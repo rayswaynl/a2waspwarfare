@@ -458,7 +458,7 @@ while {!WFBE_GameOver && _alive} do {
 						_pNear = false;
 						//--- fix(alife-stall r34): do NOT require canMove - immobilized/flipped hulls need setPos.
 						if (!isNull _pVeh && {!(_pVeh in [_pLdr])} && {alive _pVeh}) then {
-							private ["_pNearResult","_pNrStep","_pNrGuess","_pNrFlat","_pNrBrg","_pNrVp","_pNrDest"];
+							private ["_pNearResult","_pNrStep","_pNrGuess","_pNrFlat","_pNrBrg","_pNrVp","_pNrDest","_pRoadOccupied"];
 							_pNearResult = 0;
 							_pNearResult = [getPos _pVeh, 100] Call WFBE_CO_FNC_RealPlayersNear;
 							if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true};
@@ -471,9 +471,17 @@ while {!WFBE_GameOver && _alive} do {
 								if (count _pRds > 0) then {
 									_pNode = [getPos _pVeh, _pRds] Call WFBE_CO_FNC_GetClosestEntity;
 									if (!isNull _pNode && {!surfaceIsWater (getPos _pNode)}) then {
-										_pVeh setVelocity [0,0,0];
-										_pVeh setPos (getPos _pNode);
-										_pSnapped = true;
+										//--- A raw road node is not guaranteed empty: another same-side patrol can be queued
+										//--- on it at a bridge or gate. Do not turn a legitimate queue into a hull overlap.
+										_pRoadOccupied = false;
+										{if (_x != _pVeh && {alive _x} && {side _x == _side}) then {_pRoadOccupied = true}} forEach ((getPos _pNode) nearEntities [["LandVehicle"], 18]);
+										if (!_pRoadOccupied) then {
+											_pVeh setVelocity [0,0,0];
+											_pVeh setPos (getPos _pNode);
+											_pSnapped = true;
+										} else {
+											diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK_BLOCKED|team=" + (str _team) + "|reason=friendly-road-node");
+										};
 									};
 								};
 								//--- fix(alife-stall r34): NOROAD_STEP when empty roads OR water/invalid node.
