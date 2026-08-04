@@ -635,6 +635,10 @@ while {alive player && dialog} do {
 				["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
 				
 				hint (localize "STR_WF_INFO_Paratroop_Info");
+			} else {
+				//--- r129 map-click validation: a rejected (water) click was silently swallowed - MenuAction was already consumed and the player got no feedback. Surface the deny on the 17027 status strip (same idiom the fast-travel deny uses).
+				ctrlSetText [17027, "Cannot drop paratroops on water - pick a land position."];
+				_lastUpdate = 0;
 			};
 		};
 		//--- Fast Travel.
@@ -1010,12 +1014,18 @@ while {alive player && dialog} do {
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
-			lastSupplyCall = time;
-			if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
-				-_currentFee Call ChangePlayerFunds;
-			};
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+			//--- r129 map-click validation: reject water drops BEFORE stamping the supply cooldown or charging. The cargo classes (Root_* PARAVEHICARGO: MtvrRepair/UralRepair/KamazRepair/SUV_PMC/BTR40) are not amphibious - a vehicle parachuted into the sea is a total loss. Paratroops above already rejected water; this branch did not.
+			if (!surfaceIsWater _callPos) then {
+				lastSupplyCall = time;
+				if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
+					-_currentFee Call ChangePlayerFunds;
+				};
+				["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+			} else {
+				ctrlSetText [17027, "Cannot paradrop a vehicle on water - pick a land position."];
+				_lastUpdate = 0;
+			};
 		};
 		//--- Ammo Paradrop.
 		if (MenuAction == 10) then {
@@ -1023,12 +1033,18 @@ while {alive player && dialog} do {
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
-			lastSupplyCall = time;
-			if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
-				-_currentFee Call ChangePlayerFunds;
-			};
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+			//--- r129 map-click validation: same water-reject gap as ParaVehi above - crates dropped at sea are unreachable, the fee was already gone, and the player got no feedback.
+			if (!surfaceIsWater _callPos) then {
+				lastSupplyCall = time;
+				if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
+					-_currentFee Call ChangePlayerFunds;
+				};
+				["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+			} else {
+				ctrlSetText [17027, "Cannot paradrop ammo on water - pick a land position."];
+				_lastUpdate = 0;
+			};
 		};
 		//--- cmdcon41-w3i (Ray 2026-07-02) CARRIER SCUD fire (migrated from war-room button 14631 / MenuAction 770). Sends the
 		//--- EXACT existing ScudStrike payload the deck addAction + old button used; server Support_ScudStrike re-validates carrier
