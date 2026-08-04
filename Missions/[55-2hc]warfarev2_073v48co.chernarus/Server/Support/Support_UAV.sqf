@@ -41,7 +41,13 @@ _playerTeam setVariable ["wfbe_funds", (_funds - _cost), true];
 missionNamespace setVariable [_cooldownKey, time];
 
 _uav = createVehicle [_class, getPos _closest, [], 0, "FLY"];
-if (isNull _uav) exitWith { ["WARNING", "Support_UAV.sqf: UAV creation failed after authorization."] Call WFBE_CO_FNC_LogContent };
+//--- Post-debit create fail-clean: restore the reservation if no hull was created.
+if (isNull _uav) exitWith {
+	_playerTeam setVariable ["wfbe_funds", _funds, true];
+	[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord;
+	missionNamespace setVariable [_cooldownKey, _last];
+	["WARNING", "Support_UAV.sqf: UAV creation failed after authorization - funds refunded, cooldown restored."] Call WFBE_CO_FNC_LogContent;
+};
 _sideID = _side Call GetSideID;
 Call Compile Format ["_uav addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]", _sideID];
 _uav setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _sideID];
