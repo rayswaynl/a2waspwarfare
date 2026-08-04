@@ -338,7 +338,7 @@ while {!WFBE_GameOver} do {
 				//--- group-first teardown).
 				_flyAwayGroups = _flyAwayGroups + [_eGrp];
 				[_eTown, _eVeh, _eGrp, _ePilot, _eGunner, _flyHeight] Spawn {
-					private ["_t","_v","_g","_p","_gu","_h","_tPos","_vPos","_dx","_dy","_ang","_flyPos","_climbH","_timeout","_tick","_done","_finalDist"];
+					private ["_t","_v","_g","_p","_gu","_h","_tPos","_vPos","_dx","_dy","_ang","_flyPos","_climbH","_timeout","_deadline","_done","_finalDist"];
 					_t = _this select 0;
 					_v = _this select 1;
 					_g = _this select 2;
@@ -386,12 +386,11 @@ while {!WFBE_GameOver} do {
 					_timeout = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_FLYAWAY_TIMEOUT", 60];
 					if (_timeout > 60) then { _timeout = 60; };
 					if (_timeout < 5) then { _timeout = 5; };
-					_tick = 0;
+					_deadline = time + _timeout;
 					_done = false;
 					waitUntil {
 						sleep 1;
-						_tick = _tick + 1;
-						_done = (isNull _v) || {!(alive _v)} || {(_v distance _tPos) > 1500} || {_tick >= _timeout};
+						_done = (isNull _v) || {!(alive _v)} || {(_v distance _tPos) > 1500} || {time >= _deadline};
 						_done
 					};
 
@@ -403,7 +402,7 @@ while {!WFBE_GameOver} do {
 					if (!isNull _gu && {!(isPlayer _gu)}) then { ["guerairdef-flyaway-gunner", _gu, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gu; };
 					if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then { {["guerairdef-flyaway-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _v); ["guerairdef-flyaway-hull", _v, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _v; }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 					if (!isNull _g && {({alive _x} count (units _g)) == 0}) then { deleteGroup _g; };
-					diag_log format ["GUERAIRDEF|FLYAWAYDESPAWN|town=%1|dist=%2|ticks=%3", (if (isNull _t) then {"?"} else {_t getVariable ["name","?"]}), _finalDist, _tick];
+					diag_log format ["GUERAIRDEF|FLYAWAYDESPAWN|town=%1|dist=%2|elapsed=%3", (if (isNull _t) then {"?"} else {_t getVariable ["name","?"]}), _finalDist, round (time - (_deadline - _timeout))];
 				};
 				diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3|flyaway=1", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
 			} else {
