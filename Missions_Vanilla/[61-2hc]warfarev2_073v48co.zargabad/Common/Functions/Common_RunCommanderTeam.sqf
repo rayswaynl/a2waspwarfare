@@ -25,7 +25,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev",
-         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass","_hasIdleTransport","_idleRtbEnabled"];
+         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass","_hasIdleTransport","_idleRtbEnabled","_pendingId"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -49,6 +49,8 @@ _isPlaneTeam = false;
 if (count _this > 7) then { private ["_ipt"]; _ipt = _this select 7; if (typeName _ipt == "BOOL") then {_isPlaneTeam = _ipt} };
 _planeDir = -1;
 if (count _this > 8) then { private ["_ipd"]; _ipd = _this select 8; if (typeName _ipd == "SCALAR") then {_planeDir = _ipd} };
+_pendingId = -1;
+if (count _this > 9) then { private ["_ipid"]; _ipid = _this select 9; if (typeName _ipid == "SCALAR") then {_pendingId = _ipid} };
 //--- Belt-and-braces: if the flag is set but no valid heading arrived, self-resolve the runway heading HERE from the nearest
 //--- airfield logic (getDir of the LocationLogicAirport), else fall back to 0 so a plane never air-starts on a nil heading.
 //--- Only runs for a flagged plane team; ground/heli founding never touches this.
@@ -129,6 +131,7 @@ _team setVariable ["wfbe_aicom_lossretreat_prevtime", nil];
 _team setVariable ["wfbe_aicom_lossretreat_cooldown_until", nil];
 _team setVariable ["wfbe_aicom_overrun_mopup", false, true];   //--- overrunrazer: same group-slot-recycle hazard - a re-founded team must never inherit a stale mop-up stamp from its slot's previous occupant
 
+if (_pendingId >= 0) then {_team setVariable ["wfbe_aicom_pending_id", _pendingId, true]};
 if (isServer) then {
 	["aicom-team-created", _sideID, _team] Call HandleSpecial;
 } else {
