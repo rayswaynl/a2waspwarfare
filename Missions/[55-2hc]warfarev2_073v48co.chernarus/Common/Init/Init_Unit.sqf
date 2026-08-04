@@ -213,9 +213,58 @@ if (_unit isKindOf "Ship") then { //--- Boats.
 if (_unit isKindOf "Air") then { //--- Air units.
 	if ((getNumber (configFile >> 'CfgVehicles' >> _unit_kind >> 'transportSoldier')) > 0) then { //--- Transporters only.
 		//--- HALO action.
-		_unit addAction ['HALO','Client\Action\Action_HALO.sqf', [], 97, false, true, '', Format['getPos _target select 2 >= %1 && alive _target', missionNamespace getVariable 'WFBE_C_PLAYERS_HALO_HEIGHT']];
+		_unit addAction ['HALO','Client\Action\Action_HALO.sqf', [], 97, false, true, '', Format['vehicle _this == _target && alive _this && alive _target && getPos _target select 2 >= %1', missionNamespace getVariable 'WFBE_C_PLAYERS_HALO_HEIGHT']];
 		//--- Cargo Eject action.
 		_unit addAction [localize 'STR_WF_Cargo_Eject','Client\Action\Action_EjectCargo.sqf', [], 99, false, true, '', 'driver _target == _this && alive _target'];
+		//--- r72: emergency player HALO on involuntary high-altitude GetOut (shot-down / forced leave).
+		//--- Action_HALO stamps wfbe_halo_scripted so intentional jumps do not double-start HALO_getout.
+		_unit addEventHandler ["GetOut", {
+			Private ["_unit"];
+			_unit = _this select 2;
+			if (isNil "_unit" || {isNull _unit}) exitWith {};
+			if (!local _unit) exitWith {};
+			if !(isPlayer _unit) exitWith {};
+			if !(alive _unit) exitWith {};
+			if (_unit getVariable ["wfbe_halo_scripted", false]) exitWith {};
+			_unit spawn {
+				Private ["_u","_h"];
+				_u = _this;
+				sleep 0.05;
+				if (isNull _u || {!alive _u}) exitWith {};
+				if (_u getVariable ["wfbe_halo_scripted", false]) exitWith {};
+				if (vehicle _u != _u && {(vehicle _u) isKindOf "ParachuteBase"}) exitWith {};
+				_h = (getPos _u) select 2;
+				if (_h < 30) exitWith {};
+				if (vehicle _u != _u && {!((vehicle _u) isKindOf "ParachuteBase")}) exitWith {};
+				_u setVariable ["wfbe_halo_scripted", true];
+				_u setVelocity [0,0,0];
+				[_u] Exec "ca\air2\Halo\data\Scripts\HALO_getout.sqs";
+				_u spawn {
+					Private ["_u","_t0","_near","_c"];
+					_u = _this;
+					_t0 = time;
+					waitUntil {
+						sleep 0.35;
+						isNull _u || {!alive _u} || {((getPos _u) select 2) < 25} || {(time - _t0) > 180}
+					};
+					if (isNull _u || {!alive _u}) exitWith {};
+					if (((getPos _u) select 2) < 25) then {
+						_u allowDamage false;
+						waitUntil {
+							sleep 0.2;
+							isNull _u || {!alive _u} || {((getPos _u) select 2) < 1.5} || {(time - _t0) > 200}
+						};
+						sleep 0.8;
+						if (!isNull _u && {alive _u}) then {_u allowDamage true};
+					};
+					if (!isNull _u) then {
+						_near = (getPos _u) nearEntities ["ParachuteBase", 12];
+						{ if (!isNull _x && {(count crew _x) == 0}) then {deleteVehicle _x} } forEach _near;
+						_u setVariable ["wfbe_halo_scripted", false];
+					};
+				};
+			};
+		}];
 	};
 
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") > 0 && WF_A2_Vanilla) then { //--- Use of a custom CM parameter (Vanilla Only).
