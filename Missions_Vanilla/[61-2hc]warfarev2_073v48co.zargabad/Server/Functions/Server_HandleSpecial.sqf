@@ -2239,7 +2239,7 @@ if (isNull _base) exitWith {
 		if ((count _args) > 3 && {typeName (_args select 3) == "STRING"}) then {_requestToken = _args select 3};
 		_vbiedOK = false;
 		_vbiedMsg = "VBIED detonation denied; you must still be driving a live GUER VBIED.";
-		if (_requestToken != "" && {!isNull _veh} && {alive _veh} && {!isNull _driver} && {isPlayer _driver} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC). fable/guer-suicide-bike: OR the flag-gated suicide motorcycle -- SAME body below keeps the established attribution/reward flow.
+		if (_requestToken != "" && {!isNull _veh} && {alive _veh} && {!isNull _driver} && {isPlayer _driver} && {alive _driver} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC). fable/guer-suicide-bike: OR the flag-gated suicide motorcycle -- SAME body below keeps the established attribution/reward flow.
 			if (_veh getVariable ["wfbe_vbied_server_fired", false]) then {
 				_vbiedMsg = "VBIED detonation was already accepted.";
 			} else {
@@ -2556,7 +2556,7 @@ if (isNull _base) exitWith {
 		};
 		_pos    = _args select 1;
 		_player = _args select 2;
-		if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0 && {typeName _pos == "ARRAY"} && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {  //--- sweep-fix: master-flag re-check server-side so the feature is truly inert when WFBE_C_GUER_HELIBOMB_ENABLE=0 (a client can send the request even with its addAction hidden).
+		if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0 && {typeName _pos == "ARRAY"} && {!isNull _player} && {alive _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {  //--- sweep-fix: master-flag re-check server-side so the feature is truly inert when WFBE_C_GUER_HELIBOMB_ENABLE=0 (a client can send the request even with its addAction hidden).
 			//--- KILL-TIER GATE (server-authoritative re-check): the addAction's own condition string already
 			//--- hides this from a not-yet-unlocked player client-side, but that is a UX convenience, not a
 			//--- trust boundary - re-check here before any funds move.
