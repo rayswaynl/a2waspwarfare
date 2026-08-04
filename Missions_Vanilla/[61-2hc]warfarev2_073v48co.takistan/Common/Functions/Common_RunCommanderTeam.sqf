@@ -1081,6 +1081,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_ORPHAN_HEAL", 0]) > 0) then {
 
 while {!WFBE_GameOver && _alive} do {
 
+	//--- REFILL-VEHICLE TRIAGE: AIBuyUnit can append a crewed hull after this long-lived worker captured its founding array.
+	//--- Fold current group hulls in before mounted, abandon, and service decisions so a later refill is not invisible.
+	{if (!isNull _x && {!(_x in _vehicles)}) then {_vehicles = _vehicles + [_x]}} forEach ([_team, false] Call GetTeamVehicles);
+
 	//--- AICOM v2 (Ray): reap UNCREWED/bugged aircraft. An airframe (heli OR plane) alive with NO alive crew is
 	//--- orphaned (crew killed/bailed/bugged) - it crashes, sits, or piles up over a long round. Delete it after a
 	//--- short grace so it can't accumulate. Stamp-on-first-seen avoids deleting a transient bail/reseat. HC-local.
