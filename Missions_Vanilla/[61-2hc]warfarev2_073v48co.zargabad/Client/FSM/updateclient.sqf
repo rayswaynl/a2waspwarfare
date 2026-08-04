@@ -240,8 +240,8 @@ while {!gameOver && !_afkKickRequested} do {
 		if (!isNull(commanderTeam)) then {
 			if (commanderTeam == Group player) then {
 				if (!IsNull _MHQ) then {
-					_MHQ setVariable ["wfbe_mhq_unlock_aid", _MHQ addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [], 95, false, true, '', 'alive _target && locked _target']]; //--- fix(hunt): store the LOCAL action id for exact removal on commander change
-					_MHQ setVariable ["wfbe_mhq_lock_aid", _MHQ addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)']];
+					_MHQ setVariable ["wfbe_mhq_unlock_aid", _MHQ addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && locked _target']]; //--- fix(hunt): store the LOCAL action id for exact removal on commander change
+					_MHQ setVariable ["wfbe_mhq_lock_aid", _MHQ addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && !(locked _target)']];
 				};
 				_deployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 				if (_deployed) then {
