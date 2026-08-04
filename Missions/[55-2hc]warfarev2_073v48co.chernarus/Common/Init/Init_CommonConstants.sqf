@@ -877,6 +877,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM2_DECAP_DOM_RATIO")   then {WFBE_C_AICOM2_DECAP_DOM_RATIO   = 1.5};  //--- ARM only while myEff >= enEff * this (decisive maneuver dominance, not a coin-flip edge).
 	if (isNil "WFBE_C_AICOM2_DECAP_ABORT_RATIO") then {WFBE_C_AICOM2_DECAP_ABORT_RATIO = 0.9};  //--- once COMMITTED, only abort if myEff < enEff * this (wide hysteresis a momentary garrison dip cannot cross).
 	if (isNil "WFBE_C_AICOM2_DECAP_MAX_ENTOWNS") then {WFBE_C_AICOM2_DECAP_MAX_ENTOWNS = 5};    //--- SECONDARY safety only (owner Q1 2026-07-06: demoted from primary trigger, was 2): even when sensed + dominant, no commit while the enemy holds more than this many towns.
+	if (isNil "WFBE_C_AICOM2_DECAP_MAPRELATIVE") then {WFBE_C_AICOM2_DECAP_MAPRELATIVE = 0}; //--- default 0 retains the absolute MAX_ENTOWNS ceiling; 1 scales it to the live snapshot town count.
+	if (isNil "WFBE_C_AICOM2_DECAP_MAX_ENTOWNS_FRAC") then {WFBE_C_AICOM2_DECAP_MAX_ENTOWNS_FRAC = 0.4}; //--- armed profile: ceil(total capturable towns * fraction), so a 40-town Chernarus round permits the closer at <=16 enemy towns.
 	if (isNil "WFBE_C_AICOM2_DECAP_ARM_TICKS")   then {WFBE_C_AICOM2_DECAP_ARM_TICKS   = 3};    //--- consecutive dominant strategy ticks required to ARM -> COMMIT (durability latch; blocks single-tick effective-strength gaming).
 	if (isNil "WFBE_C_AICOM2_DECAP_MIN_COMMIT")  then {WFBE_C_AICOM2_DECAP_MIN_COMMIT  = 300};  //--- seconds a COMMITTED decap must persist before an ABORT is even considered (stops flap; the siege counter needs time to accrue).
 	//--- ORGANIC BASE SENSING (owner Q1 2026-07-06): the closer must not ACT on global HQ knowledge. A ground

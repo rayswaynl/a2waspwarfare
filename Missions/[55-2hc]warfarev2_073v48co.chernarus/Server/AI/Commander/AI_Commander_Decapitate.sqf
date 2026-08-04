@@ -35,8 +35,8 @@
 	NSSETVAR3, no A3 commands); >0 numeric-flag guards; if/else booleans (no ==/!= on Bool).
 */
 
-private ["_side","_logik","_snap","_myEff","_enEff","_enTowns","_myTowns","_enHQ","_enHQPos","_enHQAlive",
-	"_domRatio","_abortRatio","_maxEnTowns","_armTicks","_minCommit","_dominant","_streak","_committed",
+private ["_side","_logik","_snap","_myEff","_enEff","_enTowns","_myTowns","_totTowns","_enHQ","_enHQPos","_enHQAlive",
+	"_domRatio","_abortRatio","_maxEnTowns","_mapRelativeFrac","_armTicks","_minCommit","_dominant","_streak","_committed",
 	"_t0","_state","_tgtTowns","_teams","_nearTown","_bestD","_d","_t","_stamped","_sideText","_elMin",
 	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding","_capLk","_capLocked","_dHQ","_decV","_stallStreak","_gateReason"];
 
@@ -50,6 +50,7 @@ _myEff     = _snap select WFBE_SNAP_MYEFF;
 _enEff     = _snap select WFBE_SNAP_ENEFF;
 _enTowns   = _snap select WFBE_SNAP_ENTOWNS;
 _myTowns   = _snap select WFBE_SNAP_MYTOWNS;
+_totTowns  = _snap select WFBE_SNAP_TOTTOWNS;
 _enHQ      = _snap select WFBE_SNAP_ENHQ;
 _enHQPos   = _snap select WFBE_SNAP_ENHQPOS;
 _enHQAlive = _snap select WFBE_SNAP_ENHQALIVE;
@@ -64,6 +65,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_GRUDGE", 0]) > 0 && {_enHQAlive
 _domRatio   = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_DOM_RATIO_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_DOM_RATIO", 1.5]];
 _abortRatio = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_ABORT_RATIO_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 0.9]];
 _maxEnTowns = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 5]];
+_mapRelativeFrac = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS_FRAC_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS_FRAC", 0.4]];
+if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_MAPRELATIVE", 0]) > 0 && {_totTowns > 0}) then {_maxEnTowns = ceil (_totTowns * _mapRelativeFrac)};
 _armTicks   = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_ARM_TICKS_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ARM_TICKS", 3]];
 _minCommit  = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_MIN_COMMIT", 300];
 _senseRadius   = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_SENSE_RADIUS", 3000];
