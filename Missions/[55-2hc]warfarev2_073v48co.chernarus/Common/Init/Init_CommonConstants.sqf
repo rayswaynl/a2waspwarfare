@@ -3851,7 +3851,7 @@ if (isNil "WFBE_C_UTIL_LIB_SELFTEST") then {WFBE_C_UTIL_LIB_SELFTEST = 0};
 //--- "typeof _preview != _itemclass_preview" respawn check (coin_interface.sqf) still detects
 //--- switching between adjacent buy-menu items. 0 (default) = coin_interface.sqf's read path is
 //--- untouched - byte-identical to HEAD.
-if (isNil "WFBE_C_DEF_PREVIEW_MAP") then {WFBE_C_DEF_PREVIEW_MAP = 0};
+if (isNil "WFBE_C_DEF_PREVIEW_MAP") then {WFBE_C_DEF_PREVIEW_MAP = 1}; //--- ARMED 2026-08-04 owner fortification complaint
 WFBE_ANCHOR_PREVIEW_MAP = [
 	['Misc_cargo_cont_small', 'Hedgehog_EP1'],			//--- Hedgehog Line -> real WFBE_NEURODEF_HEDGEHOGLINE child
 	['Land_Ind_TankSmall', 'Land_Ind_IlluminantTower'],		//--- Flak Tower -> WFBE_C_DEF_FLAKTOWER_STRUCTURE default host
@@ -3868,7 +3868,7 @@ WFBE_ANCHOR_PREVIEW_MAP = [
 //--- loop is untouched - byte-identical to HEAD. >0 = holding Ctrl while an existing preview is up
 //--- rotates it by WFBE_C_DEF_PLACE_ROTATE_DEG_SEC degrees/second (scaled by WFBE_C_COIN_POLL_SLEEP,
 //--- so speed is independent of poll rate) and shows a live degree readout next to the rotate hint.
-if (isNil "WFBE_C_DEF_PLACE_ROTATE") then {WFBE_C_DEF_PLACE_ROTATE = 0};
+if (isNil "WFBE_C_DEF_PLACE_ROTATE") then {WFBE_C_DEF_PLACE_ROTATE = 1}; //--- ARMED 2026-08-04 owner fortification complaint
 if (isNil "WFBE_C_DEF_PLACE_ROTATE_DEG_SEC") then {WFBE_C_DEF_PLACE_ROTATE_DEG_SEC = 90};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
