@@ -33,6 +33,7 @@ class FSM
       init = /*%FSM<STATEINIT""">*/"_optionsID = -1;" \n
        "_lastVehicle = player;" \n
        "_UpdateActions = true;" \n
+       "_wfbeUpdateActionsEpoch = missionNamespace getVariable [""WFBE_CL_UpdateActionsEpoch"", 0];" \n
        "_lastUpdate = time;"/*%FSM</STATEINIT""">*/;
       precondition = /*%FSM<STATEPRECONDITION""">*/""/*%FSM</STATEPRECONDITION""">*/;
       class Links
@@ -60,6 +61,16 @@ class FSM
       precondition = /*%FSM<STATEPRECONDITION""">*/""/*%FSM</STATEPRECONDITION""">*/;
       class Links
       {
+        /*%FSM<LINK "Superseded">*/
+        class Superseded
+        {
+          priority = 2.000000;
+          to="End";
+          precondition = /*%FSM<CONDPRECONDITION""">*/""/*%FSM</CONDPRECONDITION""">*/;
+          condition=/*%FSM<CONDITION""">*/"_wfbeUpdateActionsEpoch != (missionNamespace getVariable [""WFBE_CL_UpdateActionsEpoch"", 0])"/*%FSM</CONDITION""">*/;
+          action=/*%FSM<ACTION""">*/""/*%FSM</ACTION""">*/;
+        };
+        /*%FSM</LINK>*/
         /*%FSM<LINK "Not_Alive">*/
         class Not_Alive
         {
@@ -122,6 +133,16 @@ class FSM
       precondition = /*%FSM<STATEPRECONDITION""">*/""/*%FSM</STATEPRECONDITION""">*/;
       class Links
       {
+        /*%FSM<LINK "Superseded">*/
+        class Superseded
+        {
+          priority = 2.000000;
+          to="End";
+          precondition = /*%FSM<CONDPRECONDITION""">*/""/*%FSM</CONDPRECONDITION""">*/;
+          condition=/*%FSM<CONDITION""">*/"_wfbeUpdateActionsEpoch != (missionNamespace getVariable [""WFBE_CL_UpdateActionsEpoch"", 0])"/*%FSM</CONDITION""">*/;
+          action=/*%FSM<ACTION""">*/""/*%FSM</ACTION""">*/;
+        };
+        /*%FSM</LINK>*/
         /*%FSM<LINK "Loop">*/
         class Loop
         {
