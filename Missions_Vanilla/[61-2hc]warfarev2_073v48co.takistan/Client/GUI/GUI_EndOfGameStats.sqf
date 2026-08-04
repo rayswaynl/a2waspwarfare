@@ -244,8 +244,20 @@ if (_leaderboardFlag) then {
 
 	_scoreRows = [];
 	{
-		if (isPlayer _x && {!((name _x) in _lbHcNames)}) then {
-			_scoreRows set [count _scoreRows, [name _x, score _x, side _x]];
+		if (isPlayer _x) then {
+			//--- 2026-08-04 (owner screenshot): HC client names carry LITERAL quote characters
+			//--- ("HC-AI-Control-1" including the quotes - same artifact the A2S bench gate hit), so
+			//--- they dodged the name filter and ranked on the board. Strip ASCII 34 before both the
+			//--- filter and the display row.
+			private ["_lbRawName","_lbNameChars","_lbCleanChars"];
+			_lbRawName = name _x;
+			_lbNameChars = toArray _lbRawName;
+			_lbCleanChars = [];
+			{ if (_x != 34) then {_lbCleanChars set [count _lbCleanChars, _x]} } forEach _lbNameChars;
+			_lbRawName = toString _lbCleanChars;
+			if (!(_lbRawName in _lbHcNames)) then {
+				_scoreRows set [count _scoreRows, [_lbRawName, score _x, side _x]];
+			};
 		};
 	} forEach allUnits;
 
@@ -306,17 +318,16 @@ if (_leaderboardFlag) then {
 		_lbText = _lbText + Format ["Most Vehicles Lost: %1 (%2)<br />", _lostLabel, _lostMax];
 	};
 
+	//--- 2026-08-04 (owner screenshot): y-only reposition parked the block INSIDE the stats panel
+	//--- footprint at size 0.018 - unreadable overlap. Give both controls a full position in the
+	//--- clear area right of the panel, and let the bg actually back the text.
 	if (!isNull _leaderboardCtrl) then {
-		_lbPos = CtrlPosition _leaderboardCtrl;
-		_lbPos Set[1, 0.55];
-		_leaderboardCtrl CtrlSetPosition _lbPos;
+		_leaderboardCtrl CtrlSetPosition [0.465, 0.17, 0.30, 0.55];
 		_leaderboardCtrl CtrlCommit 0;
-		_leaderboardCtrl CtrlSetStructuredText ParseText _lbText;
+		_leaderboardCtrl CtrlSetStructuredText ParseText ("<t size='1.1'>" + _lbText + "</t>");
 	};
 	if (!isNull _leaderboardBgCtrl) then {
-		_lbBgPos = CtrlPosition _leaderboardBgCtrl;
-		_lbBgPos Set[1, 0.545];
-		_leaderboardBgCtrl CtrlSetPosition _lbBgPos;
+		_leaderboardBgCtrl CtrlSetPosition [0.455, 0.155, 0.32, 0.58];
 		_leaderboardBgCtrl CtrlCommit 0;
 	};
 };
