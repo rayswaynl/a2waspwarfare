@@ -2,6 +2,7 @@ private ["_u","_wp","_rkt","_am","_i","_vlnrd","_vl","_vlnr","_vcnr",
 "_vc","_vcnrd","_vg","_vgnr","_vgnrd","_trg","_fp","_spd","_dis","_trvldis","_sltd",
 "_sspd","_acc","_agl","_trgtp","_rtp",
 "_msl","_trgp","_trgv","_ttimp","_prd","_t"];
+scopeName "OUT";
 
 _u = _this select 0;
 _wp = currentWeapon _u;
@@ -81,7 +82,6 @@ if(isNull _trg || _u aimedAtTarget [_trg] == 0 || {_trgtp isKindOf _x} count _rt
                         sleep 0.01;
                                                };
                      					   				
-scopeName "OUT";
 exit;
 
 
