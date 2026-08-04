@@ -25,8 +25,13 @@ if (_winnerTeam == west) then {
 //--- 185 (HQ repair scaling): persist this round's elapsed time for the next mission's avg.
 private ["_rpavg185","_rpN185","_rpTotal185"];
 _rpavg185   = profileNamespace getVariable ["WFBE_RPAVG", [0, 0]];
+_rpavg185Changed = false;
+if (typeName _rpavg185 != "ARRAY") then {_rpavg185 = [0, 0]; _rpavg185Changed = true};
+if (count _rpavg185 != 2) then {_rpavg185 = [0, 0]; _rpavg185Changed = true};
 _rpN185     = _rpavg185 select 0;
 _rpTotal185 = _rpavg185 select 1;
+if (typeName _rpN185 != "SCALAR" || {typeName _rpTotal185 != "SCALAR"} || {_rpN185 < 0} || {_rpTotal185 < 0}) then {_rpavg185 = [0, 0]; _rpN185 = 0; _rpTotal185 = 0; _rpavg185Changed = true};
+if (_rpavg185Changed) then {profileNamespace setVariable ["WFBE_RPAVG", _rpavg185]; saveProfileNamespace};
 profileNamespace setVariable ["WFBE_RPAVG", [_rpN185 + 1, _rpTotal185 + (round time)]];
 saveProfileNamespace;
 

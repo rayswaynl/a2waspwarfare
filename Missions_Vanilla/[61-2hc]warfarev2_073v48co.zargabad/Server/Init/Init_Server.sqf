@@ -681,8 +681,13 @@ diag_log format ["## B67SPAWN: chosen start keys W=%1 E=%2 (rounded map pos; sho
 //--- 185 (HQ repair scaling): read rolling avg round length from profileNamespace and broadcast.
 private ["_rpavg185","_rpN185","_rpTotal185"];
 _rpavg185 = profileNamespace getVariable ["WFBE_RPAVG", [0, 0]];
+_rpavg185Changed = false;
+if (typeName _rpavg185 != "ARRAY") then {_rpavg185 = [0, 0]; _rpavg185Changed = true};
+if (count _rpavg185 != 2) then {_rpavg185 = [0, 0]; _rpavg185Changed = true};
 _rpN185     = _rpavg185 select 0;
 _rpTotal185 = _rpavg185 select 1;
+if (typeName _rpN185 != "SCALAR" || {typeName _rpTotal185 != "SCALAR"} || {_rpN185 < 0} || {_rpTotal185 < 0}) then {_rpavg185 = [0, 0]; _rpN185 = 0; _rpTotal185 = 0; _rpavg185Changed = true};
+if (_rpavg185Changed) then {profileNamespace setVariable ["WFBE_RPAVG", _rpavg185]; saveProfileNamespace};
 WFBE_HQ_REPAIR_AVG_SEC = if (_rpN185 > 0) then {_rpTotal185 / _rpN185} else {21600};
 publicVariable "WFBE_HQ_REPAIR_AVG_SEC";
 ["INITIALIZATION", Format ["Init_Server.sqf: HQ repair avg = %1s from %2 recorded rounds (seed 21600 when none).", round WFBE_HQ_REPAIR_AVG_SEC, _rpN185]] Call WFBE_CO_FNC_LogContent;
