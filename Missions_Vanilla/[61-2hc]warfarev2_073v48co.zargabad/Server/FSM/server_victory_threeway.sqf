@@ -279,6 +279,14 @@ while {!gameOver} do {
 				gameOver = true;
 				WFBE_GameOver = true;
 
+				//--- r78: terminal WASPSTAT buffer flush BEFORE ROUNDEND. StatsFlush sleeps
+				//--- WFBE_C_STATS_FLUSH_INTERVAL (60s default) while ENDGAME_HOLD is 45s — a dirty
+				//--- window opened after the last tick can be lost to failMission. Credit live
+				//--- playtime + emit dirty UIDs via the shared helper (no-op when stats disabled).
+				if (!isNil "WFBE_SE_FNC_FlushStatsTerminal") then {
+					[] call WFBE_SE_FNC_FlushStatsTerminal;
+				};
+
 				// WASPSTAT ROUNDEND telemetry (Task 10). Winner = _winSide (the real winning side).
 				// durationSec = round(time) which mirrors GlobalGameStats.sqf's _uptime source.
 				//--- L194 STATS_ROUNDEND_FLUSH: flush per-player stats inline at win-declaration.

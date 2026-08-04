@@ -394,6 +394,17 @@ if !(isNull (_commander)) then {
 	};
 };
 
+//--- r78: force-flush pending WASPSTAT buffer for this UID on disconnect. The periodic StatsFlush
+//--- loop only emits on interval; a disconnect mid-window left deltas resident until the next tick
+//--- (or forever if the round ended inside ENDGAME_HOLD < interval). Stamp the disconnect name so
+//--- the segment still carries a display name after the unit object is gone. No-op when stats off
+//--- or the UID is not dirty. Shared path with ROUNDEND terminal flush (RecordStat.sqf).
+if (_uid != "" && {!isNil "WFBE_SE_FNC_FlushStatsDirty"}) then {
+	if (!isNil "WFBE_STATS_DIRTY_UIDS" && {_uid in WFBE_STATS_DIRTY_UIDS}) then {
+		[_uid, _name] call WFBE_SE_FNC_FlushStatsDirty;
+	};
+};
+
 // Marty: When AntiStack is disabled, the score sampling loop is not running; skip DB persistence to avoid false missing-score errors.
 if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWith {
 	//--- object-var-namespace: still drop UID-keyed transient missionNamespace keys (FPV/auth).
