@@ -3,7 +3,7 @@
 //--- airframe at the server-derived command centre, then sends it to that player for local control.
 if (!isServer) exitWith {};
 
-Private ["_args","_buildings","_checks","_class","_closest","_cooldown","_cooldownKey","_cost","_driver","_funds","_gunner","_last","_operator","_playerTeam","_side","_sideID","_timeStart","_timeout","_uav","_uid"];
+Private ["_args","_buildings","_checks","_class","_closest","_cooldown","_cooldownKey","_cost","_driver","_funds","_gunner","_last","_operator","_playerTeam","_serverAuth","_side","_sideID","_timeStart","_timeout","_uav","_uid"];
 
 _args = _this;
 if (typeName _args != "ARRAY" || {count _args < 3}) exitWith { ["WARNING", "Support_UAV.sqf: denied malformed UAV request."] Call WFBE_CO_FNC_LogContent };
@@ -28,18 +28,21 @@ if (isNull _closest) exitWith { ["INFORMATION", Format ["Support_UAV.sqf: [%1] d
 _cost = missionNamespace getVariable ["WFBE_C_PLAYERS_UAV_COST", 12500];
 _cooldown = missionNamespace getVariable ["WFBE_C_PLAYERS_UAV_COOLDOWN", 1800];
 if (typeName _cost != "SCALAR" || {_cost < 0} || {typeName _cooldown != "SCALAR"} || {_cooldown < 0}) exitWith { ["WARNING", "Support_UAV.sqf: denied invalid UAV cost/cooldown configuration."] Call WFBE_CO_FNC_LogContent };
-_cooldownKey = Format ["wfbe_uav_last_%1", str _playerTeam];
-_last = missionNamespace getVariable [_cooldownKey, -999999];
-if (typeName _last != "SCALAR") then {_last = -999999};
-if ((time - _last) < _cooldown) exitWith { ["INFORMATION", Format ["Support_UAV.sqf: [%1] denied -- cooldown (%2s left).", str _side, round (_cooldown - (time - _last))]] Call WFBE_CO_FNC_LogContent };
-_funds = _playerTeam getVariable "wfbe_funds";
-if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
-if (_funds < _cost) exitWith { ["INFORMATION", Format ["Support_UAV.sqf: [%1] denied -- insufficient funds (%2 < %3).", str _side, _funds, _cost]] Call WFBE_CO_FNC_LogContent };
+_serverAuth = (missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0;
+if (!_serverAuth) then {
+	_cooldownKey = Format ["wfbe_uav_last_%1", str _playerTeam];
+	_last = missionNamespace getVariable [_cooldownKey, -999999];
+	if (typeName _last != "SCALAR") then {_last = -999999};
+	if ((time - _last) < _cooldown) exitWith { ["INFORMATION", Format ["Support_UAV.sqf: [%1] denied -- cooldown (%2s left).", str _side, round (_cooldown - (time - _last))]] Call WFBE_CO_FNC_LogContent };
+	_funds = _playerTeam getVariable "wfbe_funds";
+	if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
+	if (_funds < _cost) exitWith { ["INFORMATION", Format ["Support_UAV.sqf: [%1] denied -- insufficient funds (%2 < %3).", str _side, _funds, _cost]] Call WFBE_CO_FNC_LogContent };
 
-//--- Debit and reserve before creation so concurrent client requests cannot obtain a second free hull.
-_playerTeam setVariable ["wfbe_funds", (_funds - _cost), true];
-[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord;
-missionNamespace setVariable [_cooldownKey, time];
+	//--- Legacy mode owns the charge; server-authorized mode already charged atomically before this script runs.
+	_playerTeam setVariable ["wfbe_funds", (_funds - _cost), true];
+	[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord;
+	missionNamespace setVariable [_cooldownKey, time];
+};
 
 _uav = createVehicle [_class, getPos _closest, [], 0, "FLY"];
 if (isNull _uav) exitWith { ["WARNING", "Support_UAV.sqf: UAV creation failed after authorization."] Call WFBE_CO_FNC_LogContent };
