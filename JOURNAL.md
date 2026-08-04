@@ -1,5 +1,16 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-04 — reconcile PR #2092 onto wave0805
+
+- PR #2092 was stacked on #2060. The wave tip already contains the immobile-hull
+  crew egress behavior, so that parent hunk was not duplicated.
+- Ported the unique tier-2/3 `WFBE_C_AICOM_STUCK_REPAIR` correction into the Chernarus
+  source: after the existing scalar reset, configured vehicle hitpoints are cleared with
+  local-object `setHit` calls so a damaged wheel, track, or engine cannot leave the hull
+  immobile.
+- Added focused Chernarus regression coverage. TK/ZG mirror generation was intentionally
+  deferred to the fold orchestrator per the reconcile task boundary.
+
 ## wave0804b hotfix — 2026-08-04 [update/wave-20260802]
 
 Task: implement four fixes for three live regressions root-caused by a 6-agent triage

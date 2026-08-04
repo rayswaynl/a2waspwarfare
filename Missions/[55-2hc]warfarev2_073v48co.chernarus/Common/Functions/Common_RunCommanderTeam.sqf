@@ -1385,6 +1385,17 @@ while {!WFBE_GameOver && _alive} do {
 							_srThreat2 = {!isNull _x && {alive _x} && {((side _uTeam) getFriend (side _x)) < 0.6}} count (_uVeh nearEntities [["Man","LandVehicle"], _srSafe2]);
 							if (_srThreat2 == 0) then {
 								_uVeh setDamage 0;
+								//--- setDamage only resets the overall scalar.  Clear every configured part too so a
+								//--- wheel, track, or engine hitpoint cannot leave this recovered hull !canMove.
+								private ["_srHp2","_srHpCfg2","_srHpName2"];
+								_srHp2 = configFile >> "CfgVehicles" >> (typeOf _uVeh) >> "HitPoints";
+								if (isClass _srHp2 && {(count _srHp2) > 0}) then {
+									for "_srI2" from 0 to ((count _srHp2) - 1) do {
+										_srHpCfg2 = _srHp2 select _srI2;
+										_srHpName2 = getText (_srHpCfg2 >> "name");
+										if (!(_srHpName2 in [""])) then {_uVeh setHit [_srHpName2, 0]};
+									};
+								};
 								_uVeh setVehicleAmmo 1;
 								diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_REPAIR|team=" + (str _uTeam) + "|tier=" + str _uTier + "|veh=" + (typeOf _uVeh));
 								//--- STUCK_REPAIR_RESETS_TIER (2026-07-06, flag WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER default 0):
