@@ -49,6 +49,22 @@ class IcbmTelRuntimeStateSyncTests(unittest.TestCase):
                 self.assertIn('_id publicVariableClient _telJipKey', source)
                 self.assertIn('_id publicVariableClient _scudJipKey', source)
 
+    def test_nuke_countdown_uses_the_shared_absolute_impact_deadline(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            source = mask_comments(read(root, TEL_INIT))
+            with self.subTest(root=root):
+                self.assertRegex(
+                    source,
+                    r'_deadline\s*=\s*time\s*\+\s*_secs;\s*'
+                    r'missionNamespace setVariable \[_cdKey, _deadline\];\s*'
+                    r'\[nil, "HandleSpecial", \["icbm-countdown", time, _deadline\]\]',
+                )
+                self.assertRegex(
+                    source,
+                    r'while\s*\{\s*time\s*<\s*_deadline\s*\}\s*do\s*\{\s*sleep 1;',
+                )
+                self.assertNotIn('_steps', source)
+
 
 if __name__ == "__main__":
     unittest.main()

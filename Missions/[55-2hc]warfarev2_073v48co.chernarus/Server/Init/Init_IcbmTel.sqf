@@ -842,7 +842,7 @@ WFBE_SE_FNC_IcbmTelLaunchMarker = {
 //--- If the TEL is destroyed mid-countdown the killed-EH clears the latch and this bails (cancel handled there).
 //------------------------------------------------------------------------------------
 WFBE_SE_FNC_IcbmTelNuke = {
-	private ["_side","_tel","_tgtPos","_sideText","_cdKey","_secs","_fuzz","_enemySides","_pingPos","_ang","_r","_steps"];
+	private ["_side","_tel","_tgtPos","_sideText","_cdKey","_secs","_fuzz","_enemySides","_pingPos","_ang","_r","_deadline"];
 	_side   = _this select 0;
 	_tel    = _this select 1;
 	_tgtPos = _this select 2;
@@ -852,9 +852,10 @@ WFBE_SE_FNC_IcbmTelNuke = {
 	_fuzz = missionNamespace getVariable ["WFBE_C_ICBM_TEL_PING_FUZZ", 400];
 
 	//--- Arm the countdown latch (the killed-EH reads this to know a NUKE is in flight -> destroy = cancel).
-	missionNamespace setVariable [_cdKey, time + _secs];
+	_deadline = time + _secs;
+	missionNamespace setVariable [_cdKey, _deadline];
 	//--- pack-missiles: broadcast [launchTime, impactTime] to all clients for the countdown/warning HUD.
-	[nil, "HandleSpecial", ["icbm-countdown", time, time + _secs]] Call WFBE_CO_FNC_SendToClients;
+	[nil, "HandleSpecial", ["icbm-countdown", time, _deadline]] Call WFBE_CO_FNC_SendToClients;
 
 
 	//--- Theatrics at the TEL (erect + smoke) for the whole countdown feel.
@@ -872,10 +873,10 @@ WFBE_SE_FNC_IcbmTelNuke = {
 	} forEach _enemySides;
 
 	//--- COUNTDOWN. Poll so a mid-count destroy (killed EH clears the latch) aborts cleanly.
-	_steps = 0;
-	while {_steps < _secs} do {
+	//--- Use the same absolute deadline the HUD receives: a delayed scheduler resume must not add one
+	//--- nominal second per pass and leave players at T-0 while the server still waits to launch.
+	while {time < _deadline} do {
 		sleep 1;
-		_steps = _steps + 1;
 		if (isNull _tel || {!alive _tel}) exitWith {};
 		if ((missionNamespace getVariable [_cdKey, -1]) <= 0) exitWith {};   //--- latch cleared => canceled (destroyed).
 	};
