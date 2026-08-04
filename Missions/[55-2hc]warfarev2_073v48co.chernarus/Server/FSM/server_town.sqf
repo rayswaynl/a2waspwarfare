@@ -920,10 +920,12 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 								_detected = (_loc nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], _townRange]) unitsBelowHeight 20;
 								_guerCount = 0;
 								{
-									if (side _x == resistance) then {_guerCount = _guerCount + 1};
-									//--- Count crew members of mounted vehicles too.
-									if (!(_x isKindOf "Man")) then {
-										{if (side _x == resistance) then {_guerCount = _guerCount + 1}} forEach (crew _x);
+									//--- A vehicle object falls back to its config side while empty. Count only living
+									//--- men, and for mounted contacts resolve authority from each living crew member.
+									if (_x isKindOf "Man") then {
+										if (alive _x && {side _x == resistance}) then {_guerCount = _guerCount + 1};
+									} else {
+										{if (alive _x && {side _x == resistance}) then {_guerCount = _guerCount + 1}} forEach (crew _x);
 									};
 								} forEach _detected;
 
