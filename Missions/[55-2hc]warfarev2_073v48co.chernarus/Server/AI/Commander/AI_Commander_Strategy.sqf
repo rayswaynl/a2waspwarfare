@@ -1287,6 +1287,10 @@ if (_strikeOn) then {
 		if (isNull _best) exitWith {};
 		private "_bestAlive"; _bestAlive = {alive _x} count (units _best);
 			_best setVariable ["wfbe_aicom_strike", true];
+			_best setVariable ["wfbe_aicom_townorder", [], false];
+			_best setVariable ["wfbe_aicom_dispatch_open", false];
+			_best setVariable ["wfbe_aicom_alloc_target", nil];
+			_best setVariable ["wfbe_aicom_alloc_tick", nil];
 		[_best, "move"] Call SetTeamMoveMode;
 		_best setVariable ["wfbe_aicom_foot_stage", false];
 		_best setVariable ["wfbe_aicom_foot_stage_pos", []];
