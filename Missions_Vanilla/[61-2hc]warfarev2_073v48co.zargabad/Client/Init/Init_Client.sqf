@@ -1218,6 +1218,9 @@ if !(player getVariable ["wfbe_caster_slot", false]) then {
 };
 };
 
+//--- Keep one action FSM authoritative. The respawn flow starts a replacement only after the
+//--- new player is alive, so the old FSM can otherwise miss its !alive player exit.
+missionNamespace setVariable ["WFBE_CL_UpdateActionsEpoch", (missionNamespace getVariable ["WFBE_CL_UpdateActionsEpoch", 0]) + 1];
 [] execFSM "Client\FSM\updateactions.fsm";
 //--- QoL trio feat.3: spawn advisor nudge loop after common init is done.
 [] spawn WFBE_CL_FNC_QOL_Advisor;
