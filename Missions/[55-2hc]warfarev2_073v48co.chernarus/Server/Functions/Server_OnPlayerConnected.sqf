@@ -291,6 +291,7 @@ if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_V
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
 if (!isNil "AICOMV2_GDIR_JIP_SNAP") then {_id publicVariableClient "AICOMV2_GDIR_JIP_SNAP"}; //--- J10: GUER Director snapshot is not JIP-durable in A2-OA; target the current value to this joiner.
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+if (!isNil "WFBE_HQ_REPAIR_AVG_SEC") then {_id publicVariableClient "WFBE_HQ_REPAIR_AVG_SEC"}; //--- 185: HQ-repair cost-scaling avg is a one-shot init publicVariable (Init_Server.sqf:739), not JIP-durable; target current value to this joiner so MHQ repair charge (Action_RepairMHQ.sqf) + Team-menu cost (GUI_Menu_Team.sqf) match since-start players instead of the 21600 seed.
 //--- r68 (marker JIP + public-state fidelity): the MHQ/HQ wreck-marker feed is a set of missionNamespace
 //--- PRIMITIVES broadcast with plain publicVariable in Server_OnHQKilled.sqf (false + wreck payload) and
 //--- Server_MHQRepair.sqf (true + []). Per the B63 note above, a plain publicVariable is NOT replayed to a
