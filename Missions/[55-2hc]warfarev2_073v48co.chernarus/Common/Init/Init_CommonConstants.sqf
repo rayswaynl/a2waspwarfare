@@ -3862,5 +3862,14 @@ WFBE_ANCHOR_PREVIEW_MAP = [
 	['Misc_concrete_High', 'Land_BarGate2']			//--- Gate Complex -> real WFBE_NEURODEF_FORTIF_GATE_COMPLEX gate
 ];
 
+//--- TICK-INCREMENT PLACEMENT ROTATION (same owner report). coin_interface.sqf's rotate hint
+//--- ("ROTATE=[Ctrl]", str_coin_rotate) had never been wired to any setDir call - _ctrl was
+//--- computed every poll tick and never read again. 0 (default) = coin_interface.sqf's placement
+//--- loop is untouched - byte-identical to HEAD. >0 = holding Ctrl while an existing preview is up
+//--- rotates it by WFBE_C_DEF_PLACE_ROTATE_DEG_SEC degrees/second (scaled by WFBE_C_COIN_POLL_SLEEP,
+//--- so speed is independent of poll rate) and shows a live degree readout next to the rotate hint.
+if (isNil "WFBE_C_DEF_PLACE_ROTATE") then {WFBE_C_DEF_PLACE_ROTATE = 0};
+if (isNil "WFBE_C_DEF_PLACE_ROTATE_DEG_SEC") then {WFBE_C_DEF_PLACE_ROTATE_DEG_SEC = 90};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -665,6 +665,16 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				};
 
 			} else {
+				//--- fable/fortif-placement-preview-facing (owner 2026-08-04, "facing direction indications"):
+				//--- ROTATE=[Ctrl] hint (str_coin_rotate, below) promised a control that was never wired to any
+				//--- setDir - _ctrl (line 491) was computed every poll tick and never read again. Tick-increment
+				//--- (not mouse-delta - this loop has no per-frame mouse-move delta available) rotation while an
+				//--- existing preview is up; forces a same-tick tooltip rebuild so the live degree readout
+				//--- (below, _text1) never goes stale while Ctrl is held. Flag 0 (default) = inert.
+				if (((missionNamespace getVariable ["WFBE_C_DEF_PLACE_ROTATE", 0]) > 0) && _ctrl) then {
+					_preview setDir ((getDir _preview) + ((missionNamespace getVariable ["WFBE_C_DEF_PLACE_ROTATE_DEG_SEC", 90]) * _pollSleep));
+					_logic setVariable ["WF_RequestUpdate", true];
+				};
 				//--- Check zone
 				if (
 					([position _preview,_startPos] call BIS_fnc_distance2D) > _limitH
@@ -873,7 +883,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_textPicture = format ["<t color='#42b6ff' shadow='2' align='left' size='2.8'><img image='%1'/></t> ",_filePicture];
 				};
 
-				_text1 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_rotate" + "<t align='right'>" + call compile (keyname 29) + "</t></t><br />"} else {"<br />"};
+				_text1 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_rotate" + "<t align='right'>" + call compile (keyname 29) + (if (((missionNamespace getVariable ["WFBE_C_DEF_PLACE_ROTATE", 0]) > 0) && (_tooltipType == "preview")) then {format [" (%1 deg)", round (getDir _preview)]} else {""}) + "</t></t><br />"} else {"<br />"};
 
 				_status = if (manningDefense) then {localize "STR_WF_On"} else {localize "STR_WF_Off"};
 				_text2 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_build" + "<t align='right'>" + call compile (actionKeysNames ["DefaultAction",1]) + "</t></t><br />"} else {"<t color='#42b6ff' shadow='2'>" + localize "STR_WF_AutoDefense" + ":<t align='right'>" + _status + "</t></t><br />"};
