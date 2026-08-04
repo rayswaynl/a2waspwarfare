@@ -182,22 +182,33 @@ _spawnGroup = {
 };
 
 _setSkirmishOrders = {
-	Private ["_grp","_target","_wp"];
+	//--- r79: waypoint activation integrity - validate target shape, clear residual WPs, set completion
+	//--- radius + setCurrentWaypoint so the SAD is actually ACTIVE (WAVE-3 residual-index lesson).
+	Private ["_grp","_target","_wp","_wpIdx","_z"];
 	_grp = _this select 0;
 	_target = _this select 1;
 	if (isNull _grp) exitWith {};
+	if (typeName _target != "ARRAY" || {count _target < 2}) exitWith {};
+	if (typeName (_target select 0) != "SCALAR" || {typeName (_target select 1) != "SCALAR"}) exitWith {};
 
 	_grp setBehaviour "COMBAT";
 	_grp setCombatMode "RED";
 	_grp setFormation "WEDGE";
 	_grp setSpeedMode "NORMAL";
+	//--- Clear any residual engine waypoints before laying the SAD (A2 leaves index-0 ghosts on re-task).
+	for [{_z = (count (waypoints _grp)) - 1},{_z >= 0},{_z = _z - 1}] do {
+		deleteWaypoint [_grp, _z];
+	};
+	_wpIdx = count (waypoints _grp);
 	_wp = _grp addWaypoint [_target, 30];
-	_wp setWaypointType "SAD";
-	_wp setWaypointBehaviour "COMBAT";
-	_wp setWaypointCombatMode "RED";
-	_wp setWaypointSpeed "NORMAL";
+	[_grp, _wpIdx] setWaypointType "SAD";
+	[_grp, _wpIdx] setWaypointBehaviour "COMBAT";
+	[_grp, _wpIdx] setWaypointCombatMode "RED";
+	[_grp, _wpIdx] setWaypointSpeed "NORMAL";
+	[_grp, _wpIdx] setWaypointCompletionRadius 40;
+	_grp setCurrentWaypoint [_grp, _wpIdx];
 	{
-		if (alive _x) then {_x doMove _target};
+		if (!isNull _x && {alive _x}) then {_x doMove _target};
 	} forEach units _grp;
 };
 

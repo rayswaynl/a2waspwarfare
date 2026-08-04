@@ -1,4 +1,4 @@
-Private ['_add','_buildings','_built','_checks','_closest','_cw','_d','_dir','_driver','_group','_gunner','_lastWP','_lastWPpos','_logic','_pos','_radius','_sorted','_spawn','_step','_uav','_waypoints','_wp','_wpcount'];
+Private ['_add','_buildings','_built','_checks','_closest','_cw','_d','_dir','_driver','_group','_gunner','_lastWP','_lastWPpos','_logic','_orbitSegs','_pos','_radius','_sorted','_spawn','_step','_uav','_waypoints','_wp','_wpSnap','_wpcount'];
 _logic = WF_Logic;
 
 if (!isNull playerUAV) then {if (!alive playerUAV) then {playerUAV = objNull}};
@@ -86,10 +86,18 @@ while {alive _uav} do {
 	if (!isNil "_spawn" && {!(scriptDone _spawn)}) then {terminate _spawn}; //--- r65: only terminate a live handle (was bare terminate every loop)
 	if !(alive _uav) exitWith {};
 
-	_waypoints = waypoints _uav;
+	//--- r79: always resolve the GROUP waypoint chain (waypoints expects Group; vehicle form is
+	//--- ambiguous and can yield []). Empty chain + select (count-1) throws and kills the orbit planner.
+	_waypoints = waypoints (group _uav);
+	if ((count _waypoints) < 1) then {
+		//--- No source WP (cleared mid-tick / interface race) - wait for a player/map order instead of throwing.
+	} else {
 	_lastWP = _waypoints select (count _waypoints - 1);
 	_lastWPpos = waypointPosition _lastWP;
 	deleteWaypoint _lastWP;
+	//--- Preserve fixed orbit segment count for completion radius (do not overwrite with live count).
+	_orbitSegs = 4;
+	if (typeName _wpcount == "SCALAR" && {_wpcount > 0}) then {_orbitSegs = _wpcount};
 	for "_d" from 0 to (360-_step) step _step do
 	{
 		_add = _d;
@@ -98,10 +106,12 @@ while {alive _uav} do {
 		_wp = (group _uav) addWaypoint [_pos,0];
 		_wp setWaypointType "MOVE";
 		_wp setWaypointDescription ' ';
-		_wp setWaypointCompletionRadius (1000/_wpcount);
+		_wp setWaypointCompletionRadius (1000/_orbitSegs);
 	};
 
-	_spawn = [_uav,_add,_step,_lastWPpos,_radius,_dir,_cw,_wpcount] spawn {
+	//--- r79: CCW re-planner used `_add = -_add` every step which double-flipped the signed angle and
+	//--- painted a broken loiter. Match the outer loop: accumulate +step (CW) or -step (CCW).
+	_spawn = [_uav,_add,_step,_lastWPpos,_radius,_dir,_cw,_orbitSegs] spawn {
 		Private ['_add','_currentWP','_cw','_dir','_lastWPpos','_pos','_radius','_step','_uav','_wp','_wpcount'];
 		scriptname "UAV Route planning";
 		_uav = _this select 0;
@@ -112,12 +122,13 @@ while {alive _uav} do {
 		_dir = _this select 5;
 		_cw = _this select 6;
 		_wpcount = _this select 7;
+		if (typeName _wpcount != "SCALAR" || {_wpcount <= 0}) then {_wpcount = 4};
 		_currentWP = currentWaypoint group _uav;
 		while {alive _uav} do {
-			waitUntil {_currentWP != currentWaypoint group _uav};
+			waitUntil {_currentWP != currentWaypoint group _uav || !alive _uav};
+			if !(alive _uav) exitWith {};
 			sleep .01;
-			_add = _add + _step;
-			if !(_cw) then {_add = -_add};
+			if (_cw) then {_add = _add + _step} else {_add = _add - _step};
 			_pos = [_lastWPpos, _radius, _dir+_add] call bis_fnc_relPos;
 			_wp = (group _uav) addWaypoint [_pos,0];
 			_wp setWaypointType "MOVE";
@@ -127,8 +138,10 @@ while {alive _uav} do {
 		};
 	};
 
-	_wpcount = count waypoints _uav;
-	waitUntil {waypointDescription [group _uav,currentWaypoint group _uav] == ' ' || _wpcount != count waypoints _uav || !alive _uav};
+	//--- r79: do not clobber the fixed orbit segment count used for completion radius / next replan.
+	_wpSnap = count (waypoints (group _uav));
+	waitUntil {waypointDescription [group _uav,currentWaypoint group _uav] == ' ' || _wpSnap != count (waypoints (group _uav)) || !alive _uav};
+	}; //--- end non-empty waypoints branch
 	if (!(alive _uav)||isNull _uav) exitWith {};
 };
 
