@@ -167,10 +167,28 @@ while {!WFBE_GameOver && _alive} do {
 			//--- arrival at the chosen friendly town or the bounded timeout - either way _alive goes
 			//--- false, which hands off to the EXISTING wipe/despawn/cleanup path at the bottom of
 			//--- this script (HandleSpecial "sidepatrol-ended" + deleteGroup), same as a combat wipe.
-			if (!isNull _rtbHome && {(leader _team) distance _rtbHome < 100}) then {
-				_alive = false;
-			} else {
-				if (time > _rtbDeadline) then {_alive = false};
+			//--- The return point is a live town, not a permanent position. It can flip while this
+			//--- understrength patrol is travelling; never let it march into the now-hostile town just
+			//--- to be reaped there. Re-pick a current friendly town on this 30s patrol tick, or end
+			//--- through the existing cleanup path when the side has lost every possible RTB point.
+			if (isNull _rtbHome || {(_rtbHome getVariable ["sideID", -1]) != _sideID}) then {
+				_rtbOwned = [];
+				{if ((_x getVariable ["sideID", -1]) == _sideID) then {_rtbOwned = _rtbOwned + [_x]}} forEach towns;
+				_rtbHome = if (count _rtbOwned > 0) then {[leader _team, _rtbOwned] Call WFBE_CO_FNC_GetClosestEntity} else {objNull};
+				if (!isNull _rtbHome) then {
+					[_team, getPos _rtbHome, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|PATROL_RTB_RETARGET|team=" + (str _team) + "|town=" + (_rtbHome getVariable ["name", "town"]));
+				} else {
+					_alive = false;
+					diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|PATROL_RTB_REAP|team=" + (str _team) + "|reason=no_owned_town");
+				};
+			};
+			if (_alive) then {
+				if (!isNull _rtbHome && {(leader _team) distance _rtbHome < 100}) then {
+					_alive = false;
+				} else {
+					if (time > _rtbDeadline) then {_alive = false};
+				};
 			};
 		} else {
 		if (isNull _target) then {
@@ -272,6 +290,14 @@ while {!WFBE_GameOver && _alive} do {
 				[_team, getPos _target, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple;
 			};
 		} else {
+			//--- A patrol target is a town handle. Ownership can change during a long road march;
+			//--- clear it before the arrival/camp-sweep branch so the next 30s tick re-lays a live
+			//--- hostile objective instead of walking into a now-friendly empty town.
+			if ((_target getVariable ["sideID", -1]) == _sideID) then {
+				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|PATROL_TARGET_INVALIDATED|team=" + (str _team) + "|town=" + (_target getVariable ["name", "town"]) + "|reason=town_owned");
+				_target = objNull;
+			};
+			if (!isNull _target) then {
 			if ((leader _team) distance _target < 200) then {
 
 				//--- Task 40: camp sweep on arrival at the current target town.
@@ -501,6 +527,7 @@ while {!WFBE_GameOver && _alive} do {
 						};
 					};
 				};
+			};
 			};
 		};
 		};
