@@ -289,7 +289,8 @@ while {alive _building && !isNull _building} do {
 		_show = false;
 		WFBE_CL_QUEUE_HUD = "";
 		WFBE_CL_QUEUE_HUD_TS = time;
-	};	sleep 4;
+	};
+	sleep 4;
 	_show = true;
 	_ret = _ret + 4;
 	_queu = _building getVariable ["queu", []];
