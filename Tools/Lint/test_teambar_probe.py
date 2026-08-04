@@ -115,6 +115,14 @@ class TeambarProbeTests(unittest.TestCase):
         for token in ("getPlayerUID _leader", "leaderIsGrpLeader=", "rank _leader", 'WFBE_C_TEAMBAR_PROBE", 0]'):
             self.assertIn(token, text)
 
+    def test_server_slot1_heal_call_is_flag_gated(self) -> None:
+        # This is a correctness fix to the already-armed feature. The server mirror must remain
+        # unreachable when WFBE_C_PLAYER_TEAMBAR_FIRST is disabled.
+        text = code("Server/Functions/Server_HandleSpecial.sqf")
+        gate = text.index('if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0')
+        call = text.index('"teamleader-update"] Call WFBE_SE_FNC_TeambarSlot1Rejoin')
+        self.assertLess(gate, call)
+
     def test_registration_and_armed(self) -> None:
         """wave0721 arming ruling (2026-07-21): WFBE_C_TEAMBAR_PROBE flipped 0->1. The getVariable
         fallback default checked elsewhere in this file ('WFBE_C_TEAMBAR_PROBE", 0]') is the
