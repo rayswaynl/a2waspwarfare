@@ -1799,10 +1799,20 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
                 	Private["_i","_factory","_sorted","_walls","_factories","_area","_lx","_ly","_type","_p","_entities"];
 
                 	_color = _colorGreen;
+                	//--- wave0804b (placement rejected inside HQ circle): WFBE_C_DEF_PREVIEW_MAP (armed 2026-08-04, Init_CommonConstants.sqf)
+                	//--- now makes typeOf _preview a REAL WDDM composition-child classname (e.g. Concrete_Wall_EP1, Base_WarfareBBarrier10xTall)
+                	//--- instead of a decoy prop, so these two same-classname/DEFENSENAMES proximity checks now trip on ANY existing WDDM
+                	//--- composition nearby (HQ walls, weapon-position walls, an adjacent Wall Row/HESCO segment, etc.), rejecting placement
+                	//--- well inside the HQ build circle. Exempt just the preview-map representative classnames from these two checks - real
+                	//--- density/spacing control for these WDDM compositions is the server-side WFBE_C_WDDM_COMP_CAP / fortification cap in
+                	//--- RequestDefense.sqf, not this client-side gate. The factory-clearance ring check below (~1808-1831) is intentionally
+                	//--- NOT exempted and still applies unconditionally.
+                	if !((typeOf _preview) in WFBE_ANCHOR_PREVIEW_CLASSES) then {
                 	_walls = nearestObjects [_preview,[typeOf _preview],2];
 
                 	if(count _walls > 1) then {_color = _colorRed} else{_color = _colorGreen};
                 if(count (nearestObjects [_preview,missionNamespace getVariable (Format["WFBE_%1DEFENSENAMES",sideJoined]),((((boundingbox _preview) select 1) select 0) max (((boundingbox _preview) select 1) select 1)) max 2] - [_preview]) > 0) then {_color = _colorRed} else{_color = _colorGreen};
+                	};
 				_entities = (position _preview) nearEntities [['Man','Car','Motorcycle','Tank','Air','Ship'],12];
 				if ((count _entities > 0) && {side _x != sideJoined} count _entities !=0) then {_color = _colorRed};
                 _factories =	 nearestObjects[_preview,["Warfare_HQ_base_unfolded","WarfareBBaseStructure","Base_WarfareBContructionSite"],25];

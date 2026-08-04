@@ -3861,6 +3861,11 @@ WFBE_ANCHOR_PREVIEW_MAP = [
 	['Misc_cargo_cont_tiny', 'Land_HBarrier_large'],		//--- HESCO Line -> real WFBE_NEURODEF_FORTIF_HESCO_LINE child
 	['Misc_concrete_High', 'Land_CncBlock_Stripes']	//--- Gate Complex -> proven gate-mouth block (Land_BarGate2 is A2-only/unverified in this tree - see Init_Defenses.sqf Bank precedent)
 ];
+//--- wave0804b (placement rejected inside HQ circle): flat list of just the representative real classnames
+//--- above, for the Init_Client.sqf itemcategory==2 same-classname/DEFENSENAMES proximity-check exemption.
+//--- A2-safe: forEach (never A3 apply).
+WFBE_ANCHOR_PREVIEW_CLASSES = [];
+{WFBE_ANCHOR_PREVIEW_CLASSES = WFBE_ANCHOR_PREVIEW_CLASSES + [_x select 1]} forEach WFBE_ANCHOR_PREVIEW_MAP;
 
 //--- TICK-INCREMENT PLACEMENT ROTATION (same owner report). coin_interface.sqf's rotate hint
 //--- ("ROTATE=[Ctrl]", str_coin_rotate) had never been wired to any setDir call - _ctrl was
