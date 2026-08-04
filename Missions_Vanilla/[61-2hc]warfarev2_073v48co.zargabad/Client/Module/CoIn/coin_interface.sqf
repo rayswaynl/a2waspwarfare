@@ -870,7 +870,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 				if (_tooltipType != "empty") then {
 					_textHeader = format ["<t color='#42b6ff' shadow='1' align='center' size='1.8'> %1 </t><br />",
-						getText (configFile >> "cfgvehicles" >> _type >> "displayname"),
+						_itemname, //--- fable/fortif-placement-preview-facing (owner 2026-08-04): show the WFBE buy-menu label (line 523) instead of the anchor's raw stock CfgVehicles name.
 						if (isnull _selected) then {""} else {str round ((1 - damage _selected) * 100) + "%"}
 					];
 					//--- QoL (C3): show build count vs limit for this structure while placing.
