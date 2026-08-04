@@ -875,7 +875,8 @@ if (isNull _base) exitWith {
 							};
 						};
 					};
-				};			};
+				};
+			};
 		};
 	};
 	case "aicom-focus": {

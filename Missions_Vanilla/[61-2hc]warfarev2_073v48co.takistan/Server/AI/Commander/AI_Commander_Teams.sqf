@@ -1648,7 +1648,8 @@ if (count _live > 0) then {
 	_pending = count _pendingIds;
 	_logik setVariable ["wfbe_aicom_pending_ids", _pendingIds];
 	_logik setVariable ["wfbe_aicom_pending", _pending];
-	if (_pending <= 1) then {_logik setVariable ["wfbe_aicom_pending_since", time]};	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
+	if (_pending <= 1) then {_logik setVariable ["wfbe_aicom_pending_since", time]};
+	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
 	//--- all live HCs, and the server RPT should show the split without reading HC RPTs.
 	//--- Commander teams are the BIG atomic lumps (a whole platoon lands on ONE HC), so
 	//--- picking the least-loaded HC matters most here. Least-loaded self-corrects: once an
@@ -1738,7 +1739,8 @@ if (count _live > 0) then {
 	//--- Produce.sqf cap gate). count _template under-counts crewed-vehicle seats - acceptable: the ledger is a
 	//--- conservative brake, not bookkeeping, and entries age out.
 	_logik setVariable ["wfbe_aicom_pending_spawn", (_logik getVariable ["wfbe_aicom_pending_spawn", []]) + [[count _template, time + (missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING_TTL", 180])]]]; //--- F2 fable/aicom-econ-triad: book committed-but-unspawned HC team founding on the pending ledger
-	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
+	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades
 	//--- select _pick) so the infantry-vs-vehicle mix is visible. air>0 -> air, else heavy>0 ->
 	//--- heavy, else light>0 -> light, else infantry. Rides the existing TEAM_FOUNDED event.
