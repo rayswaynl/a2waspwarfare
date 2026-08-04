@@ -21,6 +21,16 @@ if (typeName _this == "OBJECT") then {
 if (isNull _vehicle) exitWith {};
 waitUntil {commonInitComplete};
 sleep 2;
-_amount = if (_vehicle isKindOf "Plane") then {missionNamespace getVariable 'WFBE_C_UNITS_COUNTERMEASURE_PLANES'} else {missionNamespace getVariable 'WFBE_C_UNITS_COUNTERMEASURE_CHOPPERS'};
+//--- r80b CM residual: missionNamespace keys can be nil on early ExecVM before Init_CommonConstants
+//--- finishes — bare setVariable FlareCount=nil re-arms the CM_Flares nil-arithmetic trap. Floor
+//--- to known-good plane/chopper defaults when missing/non-scalar.
+_amount = if (_vehicle isKindOf "Plane") then {
+	missionNamespace getVariable ["WFBE_C_UNITS_COUNTERMEASURE_PLANES", 64]
+} else {
+	missionNamespace getVariable ["WFBE_C_UNITS_COUNTERMEASURE_CHOPPERS", 32]
+};
+if (isNil "_amount" || {typeName _amount != "SCALAR"} || {_amount < 0}) then {
+	_amount = if (_vehicle isKindOf "Plane") then {64} else {32};
+};
 _vehicle setVariable ["FlareCount", _amount];
 _vehicle setVariable ["FlareActive", false];

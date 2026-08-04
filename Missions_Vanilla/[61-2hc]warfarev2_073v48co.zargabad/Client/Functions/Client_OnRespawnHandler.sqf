@@ -1,9 +1,14 @@
 Private ["_allowCustom","_buildings","_charge","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
 
+//--- r80b player-respawn-gear: short/malformed call args used to throw on select 0/1 and abort the whole
+//--- respawn path (naked body, no gear, no re-attach EHs). Fail-closed when unit is missing.
+if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 1}) exitWith {};
 _unit = _this select 0;
-_spawn = _this select 1;
+if (isNil "_unit" || {typeName _unit != "OBJECT"} || {isNull _unit}) exitWith {};
+_spawn = if (count _this > 1) then {_this select 1} else {objNull};
+if (isNil "_spawn" || {typeName _spawn != "OBJECT"}) then {_spawn = objNull};
 _loadDefault = true;
-_typeof = typeOf _spawn;
+_typeof = if (isNull _spawn) then {""} else {typeOf _spawn};
 
 WFBE_Client_IsRespawning = false;
 if (!isNil "WFBE_CL_FNC_AutoRunCancel") then {[] call WFBE_CL_FNC_AutoRunCancel};
@@ -59,23 +64,25 @@ _unit setVariable ["lastActionTime", time];
 _unit setVariable ["lastPosition", position _unit];
 
 //--- Default gear enforcement on mobile respawn.
-if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") == 2) then {
-	if (_typeof in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES",sideJoinedText])) then {_allowCustom = false};
+//--- r80b: bare getVariable of AMBULANCES can be nil before side gear init / JIP race — `_x in nil` throws
+//--- and aborts the rest of the respawn gear path. Default [] and scalar-gate RESPAWN_MOBILE/LEADER.
+if ((missionNamespace getVariable ["WFBE_C_RESPAWN_MOBILE", 0]) == 2) then {
+	if (_typeof in (missionNamespace getVariable [Format ["WFBE_%1AMBULANCES",sideJoinedText], []])) then {_allowCustom = false};
 };
 //--- Default gear enforcement on redeploy truck respawn (same mode gate as mobile).
-if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && (missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") == 2) then {
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && (missionNamespace getVariable ["WFBE_C_RESPAWN_MOBILE", 0]) == 2) then {
 	if (_typeof in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]])) then {_allowCustom = false};
 };
 
 //--- Default gear enforcement on leader respawn.
-if ((missionNamespace getVariable "WFBE_C_RESPAWN_LEADER") == 2) then {
-	if (_spawn == leader group _unit) then {_allowCustom = false};
+if ((missionNamespace getVariable ["WFBE_C_RESPAWN_LEADER", 0]) == 2) then {
+	if (!isNull _spawn && {_spawn == leader group _unit}) then {_allowCustom = false};
 };
 
 //--- Respawn.
 if (_spawn isKindOf "Man") then {_spawn = vehicle _spawn};
 _spawnInside = false;
-if (_typeof in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES",sideJoinedText]) && alive _spawn) then {
+if (_typeof in (missionNamespace getVariable [Format ["WFBE_%1AMBULANCES",sideJoinedText], []]) && alive _spawn) then {
 	if (_spawn emptyPositions "cargo" > 0 && !(locked _spawn)) then {_unit moveInCargo _spawn;_spawnInside = true};
 };
 if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && _typeof in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]]) && alive _spawn) then {
@@ -209,8 +216,13 @@ if ((missionNamespace getVariable ["WFBE_C_SATCHEL_TK_DETECT", 0]) > 0) then {
 };
 
 //--- Loadout.
-if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear && _allowCustom) then {
-	_mode = missionNamespace getVariable "WFBE_C_RESPAWN_PENALTY";
+//--- r80b: WFBE_RespawnDefaultGear is Init_Client-set but can be nil on early/pre-init respawn races;
+//--- bare `!nil` throws and skips both custom and default gear application (naked respawn).
+//--- RESPAWN_PENALTY bare getVariable can also be nil — `nil in [...]` throws the same way.
+if (isNil "WFBE_RespawnDefaultGear") then {WFBE_RespawnDefaultGear = false};
+if (!isNil {_unit getVariable "wfbe_custom_gear"} && {!WFBE_RespawnDefaultGear} && {_allowCustom}) then {
+	_mode = missionNamespace getVariable ["WFBE_C_RESPAWN_PENALTY", 0];
+	if (isNil "_mode" || {typeName _mode != "SCALAR"}) then {_mode = 0};
 	
 	if (_mode in [1]) then {
 		(localize "STR_WF_CHAT_Gear_RespawnDenied") Call GroupChatMessage;  //--- salvage-527 (item 4): dedicated mode-1 denial feedback (was the cryptic "RESPAWN: Penalty / Default Gear" composite).

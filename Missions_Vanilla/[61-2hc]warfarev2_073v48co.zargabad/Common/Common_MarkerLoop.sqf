@@ -17,12 +17,18 @@ if (isNil "WFBE_CL_UnitMarkerLedger") then {WFBE_CL_UnitMarkerLedger = []};
 
 _sweepNext = time + 60;
 _aarUpgradeCache = [sideUnknown, -1, -999]; // [side, level, lastCheck diag_tickTime]
-_height = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION";
+//--- r80b air-radar detect: bare getVariable left _height nil when constants race late (JIP/HC
+//--- client path) — `(_currentPos select 2) <= nil` throws inside the AAR forEach and can kill the
+//--- entire consolidated marker loop (phantom unit + AAR freeze). Force scalar defaults.
+_height = missionNamespace getVariable ["WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION", 100];
+if (isNil "_height" || {typeName _height != "SCALAR"}) then {_height = 100};
 // Trello card #65: per-AAR-level minimum detection height. The height gate below selects
 // tiers[_aarLevel] (clamped to level 2); _height stays the nil-safe scalar fallback.
-_heightTiers = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION_TIERS";
+_heightTiers = missionNamespace getVariable ["WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION_TIERS", [100, 60, 30]];
+if (isNil "_heightTiers" || {typeName _heightTiers != "ARRAY"}) then {_heightTiers = [100, 60, 30]};
 // Trello card #66: AAR upgrade level at/above which a one-shot new-contact warning fires.
 _aarWarnLevel = missionNamespace getVariable ["WFBE_C_AAR_WARN_LEVEL", 1];
+if (isNil "_aarWarnLevel" || {typeName _aarWarnLevel != "SCALAR"}) then {_aarWarnLevel = 1};
 
 // fable/awacs-radar (flag WFBE_C_AWACS, default 0): while a CREWED friendly airframe from
 // WFBE_C_AWACS_TYPES is airborne above MINALT, _awacsUp substitutes for antiAirRadarInRange
@@ -510,6 +516,9 @@ if ((_entry select 6) && !(isNull _tracked)) then {
 	{
 		if (typeName _x == "ARRAY") then {
 			_aarEntry = _x;
+			//--- r80b: short/corrupt AAR registry rows (partial append race / manual wipe) made
+			//--- select 3/8/9/11 throw and abort the forEach mid-pass. Skip until a full 12-slot entry.
+			if (count _aarEntry < 12) then {} else {
 
 			call {
 
@@ -572,13 +581,20 @@ if ((_entry select 6) && !(isNull _tracked)) then {
 				// height (tiers select _aarLevel) can be applied to the gate itself.
 				_oppositeSide = _aarEntry select 3;
 				// Marty: PR31 review caveat - key the cache by side so three-way AAR entries never read another side's level.
+				//--- r80b: GetSideUpgrades can return nil/short before side logic is ready — bare
+				//--- `_upgrades select WFBE_UP_AAR` throws and kills AAR detect for the rest of the tick.
 				if ((_aarUpgradeCache select 0) != _oppositeSide || {(diag_tickTime - (_aarUpgradeCache select 2)) > 5}) then {
 					_upgrades = (_oppositeSide) Call WFBE_CO_FNC_GetSideUpgrades;
 					_aarUpgradeCache set [0, _oppositeSide];
-					_aarUpgradeCache set [1, _upgrades select WFBE_UP_AAR];
+					if (isNil "_upgrades" || {typeName _upgrades != "ARRAY"} || {count _upgrades <= WFBE_UP_AAR}) then {
+						_aarUpgradeCache set [1, 0];
+					} else {
+						_aarUpgradeCache set [1, _upgrades select WFBE_UP_AAR];
+					};
 					_aarUpgradeCache set [2, diag_tickTime];
 				};
 				_aarLevel = _aarUpgradeCache select 1;
+				if (isNil "_aarLevel" || {typeName _aarLevel != "SCALAR"}) then {_aarLevel = 0};
 
 				// Trello card #65: tier-indexed minimum detection height by AAR level (clamp to 2);
 				// fall back to the scalar constant if the tiers array is nil/short.
@@ -586,9 +602,10 @@ if ((_entry select 6) && !(isNull _tracked)) then {
 				if (!isNil "_heightTiers" && {(typeName _heightTiers) == "ARRAY"} && {(count _heightTiers) > (_aarLevel min 2)}) then {
 					_aarHeight = _heightTiers select (_aarLevel min 2);
 				};
+				if (isNil "_aarHeight" || {typeName _aarHeight != "SCALAR"}) then {_aarHeight = 100};
 
 				_currentPos = getPos _object;
-				if ((_currentPos select 2) <= _aarHeight) exitWith {
+				if ((count _currentPos) < 3 || {(_currentPos select 2) <= _aarHeight}) exitWith {
 					_aarEntry set [8, true];
 					if (_aarEntry select 4) then {
 						_markerName setMarkerAlphaLocal 0;
@@ -661,6 +678,7 @@ if ((_entry select 6) && !(isNull _tracked)) then {
 					};
 				};
 			};
+			}; //--- r80b: close count>=12 else
 		};
 	} forEach WFBE_CL_AARMarkerRegistry;
 

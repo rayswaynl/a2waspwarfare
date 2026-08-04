@@ -276,11 +276,25 @@ _qTailFn = {
 	if (_more > 0) then {_joined = _joined + Format [" +%1 more", _more]};
 	_joined
 };
-while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} do {
+//--- r80b barracks/factory queue: (1) empty/nil queu made `_queu select 0` throw and kill the buy
+//--- coroutine mid-wait (slot stuck until factory destroyed). (2) Action_CancelQueue removes _unique
+//--- but this wait never noticed — cancelled mid-queue tokens spun until building death, then the
+//--- post-sleep E1 exit finally bailed. Abort cleanly when our token is gone (refund already issued).
+while {alive _building && !isNull _building} do {
+	if (isNil "_queu" || {typeName _queu != "ARRAY"}) then {_queu = []};
+	//--- Our token is head → exit wait and enter build countdown.
+	if ((count _queu > 0) && {(_queu select 0) == _unique}) exitWith {};
+	//--- Cancelled (token removed) or queue wiped → leave wait; post-loop E1 handles no-spawn.
+	if ((count _queu == 0) || {!(_unique in _queu)}) exitWith {
+		_show = false;
+		WFBE_CL_QUEUE_HUD = "";
+		WFBE_CL_QUEUE_HUD_TS = time;
+	};
 	sleep 4;
 	_show = true;
 	_ret = _ret + 4;
-	_queu = _building getVariable "queu";
+	_queu = _building getVariable ["queu", []];
+	if (isNil "_queu" || {typeName _queu != "ARRAY"}) then {_queu = []};
 	if ((count _queu > 0) && {time >= _nextQueueHint}) then {
 		_nextQueueHint = time + 12;
 		_queuePos = _queu find _unique;
@@ -303,15 +317,19 @@ while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} d
 	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: empty-guard the head-compare (mirror Server_BuyUnit.sqf:201) - a bare `_queu select 0` on an emptied shared queue is undefined on A2-OA.
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
-				_queu = _building getVariable "queu";
-				_queu = _queu - [_queu select 0];
-				_building setVariable ["queu",_queu,true];
+				_queu = _building getVariable ["queu", []];
+				if (isNil "_queu" || {typeName _queu != "ARRAY"}) then {_queu = []};
+				if (count _queu > 0) then {
+					_queu = _queu - [_queu select 0];
+					_building setVariable ["queu",_queu,true];
+				};
 			};
 		};
 	};
 	if ((count _queu > 0) && {count _queu2 > 0} && {!((_queu select 0) in [_queu2 select 0])}) then {  //--- queue-fix (mirror Server_BuyUnit.sqf:210, 2026-06-14 head-based fix): reset the stuck-head purge timer ONLY when the head token actually ADVANCES, not on any shared-queue COUNT change. The old count-based reset let a busy shared factory (concurrent player/AI buys + cancels churning the count) continually zero _ret so `_ret > _longest` never fired - a dead head token (e.g. a disconnected buyer whose coroutine died) then jammed the whole factory build queue permanently for every player behind it. Head-based reset lets _ret accumulate to _longest and purge the stuck head, exactly as the AI path already does.
 		_ret = 0;
-		_queu2 = _building getVariable "queu";
+		_queu2 = _building getVariable ["queu", []];
+		if (isNil "_queu2" || {typeName _queu2 != "ARRAY"}) then {_queu2 = []};
 	};
 };
 
