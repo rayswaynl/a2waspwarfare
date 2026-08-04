@@ -10,8 +10,7 @@
 	(base "GrenadeHand" is impact-fused with fuseDistance=5 and can fail to arm at rest).
 */
 
-Private ["_team","_leader","_units","_vehicles","_vehicle","_sideID","_cmd","_uCount","_vCount","_disbandDone"];
-
+Private ["_team","_leader","_units","_vehicles","_vehicle","_sideID","_cmd","_uCount","_vCount","_disbandDone","_hasPlayerCrew"];
 if (count _this < 1) exitWith {false};
 _team = _this select 0;
 if (isNull _team) exitWith {false};
@@ -41,7 +40,15 @@ _vehicles = [];
 	};
 } forEach _units;
 
-//--- Vehicles first: cook the hull (mounted crew dies with it); never touch a player-crewed hull.
+//--- Vehicles first: a player-crewed hull is a hard stand-down for the whole destructive retire.
+//--- Otherwise the later driver-tail cleanup deletes its AI crew while the player remains seated.
+_hasPlayerCrew = false;
+{
+	if (!isNull _x) then {
+		if ({isPlayer _x} count (crew _x) > 0) then {_hasPlayerCrew = true};
+	};
+} forEach _vehicles;
+if (_hasPlayerCrew) exitWith {false};
 _vCount = 0;
 {
 	if (!isNull _x && {local _x} && {alive _x} && {({isPlayer _x} count (crew _x)) == 0}) then {

@@ -473,6 +473,31 @@ while {!WFBE_GameOver} do {
 							_enemies = 0;
 						};
 
+						//--- Population/group caps must defer BEFORE the active latch.  An empty active town
+						//--- monopolizes the limited active-town budget while enemies keep its inactivity timer alive.
+						if (!_activationDeferred && {_enemies_ground > 0} && {(_side == west || {_side == east})}) then {
+							private ["_garrisonCapOnPre", "_garrisonCapTiersPre", "_garrisonCapIdxPre", "_garrisonCapPre", "_garrisonSideAIPre"];
+							_garrisonCapOnPre = (missionNamespace getVariable ["WFBE_C_GARRISON_CAP_GATE", 1]) > 0;
+							_garrisonCapTiersPre = missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140, 130, 100, 80]];
+							if ((count _garrisonCapTiersPre) < 1) then {_garrisonCapTiersPre = [missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", 140]]};
+							_garrisonCapIdxPre = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
+							if (_garrisonCapIdxPre > ((count _garrisonCapTiersPre) - 1)) then {_garrisonCapIdxPre = (count _garrisonCapTiersPre) - 1};
+							_garrisonCapPre = _garrisonCapTiersPre select _garrisonCapIdxPre;
+							_garrisonSideAIPre = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
+							if (_garrisonCapOnPre && {_garrisonSideAIPre >= _garrisonCapPre}) then {
+								_activationDeferred = true;
+								_enemies_ground = 0;
+								_enemies = 0;
+								diag_log Format ["GARRISON_CAP_DEFER|town=%1|side=%2|sideAI=%3|tierCap=%4", _town getVariable ["name", "?"], _side, _garrisonSideAIPre, _garrisonCapPre];
+							};
+						};
+						if (!_activationDeferred && {_enemies_ground > 0} && {{side _x == _side} count allGroups >= 144}) then {
+							_activationDeferred = true;
+							_enemies_ground = 0;
+							_enemies = 0;
+							diag_log Format ["TOWN_AI_GROUP_CAP_DEFER|town=%1|side=%2|groups=%3|cap=144", _town getVariable ["name", "?"], _side, {side _x == _side} count allGroups];
+						};
+
 						if(_enemies_ground > 0) then {
 							////
 							_town setVariable ["wfbe_active", true];
@@ -573,26 +598,7 @@ while {!WFBE_GameOver} do {
 						//--- Budget/GUER-cap deferrals must not fall through into creation side effects.
 						if (!_activationDeferred) then {
 						//// start of creation
-						private ["_garrisonCapOn", "_garrisonSideAI", "_garrisonCapTiers", "_garrisonCapTier", "_garrisonCapIdx", "_garrisonKeep", "_garrisonScaled", "_garrisonGi"];
-						_garrisonCapOn = (missionNamespace getVariable ["WFBE_C_GARRISON_CAP_GATE", 1]) > 0;
-						if (_garrisonCapOn && {(_side == west || {_side == east})} && {count _groups > 0}) then {
-							_garrisonCapTiers = missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140, 130, 100, 80]];
-							if ((count _garrisonCapTiers) < 1) then {_garrisonCapTiers = [missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", 140]]};
-							_garrisonCapIdx = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
-							if (_garrisonCapIdx > ((count _garrisonCapTiers) - 1)) then {_garrisonCapIdx = (count _garrisonCapTiers) - 1};
-							_garrisonCapTier = _garrisonCapTiers select _garrisonCapIdx;
-							_garrisonSideAI = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
-							if (_garrisonSideAI >= _garrisonCapTier) then {
-								_garrisonKeep = ceil ((count _groups) / 2);
-								if (_garrisonKeep < 1) then {_garrisonKeep = 1};
-								if (_garrisonKeep < count _groups) then {
-									_garrisonScaled = [];
-									for "_garrisonGi" from 0 to (_garrisonKeep - 1) do {[_garrisonScaled, (_groups select _garrisonGi)] call WFBE_CO_FNC_ArrayPush};
-									_groups = _garrisonScaled;
-									diag_log Format ["GARRISON_CAP_GATE|town=%1|side=%2|sideAI=%3|tierCap=%4|scaledTo=%5", _town getVariable ["name", "?"], _side, _garrisonSideAI, _garrisonCapTier, count _groups];
-								};
-							};
-						};
+						//--- Full-cap refusal was handled before the active latch above; do not downscale into an over-cap wave.
 						["INFORMATION", Format ["server_town_ai.sqf: Town [%1] ACTIVATED for [%2] (episode_spawned latch set, groups=%3).", _town getVariable "name", _side, count _groups]] Call WFBE_CO_FNC_AICOMLog;
 						//--- fix(tonight-20260717): mirror the _activeTownCount live-increment pattern above (~line 279)
 						//--- for the GUER group-cap counter. _guerGroupCount was read once per sweep (top of loop) and

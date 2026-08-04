@@ -789,70 +789,90 @@ if (isNull _base) exitWith {
 		};
 	};
 	case "aicom-team-created": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr","_cpendingId","_cpendingIds","_cpendingKeep","_cpendingKnown"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
-			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
-			if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
-			//--- r114 (founding-charge ledger): dispatch delivered - pop the head charge, no refund.
-			//--- Sentinel-pop removes exactly the head (A2 `-` would remove every equal price).
-			private ["_fifo","_r114Pop"];
-			_fifo = _clogik getVariable ["wfbe_aicom_pending_funds", []];
-			if ((count _fifo) > 0) then {
-				_fifo set [0, "WFBE_R114_POP"];
-				_clogik setVariable ["wfbe_aicom_pending_funds", _fifo - ["WFBE_R114_POP"]];
+			_cpendingId = -1;
+			if (!isNull _cteam) then {_cpendingId = _cteam getVariable "wfbe_aicom_pending_id"; if (isNil "_cpendingId") then {_cpendingId = -1}};
+			_cpendingIds = _clogik getVariable ["wfbe_aicom_pending_ids", []];
+			_cpendingKeep = [];
+			_cpendingKnown = false;
+			{
+				if (typeName _x == "ARRAY" && {count _x > 0} && {(_x select 0) == _cpendingId}) then {_cpendingKnown = true} else {_cpendingKeep set [count _cpendingKeep, _x]};
+			} forEach _cpendingIds;
+			if (_cpendingId >= 0) then {
+				_clogik setVariable ["wfbe_aicom_pending_ids", _cpendingKeep];
+				_clogik setVariable ["wfbe_aicom_pending", count _cpendingKeep];
+				if ((count _cpendingKeep) == 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+				if (_cpendingKnown) then {
+					//--- r114 (founding-charge ledger): dispatch delivered on time - pop the head charge, no
+					//--- refund. A late/expired ack (id already dropped by the B69 reaper) must not touch the
+					//--- ledger again here; the reaper already popped and refunded that entry.
+					private ["_fifo"];
+					_fifo = _clogik getVariable ["wfbe_aicom_pending_funds", []];
+					if ((count _fifo) > 0) then {
+						_fifo set [0, "WFBE_R114_POP"];
+						_clogik setVariable ["wfbe_aicom_pending_funds", _fifo - ["WFBE_R114_POP"]];
+					};
+				};
 			};
 			if (!isNull _cteam) then {
-				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
-				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
-				//--- [leader, sideID, dir, team] so every client can draw a side-coloured
-				//--- mil_arrow2 at the commander team's leader. dir is patched later by the
-				//--- aicom-team-heading case once the HC's heading loop reports a bearing.
-				_cldr = leader _cteam;
-				if (!isNull _cldr) then {
-					_cdir = getDir _cldr;
-					_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
-					missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
-					publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
-				};
-				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
-				//--- fable/air-quickstart-v2 (owner 2026-07-28: helicopters linger way too long in base;
-				//--- HC-safe quickstart v2): this handler is the single point EVERY founded team (HC or
-				//--- server-fallback) reports back through, right after it is registered into wfbe_teams
-				//--- above - a narrow, single-team primer belongs exactly here, not in the side-wide
-				//--- WFBE_SE_FNC_AI_Com_AssignTowns tick (HC-unsafe + perturbs every OTHER team's cadence-
-				//--- sensitive state - see PR #1586's rejection writeup for the full trace). Writes ONLY
-				//--- the public wfbe_aicom_order group variable on THIS team, using the exact [seq, mode,
-				//--- pos] contract Common_RunCommanderTeam.sqf already polls every pass (established
-				//--- object/group setVariable-with-public idiom - see e.g. AI_Commander_AssignTowns.sqf:296,
-				//--- AI_Commander_Strategy.sqf:156,622,709 - NOT the banned missionNamespace 3-arg form).
-				//--- Flag default 0: at 0 this whole block is one cheap missionNamespace getVariable read.
-				if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_QUICKSTART", 0]) > 0) then {
-					private ["_qsAirVeh","_qsDestTown","_qsTargets","_qsCand","_qsUncap","_qsBestD","_qsD"];
-					_qsAirVeh = objNull;
-					{
-						private "_qsV";
-						_qsV = vehicle _x;
-						if (!isNull _qsV && {_qsV != _x} && {isNull _qsAirVeh} && {_qsV isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _qsV) >> "transportSoldier")) > 0}) then {_qsAirVeh = _qsV};
-					} forEach (units _cteam);
-					if (!isNull _qsAirVeh && {!isNull _cldr}) then {
-						_qsDestTown = objNull;
-						_qsTargets = _clogik getVariable ["wfbe_aicom_targets", []];
-						if (count _qsTargets > 0) then {
-							_qsCand = _qsTargets select 0;
-							if (typeName _qsCand == "OBJECT" && {!isNull _qsCand} && {(_qsCand getVariable ["sideID", -1]) != _csideID}) then {_qsDestTown = _qsCand};
-						};
-						if (isNull _qsDestTown) then {
-							_qsUncap = [];
-							{ if ((_x getVariable ["sideID", -1]) != _csideID) then {_qsUncap set [count _qsUncap, _x]} } forEach towns;
-							_qsBestD = 1e9;
-							{ _qsD = _cldr distance _x; if (_qsD < _qsBestD) then {_qsBestD = _qsD; _qsDestTown = _x} } forEach _qsUncap;
-						};
-						if (!isNull _qsDestTown) then {
-							_cteam setVariable ["wfbe_aicom_order", [(if (isNil {_cteam getVariable "wfbe_aicom_order"}) then {-1} else {(_cteam getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", getPos _qsDestTown], true];
-							diag_log ("AIRQS|v1|side=" + str _csideID + "|team=" + str _cteam + "|order=" + str (getPos _qsDestTown) + "|town=" + (_qsDestTown getVariable ["name","?"]) + "|src=quickstart");
+				if (_cpendingId >= 0 && {!_cpendingKnown}) then {
+					//--- The original request timed out and was replaced; do not register both teams.
+					_cteam setVariable ["wfbe_aicom_disband", true, true];
+					["WARNING", Format ["Server_HandleSpecial.sqf: rejected late HC team acknowledgement %1 (expired pending id %2).", _cteam, _cpendingId]] Call WFBE_CO_FNC_AICOMLog;
+				} else {
+					_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+					//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
+					//--- [leader, sideID, dir, team] so every client can draw a side-coloured
+					//--- mil_arrow2 at the commander team's leader. dir is patched later by the
+					//--- aicom-team-heading case once the HC's heading loop reports a bearing.
+					_cldr = leader _cteam;
+					if (!isNull _cldr) then {
+						_cdir = getDir _cldr;
+						_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+						missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
+						publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+					};
+					["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
+					//--- fable/air-quickstart-v2 (owner 2026-07-28: helicopters linger way too long in base;
+					//--- HC-safe quickstart v2): this handler is the single point EVERY founded team (HC or
+					//--- server-fallback) reports back through, right after it is registered into wfbe_teams
+					//--- above - a narrow, single-team primer belongs exactly here, not in the side-wide
+					//--- WFBE_SE_FNC_AI_Com_AssignTowns tick (HC-unsafe + perturbs every OTHER team's cadence-
+					//--- sensitive state - see PR #1586's rejection writeup for the full trace). Writes ONLY
+					//--- the public wfbe_aicom_order group variable on THIS team, using the exact [seq, mode,
+					//--- pos] contract Common_RunCommanderTeam.sqf already polls every pass (established
+					//--- object/group setVariable-with-public idiom - see e.g. AI_Commander_AssignTowns.sqf:296,
+					//--- AI_Commander_Strategy.sqf:156,622,709 - NOT the banned missionNamespace 3-arg form).
+					//--- Flag default 0: at 0 this whole block is one cheap missionNamespace getVariable read.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_QUICKSTART", 0]) > 0) then {
+						private ["_qsAirVeh","_qsDestTown","_qsTargets","_qsCand","_qsUncap","_qsBestD","_qsD"];
+						_qsAirVeh = objNull;
+						{
+							private "_qsV";
+							_qsV = vehicle _x;
+							if (!isNull _qsV && {_qsV != _x} && {isNull _qsAirVeh} && {_qsV isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _qsV) >> "transportSoldier")) > 0}) then {_qsAirVeh = _qsV};
+						} forEach (units _cteam);
+						if (!isNull _qsAirVeh && {!isNull _cldr}) then {
+							_qsDestTown = objNull;
+							_qsTargets = _clogik getVariable ["wfbe_aicom_targets", []];
+							if (count _qsTargets > 0) then {
+								_qsCand = _qsTargets select 0;
+								if (typeName _qsCand == "OBJECT" && {!isNull _qsCand} && {(_qsCand getVariable ["sideID", -1]) != _csideID}) then {_qsDestTown = _qsCand};
+							};
+							if (isNull _qsDestTown) then {
+								_qsUncap = [];
+								{ if ((_x getVariable ["sideID", -1]) != _csideID) then {_qsUncap set [count _qsUncap, _x]} } forEach towns;
+								_qsBestD = 1e9;
+								{ _qsD = _cldr distance _x; if (_qsD < _qsBestD) then {_qsBestD = _qsD; _qsDestTown = _x} } forEach _qsUncap;
+							};
+							if (!isNull _qsDestTown) then {
+								_cteam setVariable ["wfbe_aicom_order", [(if (isNil {_cteam getVariable "wfbe_aicom_order"}) then {-1} else {(_cteam getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", getPos _qsDestTown], true];
+								diag_log ("AIRQS|v1|side=" + str _csideID + "|team=" + str _cteam + "|order=" + str (getPos _qsDestTown) + "|town=" + (_qsDestTown getVariable ["name","?"]) + "|src=quickstart");
+							};
 						};
 					};
 				};
