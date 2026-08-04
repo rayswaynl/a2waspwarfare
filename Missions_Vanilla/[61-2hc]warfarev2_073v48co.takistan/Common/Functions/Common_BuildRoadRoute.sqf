@@ -21,7 +21,7 @@
 	inside — the caller applies the >700m long-leg gate (AssignTowns / Execute both do).
 */
 
-private ["_origin","_dest","_laneOff","_hops","_route","_egRds","_egNode","_laneDX","_laneDY","_laneLEN","_lanePX","_lanePY","_rmI","_rmFrac","_rmGuess","_rmTaper","_rmRds","_rmNode"];
+private ["_origin","_dest","_laneOff","_hops","_route","_egRds","_egNode","_laneDX","_laneDY","_laneLEN","_lanePX","_lanePY","_rmI","_rmFrac","_rmGuess","_rmTaper","_rmRds","_rmNode","_rmPos","_rmRouteDuplicate"];
 _origin  = _this select 0;
 _dest    = _this select 1;
 _laneOff = _this select 2;
@@ -68,7 +68,14 @@ for "_rmI" from 1 to _hops do {
 			{ if (!isNull _x && {!surfaceIsWater (getPos _x)}) exitWith {_rmDry = _x} } forEach _rmRds;
 			if (!isNull _rmDry) then {_rmNode = _rmDry};
 		};
-		if (!isNull _rmNode) then {_route = _route + [getPos _rmNode]};
+		if (!isNull _rmNode) then {
+			_rmPos = getPos _rmNode;
+			_rmRouteDuplicate = false;
+			{
+				if (((_x select 0) == (_rmPos select 0)) && {((_x select 1) == (_rmPos select 1))}) exitWith {_rmRouteDuplicate = true};
+			} forEach _route;
+			if (!_rmRouteDuplicate) then {_route = _route + [_rmPos]};
+		};
 	};
 };
 
