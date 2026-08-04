@@ -7,7 +7,7 @@
 		- Player's call
 */
 
-Private ["_artilleryIndex","_artilleryTypes","_artilleryTypesByIndex","_logic","_ownedBySide","_refreshedArtillery","_side","_sideText","_stime","_upgrades","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrade_time","_vehicle","_patrolNewLevel","_patrolCashPool","_patrolPlayers","_patrolShare","_patrolSupply"];
+Private ["_artilleryIndex","_artilleryTypes","_artilleryTypesByIndex","_logic","_ownedBySide","_refreshedAir","_refreshedArtillery","_side","_sideID","_sideText","_stime","_upgrades","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrade_time","_vehicle","_vehicleSideID","_patrolNewLevel","_patrolCashPool","_patrolPlayers","_patrolShare","_patrolSupply"];
 
 _side = _this select 0;
 _upgrade_id = _this select 1;
@@ -111,6 +111,29 @@ if (_upgrade_id == WFBE_UP_ARTYAMMO) then {
 	};
 
 	["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Refreshed [%2] existing artillery pieces after Artillery Ammunition upgrade.", _sideText, count _refreshedArtillery]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Aircraft that existed before Flares/Countermeasures research already ran their Init_Unit path at level 0,
+//--- so they have neither its FlareCount reset nor the incomingMissile handler. Re-run only that narrow setup
+//--- through global init; full Init_Unit would duplicate player actions and marker workers. The local done stamp
+//--- makes the refresh idempotent per machine while retaining the normal per-machine EH attachment model.
+if (_upgrade_id == WFBE_UP_FLARESCM) then {
+	_sideID = _side Call GetSideID;
+	_refreshedAir = [];
+	{
+		_vehicle = _x;
+		if (alive _vehicle && {_vehicle isKindOf "Air"}) then {
+			_vehicleSideID = _vehicle getVariable ["wfbe_side_id", -1];
+			if (_vehicleSideID == _sideID) then {
+				clearVehicleInit _vehicle;
+				_vehicle setVehicleInit "this Call WFBE_CO_FNC_RefreshAirCountermeasures";
+				processInitCommands;
+				clearVehicleInit _vehicle;
+				_refreshedAir = _refreshedAir + [_vehicle];
+			};
+		};
+	} forEach vehicles;
+	["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Refreshed [%2] existing aircraft after Flares/Countermeasures upgrade.", str _side, count _refreshedAir]] Call WFBE_CO_FNC_LogContent;
 };
 
 [_side, "NewIntelAvailable"] Spawn SideMessage;
