@@ -617,14 +617,17 @@ while {!WFBE_GameOver} do {
 						_camps = +(_town getVariable "camps");
 						_positions = [];
 						_teams = [];
+						private ["_plannedGroups"];
+						_plannedGroups = +_groups;
+						_groups = [];
 						//--- fable/garrison-tonight (owner 2026-07-07): PERIMETER spread - ring the defenders around the
 						//--- town EDGE by bearing instead of clustering at camps/center. WFBE_C_TOWNS_PERIMETER 0 = legacy.
 						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP","_ctlNewGrp","_wtryP"];
 						_perimeterOn = (missionNamespace getVariable ["WFBE_C_TOWNS_PERIMETER", 0]) > 0;
-						_grpTotalP   = count _groups; if (_grpTotalP < 1) then {_grpTotalP = 1};
+						_grpTotalP   = count _plannedGroups; if (_grpTotalP < 1) then {_grpTotalP = 1};
 						_townRangeP  = _town getVariable ["range", 300]; if (_townRangeP < 120) then {_townRangeP = 120};
 						_townCenP    = getPos _town;
-						for "_groupIndex" from 0 to count(_groups)-1 do {
+						for "_groupIndex" from 0 to count(_plannedGroups)-1 do {
 							_position = [];
 							if (_perimeterOn) then {
 								_bearingP = (360 / _grpTotalP) * _groupIndex + (random 40) - 20;
@@ -657,13 +660,14 @@ while {!WFBE_GameOver} do {
 							//--- empty-position probe bounded too; a crowded activation can otherwise
 							//--- spend 1000 isFlatEmpty checks before accepting the widened fallback.
 							_position = [_position, 50, 256] call WFBE_CO_FNC_GetEmptyPosition;
-							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
 							_ctlNewGrp = ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup);
-							//--- r50 fail-clean: CreateGroup returns grpNull at side group-cap; setVariable on null
-							//--- and pushing grpNull into _teams poisons the later CreateTownUnits batch for the wave.
+							//--- r50 fail-clean: preserve only successful template/position/group tuples. A failed
+							//--- CreateGroup must never shift later work or reach client delegation as an untracked grpNull.
 							if (isNull _ctlNewGrp) then {
-								["WARNING", Format ["server_town_ai.sqf: town-ai CreateGroup failed for side [%1] town [%2] - slot dropped.", _side, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+								["WARNING", Format ["server_town_ai.sqf: town-ai CreateGroup failed for side [%1] town [%2] - slot dropped before creation/delegation.", _side, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 							} else {
+								[_groups, _plannedGroups select _groupIndex] call WFBE_CO_FNC_ArrayPush;
+								[_positions, _position] call WFBE_CO_FNC_ArrayPush;
 							//--- New-Bug-A fix (fable/ctl-survivor-bugs): stamp each freshly created group with the SAME
 							//--- per-town wfbe_ctl_ground_wave state just set above for this wave (line ~287/~309), so
 							//--- the survivor-tally numerator below (deactivation block) can tell ground-wave groups
