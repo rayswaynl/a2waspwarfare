@@ -248,6 +248,7 @@ BIS_FNC_GUIget = {UInamespace getVariable (_this select 0)};
 //--- New Fnc.
 // Marty: Centralized WF menu action helper. It keeps the mouse wheel WF menu tied to the current player object.
 WFBE_CL_FNC_AddWFMenuAction = Compile preprocessFileLineNumbers "Client\Functions\Client_AddWFMenuAction.sqf";
+WFBE_CL_FNC_ArmTkScud = Compile preprocessFileLineNumbers "Client\Functions\Client_ArmTkScud.sqf";
 WFBE_CL_FNC_AddPlayerAIActions = Compile preprocessFileLineNumbers "Client\Functions\Client_AddPlayerAIActions.sqf";
 WFBE_CL_FNC_ChangeClientFunds = Compile preprocessFileLineNumbers "Client\Functions\Client_ChangePlayerFunds.sqf";
 // Marty: Local cleanup for town AI delegated to this client or headless client.

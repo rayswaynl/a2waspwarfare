@@ -43,6 +43,19 @@ waitUntil {clientInitComplete}; //--- Wait for the client part.
 
 sleep 2; //--- Wait a bit.
 
+//--- Player-bought SCUDs survive their buyer's disconnect.  Init_Unit is executed on every
+//--- current and JIP client, so this generic type hook installs the local re-arm handler on
+//--- every possible later driver instead of only on the buyer's machine.
+if (_unit_kind == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])) then {
+	_unit addEventHandler ["GetIn", {
+		Private ["_u","_v"];
+		_v = _this select 0;
+		_u = _this select 2;
+		if (_u == player && {!isNil "WFBE_CL_FNC_ArmTkScud"}) then { _v Call WFBE_CL_FNC_ArmTkScud };
+	}];
+	if (_unit getVariable ["wfbe_is_tk_scud", false]) then { _unit Call WFBE_CL_FNC_ArmTkScud };
+};
+
 // Marty: Performance Audit starts after JIP waits and the intentional sleep, so it measures active client setup only.
 _perfStart = diag_tickTime;
 _perfAARStarted = 0;
