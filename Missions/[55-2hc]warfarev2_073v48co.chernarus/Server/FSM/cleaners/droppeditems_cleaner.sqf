@@ -1,6 +1,7 @@
 private["_capacity", "_clear", "_firstDelay", "_mapHalf", "_mapSize", "_maxPerCycle", "_scanCentre", "_scanRadius",
-        "_perfActive", "_perfDeleted", "_perfDispatched", "_perfItemStart", "_perfMines", "_perfScanned",
-        "_perfStart", "_perfWeaponholders", "_scanItems", "_timer", "_perfExtra"];
+        "_perfActive", "_perfDeleted", "_perfDispatched", "_perfHeldAge", "_perfHeldProx", "_perfItemStart", "_perfMines", "_perfScanned",
+        "_perfStart", "_perfWeaponholders", "_scanItems", "_timer", "_perfExtra",
+        "_minAge", "_prox", "_proxHold", "_whAge", "_whFirst", "_whNear", "_whNearResult", "_whSkip"];
 
 // AI-lane (Ray spec, B40 2026-06-16): full-island weaponholder sweep on a ~10-minute cadence.
 // The first sweep runs EARLY (~90s) so no boot backlog forms.
@@ -43,6 +44,20 @@ if ((missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_DEFER_FIRST", 0]
 _maxPerCycle = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_MAX_PER_CYCLE", 150];
 if (_maxPerCycle < 1) then {_maxPerCycle = 150};
 
+//--- Min age (seconds) a weaponholder must live before this cleaner may reap it. Without this a
+//--- drop created 1s before a sweep has zero guaranteed loot window (mines_cleaner age-gates;
+//--- bodies use BODIES_TIMEOUT; holders had neither). 0 = legacy immediate-reap.
+_minAge = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_MIN_AGE", 120];
+if (_minAge < 0) then {_minAge = 0};
+
+//--- Player-proximity hold (metres). Mirror of WFBE_C_UNITS_BODIES_PROX for corpses: never pop a
+//--- gear pile under a looting player's feet. 0 = off. Hold is capped by
+//--- WFBE_C_DROPPEDITEMS_PROX_HOLD past min-age so a camper cannot pin residue forever.
+_prox = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_PROX", 20];
+if (_prox < 0) then {_prox = 0};
+_proxHold = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_PROX_HOLD", 300];
+if (_proxHold < 0) then {_proxHold = 0};
+
 //--- Whole-island scan anchor + radius (weaponholders only; ~20km covers the legacy Chernarus map).
 _scanCentre = [7000, 7500, 0];
 _scanRadius = 20000;
@@ -73,6 +88,8 @@ while {!WFBE_GameOver} do {
 	_perfWeaponholders = 0;
 	_perfMines = 0;
 	_perfDispatched = 0;
+	_perfHeldAge = 0;
+	_perfHeldProx = 0;
 
 	//--- Shared per-cycle deletion budget. _capacity is the remaining number of objects we may
 	//--- delete this cycle; leftovers wait for the next cycle.
@@ -86,23 +103,56 @@ while {!WFBE_GameOver} do {
 	_perfScanned = _perfScanned + _perfWeaponholders;
 	{
 		if (_capacity <= 0) exitWith {};
-		//--- fable/cleanup-locality-2 (PVF-class hunt, CRITICAL): deleteVehicle on a NON-LOCAL object
-		//--- silently no-ops in A2 OA - and weaponholders from PLAYER deaths are local to that player's
-		//--- client, from HC-delegated AI deaths local to that HC. This cleaner was the ONLY cleanup
-		//--- path for them and it counted every holder as "deleted" while the piles stayed forever.
-		//--- Non-local holders now go to their owner via the TrashObject channel idiom - but through a
-		//--- DEDICATED receiver case: holders are "alive", so the cleanup-trash-object case's !alive
-		//--- gate can never pass them. Receiver re-checks local + reap stamp + isKindOf WeaponHolder.
-		_perfItemStart = diag_tickTime;
-		if (local _x) then {
-			deleteVehicle _x;
-			_perfDeleted = _perfDeleted + 1;
-		} else {
-			_x setVariable ["wfbe_trash_reap", true, true];
-			[_x, "HandleSpecial", ["cleanup-weaponholder", _x]] Call WFBE_CO_FNC_SendToClient;
-			_perfDispatched = _perfDispatched + 1;
+		if (isNull _x) then {} else {
+			_perfItemStart = diag_tickTime;
+			_whSkip = false;
+
+			//--- First-seen stamp (server-local). Age is measured across cleaner cycles so a holder
+			//--- dropped just before a sweep still earns its min-age window on a later pass.
+			_whFirst = _x getVariable "wfbe_wh_first_seen";
+			if (isNil "_whFirst") then {
+				_x setVariable ["wfbe_wh_first_seen", time];
+				_whFirst = time;
+			};
+			_whAge = time - _whFirst;
+			if (_minAge > 0 && {_whAge < _minAge}) then {
+				_whSkip = true;
+				_perfHeldAge = _perfHeldAge + 1;
+			};
+
+			//--- Proximity hold (capped). Bodies already do this; holders previously wiped mid-loot.
+			if (!_whSkip && {_prox > 0}) then {
+				_whNear = false;
+				_whNearResult = 0;
+				_whNearResult = [getPos _x, _prox] Call WFBE_CO_FNC_RealPlayersNear;
+				if ((typeName _whNearResult) == "SCALAR" && {_whNearResult > 0}) then {_whNear = true};
+				if (_whNear && {_whAge < (_minAge + _proxHold)}) then {
+					_whSkip = true;
+					_perfHeldProx = _perfHeldProx + 1;
+				};
+			};
+
+			if (!_whSkip) then {
+				//--- fable/cleanup-locality-2 (PVF-class hunt, CRITICAL): deleteVehicle on a NON-LOCAL object
+				//--- silently no-ops in A2 OA - and weaponholders from PLAYER deaths are local to that player's
+				//--- client, from HC-delegated AI deaths local to that HC. This cleaner was the ONLY cleanup
+				//--- path for them and it counted every holder as "deleted" while the piles stayed forever.
+				//--- Non-local holders now go to their owner via the TrashObject channel idiom - but through a
+				//--- DEDICATED receiver case: holders are "alive", so the cleanup-trash-object case's !alive
+				//--- gate can never pass them. Receiver re-checks local + reap stamp + isKindOf WeaponHolder.
+				if (local _x) then {
+					deleteVehicle _x;
+					_perfDeleted = _perfDeleted + 1;
+				} else {
+					_x setVariable ["wfbe_trash_reap", true, true];
+					[_x, "HandleSpecial", ["cleanup-weaponholder", _x]] Call WFBE_CO_FNC_SendToClient;
+					_perfDispatched = _perfDispatched + 1;
+				};
+				_capacity = _capacity - 1;
+				sleep 0.5;
+			};
+			_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
 		};
-		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);_capacity = _capacity - 1;sleep 0.5;
 	} forEach _clear;
 
 	//--- Mines: NOT scanned here. mines_cleaner.sqf tracks every createMine via the global `mines`
@@ -111,7 +161,7 @@ while {!WFBE_GameOver} do {
 
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			_perfExtra = Format["scanned:%1;deleted:%2;weaponholders:%3;mines:%4;cap:%5;cycleMs:%6;dispatched:%7", _perfScanned, _perfDeleted, _perfWeaponholders, _perfMines, _maxPerCycle, round ((diag_tickTime - _perfStart) * 1000), _perfDispatched];
+			_perfExtra = Format["scanned:%1;deleted:%2;weaponholders:%3;mines:%4;cap:%5;cycleMs:%6;dispatched:%7;heldAge:%8;heldProx:%9", _perfScanned, _perfDeleted, _perfWeaponholders, _perfMines, _maxPerCycle, round ((diag_tickTime - _perfStart) * 1000), _perfDispatched, _perfHeldAge, _perfHeldProx];
 			["cleaner_droppeditems", _perfActive, _perfExtra, "SERVER"] Call PerformanceAudit_Record;
 		};
 	};
