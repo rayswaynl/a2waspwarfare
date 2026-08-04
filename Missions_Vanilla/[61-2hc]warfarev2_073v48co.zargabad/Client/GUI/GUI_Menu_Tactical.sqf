@@ -514,14 +514,17 @@ while {alive player && dialog} do {
 		};
 	};
 	if (MenuAction == 91 || MenuAction == 92 || MenuAction == 93) then {
-		private ["_t4key"];
+		private ["_t4key","_t4row"];
 		_t4key = switch (MenuAction) do {case 91: {"ICBM"}; case 92: {"Paratroopers"}; default {"Fast_Travel"}};
 		MenuAction = -1;
 		_currentValue = _addToListID find _t4key;
 		if (_currentValue >= 0) then {
 			_currentSpecial = _addToListID select _currentValue;
 			_currentFee = _addToListFee select _currentValue;
-			lbSetCurSel [17019, _currentValue];
+			//--- bughunt-r125: list 17019 is lbSort-ed at open, so the backing-array index is NOT the
+			//--- row index - translate value->row with UIFindLBValue (same scan idiom card 90 uses on 17008).
+			_t4row = [17019, _currentValue] Call UIFindLBValue;
+			if (_t4row >= 0) then {lbSetCurSel [17019, _t4row]};
 			MenuAction = 20;
 		};
 	};
