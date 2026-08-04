@@ -654,6 +654,10 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					//--- error and no trace in RPT; log the failed classname here so it is diagnosable. Placement is not
 					//--- blocked by this - the existing reset below already lets the flow continue without a preview.
 					diag_log Format ["COINPLACE|v1|no-preview|class=%1|itemclass=%2", _itemclass_preview, _itemclass];
+					//--- fable/fortif-placement-preview-facing (owner 2026-08-04): the reset below silently
+					//--- cancels the player's just-made selection with zero on-screen feedback (RPT is invisible
+					//--- in-game) - surface it so this reads as an explicit failure, not "I clicked and nothing happened."
+					hintSilent Format ["Cannot place %1 - no preview available.", _itemname];
 					deleteVehicle _preview;
 					_logic setVariable ["BIS_COIN_preview",nil];
 					_logic setVariable ["BIS_COIN_params",[]];
