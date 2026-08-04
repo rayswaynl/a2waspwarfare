@@ -543,5 +543,13 @@ if (isServer) then {
 {
 	if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x};
 } forEach (units _team);
+//--- Terminal patrol cleanup owns the created hull list too: deleteGroup only reaps the empty group,
+//--- so an RTB or timeout left its now-empty transports parked indefinitely. Units go first (seat-race safe);
+//--- never delete a hull carrying a player who boarded it during the patrol.
+{
+	private "_cleanupVehicle";
+	_cleanupVehicle = _x;
+	if (!isNull _cleanupVehicle && {({isPlayer _x} count (crew _cleanupVehicle)) == 0}) then {deleteVehicle _cleanupVehicle};
+} forEach _vehicles;
 //--- r70 empty-group: also reap corpses (combat-wipe left dead units so deleteGroup no-op'd; SidePatrol skipped by BASE-GC).
 if (!isNull _team && {({isPlayer _x} count (units _team)) == 0}) then {deleteGroup _team};
