@@ -1,5 +1,184 @@
 # JOURNAL — a2waspwarfare-experital
 
+## Working State 2026-08-04 — fortification placement/preview/facing fix package [update/wave-20260802]
+
+Task: owner complaint "The issue is placement, preview, facing direction indications" for
+defense/fortification building. A prior 16-agent verification workflow confirmed root causes
+with file:line evidence (results file: `wyb0vtw3u.output`, not part of this repo). Worktree
+`C:\tmp\fixwt\update0802`, sole writer, branch `update/wave-20260802` (base commit
+`c01352736c` at start). Implemented findings 2, 3, 5, 6 from that verification; explicitly
+SKIPPED finding 1's collision-footprint rework (composition-vs-anchor collision checks) per
+task scope — see "Discovered Issues / Follow-up" below.
+
+### Root cause (confirmed by the verification workflow, re-verified here against source)
+
+`Client/Module/CoIn/coin_interface.sqf` builds the WDDM placement ghost from a `ghostpreview`
+CfgVehicles property (`getText (configFile >> "CfgVehicles" >> _itemclass >> "ghostpreview")`)
+that NO class in this mission tree defines — confirmed via `git grep -i ghostpreview`, zero
+`ghostpreview = "..."` definitions anywhere. The lookup always falls back to `_itemclass`
+itself (the raw WDDM anchor placeholder classname), so every WDDM-composition item (walls,
+HESCO, LoS screen, gate, hedgehog line, flak tower) previews as a cheap decoy prop (cargo
+container / industrial tank / concrete slab) that looks nothing like what actually gets built,
+and is near-symmetric so a facing (setDir) change is visually imperceptible. Separately, the
+ROTATE=[Ctrl] hint (`str_coin_rotate`) was dead: `_ctrl` was computed every poll tick
+(`BIS_CONTROL_CAM_keys`) and never read again — no `setDir` call in the file was gated on it.
+The no-preview failure path (`isnull _preview`) only wrote an RPT `diag_log` line and silently
+cleared the player's selection with zero on-screen feedback. The placement tooltip header
+re-derived the anchor's stock CfgVehicles `displayName` instead of using the already-computed
+WFBE buy-menu label (`_itemname`, set at the top of the same tick).
+
+### Fix 2 — WFBE_ANCHOR_PREVIEW_MAP (classname->classname preview override)
+
+New flag `WFBE_C_DEF_PREVIEW_MAP` (default 0) + new always-defined data array
+`WFBE_ANCHOR_PREVIEW_MAP` in `Common/Init/Init_CommonConstants.sqf` (loads on both client and
+server — `Init_Defenses.sqf`'s `WFBE_POSITION_TEMPLATE_MAP` is server-only, confirmed absent
+from Client/Common via grep, so it could not be reused directly). Maps each of the 7 "decoy
+prop" anchors (the ones the owner's complaint specifically names: cargo containers, industrial
+tank, concrete slab) to ONE lightweight, already-spawned-elsewhere representative classname,
+never the full multi-object composition (would churn 3-10 spawn/despawn pairs every
+preview-refresh tick):
+
+| Anchor (buy-menu item)         | Preview override          | Verified real host (Init_Defenses.sqf) |
+|---------------------------------|----------------------------|------------------------------------------|
+| Misc_cargo_cont_small (Hedgehog Line) | Hedgehog_EP1         | WFBE_NEURODEF_HEDGEHOGLINE child |
+| Land_Ind_TankSmall (Flak Tower) | Land_Ind_IlluminantTower  | WFBE_C_DEF_FLAKTOWER_STRUCTURE default host |
+| Misc_cargo_cont_net1 (Wall Row) | Concrete_Wall_EP1         | WFBE_NEURODEF_FORTIF_WALL_ROW child |
+| Misc_cargo_cont_net2 (Wall Corner) | Land_HBarrier3          | WFBE_NEURODEF_WALL_CORNER hub piece |
+| Misc_cargo_cont_net3 (LoS Screen) | Base_WarfareBBarrier10xTall | WFBE_NEURODEF_FORTIF_LOS_SCREEN child |
+| Misc_cargo_cont_tiny (HESCO Line) | Land_HBarrier_large     | WFBE_NEURODEF_FORTIF_HESCO_LINE child |
+| Misc_concrete_High (Gate Complex) | Land_BarGate2           | WFBE_NEURODEF_FORTIF_GATE_COMPLEX gate |
+
+Every representative classname was cross-checked (a) pairwise-distinct from every other entry
+and from every anchor classname (preserves the existing `typeof _preview != _itemclass_preview`
+respawn-on-switch check), and (b) already spawned somewhere in `Init_Defenses.sqf`'s
+`WFBE_NEURODEF_*` arrays or `Server_ConstructPosition.sqf` (never an invented/unverified
+classname) — both asserted by `test_anchor_preview_map_*` in the new test file. `coin_interface.sqf`
+gets one small addition immediately after the existing `ghostpreview` getText + fallback (lines
+524-525 pre-edit): when the flag is armed, a `forEach` over the map overrides
+`_itemclass_preview` if the current `_itemclass` has an entry; flag-off, the two original lines
+are untouched and behavior is byte-identical. The 9 non-decoy anchors (Paleta1/2,
+Land_Ind_Timbers, RoadCone, Land_WoodenRamp, Land_Barrel_sand, Land_Ind_BoardsPack1/2,
+Land_CncBlock_Stripes) are deliberately left unmapped — they already have plausible physical
+shapes and are out of the owner's specific "decoy prop" complaint.
+
+### Fix 3 — Tick-increment placement rotation + live heading readout
+
+New flags `WFBE_C_DEF_PLACE_ROTATE` (default 0) and `WFBE_C_DEF_PLACE_ROTATE_DEG_SEC` (default
+90, degrees/second tunable). In `coin_interface.sqf`'s existing-preview branch (the `} else {`
+right before the "Check zone" comment — NOT the fresh-preview/`_new` branch, so a newly created
+preview still cleanly inherits `BIS_COIN_lastdir` first), while the preview flag is armed AND
+`_ctrl` is held, `_preview setDir ((getDir _preview) + (WFBE_C_DEF_PLACE_ROTATE_DEG_SEC *
+_pollSleep))` — a TICK-INCREMENT rotation scaled by the poll interval, not mouse-delta (this
+poll loop hardcodes `_mode = "mousemoving"` as a literal string and has no per-frame mouse-move
+delta available at this call site — confirmed by the verification workflow and re-checked here
+by reading the whole 1039-line file). The same block sets `WF_RequestUpdate = true` so the
+tooltip's own change-detection cache (`(_tooltipType+_tooltip) != _oldTooltip || ... ||
+WF_RequestUpdate`) rebuilds THAT tick — without this, the rotate-hint text (`_text1`) would go
+stale while Ctrl is held, since the cache key (`_tooltipType + _tooltip`, both fixed classname
+strings) never itself changes as the player rotates. `_text1` now appends
+`round (getDir _preview)` in degrees next to the existing "ROTATE = Ctrl" hint whenever the flag
+is armed and `_tooltipType == "preview"` (a genuine preview exists this tick — guards against
+reading a stale/deleted `_preview` on a tick where the whole `count _params > 0` block never
+ran). Used plain ASCII "deg" instead of the "°" glyph to avoid any SQF-string/codepage risk.
+
+### Fix 5 — Visible feedback on preview-creation failure
+
+Inside the existing `if (isnull _preview) then {...}` block (the `createVehicleLocal` failure
+path — a genuine, reproducible A2 OA failure mode per the pre-existing `diag_log
+COINPLACE|v1|no-preview|...` line added 2026-07-28), added one `hintSilent Format ["Cannot
+place %1 - no preview available.", _itemname];` immediately after the existing `diag_log` and
+before the existing selection reset (`BIS_COIN_preview`/`BIS_COIN_params` cleared). Unflagged,
+direct fix — this is a correctness/UX fix (surfacing an already-silent failure with zero
+behavior change), not a new feature, matching this repo's flag policy
+("Correctness fixes... ship directly, no flag required"). Reset/cleanup flow is completely
+unchanged; only the missing player notice was added.
+
+### Fix 6 — Placement tooltip label uses the WFBE buy-menu name
+
+`_textHeader`'s `format [...]` call (inside `if (_tooltipType != "empty") then {...}`) used
+`getText (configFile >> "cfgvehicles" >> _type >> "displayname")` — the anchor's raw stock
+CfgVehicles name (e.g. a generic cargo-container prop name) — instead of `_itemname`, already
+computed earlier in the same tick (line 523) as the WFBE buy-menu label, and already correctly
+used for the menu button text elsewhere in the same file. Swapped the one argument. Icon/picture
+resolution (`_fileIcon`/`_filePicture`, keyed off `_type`) is deliberately untouched — separate,
+out-of-scope concern per the verification workflow's own note. Unflagged, direct correctness fix
+(same reasoning as Fix 5).
+
+### Flags summary
+
+| Flag | Default | Armed this session? |
+|---|---|---|
+| `WFBE_C_DEF_PREVIEW_MAP` | 0 | Yes, final commit "ARMED 2026-08-04 owner fortification complaint" |
+| `WFBE_C_DEF_PLACE_ROTATE` | 0 | Yes, same commit |
+| `WFBE_C_DEF_PLACE_ROTATE_DEG_SEC` | 90 | n/a (tunable, not a boolean gate) |
+
+Fixes 5 and 6 are unflagged correctness fixes (see above), so there was nothing to arm for them.
+
+### Commits (this session, oldest first)
+
+- `b49ed0e793` fix(coin): WDDM placement-ghost preview map [flag WFBE_C_DEF_PREVIEW_MAP default 0]
+- `8621fd433f` fix(coin): tick-increment placement rotation + live heading readout [flag WFBE_C_DEF_PLACE_ROTATE default 0]
+- `4a6869ed76` fix(coin): visible feedback when the placement ghost fails to spawn (unflagged)
+- `942bb614ef` fix(coin): placement tooltip header shows the WFBE buy-menu label (unflagged)
+- `6cd6c00759` test: behavior contract for fortification placement/preview/facing fixes
+- `db2a57fc8a` feat(coin): arm WFBE_C_DEF_PREVIEW_MAP and WFBE_C_DEF_PLACE_ROTATE
+
+Each commit was independently mirror-regenerated (Tools/LoadoutManager) and bracket-delta-
+verified before the next was applied, so any of the 6 can be reverted individually without
+corrupting the sequence. No `Co-Authored-By` trailer in any commit. Not pushed.
+
+### Verification
+
+- `python -m pytest Tools/ -q`: 840 passed, 0 failed (baseline before this session's edits: 827
+  passed after mirror regen; +13 new tests in `Tools/Lint/test_fortif_placement_preview_facing.py`).
+  Caught and fixed one self-inflicted regression along the way: a code comment in
+  `Init_CommonConstants.sqf` literally contained the word "deleteVehicle" (in
+  "createVehicleLocal/deleteVehicle pairs"), which bumped `Tools/Lint/vehdel_inventory.json`'s
+  tracked count for that file from 4 to 5 and failed `test_veh_delete_probe.py`'s ratchet
+  manifest test — reworded the comment ("spawn/despawn (createVehicleLocal) pairs") rather than
+  regenerating the manifest, since the change was comment-only, not a real delete call site.
+- Lint gate (verbatim CLAUDE.md selector list, `--no-classname-index`): 168 findings, all
+  pre-existing (matches the documented baseline exactly) — 0 new findings in either edited file.
+- Net bracket (`{}`/`[]`) delta: 0 on every edited file, all three terrains (6 files total).
+- `dotnet run -c RELEASE -- --check` (Tools/LoadoutManager): Takistan and Zargabad both report
+  "drift: none". `version.sqf.template` untouched by this session's edits; confirmed all three
+  still read `WF_MAXPLAYERS 34` (this branch's established 34/34/34 convention — NOT the
+  31/33 values the wiki mirror-regen doc or `Test-WaspVersionTemplates.ps1` still expect for
+  TK/ZG; that script is known-stale for this branch per a prior gate-repair session's journal
+  entry and CLAUDE.md itself — its 3 FAILs on max-player values are expected noise, not a real
+  regression, and were NOT "fixed" by reverting to the older per-map values).
+- New tests assert BEHAVIOR (structural invariants: pairwise distinctness, flag-gating,
+  tick-scaling, code ordering, cross-references into `Init_Defenses.sqf` for classname
+  verification) rather than pasting implementation-literal diff text.
+
+### Discovered Issues / Follow-up (not done this session)
+
+- **Collision-footprint rework (finding 1, explicitly out of scope per task instructions).**
+  `Client/Init/Init_Client.sqf`'s `_itemcategory == 2` placement-validity block (~line 1780+)
+  measures anti-stack/defense-proximity/entity checks from the decoy anchor's own tiny
+  bounding box, never the real multi-object composition's true footprint (LoS Screen ~43 m,
+  HESCO Line ~39 m, Wall Row ~22 m — all live by default, `WFBE_C_DEF_FORTIF_PACK = 1`). The
+  verification workflow's finalFix (a `WFBE_FORTIF_FOOTPRINT_RADIUS` table + scanning for the
+  `WFBE_WDDMPositionAnchor` tag instead of a classname) is a separate, larger change — left
+  for a dedicated follow-up PR, not touched here.
+- The verification workflow also flagged a separate `relDir` facing-offset bug (composition
+  children silently rotate away from the anchor ghost's authored facing for non-zero-relDir
+  hosts, e.g. the Gate Complex's `Land_BarGate2` at relDir 90) and a full per-child ghost
+  preview (spawning every composition child as its own oriented ghost, not just the anchor).
+  Both are larger changes explicitly out of this session's scope (fix 2 here only swaps WHICH
+  single classname previews, not a multi-object preview or a facing-offset correction) — noted
+  for the same follow-up as the collision-footprint rework.
+- Did NOT re-add the pre-fix facing-arrow (commit 25357c0dfe) — the verification workflow
+  confirmed a literal re-add would resurrect an already-fixed crash/leak (the arrow-creation
+  call sat in a spot that regresses on every no-preview failure, and only 1 of 6 original
+  cleanup sites survived the revert). Chose the live text degree-readout (Fix 3) instead of a
+  3D facing indicator, which sidesteps that whole class of spawn/cleanup risk entirely.
+- No live/box runtime smoke test performed this session (static validation only, matching this
+  repo's evidence-wording convention) — an in-engine check that `getDir`/`setDir` on a
+  `createVehicleLocal`-spawned preview object behave as expected mid-placement is still owed
+  before the owner treats rotation as fully verified, though both commands are already used
+  elsewhere in this same file on the same object (lines ~616, ~629, ~693), so this is low-risk.
+
 ## Working State 2026-08-04 — wave0804 gate repair (73 PR-fold merges) [update/wave-20260802]
 
 Task: after 73 "fold #NNNN into wave0804" merge commits landed on this branch (base
