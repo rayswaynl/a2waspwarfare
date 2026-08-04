@@ -279,8 +279,18 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && {!WFBE_RespawnDefaultGear} 
 		//--- Use the respawn loadout.
 		if !(_skip) then {
 			_get = _unit getVariable "wfbe_custom_gear";
-			[_unit, _get select 0, _get select 1, _get select 4, _get select 2, _get select 3] Call WFBE_CO_FNC_EquipUnit;
-			_loadDefault = false;
+			//--- r72b loadout-equip-null: require full custom-gear shape
+			//--- [weapons, mags, backpack, bpContent, [primary,pistol,secondary]] before select 0..4.
+			//--- Short/corrupt profile rows used to pass nil into EquipUnit mid-strip (naked respawn).
+			if (!isNil "_get" && {typeName _get == "ARRAY"} && {count _get >= 5}
+				&& {typeName (_get select 0) == "ARRAY"} && {typeName (_get select 1) == "ARRAY"}
+				&& {typeName (_get select 4) == "ARRAY"}) then {
+				[_unit, _get select 0, _get select 1, _get select 4, _get select 2, _get select 3] Call WFBE_CO_FNC_EquipUnit;
+				_loadDefault = false;
+			} else {
+				["WARNING", "Client_OnRespawnHandler.sqf: wfbe_custom_gear missing/short/malformed - falling back to default gear."] Call WFBE_CO_FNC_LogContent;
+				//--- leave _loadDefault true
+			};
 		};
 	};
 };
