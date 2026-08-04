@@ -537,7 +537,7 @@ while {!WFBE_GameOver} do {
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
-		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfRadius","_diag"];
+		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfUnitPos","_qrfRadius","_diag"];
 		_town = _x;
 
 		//--- E3: a GUER-held town under a genuine ground attack gets one edge-of-town defender
@@ -563,7 +563,8 @@ while {!WFBE_GameOver} do {
 							_qrfBuilt = 0;
 							if (!isNull _qrfGroup) then {
 								{if (!isNil "_x" && {typeName _x == "STRING"}) then {
-									_qrfUnit = [_x, _qrfGroup, _qrfPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+									_qrfUnitPos = [(_qrfPos select 0) + (random 20) - 10, (_qrfPos select 1) + (random 20) - 10, 0];
+									_qrfUnit = [_x, _qrfGroup, _qrfUnitPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _qrfUnit) then {
 										_qrfUnit setVariable ["WFBE_IsTownDefenderAI", true, true];
 										_qrfBuilt = _qrfBuilt + 1;
