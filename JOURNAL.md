@@ -1,6 +1,122 @@
 # JOURNAL — a2waspwarfare-experital
 
-## Working State 2026-08-02 -- AICOM founding/placement fix [fable/founding-placement-20260802]
+## Working State 2026-08-04 — wave0804 gate repair (73 PR-fold merges) [update/wave-20260802]
+
+Task: after 73 "fold #NNNN into wave0804" merge commits landed on this branch (base
+42d0191ea8, HEAD 3af93fe675), all three gates (LoadoutManager mirror check, pytest,
+lint) were failing. Goal: make every gate pass without weakening any test, no push.
+
+### 1. LoadoutManager mirror drift
+
+`dotnet run -c RELEASE -- --check` reported 4-file drift on BOTH Takistan and Zargabad
+(Common_CommanderLease.sqf, Server_OnPlayerDisconnected.sqf, Server_VoteForCommander.sqf,
+RequestCommanderVote.sqf) — folds had touched the Chernarus source without the mirror
+generator having run since. Fix: `A2WASP_SKIP_ZIP=1 dotnet run -c RELEASE` from
+Tools/LoadoutManager, twice (once before the pytest-driven CH edits below, once after,
+to also propagate those). `--check` now reports zero drift on both mirrors.
+
+WF_MAXPLAYERS: verified all three `version.sqf.template` files (CH/TK/ZG) read 34 both
+before and after each generator run — no drift occurred this run, matching branch HEAD
+and this branch's own CLAUDE.md ("TK: WF_MAXPLAYERS 34 ... ZG: WF_MAXPLAYERS 34" — the
+34/34/34 normalization is this branch's intentional, owner-approved state, NOT the older
+31/33 values documented in the repo wiki's mirror-regen skill doc, which is stale for
+this branch). No revert was needed.
+
+### 2. pytest — 5 failures, root causes and resolutions
+
+- **test_fpv_purchase_authority.py::test_server_validates_wallet_and_per_uid_rearm_before_registering**
+  — fold #1636 (fix commit 713e830ce3, "object/missionNamespace var pollution — CBR
+  registry, FPV PV, disconnect keys") deliberately replaced `publicVariable _nextKey`
+  (a real bug: broadcasting a per-UID rearm-cooldown variable to every connected client)
+  with a private targeted send via the file's existing `_sendPrivate` helper
+  (`["fpv-rearm-cooldown", _next], _replyId, _uid] Call _sendPrivate`), fully mirrored to
+  TK/ZG and consumed by a matching new `case "fpv-rearm-cooldown"` handler in
+  Client/PVFunctions/HandleSpecial.sqf. Legitimate improvement — realigned the test to
+  assert the new private-send behavior instead of the old broadcast literal, and added a
+  regression guard (`assertNotIn("publicVariable _nextKey", code)`) so the bug can't
+  silently come back.
+
+- **test_overrun_razer_reachability.py::test_engagegate_patch_alive_filters_before_ranging**
+  — NOT a test-vs-behavior mismatch. Fold #1738 (fix commit 461de7d48b, "rally regroup
+  hold + live dest revalidation (r61)") introduced a genuine SQF syntax bug in
+  Common_RunCommanderTeam.sqf: an unterminated string literal —
+  `[_stB,_stC,"WEDGE","NORMAL]]]] Spawn WFBE_CO_FNC_WaypointsAdd;` — missing the closing
+  `"` after NORMAL (compare the two correct sibling call sites a few lines below/above
+  using the identical idiom `"WEDGE","NORMAL"]]]]`). The runaway string swallowed the
+  rest of the file for `mask_comments`'s state machine, which is why the FIRST occurrence
+  of the FLAG token the test searched for landed inside an unmasked comment instead of
+  the real gate condition. **Fixed the bug directly** (added the missing `"`) rather than
+  reverting the whole fold — the feature (defensive SAD hold on rally arrival) is sound,
+  it was a single-character typo. Test needed no changes; it passes once the source
+  bug is fixed. Mirrored to TK/ZG via the LoadoutManager regen.
+
+- **test_settownattackpath_nilside.py::test_deleted_dispatch_inputs_exit_before_dereference**
+  — fold #1781 (fix commit b177657b36, "town attack pathfind fail-clean (r78b)") added a
+  null-leader guard in Server_AI_SetTownAttackPath.sqf: `leader _team` is now captured
+  into `_fallbackLeader`, null-checked with its own `exitWith` (logged), and only then
+  dereferenced via `getPos _fallbackLeader` — replacing the old unguarded
+  `_wp_origin = getPos (leader _team);` that could throw on an empty/culled group.
+  Legitimate defensive fix (part of a 5-bug integrity pass, CH→TK/ZG mirrored,
+  byte-identical across all three). Realigned the test to assert the new capture/guard/
+  read sequence and disambiguated the two `_fallbackLeader = leader _team` occurrences in
+  the file (the new r78b guard near the top, and the pre-existing #1209 side-recovery
+  block further down) by anchoring each `.index()` search from the correct offset.
+
+- **test_supply_completion_authority.py::test_client_completion_rederives_sender_side_and_validates_delivery_state**
+  — fold #1619 (fix commit 49a565ca4f, "cargo transfer world revalidation + deliverer +
+  exitWith latch") changed `_sidePlayer = side _playerObject;` to
+  `_sidePlayer = side group _playerObject;` with an inline comment explaining why
+  (`side group` is more stable than bare `side unit` when the unit is mid-state-change).
+  Legitimate hardening, consistent with the rest of that fold's "never trust the
+  client-provided side slot" theme. Realigned the test's expected token.
+
+- **test_veh_delete_probe.py::test_ratchet_manifest_matches_the_entire_tree** — folds
+  added/changed deleteVehicle call sites in 6 files (Common_RunSidePatrol.sqf,
+  Server_GuerDirector.sqf, server_town.sqf, Server_ManageTownDefenses.sqf,
+  Server_OnPlayerDisconnected.sqf, Server_TownGarrisonDressing.sqf) without regenerating
+  vehdel_inventory.json. Wrote a regen script mirroring the test's own computation
+  (`text.count("deleteVehicle")` / `text.count("WFBE_CO_FNC_LogVehDelete")` per file,
+  same JSON style: 1-space indent, CRLF, no BOM) — but did NOT blindly overwrite first.
+  Diffed old-vs-fresh manifest and found fold #1631 (fix commit 19d4703805, "reclaim
+  town-AI budget on capture") had added 2 NEW deleteVehicle sites to server_town.sqf
+  (town-capture-unit/hull teardown) WITH proper adjacent probes for those 2 sites, but
+  this pushed the file's `probed` count from 0 to 2 — which would newly subject the
+  file's other 10 pre-existing, never-probed deleteVehicle sites (hangar/navsp/defense-
+  gunner/defense-structure/mop-up-squad/garrison-unit/SP/dressing-props/radar teardown)
+  to `test_every_code_delete_in_probed_files_is_probe_adjacent`'s all-or-nothing
+  per-file policy, which is enforced on purpose ("no curated subset left to argue
+  about"). Added matching `[<reason>, _obj, ""] Call WFBE_CO_FNC_LogVehDelete;` probe
+  calls (telemetry-only, gated behind WFBE_C_VEH_DELETE_PROBE, no behavior change) to
+  all 10 remaining sites, following the exact same-line convention already used
+  elsewhere in this file and in Server_TownGarrisonDressing.sqf. Verified 0/0 bracket
+  delta on both edited files. Regenerated the manifest after — all 5 veh_delete_probe
+  tests pass, including the adjacency check.
+
+No fold was reverted. All 5 failures traced to either (a) a stale test pinned to
+superseded literal behavior that the fold legitimately and deliberately changed, or
+(b) one real syntax bug (fold #1738) that was fixed at the source instead of reverting
+the whole feature.
+
+### 3. Lint gate
+
+Ran the verbatim gate command from this repo's CLAUDE.md (A3CMD..TRAILCOMMA incl.
+BAREEXIT, `--no-classname-index`). See gate-output tail in the final report / PR body.
+
+### Files touched (source)
+
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf`
+  — 1-byte string-terminator fix (missing `"`), mirrored to TK/ZG.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town.sqf` — 10 new
+  probe-call insertions (telemetry only), mirrored to TK/ZG.
+- `Tools/Lint/test_fpv_purchase_authority.py`, `test_settownattackpath_nilside.py`,
+  `test_supply_completion_authority.py` — realigned to current (post-fold) behavior.
+- `Tools/Lint/vehdel_inventory.json` — regenerated ratchet manifest.
+- Mirror propagation touched the corresponding TK/ZG copies of the two edited CH files
+  plus the 4 previously-drifted files (Common_CommanderLease.sqf,
+  Server_OnPlayerDisconnected.sqf, Server_VoteForCommander.sqf,
+  RequestCommanderVote.sqf) on both Takistan and Zargabad.
+
+
 
 Task: owner live bug report (m0801h-era, Takistan, mid-match 2026-08-02 16:47) - two AICOM
 production-placement defects. Worktree C:/tmp/claudewt/founding-fix, branch
