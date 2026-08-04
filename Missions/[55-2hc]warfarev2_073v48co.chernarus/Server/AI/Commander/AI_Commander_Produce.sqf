@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_factoryReservations","_facCandidate","_facQueue","_facReserved","_facLoad","_facBestLoad","_facDist","_facBestDist","_facReservation","_facReservationFound","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -23,6 +23,9 @@ if (isNil "_logik") exitWith {};
 _batchCap = missionNamespace getVariable ["WFBE_C_AICOM_PRODUCE_BATCH", 3];
 _richFlag = _logik getVariable ["wfbe_aicom_reinforce_rich", false];
 if (_richFlag) then {_batchCap = _batchCap * 2};
+
+//--- One reservation per queued AICOM order during this producer pass. Spawned BuyUnit workers append their token later.
+_factoryReservations = [];
 
 //--- Safety cap: do not produce above the per-side AI ceiling.
 _capTiers = missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]];
@@ -568,29 +571,37 @@ if (_airMaxTotalP > 0) then {
 				_factories = [_side, _kind, _buildings] Call GetFactories;
 				if (count _factories == 0) exitWith {};
 
-				//--- FORWARD-REINFORCE: spawn the refill at the factory nearest this team's
-				//--- leader. A forward team hugging a captured town refills from that town's
-				//--- factory (resupplies the front) instead of a lone unit trekking from the
-				//--- rear. Null leader (wiped team) falls back to factory[0] = reform at base.
-				_facObj = _factories select 0;
+				//--- Queue-balanced factory selection: a factory owns its own shared FIFO, but the old
+				//--- nearest-only picker never read it. The spawned BuyUnit workers append asynchronously,
+				//--- so keep pass-local reservations as well: the second order in this tick sees the first.
+				//--- Within the shortest effective queue, retain the forward leader/objective distance policy.
 				_ldr = leader _team;
-				if (!isNull _ldr) then {
-					{ if ((_x distance _ldr) < (_facObj distance _ldr)) then {_facObj = _x} } forEach _factories;
-				};
-
-				//--- OPTIONAL FORWARD FACTORY TARGETING: player-placed additional factories are already
-				//--- in _factories. When armed, prefer the one closest to this team's assigned AICOM
-				//--- objective instead of its current leader position. Invalid/missing orders retain the
-				//--- leader-selected result above; flag 0 is byte-identical to the legacy selection.
+				_factoryAnchor = if (!isNull _ldr) then {getPosATL _ldr} else {getPosATL (_factories select 0)};
 				_factoryTargetOn = (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_TARGET_ENABLE", 0]) > 0;
 				if (_factoryTargetOn) then {
 					_factoryOrder = _team getVariable "wfbe_aicom_order";
-					if (!isNil "_factoryOrder" && {count _factoryOrder > 2} && {typeName (_factoryOrder select 2) == "ARRAY"}) then {
-						_factoryAnchor = _factoryOrder select 2;
-						{ if ((_x distance _factoryAnchor) < (_facObj distance _factoryAnchor)) then {_facObj = _x} } forEach _factories;
-					};
+					if (!isNil "_factoryOrder" && {count _factoryOrder > 2} && {typeName (_factoryOrder select 2) == "ARRAY"}) then {_factoryAnchor = _factoryOrder select 2};
 				};
-
+				_facObj = objNull;
+				_facBestLoad = 1e9;
+				_facBestDist = 1e12;
+				{
+					_facCandidate = _x;
+					_facQueue = _facCandidate getVariable "queu";
+					if (isNil "_facQueue" || {typeName _facQueue != "ARRAY"}) then {_facQueue = []};
+					_facReserved = 0;
+					{
+						_facReservation = _x;
+						if ((_facReservation select 0) == _facCandidate) then {_facReserved = _facReservation select 1};
+					} forEach _factoryReservations;
+					_facLoad = (count _facQueue) + _facReserved;
+					_facDist = _facCandidate distance _factoryAnchor;
+					if (isNull _facObj || {_facLoad < _facBestLoad} || {_facLoad == _facBestLoad && {_facDist < _facBestDist}}) then {
+						_facObj = _facCandidate;
+						_facBestLoad = _facLoad;
+						_facBestDist = _facDist;
+					};
+				} forEach _factories;
 				_funds = (_side) Call GetAICommanderFunds;
 
 				//--- W15 BLACK MARKET (claude-gaming 2026-06-13): honor a live 50% discount flag set by the wildcard deck.
@@ -600,6 +611,16 @@ if (_airMaxTotalP > 0) then {
 					_priceCharged = if (!isNil "_w15Exp" && {_w15Exp > time}) then {round (_price * 0.5)} else {_price};
 					if (_funds < _priceCharged) exitWith {}; //--- Cannot afford the actual discounted charge; stop batch.
 					[_side, -_priceCharged] Call ChangeAICommanderFunds;
+					//--- Reserve only after the debit succeeds; unaffordable orders must not bias later picks this pass.
+					_facReservationFound = false;
+					{
+						_facReservation = _x;
+						if ((_facReservation select 0) == _facObj) then {
+							_facReservation set [1, (_facReservation select 1) + 1];
+							_facReservationFound = true;
+						};
+					} forEach _factoryReservations;
+					if (!_facReservationFound) then {_factoryReservations set [count _factoryReservations, [_facObj, 1]]};
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNIT_PRODUCED|class=" + _toBuild + "|factory=" + _typeName + "|cost=" + str _priceCharged + "|listCost=" + str _price + "|batch=" + str (_batchOrdered + 1));
 				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
 				_id = [floor (random 1000000)];
