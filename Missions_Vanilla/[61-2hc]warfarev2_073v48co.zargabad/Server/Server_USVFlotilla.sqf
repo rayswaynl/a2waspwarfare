@@ -54,7 +54,7 @@ if ((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_ENABLE", 0]) != 1) exitW
 ["INITIALIZATION", "Server_USVFlotilla.sqf : USV flotilla feature ENABLED - waiting for townInit."] Call WFBE_CO_FNC_LogContent;
 
 waitUntil { !isNil "townInit" && townInit };
-waitUntil { !isNil "towns" };
+waitUntil { !isNil "towns" && {count towns > 0} };
 
 private ["_coastalRadius","_coastalSamples","_coastalCount","_tPos","_isCoastal","_s","_ang","_probe",
          "_wps","_wpIdx","_wpVar","_wpLogic","_route","_count","_side","_hull","_roles","_loadouts",
