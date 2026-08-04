@@ -1284,7 +1284,7 @@ while {!WFBE_GameOver && _alive} do {
 				if (_pressAct) then {_usTier = 0};	//--- press guard: a stamped pressing team (valid press pos) is not a stuck re-issue - never fire the UNSTUCK strike ladder (teleport/reverse/lane-flip) on a live press
 				if (_usTier > 0) then {
 					[_team, _usTier, _side] Spawn {
-						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode","_recV2","_uOnWater","_uForceRoad","_uFlush","_uFlushOrder","_uFlushSeq","_uFlushMode","_uFlushDest"]; //--- cmdcon41-w3e +_recV2/_uOnWater/_uForceRoad; lane377 +_uFlush*
+						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode","_recV2","_uOnWater","_uForceRoad","_uFlush","_uFlushOrder","_uFlushSeq","_uFlushMode","_uFlushDest","_uFlushTier"]; //--- cmdcon41-w3e +_recV2/_uOnWater/_uForceRoad; lane377 +_uFlush*
 						_uTeam = _this select 0;
 						_uTier = _this select 1;
 						_uSide = _this select 2;
@@ -1443,7 +1443,8 @@ while {!WFBE_GameOver && _alive} do {
 												_uFlushSeq = _uFlushOrder select 0;
 												_uFlushMode = _uFlushOrder select 1;
 												_uFlushDest = _uFlushOrder select 2;
-												_uTeam setVariable ["wfbe_aicom_order", [_uFlushSeq + 1, _uFlushMode, _uFlushDest], true];
+												_uFlushTier = if (count _uFlushOrder > 3) then {_uFlushOrder select 3} else {0};
+												_uTeam setVariable ["wfbe_aicom_order", [_uFlushSeq + 1, _uFlushMode, _uFlushDest, _uFlushTier], true];
 												diag_log ("AICOMSTAT|v2|EVENT|" + str _uSide + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _uTeam) + "|seq=" + str (_uFlushSeq + 1) + "|mode=" + str _uFlushMode + "|kind=vehicle");
 											};
 										};
@@ -1534,7 +1535,8 @@ while {!WFBE_GameOver && _alive} do {
 												_uFlushSeq = _uFlushOrder select 0;
 												_uFlushMode = _uFlushOrder select 1;
 												_uFlushDest = _uFlushOrder select 2;
-												_uTeam setVariable ["wfbe_aicom_order", [_uFlushSeq + 1, _uFlushMode, _uFlushDest], true];
+												_uFlushTier = if (count _uFlushOrder > 3) then {_uFlushOrder select 3} else {0};
+												_uTeam setVariable ["wfbe_aicom_order", [_uFlushSeq + 1, _uFlushMode, _uFlushDest, _uFlushTier], true];
 												diag_log ("AICOMSTAT|v2|EVENT|" + str _uSide + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _uTeam) + "|seq=" + str (_uFlushSeq + 1) + "|mode=" + str _uFlushMode + "|kind=foot");
 											};
 										};
