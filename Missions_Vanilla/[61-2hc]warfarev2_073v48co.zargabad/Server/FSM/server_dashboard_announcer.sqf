@@ -31,6 +31,7 @@ if (isNil {missionNamespace getVariable "wfbe_dashboard_msg_idx"}) then {
 
 while {true} do {
 	sleep _interval;                                   //--- wait first, so we do not spam at t=0 boot.
+	if (gameOver || {WFBE_GameOver}) exitWith {};
 
 	//--- Pick the next hint from the pool; fall back to the single fixed message if the pool is nil/empty.
 	_msgs  = missionNamespace getVariable ["WFBE_C_DASHBOARD_MSGS", []];
