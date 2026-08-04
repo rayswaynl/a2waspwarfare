@@ -347,7 +347,7 @@ waitUntil {commonInitComplete};
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
-	private ["_max","_disp","_shown","_shownPlayers","_shownAI","_shownVehicles","_shownTallies","_pp","_scr","_ctrl","_d","_sz","_ntBase","_nextCandidateScan","_playerCandidates","_aiCandidates","_vehicleCandidates","_crewPlayerCandidates","_tagStatCycles","_veh","_isPlayerCand","_sideFail","_offscreen","_tcnt","_tclr","_tpp","_tscr","_td","_tsz"];
+	private ["_max","_disp","_shown","_shownPlayers","_shownAI","_shownVehicles","_shownTallies","_pp","_scr","_ctrl","_tagText","_d","_sz","_ntBase","_nextCandidateScan","_playerCandidates","_aiCandidates","_vehicleCandidates","_crewPlayerCandidates","_tagStatCycles","_veh","_isPlayerCand","_sideFail","_offscreen","_tcnt","_tclr","_tpp","_tscr","_td","_tsz"];
 	_max = 18;
 	_ntBase = 0.024; //--- fix(tags 07-24): inline <t size> is a MULTIPLIER of the NT0 base font size in Rsc/Titles.hpp; the absolute px targets below are divided by it (raw absolute values rendered sub-pixel since cmdcon29).
 	_nextCandidateScan = time;
@@ -406,7 +406,9 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_d = _x distance player;
 						_sz = (0.018 + (0.016 * (1 - (_d / 120)))) / _ntBase;
 						_ctrl = _disp displayCtrl (62000 + _shown);
-						_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#d6ecff'>%1</t>", name _x, _sz]));
+						_tagText = text (name _x);
+						_tagText setAttributes ["align", "center", "shadow", "1", "size", str _sz, "color", "#d6ecff"];
+						_ctrl ctrlSetStructuredText (composeText [_tagText]);
 						_ctrl ctrlSetPosition [(_scr select 0) - 0.1, (_scr select 1) - 0.025, 0.2, 0.05];
 						_ctrl ctrlCommit 0;
 						_ctrl ctrlShow true;
@@ -429,7 +431,9 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_d = _x distance player;
 						_sz = (0.018 + (0.016 * (1 - (_d / 200)))) / _ntBase;
 						_ctrl = _disp displayCtrl (62000 + _shown);
-						_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#d6ecff'>%1</t>", name _x, _sz]));
+						_tagText = text (name _x);
+						_tagText setAttributes ["align", "center", "shadow", "1", "size", str _sz, "color", "#d6ecff"];
+						_ctrl ctrlSetStructuredText (composeText [_tagText]);
 						_ctrl ctrlSetPosition [(_scr select 0) - 0.1, (_scr select 1) - 0.025, 0.2, 0.05];
 						_ctrl ctrlCommit 0;
 						_ctrl ctrlShow true;
