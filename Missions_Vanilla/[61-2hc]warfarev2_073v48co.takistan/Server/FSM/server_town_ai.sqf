@@ -281,6 +281,7 @@ while {!WFBE_GameOver} do {
 				//--- TOWNSCAN TELEMETRY: the dice skipped this dormant town's scan this sweep.
 				if (_tstOn && {!_doScan}) then {_tstScansSkipped = _tstScansSkipped + 1};
 				if (_doScan) then {
+				//--- Hysteresis: active towns use the WIDER ACTIVE_COEF ring (see Init_CommonConstants); idle uses DETECT COEF.
 				_dynRange = if ((_town getVariable ["wfbe_active", false]) || {(_town getVariable ["wfbe_active_air", false])}) then {_range_detect_active} else {_range_detect}; //--- D6c follow-up: late-registering towns reach this scan before their worker stamps wfbe_active* - nil condition silently killed the assignment (a2-failed-statement-continues), leaving _dynRange undefined and the :278 nearEntities scan dead for that town (55x on the wave0803a boot). Defaulted reads make the scan nil-safe.
 				_scanStart = diag_tickTime;
 								//--- A2 air-tier (lane 800): scan includes all Air; split into ground vs air lists.
