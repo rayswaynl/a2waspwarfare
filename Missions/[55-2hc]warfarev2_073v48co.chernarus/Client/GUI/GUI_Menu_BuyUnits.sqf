@@ -384,9 +384,15 @@ _IDCS = _IDCS - [_currentIDC];
 		_uid33 = getPlayerUID player;
 		//--- A2-safe "token starts with UID" test. `string find string` is ARMA 3-only and
 		//--- throws "Type String, expected Array" on A2 OA; compare leading bytes via toArray.
+		//--- type-mismatch residual (2026-07-30): shared factory "queu" mixes player STRING tokens
+		//--- with AI SCALAR tokens (see #1050 Server_BuyUnit queue-fix). toArray on NUMBER throws
+		//--- and aborts Cancel Last when AI orders share the factory - skip non-STRING (false).
 		_uidPrefix33 = {
-			private ["_tokA","_uidA","_ul","_ok","_j"];
-			_tokA = toArray (_this select 0);
+			private ["_tok","_tokA","_uidA","_ul","_ok","_j"];
+			_tok = _this select 0;
+			if (typeName _tok != "STRING") exitWith {false};
+			if (typeName (_this select 1) != "STRING") exitWith {false};
+			_tokA = toArray _tok;
 			_uidA = toArray (_this select 1);
 			_ul = count _uidA;
 			_ok = (_ul > 0) && (_ul <= count _tokA);
@@ -606,13 +612,17 @@ _IDCS = _IDCS - [_currentIDC];
 				if (isNil "_rLongest" || {_rLongest <= 0}) then {_rLongest = 60};
 				_rHead = _rQueu select 0;
 				_rSeen = _closest getVariable ["wfbe_queu_head_seen", ["", -1]];
-				if (((_rSeen select 0) != _rHead) || {(_rSeen select 1) < 0}) then {
+				//--- type-mismatch residual (2026-07-30 / #1050 class): shared "queu" head is STRING
+				//--- (player) or SCALAR (AI). Default seen[0] is "" - raw `!=` / `==` on mixed types
+				//--- throws "Generic error in expression" on A2 OA and kills the buy-menu tick
+				//--- (orphan reaper + queue display). Use type-safe `in [head]` (never throws).
+				if ((!(_rHead in [_rSeen select 0])) || {(_rSeen select 1) < 0}) then {
 					//--- New/changed head => (re)start its stagnation timer.
 					_closest setVariable ["wfbe_queu_head_seen", [_rHead, time]];
 				} else {
 					if ((time - (_rSeen select 1)) > (_rLongest + 60)) then {
 						_rQueu = _closest getVariable ["queu", []];
-						if ((count _rQueu > 0) && {(_rQueu select 0) == _rHead}) then {
+						if ((count _rQueu > 0) && {(_rQueu select 0) in [_rHead]}) then {
 							_rQueu = _rQueu - [_rHead];
 							_closest setVariable ["queu", _rQueu, true];
 							_closest setVariable ["wfbe_queu_head_seen", ["", -1]];
@@ -989,9 +999,14 @@ _IDCS = _IDCS - [_currentIDC];
 			_qLabels33 = _closest getVariable ["queu_labels", []];
 			_uid33 = getPlayerUID player;
 			//--- A2-safe "token starts with UID" test (string find is A3-only, throws on A2 OA).
+			//--- type-mismatch residual (2026-07-30): skip non-STRING AI SCALAR tokens - toArray on
+			//--- NUMBER aborts the queue list render every menu tick when AI shares the factory.
 			_uidPrefix33b = {
-				private ["_tokA","_uidA","_ul","_ok","_j"];
-				_tokA = toArray (_this select 0);
+				private ["_tok","_tokA","_uidA","_ul","_ok","_j"];
+				_tok = _this select 0;
+				if (typeName _tok != "STRING") exitWith {false};
+				if (typeName (_this select 1) != "STRING") exitWith {false};
+				_tokA = toArray _tok;
 				_uidA = toArray (_this select 1);
 				_ul = count _uidA;
 				_ok = (_ul > 0) && (_ul <= count _tokA);

@@ -26,9 +26,16 @@ _queuLabels = _building getVariable ["queu_labels", []];
 //--- A2-fix (2026-06-14): "token starts with UID" test. `string find string` is ARMA-3-only and
 //--- throws "find: Type String, expected Array" on A2 OA (it fired every time a player cancelled a
 //--- queue item). Compare leading bytes via toArray - same idiom as GUI_Menu_BuyUnits.sqf.
+//--- type-mismatch residual (2026-07-30): factory "queu" is SHARED with AI buys (Server_BuyUnit /
+//--- AI_Commander_Produce push SCALAR tokens; players push STRING). toArray on a NUMBER throws
+//--- "Type Number, expected String" and aborts cancel when any AI order sits ahead/alongside player
+//--- orders. Non-string tokens are never player-owned - skip them (false).
 _uidPrefix = {
-	private ["_tokA","_uidA","_ul","_ok","_j"];
-	_tokA = toArray (_this select 0);
+	private ["_tok","_tokA","_uidA","_ul","_ok","_j"];
+	_tok = _this select 0;
+	if (typeName _tok != "STRING") exitWith {false};
+	if (typeName (_this select 1) != "STRING") exitWith {false};
+	_tokA = toArray _tok;
 	_uidA = toArray (_this select 1);
 	_ul = count _uidA;
 	_ok = (_ul > 0) && (_ul <= count _tokA);
