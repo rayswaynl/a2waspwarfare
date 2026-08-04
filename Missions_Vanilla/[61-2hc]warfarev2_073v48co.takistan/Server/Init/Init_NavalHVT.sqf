@@ -821,7 +821,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
 					};
 				};
-				if (!isNull _capGrp) then { deleteGroup _capGrp };
+				if (!isNull _capGrp) then {
+					{if (!(isPlayer _x)) then {deleteVehicle _x; sleep 0}} forEach (units _capGrp);
+					deleteGroup _capGrp;
+				};
 				["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP torn down at %1 (carrier captured, sideID=%2).", _loc getVariable "name", _sideID]] Call WFBE_CO_FNC_LogContent;
 			};
 
@@ -1219,7 +1222,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
 							};
 						};
-						if (!isNull _capGrp) then { deleteGroup _capGrp };
+						if (!isNull _capGrp) then {
+							{if (!(isPlayer _x)) then {deleteVehicle _x; sleep 0}} forEach (units _capGrp);
+							deleteGroup _capGrp;
+						};
 						["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP despawned at %1 (inactivity).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
