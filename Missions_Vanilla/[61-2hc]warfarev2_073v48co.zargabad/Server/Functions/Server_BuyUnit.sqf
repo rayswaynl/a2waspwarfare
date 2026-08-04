@@ -50,7 +50,7 @@ _sideText = str _side;
 //--- a valid sibling instead; this guard also protects direct/older AIBuyUnit callers.
 _unitConfig = configFile >> "CfgVehicles" >> _unitType;
 if !(isClass _unitConfig) exitWith {
-	if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+	if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
 	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
 	["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL unavailable CfgVehicles classname [%1] - refunded %2 to side [%3]; no queue/spawn attempted.", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
 	diag_log Format ["BUYFAIL|v1|aicom-unavailable-class|side=%1|class=%2", _sideText, _unitType];
@@ -62,14 +62,14 @@ if !(isClass _unitConfig) exitWith {
 _unitTypeGet = missionNamespace getVariable _unitType;
 if (isNil "_unitTypeGet" || {typeName _unitTypeGet != "ARRAY"}) exitWith {
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
-if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
 ["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH forged/unregistered classname [%1] - refunded %2 to [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
 };
 _unlockRes = [_unitType, _sideText, (_side) Call WFBE_CO_FNC_GetSideUpgrades] Call WFBE_CO_FNC_IsUnitUnlocked;
 _unitFound = if (typeName _unlockRes == "ARRAY" && {(count _unlockRes) > 1}) then {_unlockRes select 1} else {false};
 if (!_unitFound) exitWith {
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
-if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
 ["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH classname [%1] not on side [%2] factory rosters - refunded %3.", _unitType, _sideText, _price]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -78,19 +78,19 @@ _teamSide = _team getVariable "wfbe_side";
 if (isNil "_teamSide") then {_teamSide = side _team};
 if (typeName _teamSide != "SIDE" || {_teamSide != _side}) exitWith {
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
-if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
 ["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH team/side mismatch (claim=%1 team=%2) for [%3] - refunded %4.", _side, _teamSide, _unitType, _price]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- Man/vehicle flag must match the class (prevents wrong branch: free crew / empty hull path abuse).
 if ((_unitType isKindOf "Man") && {_isVehicle}) exitWith {
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
-if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
 ["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH isVehicle flag mismatch for Man class [%1] - refunded %2.", _unitType, _price]] Call WFBE_CO_FNC_LogContent;
 };
 if (!(_unitType isKindOf "Man") && {!_isVehicle}) exitWith {
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
-if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
 ["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH isVehicle flag mismatch for vehicle class [%1] - refunded %2.", _unitType, _price]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -98,15 +98,22 @@ if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wf
 _sideStructs = _side Call WFBE_CO_FNC_GetSideStructures;
 if (isNil "_sideStructs" || {typeName _sideStructs != "ARRAY"}) then {_sideStructs = []};
 if (isNull _building || {!alive _building} || {!(_building in _sideStructs)}) exitWith {
-if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 if (isNull _building || {!alive _building}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 if (!isNull _building && {alive _building} && {!(_building in _sideStructs)}) then {["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH factory not owned by side [%1] for [%2] - refunded %3.", _sideText, _unitType, _price]] Call WFBE_CO_FNC_LogContent};
 };
 
-if (isPlayer (leader _team)) exitWith {
+//--- fold-resolve #1607 into #1606 (BUYUNIT-AUTH): nil-safe wfbe_queue release + null-safe
+//--- isPlayer(leader _team), so the treasury refund below always runs even with a nil/non-array
+//--- queue var or a team whose group currently has no living leader (leader _team == objNull).
+if (!isNull (leader _team) && {isPlayer (leader _team)}) exitWith {
 if (!isNull _team) then {
-_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+private "_tq";
+_tq = _team getVariable "wfbe_queue";
+if (isNil "_tq") then {_tq = []};
+if (typeName _tq != "ARRAY") then {_tq = []};
+_team setVariable ["wfbe_queue", _tq - [_id]];
 };
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent;
@@ -265,9 +272,14 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 	//--- aborts the script for real before anything spawns, and (b) the wfbe_queue release is an ARRAY
 	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
 	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
-	if (!(alive _building)||(isNull _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
+	if (!(alive _building)||(isNull _building)||{isNull _team}||{!isNull (leader _team) && {isPlayer (leader _team)}}) exitWith {
 		if (!isNull _team) then {
-			_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+			//--- A2-safe: nil/non-array wfbe_queue must not throw before refund paths below.
+			private "_tq";
+			_tq = _team getVariable "wfbe_queue";
+			if (isNil "_tq") then {_tq = []};
+			if (typeName _tq != "ARRAY") then {_tq = []};
+			_team setVariable ["wfbe_queue", _tq - [_id]];
 		};
 		_queu = _building getVariable "queu";
 		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
@@ -277,7 +289,7 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 		//--- ENGINE-VERIFIED note above - this exitWith only breaks the loop and always falls through).
 		if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted mid-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 		if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-		if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+		if (!isNull (leader _team) && {isPlayer (leader _team)}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	};
 
 	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: guard empty queu/queu2 before head-compare + type-safe head-compare (mirror Client_BuildUnit.sqf:302) - a mixed player/AI head token would throw Generic error on raw ==
@@ -298,6 +310,8 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 sleep _waitTime;
 
 _queu = _building getVariable "queu";
+if (isNil "_queu") then {_queu = []};
+if (typeName _queu != "ARRAY") then {_queu = []};
 _queu = _queu - [_id select 0];
 _building setVariable ["queu",_queu,true];
 
@@ -309,15 +323,20 @@ _building setVariable ["queu",_queu,true];
 //--- double-value; for a vehicle that then hits the objNull guard below, a second full refund on top of
 //--- that). Once ANY earlier abort has paid a refund, this exitWith is now TERMINAL regardless of whether
 //--- the original abort condition still holds - the build must never happen after a refund fired.
-if (_refunded || {!(alive _building)} || {isNull _team} || {isPlayer (leader _team)}) exitWith {
+if (_refunded || {!(alive _building)} || {isNull _team} || {!isNull (leader _team) && {isPlayer (leader _team)}}) exitWith {
 	if (!isNull _team) then {
-		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+		//--- A2-safe: nil/non-array wfbe_queue must not throw before refund paths below.
+		private "_tq";
+		_tq = _team getVariable "wfbe_queue";
+		if (isNil "_tq") then {_tq = []};
+		if (typeName _tq != "ARRAY") then {_tq = []};
+		_team setVariable ["wfbe_queue", _tq - [_id]];
 	};
 	//--- fable/aicom-treasury-refund-on-abort: catches the abort when it first manifests here (no
 	//--- earlier mid-loop abort fired) - the flag guard is a no-op if the block above already refunded.
 	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted post-wait - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+	if (!isNull (leader _team) && {isPlayer (leader _team)}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	//--- fable/aicom-refund-then-build-fix: reached solely because _refunded was already true (the abort
 	//--- condition itself reverted during the sleep) - neither log line above fired, so make the RPT read
 	//--- clearly instead of silently looking like a no-op exit.
@@ -625,5 +644,10 @@ _vehicle allowCrewInImmobile true;
 };
 
 if (!isNull _team) then {
-	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+	//--- A2-safe: nil/non-array wfbe_queue must not throw before refund paths below.
+	private "_tq";
+	_tq = _team getVariable "wfbe_queue";
+	if (isNil "_tq") then {_tq = []};
+	if (typeName _tq != "ARRAY") then {_tq = []};
+	_team setVariable ["wfbe_queue", _tq - [_id]];
 };
