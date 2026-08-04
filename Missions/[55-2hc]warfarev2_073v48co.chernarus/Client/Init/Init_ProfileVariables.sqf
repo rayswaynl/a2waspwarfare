@@ -9,7 +9,7 @@
 _profile_var = profileNamespace getVariable "WFBE_PERSISTENT_CONST_VIEW_DISTANCE";
 if !(isNil '_profile_var') then {
 	if (typeName _profile_var == "SCALAR") then {
-		if (_profile_var <= (missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_VIEW")) then {
+		if ((_profile_var >= 500) && {_profile_var <= (missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_VIEW")}) then {
 			setViewDistance _profile_var;
 		};
 	};

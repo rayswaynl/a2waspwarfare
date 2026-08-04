@@ -1,4 +1,4 @@
-Private ["_timerInstance","_timerDuration","_startTime","_elapsedTime","_remainingTime","_changeTheViewDistance"];
+Private ["_timerInstance","_timerDuration","_startTime","_elapsedTime","_remainingTime","_changeTheViewDistance","_appliedViewDistance"];
 
 timerInstanceCount = timerInstanceCount + 1;
 _timerInstance = timerInstanceCount;
@@ -31,7 +31,9 @@ while {_elapsedTime < _timerDuration} do {
 };
 
 if (_changeTheViewDistance) then {
-    setViewDistance (newViewDistance min (missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 10000]));
+    _appliedViewDistance = (newViewDistance max 500) min (missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 10000]);
+    setViewDistance _appliedViewDistance;
+    if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {['WFBE_PERSISTENT_CONST_VIEW_DISTANCE', _appliedViewDistance] Call WFBE_CO_FNC_SetProfileVariable};
 
     (format ["Set the view distance to: %1", str(newViewDistance)]) call GroupChatMessage;
 
