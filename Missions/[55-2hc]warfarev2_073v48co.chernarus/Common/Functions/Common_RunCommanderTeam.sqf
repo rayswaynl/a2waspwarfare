@@ -2707,7 +2707,7 @@ while {!WFBE_GameOver && _alive} do {
 									//--- Reveal the camp's live enemy so the squad prosecutes them.
 									{
 										if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
-									} forEach ((getPos _campObj) nearEntities [["Man"], 60]);
+									} forEach ((getPos _campObj) nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 									sleep 3;
 								};
 								//--- Dwell so the 10m camp scan ticks (presence-based capture).
@@ -2790,7 +2790,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Reveal the camp's live enemy so the squad prosecutes them (sweep pattern).
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
-							} forEach (_campTgtPos nearEntities [["Man"], 60]);
+							} forEach (_campTgtPos nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 							//--- FIX A: in the mode-2 gated path the depot can't flip until the garrison is
 							//--- cleared, so prosecute the camp HARDER: lay a live SAD ring over the camp and
 							//--- doTarget/doFire every live garrison unit so the squad ATTACKS instead of just
@@ -2803,7 +2803,7 @@ while {!WFBE_GameOver && _alive} do {
 										_team reveal _x; //--- A2: 2-operand reveal only.
 										_campEnemy = _campEnemy + [_x];
 									};
-								} forEach (_campTgtPos nearEntities [["Man"], 60]);
+								} forEach (_campTgtPos nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 								if (count _campEnemy > 0) then {
 									_campFoe = _campEnemy select 0;
 									{if (alive _x) then {_x doTarget _campFoe; _x doFire _campFoe}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
@@ -2920,7 +2920,7 @@ while {!WFBE_GameOver && _alive} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
 							if (_capAbort) exitWith {}; //--- B69: re-tasked mid depot-hold -> bail; outer loop re-reads the new order
-							_enemyNear = (_townCenter nearEntities [["Man"], _capRange]) unitsBelowHeight 10;
+							_enemyNear = (_townCenter nearEntities [["Man","Car","Motorcycle","Tank","Air"], _capRange]) unitsBelowHeight 10;
 							_resNear = 0;
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {
