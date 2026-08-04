@@ -90,20 +90,72 @@ def test_anchor_preview_map_entries_are_pairwise_distinct():
     )
 
 
-def test_anchor_preview_map_targets_are_already_used_in_the_mission_tree():
-    """Every representative preview classname must already exist somewhere in this
-    mission's own composition data (Init_Defenses.sqf WFBE_NEURODEF_* arrays / flak
-    host default) - never an unverified/invented classname."""
+# Anchors whose preview deliberately is NOT a literal child of the composition the
+# anchor resolves to. Every entry needs the exact preview classname AND a reason;
+# the classname must still be proven content used elsewhere in Init_Defenses.sqf.
+REPRESENTATIVE_OK = {
+    "Land_Ind_TankSmall": (
+        "Land_Ind_IlluminantTower",
+        "flak preview host comes from WFBE_C_DEF_FLAKTOWER_STRUCTURE, not a composition array",
+    ),
+    "Misc_cargo_cont_net2": (
+        "Base_WarfareBBarrier5x",
+        "composition is 10x Concrete_Wall_EP1, which is already Wall Row's preview - "
+        "the pairwise-distinctness rule forbids reuse, so a validated wall segment stands in",
+    ),
+    "Misc_concrete_High": (
+        "Land_CncBlock_Stripes",
+        "Land_BarGate2 is A2-only/unverified in this tree (see the Bank-gate precedent "
+        "in Init_Defenses.sqf); the proven gate-mouth block stands in",
+    ),
+}
+
+
+def test_anchor_preview_targets_resolve_to_their_own_composition_or_allowlist():
+    """Each preview classname must be a REAL child of the composition its anchor
+    resolves to via WFBE_POSITION_TEMPLATE_MAP - or sit in the explicit, justified
+    REPRESENTATIVE_OK allowlist (and still be proven content that Init_Defenses.sqf
+    spawns elsewhere). Guards against name-coincidence picks from unrelated
+    composition arrays, which a whole-file substring check cannot catch."""
     constants = _masked(CH, COMMON_CONSTANTS)
+    defenses = _masked(CH, DEFENSES_INIT)
     pairs = _anchor_preview_pairs(constants)
-    defenses_src = _read(CH, DEFENSES_INIT)
+
+    template_of = dict(
+        re.findall(r"\[\s*'([^']+)'\s*,\s*'(WFBE_NEURODEF_[A-Z0-9_]+)'", defenses)
+    )
 
     for anchor, preview in pairs:
-        needle_single = "'%s'" % preview
-        needle_double = '"%s"' % preview
-        assert needle_single in defenses_src or needle_double in defenses_src, (
-            "preview classname %r (for anchor %r) does not appear anywhere in "
-            "Init_Defenses.sqf - unverified classname" % (preview, anchor)
+        if anchor in REPRESENTATIVE_OK:
+            required, why = REPRESENTATIVE_OK[anchor]
+            assert preview == required, (
+                "anchor %r is allowlisted with preview %r (%s) but the map now uses %r - "
+                "either fix the map or update the allowlist WITH justification"
+                % (anchor, required, why, preview)
+            )
+            assert ("'%s'" % preview) in defenses, (
+                "allowlisted preview %r is not proven content - it never appears in "
+                "Init_Defenses.sqf" % preview
+            )
+            continue
+        tmpl = template_of.get(anchor)
+        assert tmpl is not None, (
+            "anchor %r has no WFBE_POSITION_TEMPLATE_MAP binding in Init_Defenses.sqf - "
+            "cannot prove its preview classname" % anchor
+        )
+        # compositions are defined either as `X = [...];` or as
+        # `missionNamespace setVariable ['X', [...]];`
+        m = re.search(re.escape(tmpl) + r"\s*=\s*\[(.*?)\];", defenses, re.DOTALL)
+        if m is None:
+            m = re.search(
+                r"setVariable\s*\[\s*'" + re.escape(tmpl) + r"'\s*,\s*\[(.*?)\]\s*\]\s*;",
+                defenses,
+                re.DOTALL,
+            )
+        assert m is not None, "composition array %s not found in Init_Defenses.sqf" % tmpl
+        assert ("'%s'" % preview) in m.group(1), (
+            "preview %r (anchor %r) is NOT a child of its own composition %s - "
+            "name-coincidence pick from an unrelated array?" % (preview, anchor, tmpl)
         )
 
 

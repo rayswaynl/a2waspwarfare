@@ -3856,10 +3856,10 @@ WFBE_ANCHOR_PREVIEW_MAP = [
 	['Misc_cargo_cont_small', 'Hedgehog_EP1'],			//--- Hedgehog Line -> real WFBE_NEURODEF_HEDGEHOGLINE child
 	['Land_Ind_TankSmall', 'Land_Ind_IlluminantTower'],		//--- Flak Tower -> WFBE_C_DEF_FLAKTOWER_STRUCTURE default host
 	['Misc_cargo_cont_net1', 'Concrete_Wall_EP1'],		//--- Wall Row -> real WFBE_NEURODEF_FORTIF_WALL_ROW child
-	['Misc_cargo_cont_net2', 'Land_HBarrier3'],			//--- Wall Corner -> real WFBE_NEURODEF_WALL_CORNER hub piece
+	['Misc_cargo_cont_net2', 'Base_WarfareBBarrier5x'],		//--- Wall Corner -> validated wall segment (composition is 10x Concrete_Wall_EP1, already Wall Row's preview - respawn check needs a distinct class)
 	['Misc_cargo_cont_net3', 'Base_WarfareBBarrier10xTall'],	//--- LoS Screen -> real WFBE_NEURODEF_FORTIF_LOS_SCREEN child
 	['Misc_cargo_cont_tiny', 'Land_HBarrier_large'],		//--- HESCO Line -> real WFBE_NEURODEF_FORTIF_HESCO_LINE child
-	['Misc_concrete_High', 'Land_BarGate2']			//--- Gate Complex -> real WFBE_NEURODEF_FORTIF_GATE_COMPLEX gate
+	['Misc_concrete_High', 'Land_CncBlock_Stripes']	//--- Gate Complex -> proven gate-mouth block (Land_BarGate2 is A2-only/unverified in this tree - see Init_Defenses.sqf Bank precedent)
 ];
 
 //--- TICK-INCREMENT PLACEMENT ROTATION (same owner report). coin_interface.sqf's rotate hint
