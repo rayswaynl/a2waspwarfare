@@ -860,95 +860,109 @@ if (isNull _base) exitWith {
 		};
 	};
 	case "aicom-focus": {
-		//--- AICOM v2 M4: the human commander set a side FOCUS town from the command center ("Move All"
-		//--- doubles as the AI focus). Stamp it on the side logic; the Allocator reads it (TTL'd) and makes
-		//--- it the side's fist - honoured every tick. side validated west/east (the command menu is commander-only).
-		//--- TP-13 SERVER-SIDE RATE LIMIT (WFBE_C_TEAM_FOCUS_COOLDOWN, 0 disables): the only guard was the
-		//--- CLIENT cooldown in GUI_Menu_Command (_lastSend) - a modified client could spam this case every
-		//--- frame and whipsaw the Allocator fist. UID-keyed on the side logic, mirroring the CMD_NUDGE
-		//--- cooldown idiom below; legacy/malicious 3-arg senders (no player appended) share ONE "anon" key
-		//--- per side = the side-wide backstop a spoofed sender cannot bypass by omitting the arg.
-		private ["_fSide","_fTown","_fLogik","_fPlayer","_fUID","_fKey","_fCd","_fNow","_fLast"];
+		//--- AICOM v2 M4: a same-side player set a side FOCUS town (command console STATE-A advisory / war-room).
+		//--- Stamp it on the side logic; the Allocator reads it (TTL'd) and makes it the side's fist.
+		//--- TP-13 SERVER-SIDE RATE LIMIT (WFBE_C_TEAM_FOCUS_COOLDOWN, 0 disables): UID-keyed on the side logic.
+		//--- ORDER-AUTH 20260730: REQUIRE a live same-side player before applying. The previous "anon" path still
+		//--- stamped focus after the shared cooldown, so a forged RequestSpecial naming the victim side (no player /
+		//--- wrong-side player) could pin that side's Allocator fist. Cross-side and no-player sends now reject.
+		private ["_fSide","_fTown","_fLogik","_fPlayer","_fUID","_fKey","_fCd","_fNow","_fLast","_fAuth"];
 		_fSide = _args select 1;
 		_fTown = _args select 2;
+		_fPlayer = objNull; if (count _args > 3) then {_fPlayer = _args select 3};
 		if (!isNil "_fTown" && {!isNull _fTown} && {_fSide in [west, east]}) then {
 			_fLogik = (_fSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _fLogik) then {
-				_fNow = time;
-				_fCd  = missionNamespace getVariable ["WFBE_C_TEAM_FOCUS_COOLDOWN", 120];
-				if (count _args > 3) then {_fPlayer = _args select 3};
-				_fUID = "anon";
-				//--- TP-13 stack-pass: only a REAL player on THIS side earns a per-UID key. A spoofed sender passing an
-				//--- arbitrary object (str-of-object = fresh key per object) would otherwise bypass the limit; such
-				//--- senders now fall through to the shared "anon" side key (throttled). No str-of-object fallback.
-				if (!isNil "_fPlayer" && {!isNull _fPlayer} && {isPlayer _fPlayer} && {side (group _fPlayer) == _fSide}) then {
+				_fAuth = (!isNull _fPlayer) && {alive _fPlayer} && {isPlayer _fPlayer} && {side (group _fPlayer) == _fSide};
+				if (_fAuth) then {
+					_fNow = time;
+					_fCd  = missionNamespace getVariable ["WFBE_C_TEAM_FOCUS_COOLDOWN", 120];
+					_fUID = "anon";
 					private "_u"; _u = getPlayerUID _fPlayer;
 					if (!isNil "_u" && {_u != ""}) then {_fUID = _u};
-				};
-				_fKey = "wfbe_cmd_focus_" + _fUID;
-				_fLast = _fLogik getVariable [_fKey, -1e9];
-				if ((_fNow - _fLast) >= _fCd) then {
-					_fLogik setVariable [_fKey, _fNow];
-					_fLogik setVariable ["wfbe_aicom_focus", _fTown];
-					_fLogik setVariable ["wfbe_aicom_focus_t0", time];
-					diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]) + "|uid=" + _fUID);
+					_fKey = "wfbe_cmd_focus_" + _fUID;
+					_fLast = _fLogik getVariable [_fKey, -1e9];
+					if (_fCd <= 0 || {(_fNow - _fLast) >= _fCd}) then {
+						_fLogik setVariable [_fKey, _fNow];
+						_fLogik setVariable ["wfbe_aicom_focus", _fTown];
+						_fLogik setVariable ["wfbe_aicom_focus_t0", time];
+						diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]) + "|uid=" + _fUID);
+					} else {
+						diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|uid=" + _fUID + "|cdLeft=" + str (round (_fCd - (_fNow - _fLast))));
+					};
 				} else {
-					diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|uid=" + _fUID + "|cdLeft=" + str (round (_fCd - (_fNow - _fLast))));
+					diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|auth=false");
 				};
 			};
 		};
 	};
 	case "aicom-defend": {
-		//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): a player set a DEFEND town for the AI commander (modeled
-		//--- EXACTLY on aicom-focus). Stamp it (+ a t0 timestamp) on the side logic; AI_Commander_Strategy.sqf
-		//--- reads it (TTL'd by WFBE_C_AICOM_DEFEND_TTL) and biases a reliever team to that town. side validated west/east.
-		//--- TP-20 SERVER-SIDE RATE LIMIT (WFBE_C_CMD_VERB_COOLDOWN, 0 disables): defend/reinforce/posture/fieldorder each
-		//--- had only a client-side cooldown gate; a modified client could spam them server-side. UID-keyed on the side
-		//--- logic (wfbe_cmd_ prefix) identical to the aicom-focus guard (TP-13); legacy/anon senders share one side key.
-		private ["_dSide","_dTown","_dLogik","_dPlayer","_dUID","_dKey","_dCd","_dNow","_dLast"];
+		//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): a same-side player set a DEFEND town for the AI commander.
+		//--- Stamp it (+ t0) on the side logic; Strategy reads it (TTL WFBE_C_AICOM_DEFEND_TTL).
+		//--- TP-20 SERVER-SIDE RATE LIMIT (WFBE_C_CMD_VERB_COOLDOWN). ORDER-AUTH 20260730: require live same-side
+		//--- player before applying (closes forged cross-side / no-player defend stamps that previously rode the "anon" key).
+		private ["_dSide","_dTown","_dLogik","_dPlayer","_dUID","_dKey","_dCd","_dNow","_dLast","_dAuth"];
 		_dSide = _args select 1;
 		_dTown = _args select 2;
+		_dPlayer = objNull; if (count _args > 3) then {_dPlayer = _args select 3};
 		if (!isNil "_dTown" && {!isNull _dTown} && {_dSide in [west, east]}) then {
 			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _dLogik) then {
-				_dNow = time;
-				_dCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
-				if (count _args > 3) then {_dPlayer = _args select 3};
-				_dUID = "anon";
-				if (!isNil "_dPlayer" && {!isNull _dPlayer} && {isPlayer _dPlayer} && {side (group _dPlayer) == _dSide}) then {
+				_dAuth = (!isNull _dPlayer) && {alive _dPlayer} && {isPlayer _dPlayer} && {side (group _dPlayer) == _dSide};
+				if (_dAuth) then {
+					_dNow = time;
+					_dCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
+					_dUID = "anon";
 					private "_u"; _u = getPlayerUID _dPlayer;
 					if (!isNil "_u" && {_u != ""}) then {_dUID = _u};
-				};
-				_dKey  = "wfbe_cmd_defend_" + _dUID;
-				_dLast = _dLogik getVariable [_dKey, -1e9];
-				if (_dCd <= 0 || {(_dNow - _dLast) >= _dCd}) then {
-					_dLogik setVariable [_dKey, _dNow];
-					_dLogik setVariable ["wfbe_aicom_defend_focus", _dTown];
-					_dLogik setVariable ["wfbe_aicom_defend_focus_t0", time];
-					diag_log ("AICOM2|v1|DEFEND|" + str _dSide + "|" + str (round (time / 60)) + "|set=" + (_dTown getVariable ["name", "?"]) + "|uid=" + _dUID);
+					_dKey  = "wfbe_cmd_defend_" + _dUID;
+					_dLast = _dLogik getVariable [_dKey, -1e9];
+					if (_dCd <= 0 || {(_dNow - _dLast) >= _dCd}) then {
+						_dLogik setVariable [_dKey, _dNow];
+						_dLogik setVariable ["wfbe_aicom_defend_focus", _dTown];
+						_dLogik setVariable ["wfbe_aicom_defend_focus_t0", time];
+						diag_log ("AICOM2|v1|DEFEND|" + str _dSide + "|" + str (round (time / 60)) + "|set=" + (_dTown getVariable ["name", "?"]) + "|uid=" + _dUID);
+					} else {
+						diag_log ("AICOM2|v1|DEFEND|REJECT|" + str _dSide + "|uid=" + _dUID + "|cdLeft=" + str (round (_dCd - (_dNow - _dLast))));
+					};
 				} else {
-					diag_log ("AICOM2|v1|DEFEND|REJECT|" + str _dSide + "|uid=" + _dUID + "|cdLeft=" + str (round (_dCd - (_dNow - _dLast))));
+					diag_log ("AICOM2|v1|DEFEND|REJECT|" + str _dSide + "|auth=false");
 				};
 			};
 		};
 	};
 	case "aicom-arty-here": {
-		//--- COMMAND CONSOLE: a player called an ARTILLERY-HERE strike from the war room. We stamp a fresh [pos,time]
-		//--- request on the side logic; the assist-mode resolver (AI_Com_PlayerArty, every supervisor tick) consumes it
-		//--- fire-once - so it works even under a HUMAN commander, where the brain's own Strategy arty block is dormant.
-		//--- PRODUCTION FIX (claude-gaming 2026-06-28): gate on the SEPARATE player-arty flag (WFBE_C_AICOM_PLAYER_ARTY),
-		//--- NOT WFBE_C_AI_COMMANDER_ARTILLERY (the AI's OWN fire/build gate - default ON since 2026-07-08
-		//--- fable/alife-arty-dwell, was Steff-hard-locked to 0 before that; see Init_CommonConstants.sqf).
-		//--- The player request is serviced in assist-mode by AI_Com_PlayerArty and only ever fires friendly pieces
-		//--- that already exist (it never builds guns), so it stays independent of the AI's own arty state either way.
-		private ["_aSide","_aPos","_aLogik"];
+		//--- COMMAND CONSOLE: human commander called ARTILLERY-HERE from the war room. Stamp [pos,time] on side logic;
+		//--- assist-mode resolver AI_Com_PlayerArty consumes it fire-once (works under human commander).
+		//--- Flag: WFBE_C_AICOM_PLAYER_ARTY (independent of AI-own arty flag).
+		//--- ORDER-AUTH 20260730: previously accepted ANY forged RequestSpecial naming a side + position with NO
+		//--- player, NO commander bind, NO server cooldown - an enemy client could aim the victim side's existing
+		//--- guns. Require acting commander identity (same pattern as aicom-team-disband) + per-side cooldown
+		//--- (reuses WFBE_C_CMD_VERB_COOLDOWN default 60; 0 disables). Client always appends live player.
+		private ["_aSide","_aPos","_aLogik","_aPlayer","_aCmd","_aAuth","_aCd","_aNow","_aLast","_aKey"];
 		_aSide = _args select 1;
 		_aPos  = _args select 2;
+		_aPlayer = objNull; if (count _args > 3) then {_aPlayer = _args select 3};
 		if ((typeName _aPos == "ARRAY") && {_aSide in [west, east]} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0}) then {
 			_aLogik = (_aSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _aLogik) then {
-				_aLogik setVariable ["wfbe_aicom_arty_request", [_aPos, time]];
-				diag_log ("AICOM2|v1|ARTYREQ|" + str _aSide + "|" + str (round (time / 60)) + "|pos=" + str _aPos);
+				_aCmd = (_aSide) Call WFBE_CO_FNC_GetCommanderTeam;
+				_aAuth = (!isNull _aPlayer) && {alive _aPlayer} && {isPlayer _aPlayer} && {!isNull _aCmd} && {side (group _aPlayer) == _aSide} && {group _aPlayer == _aCmd};
+				if (_aAuth) then {
+					_aNow = time;
+					_aCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
+					_aKey = "wfbe_cmd_artyhere";
+					_aLast = _aLogik getVariable [_aKey, -1e9];
+					if (_aCd <= 0 || {(_aNow - _aLast) >= _aCd}) then {
+						_aLogik setVariable [_aKey, _aNow];
+						_aLogik setVariable ["wfbe_aicom_arty_request", [_aPos, time]];
+						diag_log ("AICOM2|v1|ARTYREQ|" + str _aSide + "|" + str (round (time / 60)) + "|pos=" + str _aPos + "|uid=" + (getPlayerUID _aPlayer));
+					} else {
+						diag_log ("AICOM2|v1|ARTYREQ|REJECT|" + str _aSide + "|cdLeft=" + str (round (_aCd - (_aNow - _aLast))));
+					};
+				} else {
+					diag_log ("AICOM2|v1|ARTYREQ|REJECT|" + str _aSide + "|auth=false");
+				};
 			};
 		};
 	};
@@ -1167,47 +1181,56 @@ if (isNull _base) exitWith {
 		};
 	};
 	case "aicom-ai-command": {
-		//--- COMMAND CONSOLE (claude-gaming 2026-06-29): the human commander toggled SQUAD-COMMAND MODE from the war
-		//--- room - "ON" (delegate squad MANEUVER to the AI: it runs Strategy + AssignTowns UNDER the human while the
-		//--- player keeps the economy) or "OFF" (today's DIRECT player control). Stamp a BROADCAST bool on the side
-		//--- logic; AI_Commander.sqf reads it to widen the strategy gate (_aiStrategy = _canBuild || _aiDelegate) and
-		//--- the war-room client reads it back to label the toggle. Default-ABSENT reads as direct-ON everywhere.
-		//--- DELIBERATELY no human-commander gate: this flag's whole purpose is to change whether the AI strategy runs
-		//--- UNDER a human commander. Modeled on aicom-posture: ENABLED + HQ-alive + west/east + string whitelist.
-		private ["_dSide","_dVal","_dLogik"];
+		//--- COMMAND CONSOLE: human commander toggled SQUAD-COMMAND MODE - "ON" (delegate squad MANEUVER to AI strategy
+		//--- under the human) or "OFF" (DIRECT player control). Stamp broadcast bool on side logic; AI_Commander.sqf
+		//--- reads it for _aiStrategy. Default-ABSENT => TRUE (cmdcon27 THREAD B).
+		//--- ORDER-AUTH 20260730: previously NO player / NO commander / NO same-side check - any client could forge
+		//--- RequestSpecial ["aicom-ai-command", victimSide, "ON"|"OFF"] and flip that side's strategy delegation.
+		//--- Require acting commander identity always-on (C4/C2 ruling, same as aicom-team-disband). Client appends player.
+		//--- Note: we do NOT require "human already commands" via _dHuman - the toggle is how a commander enables/disables
+		//--- AI assist; group==commanderTeam is the seat bind.
+		private ["_dSide","_dVal","_dLogik","_dPlayer","_dCmd","_dAuth"];
 		_dSide = _args select 1;
 		_dVal  = _args select 2;
+		_dPlayer = objNull; if (count _args > 3) then {_dPlayer = _args select 3};
 		if ((typeName _dVal == "STRING") && {(_dVal == "ON") || (_dVal == "OFF")} && {_dSide in [west, east]}) then {
 			if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_dSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
 				_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 				if (!isNull _dLogik) then {
-					_dLogik setVariable ["wfbe_aicom_player_delegate", (_dVal == "ON"), true];
-					diag_log ("AICOM2|v1|ORDER|aicom-ai-command|" + str _dSide + "|" + str (round (time / 60)) + "|delegate=" + _dVal);
+					_dCmd = (_dSide) Call WFBE_CO_FNC_GetCommanderTeam;
+					_dAuth = (!isNull _dPlayer) && {alive _dPlayer} && {isPlayer _dPlayer} && {!isNull _dCmd} && {side (group _dPlayer) == _dSide} && {group _dPlayer == _dCmd};
+					if (_dAuth) then {
+						_dLogik setVariable ["wfbe_aicom_player_delegate", (_dVal == "ON"), true];
+						diag_log ("AICOM2|v1|ORDER|aicom-ai-command|" + str _dSide + "|" + str (round (time / 60)) + "|delegate=" + _dVal + "|uid=" + (getPlayerUID _dPlayer));
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-ai-command|REJECT|" + str _dSide + "|auth=false|val=" + _dVal);
+					};
 				};
 			};
 		};
 	};
 	case "aicom-request-unit": {
-		//--- COMMAND CONSOLE (PR backend): a player asked the AI commander to favour a UNIT CLASS next time it founds a
-		//--- team - "armor" / "air" / "infantry". Stamp [type,time]; AssignTypes + Teams nudge the next founding type pick
-		//--- toward that class (a weight bias, NOT a hard force). Reuses the POSTURE TTL. AI-commander-run gate + west/east +
-		//--- class whitelist.
-		//--- PRODUCTION FIX (claude-gaming 2026-06-28): the client sends aicom-request-unit ONLY from the war room
-		//--- (the player IS the commander). The old _uRun=!_uHuman gate rejected EXACTLY that case, so every Build
-		//--- press was silently dropped (a root cause of ORDERS(war-room)=0). The consumer is SELF-PROTECTING and
-		//--- reachable under a human commander: the HYBRID-REFILL team-founding worker (AI_Commander_Teams.sqf:467)
-		//--- reads this [type,time] stamp TTL-gated (WFBE_C_AICOM_POSTURE_TTL) and applies only a SOFT weight bias,
-		//--- so a player order can neither pin nor destabilise the brain. We therefore gate only on ENABLED + HQ-alive
-		//--- + side + class whitelist - no human-commander gate. The TTL ages the stamp out on its own.
-		private ["_uSide","_uType","_uLogik"];
+		//--- COMMAND CONSOLE: human commander asked HYBRID-REFILL to favour a UNIT CLASS next founding
+		//--- ("armor"/"air"/"infantry"). Stamp [type,time]; soft weight bias only (WFBE_C_AICOM_POSTURE_TTL).
+		//--- PRODUCTION FIX (2026-06-28) removed !_uHuman so war-room orders land under a human commander.
+		//--- ORDER-AUTH 20260730: previously NO player / NO side bind - any client could forge production bias for
+		//--- either side. Require acting commander identity always-on. Client appends player. Soft bias + TTL kept.
+		private ["_uSide","_uType","_uLogik","_uPlayer","_uCmd","_uAuth"];
 		_uSide = _args select 1;
 		_uType = _args select 2;
+		_uPlayer = objNull; if (count _args > 3) then {_uPlayer = _args select 3};
 		if ((typeName _uType == "STRING") && {(_uType == "armor") || (_uType == "air") || (_uType == "infantry")} && {_uSide in [west, east]}) then {
 			_uLogik = (_uSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _uLogik) then {
 				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_uSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
-					_uLogik setVariable ["wfbe_aicom_request_type", [_uType, time]];
-					diag_log ("AICOM2|v1|ORDER|aicom-request-unit|" + str _uSide + "|" + str (round (time / 60)) + "|type=" + _uType);
+					_uCmd = (_uSide) Call WFBE_CO_FNC_GetCommanderTeam;
+					_uAuth = (!isNull _uPlayer) && {alive _uPlayer} && {isPlayer _uPlayer} && {!isNull _uCmd} && {side (group _uPlayer) == _uSide} && {group _uPlayer == _uCmd};
+					if (_uAuth) then {
+						_uLogik setVariable ["wfbe_aicom_request_type", [_uType, time]];
+						diag_log ("AICOM2|v1|ORDER|aicom-request-unit|" + str _uSide + "|" + str (round (time / 60)) + "|type=" + _uType + "|uid=" + (getPlayerUID _uPlayer));
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-request-unit|REJECT|" + str _uSide + "|auth=false|type=" + _uType);
+					};
 				};
 			};
 		};
