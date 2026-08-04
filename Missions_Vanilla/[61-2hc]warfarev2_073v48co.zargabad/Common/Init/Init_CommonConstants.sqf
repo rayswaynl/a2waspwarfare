@@ -1433,7 +1433,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_SKINSEL")                       then {WFBE_C_SKINSEL = 1};                       //--- cmdcon41-w3l: skin selector master (WF-menu SKIN button + first-spawn dialog + respawn restore). Legacy WFBE_C_SKIN_SELECTOR still honored as an OR.
 	if (isNil "WFBE_C_SKINSWAP_FUNDS_CARRY")          then {WFBE_C_SKINSWAP_FUNDS_CARRY = 1};          //--- cmdcon43-h: carry the player's wfbe_funds + wfbe_side across a skin swap so a failed rejoin (fresh/diverted/CIV group) never orphans his wallet to $0 (LIVE-confirmed cmdcon42b). 1 on, 0 off.
 	if (isNil "WFBE_C_FUNDS_HEAL_ZERO_GRACE")         then {WFBE_C_FUNDS_HEAL_ZERO_GRACE = 90};         //--- Ray pick A (2026-07-03): seconds the client funds self-heal refuses to accept a 0 wfbe_funds as "healed" (a transient JIP-sync 0 was the old zero-latch); keeps re-requesting the server lock-step record restore. Belt-and-suspenders atop the record fix. Higher = longer no-zero window.
-	if (isNil "WFBE_C_SKIN_PERSIST") then {WFBE_C_SKIN_PERSIST = 0};           //--- skin-persist 2026-07-06: persist player skin choice via profileNamespace across session reconnects; re-applies on respawn. 0 = off (default, byte-identical).
+	if (isNil "WFBE_C_SKIN_PERSIST") then {WFBE_C_SKIN_PERSIST = 1}; //--- ARMED 2026-08-04 owner go           //--- skin-persist 2026-07-06: persist player skin choice via profileNamespace across session reconnects; re-applies on respawn. 0 = off (default, byte-identical).
 
 	//--- === cmdcon41 wave-3m (live-RPT findings 2026-07-02): MHQ comeback + naval patrol guard ===
 	if (isNil "WFBE_C_AICOM_MHQ_RELAX")               then {WFBE_C_AICOM_MHQ_RELAX = 1};               //--- losing-side comeback: when no standoff clears the full ring, relax 600+buffer -> 600 -> FLOOR instead of aborting forever (live WEST: 21/21 aborts while ringed).
@@ -3793,7 +3793,7 @@ if (isNil "WFBE_C_ENDGAME_AWARDS") then {WFBE_C_ENDGAME_AWARDS = 1}; //--- ARMED
 //--- Team Menu V2 squad bulk mount/dismount (pattern studied from the rhs_cargosystem whole-squad
 //--- bulk-load/staggered-dismount idiom, remade in vanilla A2 SQF). Master flag default 0 -
 //--- Load/Unload Squad buttons stay hidden and MenuAction 2003/2004 no-op with the flag off.
-if (isNil "WFBE_C_SQUAD_BULK_MOUNT") then {WFBE_C_SQUAD_BULK_MOUNT = 0};
+if (isNil "WFBE_C_SQUAD_BULK_MOUNT") then {WFBE_C_SQUAD_BULK_MOUNT = 1}; //--- ARMED 2026-08-04 owner go (zombie-menu guards fixed 2026-08-03)
 if (isNil "WFBE_C_SQUAD_BULK_MOUNT_RANGE") then {WFBE_C_SQUAD_BULK_MOUNT_RANGE = 10}; //--- metres; Load Squad only mounts units already within this range of the target vehicle (v1: no path-walking).
 if (isNil "WFBE_C_SQUAD_BULK_MOUNT_STAGGER") then {WFBE_C_SQUAD_BULK_MOUNT_STAGGER = 0.15}; //--- seconds between staggered per-unit GetOut actions on Unload Squad, so a full vehicle does not dismount on a single tick.
 
@@ -3802,7 +3802,7 @@ if (isNil "WFBE_C_SQUAD_BULK_MOUNT_STAGGER") then {WFBE_C_SQUAD_BULK_MOUNT_STAGG
 //--- Phase 1 classify+cache (WFBE_C_TERRAIN_CLASSIFY_SECTORS, default 0 = INERT): once per town at
 //--- boot, Common_TerrainClassifySector.sqf caches garrison/bush-camp/open-maneuver on the town
 //--- object (wfbe_sector_class / wfbe_sector_classified). Zero composition effect on its own.
-if (isNil "WFBE_C_TERRAIN_CLASSIFY_SECTORS") then {WFBE_C_TERRAIN_CLASSIFY_SECTORS = 0};
+if (isNil "WFBE_C_TERRAIN_CLASSIFY_SECTORS") then {WFBE_C_TERRAIN_CLASSIFY_SECTORS = 1}; //--- ARMED 2026-08-04 owner go (phase-1 cache only; composition nudge stays dark)
 //--- Number of jittered selectBestPlaces samples averaged per axis. Card spec: 5.
 if (isNil "WFBE_C_TERRAIN_CLASSIFY_SAMPLES") then {WFBE_C_TERRAIN_CLASSIFY_SAMPLES = 5};
 //--- selectBestPlaces precision argument (higher = finer/slower scan; engine samples ~(2*radius/precision)^2
