@@ -3886,5 +3886,24 @@ if (isNil "WFBE_C_DISCONNECT_ZOMBIE_TIMEOUT") then {WFBE_C_DISCONNECT_ZOMBIE_TIM
 if (isNil "WFBE_C_MARKER_REBUILD_FPS") then {WFBE_C_MARKER_REBUILD_FPS = 15}; //--- read Common/Common_MarkerLoop.sqf:49 (fallback 15): auto map-marker rebuild while client fps stays below this. 0 disables; previously unarmable.
 if (isNil "WFBE_C_MARKER_BUDGET_PER_TICK") then {WFBE_C_MARKER_BUDGET_PER_TICK = 30}; //--- read Common/Common_MarkerLoop.sqf:83 (fallback 30): fixed per-tick marker-refresh ceiling; the BUDGET_ADAPT block above references it as "above" but it was never declared.
 
+//--- STAR FORTRESS Phase 1 MVP. Default 0 keeps the action, PV endpoint, registries, construction
+//--- watcher, respawn candidate, and status watcher inert.
+if (isNil "WFBE_C_STARFORT_ENABLE") then {WFBE_C_STARFORT_ENABLE = 0};
+if (isNil "WFBE_C_STARFORT_UNLOCK_BARRACKS_LVL") then {WFBE_C_STARFORT_UNLOCK_BARRACKS_LVL = 3};
+if (isNil "WFBE_C_STARFORT_MIN_ENEMY_TOWN_DIST") then {WFBE_C_STARFORT_MIN_ENEMY_TOWN_DIST = 800};
+if (isNil "WFBE_C_STARFORT_MAX_FRONTLINE_DIST") then {WFBE_C_STARFORT_MAX_FRONTLINE_DIST = 1500};
+if (isNil "WFBE_C_STARFORT_MIN_ENEMY_HQ_DIST") then {WFBE_C_STARFORT_MIN_ENEMY_HQ_DIST = 1000};
+if (isNil "WFBE_C_STARFORT_OBJ_CAP") then {WFBE_C_STARFORT_OBJ_CAP = 55};
+if (isNil "WFBE_C_STARFORT_OBJ_CAP_HARD") then {WFBE_C_STARFORT_OBJ_CAP_HARD = 60};
+if (isNil "WFBE_C_STARFORT_BASTIONS") then {WFBE_C_STARFORT_BASTIONS = 4};
+if (isNil "WFBE_C_STARFORT_BREACH_BASTIONS_LOST") then {WFBE_C_STARFORT_BREACH_BASTIONS_LOST = 2};
+if (isNil "WFBE_C_STARFORT_COST_FOUNDATION") then {WFBE_C_STARFORT_COST_FOUNDATION = 6000};
+if (isNil "WFBE_C_STARFORT_COST_WALLS") then {WFBE_C_STARFORT_COST_WALLS = 15000};
+if (isNil "WFBE_C_STARFORT_COST_BASTIONS") then {WFBE_C_STARFORT_COST_BASTIONS = 28000};
+if (isNil "WFBE_C_STARFORT_BUILD_TIME") then {WFBE_C_STARFORT_BUILD_TIME = 300};
+if (isNil "WFBE_C_STARFORT_RADIUS") then {WFBE_C_STARFORT_RADIUS = 25};
+if (isNil "WFBE_C_STARFORT_SLOPE_MAX") then {WFBE_C_STARFORT_SLOPE_MAX = 0.97};
+if (isNil "WFBE_C_STARFORT_PENDING_WINDOW") then {WFBE_C_STARFORT_PENDING_WINDOW = 180};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -291,6 +291,12 @@ if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_V
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
 if (!isNil "AICOMV2_GDIR_JIP_SNAP") then {_id publicVariableClient "AICOMV2_GDIR_JIP_SNAP"}; //--- J10: GUER Director snapshot is not JIP-durable in A2-OA; target the current value to this joiner.
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+//--- Star Fortress registry and state flags are primitive publicVariables, so replay them to JIP clients.
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0) then {
+	{
+		if (!isNil {missionNamespace getVariable _x}) then {_id publicVariableClient _x};
+	} forEach ["WFBE_STARFORT_WEST","WFBE_STARFORT_EAST","wfbe_starfort_keepalive_west","wfbe_starfort_keepalive_east","wfbe_starfort_breached_west","wfbe_starfort_breached_east"];
+};
 //--- r68 (marker JIP + public-state fidelity): the MHQ/HQ wreck-marker feed is a set of missionNamespace
 //--- PRIMITIVES broadcast with plain publicVariable in Server_OnHQKilled.sqf (false + wreck payload) and
 //--- Server_MHQRepair.sqf (true + []). Per the B63 note above, a plain publicVariable is NOT replayed to a
