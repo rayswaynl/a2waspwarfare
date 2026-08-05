@@ -59,7 +59,7 @@ class Mission
 				};
 				class Item1
 				{
-					position[]={3842,0,4390};
+					position[]={3746,0,4477};
 					special="NONE";
 					id=1;
 					side="LOGIC";
