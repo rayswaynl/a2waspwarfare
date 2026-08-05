@@ -481,7 +481,7 @@ if (_airMaxTotalP > 0) then {
 						Private ["_liveMerge"];
 						_liveMerge = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
 						_liveMerge joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
-						{if (!alive _x && {!(isPlayer _x)}) then {deleteVehicle _x}} forEach (units _team);
+						{if (!alive _x && {!(isPlayer _x)}) then {["produce-merge-cull-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] stranded survivor MERGED into [%3] (alive=%4, dist=%5, mergeDist=%6) - body preserved, groups-1.", _sideText, _team, _mergedInto, _aliveNow, _curDist, round _mergeBest]] Call WFBE_CO_FNC_AICOMLog;
 						//--- r29 idle-reclaim: full ledger cleanup (match HCTopUp B69) BEFORE deleteGroup.
 						_team setVariable ["wfbe_persistent", false, true];
