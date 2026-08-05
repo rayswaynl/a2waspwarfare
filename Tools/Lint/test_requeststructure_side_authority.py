@@ -1,17 +1,13 @@
-"""Regression checks for the RequestStructure.sqf requester side-binding fix.
+"""Regression checks for the merged RequestStructure.sqf authority contract.
 
-RequestStructure.sqf built a side's economy structure (Barracks / CB Radar /
+RequestStructure.sqf builds a side's economy structure (Barracks / CB Radar /
 AA Radar / Bank / etc.) at a client-supplied position for a client-supplied
-SIDE, and never checked the requester's own side against the claimed side -
-unlike its siblings RequestDefense.sqf's neighbours RequestMHQRepair.sqf and
-RequestSiteClearance.sqf, which both bind `side group _reqPlayer` to the
-claimed `_side`. A forger could build (or duplicate-race-grief) structures
-for a side they do not belong to. The fix adds the same requester-side gate,
-with a documented exception ONLY for structure index 0 (CommandCenter) to
-keep the HQ-mobilize toggle (coin_interface.sqf:545, the one caller that
-omits the player arg) working exactly as before. This test locks that
-contract so a future edit cannot silently drop the gate or widen the
-no-requester exception past the CommandCenter slot.
+SIDE. The merged server path now requires a verified player requester for
+every structure, binds `side group _reqPlayer` to the claimed `_side`, and
+adds a separate commander-team check for the CommandCenter/HQ slot (index 0).
+This test locks the current contract so a future edit cannot silently drop the
+requester gate, move it behind a build reservation, or remove the HQ authority
+check.
 """
 
 from pathlib import Path
@@ -37,31 +33,38 @@ def test_requester_side_is_verified_before_any_build_gate():
             "_reqPlayer = if (count _this > 4) then {_this select 4} else {objNull};"
         )
 
+        # Every structure request, including CommandCenter/HQ, requires a real
+        # player object before any side or build gate can run.
+        requester_gate = text.index(
+            'if (isNull _reqPlayer || {!isPlayer _reqPlayer}) then {'
+        )
+        assert capture < requester_gate
+        requester_block = text[requester_gate: requester_gate + 450]
+        assert '_reject = true;' in requester_block
+        assert 'StructureRequesterMismatch' in requester_block
+
         # A verified same-side player is required - client-claimed _side is never
         # trusted on its own (mirrors RequestMHQRepair.sqf / RequestSiteClearance.sqf).
-        player_check = text.index('if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {')
-        assert capture < player_check
-
         side_gate = text.index('if !((side group _reqPlayer) in [_side]) then {')
-        assert player_check < side_gate
+        assert requester_gate < side_gate
         side_gate_block = text[side_gate: side_gate + 400]
         assert '_reject = true;' in side_gate_block
         assert 'StructureRequesterMismatch' in side_gate_block
 
-        # The no-player branch only tolerates a missing requester for structure
-        # index 0 (CommandCenter / HQ mobilize toggle) - every other structure
-        # index is rejected, not silently waved through.
-        no_player_gate = text.index('if (_index != 0) then {')
-        assert side_gate < no_player_gate
-        no_player_block = text[no_player_gate: no_player_gate + 400]
-        assert '_reject = true;' in no_player_block
-        assert 'StructureRequesterMismatch' in no_player_block
+        # CommandCenter/HQ requests add a server-side commander-team check;
+        # the client menu's commander gate is not the authority boundary.
+        hq_gate = text.index('if (!_reject && _index == 0) then {')
+        assert side_gate < hq_gate
+        hq_block = text[hq_gate: hq_gate + 500]
+        assert '_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;' in hq_block
+        assert 'isNull _cmdTeam || {group _reqPlayer != _cmdTeam}' in hq_block
+        assert 'StructureRequesterMismatch' in hq_block
 
         # The side-binding gate runs BEFORE any of the CBRadar/AARadar/Bank
         # duplicate-race pending-reservation gates, so a forged/mismatched
         # request can never stamp a pending lock against another side.
         cbr_gate = text.index('if (_rlType == "CBRadar") then {')
-        assert no_player_gate < cbr_gate
+        assert hq_gate < cbr_gate
 
         radar_pending_stamp = text.index('missionNamespace setVariable [_rrPendingKey, time];')
         bank_pending_stamp = text.index('missionNamespace setVariable [_pendingKey, time];')
