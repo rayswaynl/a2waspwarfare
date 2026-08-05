@@ -155,7 +155,7 @@ if (_startResultKey != "") then {missionNamespace setVariable [_startResultKey, 
 if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) then {
 	_nearLogic setVariable ["WFBE_B_Type", _rlType];
 
-	waitUntil {time >= _timeNextUpdate || {isNull _nearLogic}};
+	waitUntil {sleep 0.05; time >= _timeNextUpdate || {isNull _nearLogic}};
 	_timeNextUpdate = _startTime + _time * 2;
 	if (isNull _nearLogic) then {_constructionLogicLost = true};
 } else {
@@ -174,13 +174,13 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) then {
 	if (!_constructionLogicLost) then {
 		_constructed = _constructed + ([_position,_direction,_stage2Objects] Call _construct);
-		waitUntil {time >= _timeNextUpdate || {isNull _nearLogic}};
+		waitUntil {sleep 0.05; time >= _timeNextUpdate || {isNull _nearLogic}};
 		_timeNextUpdate = _startTime + _time * 3;
 		if (isNull _nearLogic) then {_constructionLogicLost = true};
 	};
 	if (!_constructionLogicLost) then {
 		_constructed = _constructed + ([_position,_direction,_stage3Objects] Call _construct);
-		waitUntil {time >= _timeNextUpdate || {isNull _nearLogic}};
+		waitUntil {sleep 0.05; time >= _timeNextUpdate || {isNull _nearLogic}};
 		if (isNull _nearLogic) then {_constructionLogicLost = true};
 	};
 	if (!_constructionLogicLost) then {
