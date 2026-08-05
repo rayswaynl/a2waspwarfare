@@ -360,8 +360,8 @@
   "probed": 10
  },
  "Server/Server_USVFlotilla.sqf": {
-  "total": 6,
-  "probed": 5
+  "total": 13,
+  "probed": 12
  },
  "Server/Support/Support_CargoAirdrop.sqf": {
   "total": 21,
@@ -376,7 +376,7 @@
   "probed": 0
  },
  "Server/Support/Support_Paratroopers.sqf": {
-  "total": 3,
+  "total": 6,
   "probed": 0
  },
  "Server/Support/Support_ParaVehicles.sqf": {
