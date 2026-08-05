@@ -229,7 +229,12 @@ if (_greenlight) then {
 	//--- stick previously got no waypoint/doMove/patrol at all and stood idle at the drop zone forever.
 	//--- A human-called drop already has the player commanding _playerTeam, so only the AI path needs this.
 	if (_isAI && {count units _playerTeam > 0}) then {
-		_dropPos = getPos (leader _playerTeam);
+		//--- r70 tasking: re-home stick to the ORDERED objective (town centre), not the parachuting
+		//--- leader mid-air pos (prior: AIPatrol around fall position, never the reinforce target).
+		_dropPos = _destination;
+		if (isNil "_dropPos" || {typeName _dropPos != "ARRAY"} || {count _dropPos < 2}) then {
+			_dropPos = getPos (leader _playerTeam);
+		};
 		//--- AIPatrol resets behaviour to AWARE/YELLOW as its first act, so it MUST run BEFORE the engage
 		//--- posture is set or COMBAT/RED gets clobbered (same idiom as Server_GuerAirDef.sqf).
 		[_playerTeam, _dropPos, 200] Call AIPatrol;
