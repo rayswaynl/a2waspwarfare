@@ -121,6 +121,7 @@ onMapSingleClick "
 		_cool = _this select 3;
 		_ready = false;
 		while {true} do {
+			if (gameOver || {WFBE_GameOver}) exitWith {deleteMarkerLocal _marker;};
 			if (isNull _player) exitWith {};
 			_currentLast = _player getVariable ['wfbe_helibomb_last', -9999];
 			if !(_currentLast >= _start) exitWith {
