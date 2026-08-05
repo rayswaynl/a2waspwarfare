@@ -1141,7 +1141,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 //---    REUSES _findBuildPos by repointing the _hqPos CLOSURE var to the forward center (the helper reads
 //---    _hqPos as a free var, L137/141). Runs LAST so _hqPos is free to repoint. FWDBASE_ENABLE=0 = inert.
 //--- ============================================================================================
-private ["_fwdEnable","_relocActive","_rearHQpos","_fwdMyID","_fwdCap","_fwdSupplyGate","_fwdReserve","_fwdMinDist","_ccCount","_basesMax","_frontF","_haveFront","_frontPosF","_bestFwdT","_bestFwdD","_dxF","_dyF","_dF","_standoffF","_fwdPos","_fwdOrder","_fwdHave","_ord","_fwdIdx","_fwdClass","_baseRF","_presentF","_fwdCost","_fwdFacP","_fwdScript","_fwdDir","_fwdCCpresent","_fwdDefMax","_fwdDefCount","_fwdDefClass","_fwdDefData","_fwdDefPrice","_fwdFunds","_fwdDefPos","_fwdDefDir","_fwdDx2","_fwdDy2"];
+private ["_fwdEnable","_relocActive","_rearHQpos","_fwdMyID","_fwdCap","_fwdSupplyGate","_fwdReserve","_fwdMinDist","_ccCount","_basesMax","_frontF","_haveFront","_frontPosF","_bestFwdT","_bestFwdD","_dxF","_dyF","_dF","_standoffF","_fwdPos","_fwdOrder","_fwdHave","_ord","_fwdIdx","_fwdClass","_baseRF","_presentF","_fwdCost","_fwdFacP","_fwdScript","_fwdDir","_fwdCCpresent","_fwdDefMax","_fwdDefCount","_fwdDefClass","_fwdDefData","_fwdDefPrice","_fwdFunds","_fwdDefPos","_fwdDefDir","_fwdDx2","_fwdDy2","_fwdCapped","_fwdTypeLimit","_fwdTypeHave"];
 _fwdEnable = (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_ENABLE", 1]) > 0;
 if (_fwdEnable && {_dual}) then {
 	_relocActive = _logik getVariable ["wfbe_mhqreloc_active", false];
@@ -1203,7 +1203,22 @@ if (_fwdEnable && {_dual}) then {
 									_presentF = false;
 									{ if (typeOf _x == _fwdClass && {alive _x} && {((getPos _x) distance _fwdPos) <= _baseRF}) exitWith {_presentF = true} } forEach _structures;
 									if (!_presentF && {(time - (_logik getVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], -1e6])) < 300}) then {_presentF = true};
-									if (!_presentF) then {
+									//--- fix(aicom-fwdbase-cap): the forward outpost factory has NO side-wide cap of its own -
+									//--- _presentF above only checks local presence within _baseRF of THIS forward point, so a
+									//--- fresh outpost at a new forward town could always add one more Heavy/Light factory with
+									//--- no ceiling (live RPT: EAST Heavy reached 5 while WFBE_C_STRUCTURES_MAX_HEAVY stayed 2).
+									//--- Obey the SAME side-wide per-type cap the main build-order loop and human players
+									//--- (RequestStructure.sqf WFBE_C_STRUCTURES_CAP_SERVER) already enforce; CommandCenter is
+									//--- additionally clamped to _basesMax (already computed above this block, same idiom as L717-719).
+									_fwdCapped = false;
+									if ((missionNamespace getVariable ["WFBE_C_AICOM_OBEY_BUILD_LIMITS", 1]) > 0) then {
+										_fwdTypeLimit = missionNamespace getVariable [Format ["WFBE_C_STRUCTURES_MAX_%1", _ord], 3];
+										if (typeName _fwdTypeLimit != "SCALAR") then {_fwdTypeLimit = 3};
+										if (_ord == "CommandCenter" && {_basesMax > 0} && {_basesMax < _fwdTypeLimit}) then {_fwdTypeLimit = _basesMax};
+										_fwdTypeHave = {((_x getVariable ["wfbe_structure_type", ""]) == _ord) && {alive _x}} count _structures;
+										if (_fwdTypeHave >= _fwdTypeLimit) then {_fwdCapped = true};
+									};
+									if (!_presentF && !_fwdCapped) then {
 										_fwdHave = true;   //--- one-per-pass latch (consume the slot whether or not affordable).
 										_fwdCost = _costs select _fwdIdx;
 										if (_supply >= (_fwdCost + _fwdReserve)) then {

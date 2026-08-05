@@ -159,6 +159,20 @@ if !(alive _killer) exitWith {}; //--- Killer is null or dead, nothing to see he
 _killed_group = group _killed;
 _killed_isman = if (_killed isKindOf "Man") then {true} else {false};
 _killed_type = typeOf _killed;
+//--- fix(killmoney): a corpse/wreck can be GC-deleted (objNull) during the SendToServer
+//--- publicVariable round-trip between the "killed" EH firing (Common_OnUnitKilled.sqf,
+//--- possibly on a remote client/HC - real network/scheduler delay) and this PVF running
+//--- here on the server. When that race lands, typeOf _killed reads "" (missionNamespace
+//--- getVariable "" -> nil), which silently zeroes the WHOLE reward gate below - BOTH score
+//--- and bounty, for an otherwise-legitimate kill - since _get never resolves. Live-evidenced
+//--- 2026-08-05 (wave0804b RPT: repeated "[<NULL-object>] has been killed by" lines, ~9% of
+//--- kills). Common_OnUnitKilled.sqf now captures typeOf _killed SYNCHRONOUSLY at EH-fire
+//--- time (before any round-trip, when the object is still guaranteed valid) and forwards it
+//--- as payload element 3; fall back to that captured classname only when the live object has
+//--- since gone null. Legacy 3-element payloads (no element 3) are unaffected.
+if (isNull _killed && {(count _this) > 3} && {typeName (_this select 3) == "STRING"} && {(_this select 3) != ""}) then {
+	_killed_type = _this select 3;
+};
 _killer_group = group _killer;
 _killer_isplayer = if (isPlayer _killer) then {true} else {false};
 _killed_isplayer = if (isPlayer _killed) then {true} else {false};
