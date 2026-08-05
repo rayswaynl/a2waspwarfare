@@ -199,8 +199,9 @@ switch (_request) do {
 						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
 					};
 				} forEach _wUnits;
-				{if (!isNull _x && {({isPlayer _x} count (crew _x)) == 0}) then {deleteVehicle _x}} forEach _wVehicles; //--- r128: player-crew guard (parity with the server half in server_side_patrols.sqf)
+				//--- r66: units before hulls (014EFCF4 seated-delete race)
 				{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;
+				{if (!isNull _x && {({isPlayer _x} count (crew _x)) == 0}) then {deleteVehicle _x}} forEach _wVehicles; //--- r128: player-crew guard (parity with the server half in server_side_patrols.sqf)
 				if (!isNull _wGrp) then {deleteGroup _wGrp};
 			} else {
 				diag_log Format ["WARNING sidepatrol-watchdog HandleSpecial received unknown tier %1 - no-op", _wTier];
@@ -221,7 +222,13 @@ switch (_request) do {
 		//--- eject / survivor get-out walks those seats. This runs on the OWNER, so the vehicle/crew reads are
 		//--- authoritative. Fails closed; the sender defers hot bodies itself and releases dispatched ones back
 		//--- to its collector, so a rejection here is re-queued on the next pass, never leaked.
-		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])} && {!(_trashObj isKindOf "Man") || {vehicle _trashObj == _trashObj} || {!(alive (vehicle _trashObj)) && {({alive _x} count crew (vehicle _trashObj)) == 0}}}) then {deleteVehicle _trashObj};
+		//--- r66: purge dead non-player crew before deleting a local wreck; A2 refuses crewed hull deletion.
+		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])} && {!(_trashObj isKindOf "Man") || {vehicle _trashObj == _trashObj} || {!(alive (vehicle _trashObj)) && {({alive _x} count crew (vehicle _trashObj)) == 0}}}) then {
+			if (!(_trashObj isKindOf "Man")) then {
+				{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { deleteVehicle _x } } forEach (crew _trashObj);
+			};
+			if (!isNull _trashObj) then { deleteVehicle _trashObj };
+		};
 	};
 	//--- fable/cleanup-locality-2: owner-side half of the weaponholder sweep (droppeditems_cleaner.sqf).
 	//--- Weaponholders are "alive", so the trash case above can never pass them - dedicated case with
@@ -243,7 +250,11 @@ switch (_request) do {
 		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
 		if (count _args < 1) exitWith {};
 		_emptyVehicle = _args select 0;
-		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {!(_emptyVehicle getVariable ["wfbe_is_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {deleteVehicle _emptyVehicle};
+		//--- r66: purge dead non-player crew before deleting an empty hull; living-crew and FOB guards remain.
+		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {!(_emptyVehicle getVariable ["wfbe_is_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {
+			{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { deleteVehicle _x } } forEach (crew _emptyVehicle);
+			if (!isNull _emptyVehicle) then { deleteVehicle _emptyVehicle };
+		};
 	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};

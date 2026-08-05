@@ -116,6 +116,7 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 							};
 						}];
 						[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
+						[str _side,'UnitsCreated',1] Call UpdateStatistics;
 						["WARNING", Format ["Server_HandleDefense.sqf: [%1] HC delegation did not seat a gunner for [%2] within grace window - filled server-side.", str _side, typeOf _defense]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
@@ -150,11 +151,11 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 			};
 		};
 
-		//--- HC path: count a dispatched manning request (server-fill logs separately).
-		if (_liveHCs > 0) then {
-			[str _side,'UnitsCreated',1] Call UpdateStatistics;
-			["INFORMATION", Format ["Server_HandleDefense.sqf: [%1] Unit has been dispatched to a [%2] defense (instant=%3).", str _side,typeOf _defense,_moveInGunner]] Call WFBE_CO_FNC_LogContent;
-		};
+		//--- FAIL-CLEAN (#1680 r32): dropped the old unconditional per-dispatch UnitsCreated credit here.
+		//--- It double-counted: the HC path is credited by Common_CreateUnitForStaticDefence.sqf (_built,
+		//--- line ~255) when the HC actually creates units, and the non-HC/fallback path is credited only
+		//--- on confirmed creation (see the fallback-watchdog spawn block above and the isNull-guarded
+		//--- else branch below). A credit here fired every tick regardless of success - phantom stats.
 	};
 
 	//--- build/defense audit 2026-07-28: bounded short-poll replaces the single sleep 420 so a gunner

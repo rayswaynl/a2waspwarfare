@@ -434,6 +434,7 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 									_static = objNull;
 									diag_log format ["USVFLOTILLA-WARN: gunner create failed for static [%1] - boat ships bare.", _nextClass];
 									_boat setVariable ["wfbe_usv_flotilla", true, true];
+									_grp setVariable ["wfbe_usv_flotilla", true, true];
 									_boat setVariable ["wfbe_usv_role", _nextRole, true];
 									_grp setBehaviour "AWARE";
 									_grp setCombatMode "RED";
@@ -455,6 +456,7 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 										_static = objNull;
 										diag_log format ["USVFLOTILLA-WARN: gunner seat failed for static [%1] - boat ships bare.", _nextClass];
 										_boat setVariable ["wfbe_usv_flotilla", true, true];
+										_grp setVariable ["wfbe_usv_flotilla", true, true];
 										_boat setVariable ["wfbe_usv_role", _nextRole, true];
 										_grp setBehaviour "AWARE";
 										_grp setCombatMode "RED";
@@ -466,6 +468,7 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 									} else {
 										_boat   setVariable ["wfbe_usv_flotilla", true, true];
 										_static setVariable ["wfbe_usv_flotilla", true, true];
+										_grp setVariable ["wfbe_usv_flotilla", true, true];
 										_boat   setVariable ["wfbe_usv_role", _nextRole, true];
 										_grp setBehaviour "AWARE";
 										_grp setCombatMode "RED";
@@ -488,6 +491,7 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 								//--- Boat itself still stands (bare hull, matching USV-FLOTILLA-VARIANTS.md #4's
 								//--- "trivial" Scout Skiff hedge) rather than deleting a good hull over a bad static.
 								_boat setVariable ["wfbe_usv_flotilla", true, true];
+								_grp setVariable ["wfbe_usv_flotilla", true, true];
 								_boat setVariable ["wfbe_usv_role", _nextRole, true];
 								_grp setBehaviour "AWARE";
 								_grp setCombatMode "RED";

@@ -154,12 +154,13 @@ _createBorder = {
 		_zpos = (_center select 2);
 
 		_a = "transparentwall" createVehicleLocal [_xpos,_ypos,_zpos];
+		//--- r105 bughunt: was setPosASL z=0 (sea level) - the whole border ring sat BURIED under any
+		//--- terrain above 0m ASL (all inland build areas on CH/TK/ZG), so the build-area boundary never
+		//--- rendered away from the coast. Ground-snap each segment instead (setPosATL z=0 = terrain surface).
+		//--- FAIL-CLEAN r44: null create must not setpos/setdir or append a null border segment.
 		if (isNull _a) then {
-			["WARNING", Format ["coin_interface.sqf: transparentwall create failed at [%1,%2,%3].", _xpos, _ypos, _zpos]] Call WFBE_CO_FNC_LogContent;
+			["WARNING", Format ["coin_interface.sqf: transparentwall border create failed at [%1,%2,%3].", _xpos, _ypos, _zpos]] Call WFBE_CO_FNC_LogContent;
 		} else {
-			//--- r105 bughunt: was setPosASL z=0 (sea level) - the whole border ring sat BURIED under any
-			//--- terrain above 0m ASL (all inland build areas on CH/TK/ZG), so the build-area boundary never
-			//--- rendered away from the coast. Ground-snap each segment instead (setPosATL z=0 = terrain surface).
 			_a setPosATL [_xpos,_ypos,0];
 			_a setdir (_dir + 90);
 			_border = _border + [_a];
@@ -625,6 +626,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				};
 
 				_preview = _itemclass_preview createVehicleLocal (screenToWorld [0.5,0.5]);
+				//--- FAIL-CLEAN r44: guard create null BEFORE setDir/camSetTarget/helper (late isnull ran after mutators)
 				if (isNull _preview) then {
 					["WARNING", Format ["coin_interface.sqf: preview class [%1] createVehicleLocal failed.", _itemclass_preview]] Call WFBE_CO_FNC_LogContent;
 					//--- fable/coin-placement-fixes (owner live report 2026-07-28 "some things dont even show a preview"):
@@ -658,6 +660,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",sideJoinedText]) select _index;
 						_npos = [getPos _preview,_distance,getDir _preview + _direction] Call GetPositionFrom;
 						_helper = "Sign_Danger" createVehicleLocal _npos;
+						//--- FAIL-CLEAN r44: helper null must not setPos/setDir/attachTo.
 						if (isNull _helper) then {
 							["WARNING", Format ["coin_interface.sqf: Sign_Danger helper create failed at %1.", _npos]] Call WFBE_CO_FNC_LogContent;
 						} else {
@@ -671,10 +674,10 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 							_logic setVariable ['WFBE_Helper',_helper];
 						};
 					};
+
 					_preview setObjectTexture [0,_colorGray];
 					_preview setVariable ["BIS_COIN_color",_colorGray];
 				};
-
 			} else {
 				//--- fable/fortif-placement-preview-facing (owner 2026-08-04, "facing direction indications"):
 				//--- ROTATE=[Ctrl] hint (str_coin_rotate, below) promised a control that was never wired to any

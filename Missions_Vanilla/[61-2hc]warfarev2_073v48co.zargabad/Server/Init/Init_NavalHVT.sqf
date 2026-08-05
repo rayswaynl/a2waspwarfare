@@ -963,7 +963,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 										deleteVehicle _jet1;
 										diag_log "NAVALCAP|SEATFAIL|L39|jet1";
 									} else {
-										_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit
+										_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
 									};
 								};
 							};
@@ -977,7 +977,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
 								_jet2 flyInHeight 600;
 								_jetPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-								if (isNull _jetPilot2) then {_jetPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+								if (isNull _jetPilot2) then {_jetPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
 								if (isNull _jetPilot2) then {
 									deleteVehicle _jet2;
 									diag_log "NAVALCAP|PILOTFAIL|L39|jet2";
@@ -993,7 +993,6 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 									};
 								};
 							};
-
 							_capGrp setBehaviour "AWARE";
 							//--- fable/inland-sweep: YELLOW, not RED - the circuit overflies towns and a RED jet strafes
 							//--- infantry (owner: HVT only, never free-fire on men). Engagement is FORCED per tick on
@@ -1017,8 +1016,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 
 							//--- Tag both as CAP so GC/groupsGC don't reap them.
 							_capGrp setVariable ["wfbe_naval_cap", true, true];
-							_jet1 setVariable ["wfbe_naval_cap", true, true];
-							_jet2 setVariable ["wfbe_naval_cap", true, true];
+							if (!isNull _jet1) then {_jet1 setVariable ["wfbe_naval_cap", true, true]};
+							if (!isNull _jet2) then {_jet2 setVariable ["wfbe_naval_cap", true, true]};
 
 							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (2x L39_TK_EP1, easa_random=%2).", _loc getVariable "name", (missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0])]] Call WFBE_CO_FNC_LogContent;
 						} else {
@@ -1536,42 +1535,42 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 				{
 					_cOff = _x;
 					_cXY = _deckPart modelToWorld _cOff;
-					_cLogic = "HeliHEmpty" createVehicle [_cXY select 0, _cXY select 1, 0];
 					//--- FAIL-CLEAN (r40): null logic/model/flag must not setDir/setPos/setVar or pollute camps/flags arrays.
+					_cLogic = "HeliHEmpty" createVehicle [_cXY select 0, _cXY select 1, 0];
 					if (isNull _cLogic) then {
 						diag_log Format ["NAVALHVT-CAMP: deck camp logic createVehicle FAILED at %1 - slot skipped.", _cXY];
 					} else {
-					_cLogic setDir (getDir _deckPart);
-					_cLogic setPosASL [_cXY select 0, _cXY select 1, _deckZ];
-					_cLogic allowDamage false;
-					_cLogic setVariable ["town", _loc];
-					_cLogic setVariable ["sideID", _townSideID, true];
-					_cLogic setVariable ["supplyValue", _townSV, true];
-					_cLogic setVariable ["wfbe_camp_deckz", _deckZ]; //--- kimi/naval-deckcamp-repair (2026-07-20): server-local deck-height marker (writer here, reader Server_HandleSpecial "repair-camp") so a repaired deck-camp bunker is reseated ON the flight deck (setPosASL) instead of the ATL z=0 sea-surface bury inside the hull.
-					_cModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
-					if (isNull _cModel) then {
-						diag_log Format ["NAVALHVT-CAMP: deck camp bunker createVehicle FAILED at %1 - logic deleted.", _cXY];
-						deleteVehicle _cLogic;
-					} else {
-					_cModel setDir ((getDir _cLogic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
-					_cModel setPosASL [_cXY select 0, _cXY select 1, _deckZ];
-					_campHealth = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
+						_cLogic setDir (getDir _deckPart);
+						_cLogic setPosASL [_cXY select 0, _cXY select 1, _deckZ];
+						_cLogic allowDamage false;
+						_cLogic setVariable ["town", _loc];
+						_cLogic setVariable ["sideID", _townSideID, true];
+						_cLogic setVariable ["supplyValue", _townSV, true];
+						_cLogic setVariable ["wfbe_camp_deckz", _deckZ]; //--- kimi/naval-deckcamp-repair (2026-07-20): server-local deck-height marker (writer here, reader Server_HandleSpecial "repair-camp") so a repaired deck-camp bunker is reseated ON the flight deck (setPosASL) instead of the ATL z=0 sea-surface bury inside the hull.
+						_cModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+						if (isNull _cModel) then {
+							diag_log Format ["NAVALHVT-CAMP: deck camp bunker createVehicle FAILED at %1 - logic deleted.", _cXY];
+							deleteVehicle _cLogic;
+						} else {
+							_cModel setDir ((getDir _cLogic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
+							_cModel setPosASL [_cXY select 0, _cXY select 1, _deckZ];
+							_campHealth = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
 							if !(isNil '_campHealth') then {
 								_cModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 							};
-					_cFlag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
-					if (isNull _cFlag) then {
-						diag_log Format ["NAVALHVT-CAMP: deck camp flag createVehicle FAILED at %1 - bunker kept without flag.", _cXY];
-						_cLogic setVariable ["wfbe_flag", objNull];
-					} else {
-						_cFlagPos = _cLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
-						_cFlag setPosASL [_cFlagPos select 0, _cFlagPos select 1, _deckZ];
-						_cLogic setVariable ["wfbe_flag", _cFlag];
-						_newFlags = _newFlags + [_cFlag];
-					};
-					_cLogic setVariable ["wfbe_camp_bunker", _cModel, true];
-					_newCamps = _newCamps + [_cLogic];
-					};
+							_cFlag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+							if (isNull _cFlag) then {
+								diag_log Format ["NAVALHVT-CAMP: deck camp flag createVehicle FAILED at %1 - bunker kept without flag.", _cXY];
+								_cLogic setVariable ["wfbe_flag", objNull];
+							} else {
+								_cFlagPos = _cLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
+								_cFlag setPosASL [_cFlagPos select 0, _cFlagPos select 1, _deckZ];
+								_cLogic setVariable ["wfbe_flag", _cFlag];
+								_newFlags = _newFlags + [_cFlag];
+							};
+							_cLogic setVariable ["wfbe_camp_bunker", _cModel, true];
+							_newCamps = _newCamps + [_cLogic];
+						};
 					};
 				} forEach [[-10, 18, 0], [-10, -18, 0]];
 				_loc setVariable ["camps", _newCamps, true];
