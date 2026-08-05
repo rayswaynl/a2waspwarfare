@@ -1,4 +1,8 @@
 {
+ "Client/Action/Action_HALO.sqf": {
+  "total": 1,
+  "probed": 0
+ },
  "Client/Client_EndGame.sqf": {
   "total": 2,
   "probed": 0
@@ -129,6 +133,10 @@
  },
  "Common/Init/Init_CommonConstants.sqf": {
   "total": 4,
+  "probed": 0
+ },
+ "Common/Init/Init_Unit.sqf": {
+  "total": 1,
   "probed": 0
  },
  "Common/Module/Arty/ARTY_HandleILLUM.sqf": {
