@@ -1,6 +1,6 @@
 // Marty: Restore pre-May 2026 town SV marker behavior; keep supply-role labels without recent visibility/cache changes.
 // QoL S3: SpecOps gets a cooldown MM:SS countdown on town markers + ARTY_cooldown_over sound when supply becomes ready.
-private["_tcarm","_units","_canCollectSupply","_supplyCooldownWasActive","_mapVisible","_isSpecOps","_lastTownText","_desired"];
+private["_tcarm","_units","_canCollectSupply","_supplyCooldownWasActive","_mapVisible","_isSpecOps","_lastTownText","_desired","_i"];
 
 _tcarm = missionNamespace getVariable "WFBE_C_PLAYERS_MARKER_TOWN_RANGE";
 //--- Per-town cooldown-was-active cache (parallel to towns array); used to detect the active->ready transition.
@@ -21,6 +21,19 @@ while {!gameOver} do {
 	//--- still fire off-map. visibleMap/shownGPS are A2-OA-safe (already used across the marker scripts).
 	_mapVisible = visibleMap || shownGPS;
 	_isSpecOps = (!isNil "WFBE_SK_V_Type") && {WFBE_SK_V_Type == 'SpecOps'};
+	//--- fix(markers): towns[] keeps growing for up to ~60s after Init_Towns.sqf releases townInit
+	//--- (Common\Init\Init_Towns.sqf D6c, 2026-08-03) - each Init_Town.sqf worker only self-registers
+	//--- once its own game-time sleep elapses, well after this FSM's one-shot cache seed above ran.
+	//--- Once towns[] outgrows _lastTownText/_supplyCooldownWasActive, a select on a late-
+	//--- registered town returns nil and the SV text write for it never lands - same failure class
+	//--- already documented+fixed for clientTeams in updateteamsmarkers.sqf (B64/cmdcon26). Grow both
+	//--- caches to match towns[] every tick, before the per-town forEach below.
+	if ((count towns) > (count _lastTownText)) then {
+		for "_i" from (count _lastTownText) to ((count towns) - 1) do {
+			_lastTownText set [_i, "~"];
+			_supplyCooldownWasActive set [_i, false];
+		};
+	};
 	if (!_mapVisible && !_isSpecOps) then { sleep 0.5 } else {
 	_units = (Units Group player) Call GetLiveUnits;
 
