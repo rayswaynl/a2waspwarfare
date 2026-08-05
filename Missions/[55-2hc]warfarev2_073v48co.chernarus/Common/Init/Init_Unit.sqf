@@ -214,7 +214,7 @@ if (_unit isKindOf "Air") then { //--- Air units.
 	if ((getNumber (configFile >> 'CfgVehicles' >> _unit_kind >> 'transportSoldier')) > 0) then { //--- Transporters only.
 		//--- HALO action.
 		//--- Only occupants may see/use HALO; Action_HALO rechecks the seat at invocation.
-		_unit addAction ['HALO','Client\Action\Action_HALO.sqf', [], 97, false, true, '', Format['vehicle _this == _target && {alive _this} && {getPos _target select 2 >= %1} && {alive _target}', missionNamespace getVariable 'WFBE_C_PLAYERS_HALO_HEIGHT']];
+		_unit addAction ['HALO','Client\Action\Action_HALO.sqf', [], 97, false, true, '', Format['vehicle _this == _target && alive _this && alive _target && getPos _target select 2 >= %1', missionNamespace getVariable 'WFBE_C_PLAYERS_HALO_HEIGHT']];
 		//--- Cargo Eject action.
 		_unit addAction [localize 'STR_WF_Cargo_Eject','Client\Action\Action_EjectCargo.sqf', [], 99, false, true, '', 'driver _target == _this && alive _target'];
 		//--- r72: emergency player HALO on involuntary high-altitude GetOut (shot-down / forced leave).
