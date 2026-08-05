@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals.
-private ["_playerStats","_playerScore","_playerPrevStats","_playerPrevScoreTotal","_playerPrevTimePlayedTotal","_result","_oldScore","_playerScoreDiff","_playerNewScore","_playerNewScoreTotal","_sleep","_miniSleep","_hasConnectedAtLaunch","_flushSleep","_initialSleep","_perfStart","_perfPlayers","_perfAllUnits"];
+private ["_playerStats","_playerScore","_playerPrevStats","_playerPrevScoreTotal","_playerPrevTimePlayedTotal","_result","_oldScore","_playerScoreDiff","_playerNewScore","_playerNewScoreTotal","_sleep","_miniSleep","_hasConnectedAtLaunch","_flushSleep","_initialSleep","_perfStart","_perfPlayers"];
 
 
 _sleep = _this select 0;
@@ -15,7 +15,6 @@ while { !WFBE_GameOver } do { //--- wiki-wins: stop at game over, matching sibli
 	// Marty: Performance Audit timing for AntiStack score sampling.
 	_perfStart = diag_tickTime;
 	_perfPlayers = 0;
-	_perfAllUnits = count allUnits;
 
 	{
 		if (!isNull _x) then {
@@ -28,7 +27,8 @@ while { !WFBE_GameOver } do { //--- wiki-wins: stop at game over, matching sibli
 	// Marty: Performance Audit record for AntiStack score sampling.
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			["antistack_update_score", diag_tickTime - _perfStart, Format["allUnits:%1;players:%2", _perfAllUnits, _perfPlayers], "SERVER"] Call PerformanceAudit_Record;
+			//--- The one-second score loop samples real players only; all-unit census telemetry remains in the lower-frequency AntiStack loops.
+			["antistack_update_score", diag_tickTime - _perfStart, Format["players:%1", _perfPlayers], "SERVER"] Call PerformanceAudit_Record;
 		};
 	};
 };
