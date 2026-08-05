@@ -29,6 +29,8 @@ Deliberately unchanged (documented in PR):
   is a standoff behind the nearest OWN-held town (ring-validated), never the naval town.
 - AssignTowns per-team air gates (`_teamAir`/`_bootAir`) remain the per-team authority.
 
+Draft PR: #2199 (base master).
+
 Gates (actuals):
 - Lint gate (CLAUDE.md verbatim incl. BAREEXIT/DBLBOM/TRAILCOMMA): 168 findings tree-wide
   = pre-existing baseline; 0 in the three edited files.
