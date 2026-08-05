@@ -42,7 +42,7 @@ _fnGuerGroups = {
     _t = _this select 0;
     _out = [];
     {
-        if ((side _x == resistance) && {alive (leader _x)} && {(leader _x) distance _t < 600}) then {
+        if ((side _x == resistance) && {!([_x, "wfbe_naval_cap", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_x, "wfbe_usv_flotilla", false] Call WFBE_CO_FNC_GroupGetBool)} && {alive (leader _x)} && {(leader _x) distance _t < 600}) then {
             _out set [count _out, _x];
         };
     } forEach allGroups;
