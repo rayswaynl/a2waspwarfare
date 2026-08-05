@@ -1628,6 +1628,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_DROPPEDITEMS_MIN_AGE") then {WFBE_C_DROPPEDITEMS_MIN_AGE = 120}; //--- s: weaponholder must be at least this old (first-seen by droppeditems_cleaner) before reaping. 0 = legacy immediate. Gives a guaranteed loot window independent of cleaner phase.
 	if (isNil "WFBE_C_DROPPEDITEMS_PROX") then {WFBE_C_DROPPEDITEMS_PROX = 20}; //--- m: hold weaponholder deletion while a real player is this close (mirrors WFBE_C_UNITS_BODIES_PROX). 0 = off.
 	if (isNil "WFBE_C_DROPPEDITEMS_PROX_HOLD") then {WFBE_C_DROPPEDITEMS_PROX_HOLD = 300}; //--- s: max extra hold past MIN_AGE while a player camps a pile (anti-pin). Total max life under prox = MIN_AGE + PROX_HOLD.
+	if (isNil "WFBE_C_DROPPEDITEMS_HOLD_ENABLE") then {WFBE_C_DROPPEDITEMS_HOLD_ENABLE = 0}; //--- PR #1718 fix (owner ruling 2026-08-05): MIN_AGE/PROX/PROX_HOLD shipped ARMED by default with no opt-in, violating flag policy. Default OFF = pre-#1718 immediate-reap (byte-identical to HEAD before that PR). 1 = arm the age+proximity hold using the tuning values above. Gated in droppeditems_cleaner.sqf.
 	WFBE_C_BASE_AREA_RANGE = 250; //--- A base area has a range of x meters.
 	WFBE_C_BASE_HQ_BUILD_RANGE = 120; //--- HQ Build range.
 	WFBE_C_BASE_AV_STRUCTURES = 260; //--- Base available structures.

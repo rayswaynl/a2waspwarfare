@@ -58,6 +58,18 @@ if (_prox < 0) then {_prox = 0};
 _proxHold = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_PROX_HOLD", 300];
 if (_proxHold < 0) then {_proxHold = 0};
 
+//--- PR #1718 fix (owner ruling 2026-08-05, flag WFBE_C_DROPPEDITEMS_HOLD_ENABLE default 0):
+//--- the age/proximity hold above shipped ARMED with no opt-in, violating flag policy (every
+//--- server held weaponholder piles >=120s, up to 420s under camping, with no off-switch).
+//--- With the flag at 0, force both gate inputs to 0 so the ">0" checks below (_minAge>0 at the
+//--- age gate, _prox>0 at the proximity gate) are never true - this reproduces the pre-#1718
+//--- immediate-reap path byte-for-byte. 1 = arm the hold using the tuning values read above.
+if ((missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_HOLD_ENABLE", 0]) <= 0) then {
+	_minAge = 0;
+	_prox = 0;
+	_proxHold = 0;
+};
+
 //--- Whole-island scan anchor + radius (weaponholders only; ~20km covers the legacy Chernarus map).
 _scanCentre = [7000, 7500, 0];
 _scanRadius = 20000;
