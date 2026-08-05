@@ -9,7 +9,7 @@ _building = objNull;
 _unitType = "";
 _side = sideUnknown;
 _team = grpNull;
-_isVehicle = false;
+_isVehicle = [];
 _price = 0;
 if (typeName _this != "ARRAY" || {(count _this) < 6}) then {_authBad = "short/non-array buy payload"};
 if (_authBad == "") then {
@@ -25,7 +25,14 @@ if (_authBad == "" && {typeName _building != "OBJECT"}) then {_authBad = "buildi
 if (_authBad == "" && {typeName _unitType != "STRING" || {_unitType == ""}}) then {_authBad = "unitType is not a non-empty STRING"};
 if (_authBad == "" && {typeName _side != "SIDE" || {!(_side in [west,east,resistance])}}) then {_authBad = "side is not a playable SIDE"};
 if (_authBad == "" && {typeName _team != "GROUP" || {isNull _team}}) then {_authBad = "team is not a live GROUP"};
-if (_authBad == "" && {typeName _isVehicle != "BOOL"}) then {_authBad = "isVehicle flag type invalid"};
+if (_authBad == "" && {typeName _isVehicle != "ARRAY"}) then {_authBad = "isVehicle flags type invalid"};
+if (_authBad == "" && {count _isVehicle > 0 && {count _isVehicle != 4}}) then {_authBad = "isVehicle flags array length invalid"};
+if (_authBad == "" && {count _isVehicle == 4}) then {
+	if (typeName (_isVehicle select 0) != "BOOL") then {_authBad = "isVehicle flags contain invalid type"};
+	if (_authBad == "" && {typeName (_isVehicle select 1) != "BOOL"}) then {_authBad = "isVehicle flags contain invalid type"};
+	if (_authBad == "" && {typeName (_isVehicle select 2) != "BOOL"}) then {_authBad = "isVehicle flags contain invalid type"};
+	if (_authBad == "" && {typeName (_isVehicle select 3) != "BOOL"}) then {_authBad = "isVehicle flags contain invalid type"};
+};
 if (_authBad == "" && {typeName _price != "SCALAR" || {_price < 0}}) then {_authBad = "price is not a non-negative SCALAR"};
 };
 if (_authBad != "") exitWith {
@@ -71,12 +78,12 @@ if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wf
 };
 
 //--- Man/vehicle flag must match the class (prevents wrong branch: free crew / empty hull path abuse).
-if ((_unitType isKindOf "Man") && {_isVehicle}) exitWith {
+if ((_unitType isKindOf "Man") && {count _isVehicle > 0}) exitWith {
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
 if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
 ["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH isVehicle flag mismatch for Man class [%1] - refunded %2.", _unitType, _price]] Call WFBE_CO_FNC_LogContent;
 };
-if (!(_unitType isKindOf "Man") && {!_isVehicle}) exitWith {
+if (!(_unitType isKindOf "Man") && {count _isVehicle == 0}) exitWith {
 if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
 if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
 ["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH isVehicle flag mismatch for vehicle class [%1] - refunded %2.", _unitType, _price]] Call WFBE_CO_FNC_LogContent;
