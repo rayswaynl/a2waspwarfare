@@ -11,11 +11,25 @@
 	a player from stealing a seat that is locked, occupied by a human, or not theirs.
 */
 
-Private ["_side","_claimTeam","_logic","_currentCommander","_syncAicomState"];
+Private ["_side","_claimTeam","_logic","_currentCommander","_syncAicomState","_teams"];
+
+if (typeName _this != "ARRAY") exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected malformed payload type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
+};
+if ((count _this) < 2) exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected short payload [%1].", _this]] Call WFBE_CO_FNC_LogContent;
+};
 
 _side = _this select 0;
 _claimTeam = _this select 1;
 _syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
+
+if (typeName _side != "SIDE") exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected non-side [%1].", typeName _side]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _claimTeam != "GROUP" || {isNull _claimTeam}) exitWith {
+	["WARNING", "RequestClaimCommander.sqf: rejected invalid claim team."] Call WFBE_CO_FNC_LogContent;
+};
 
 _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
 
@@ -29,10 +43,17 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) exitWith
 _currentCommander = _logic getVariable ["wfbe_commander", objNull];
 if (!isNull _currentCommander) exitWith {};
 
-//--- Guard: the claiming team must be a real, player-led team on the requesting side.
-if (isNull _claimTeam) exitWith {};
+//--- Guard: the claiming team must be a real, player-led team on the requesting side roster.
 if (!isPlayer (leader _claimTeam)) exitWith {};
 if (side _claimTeam != _side) exitWith {};
+_teams = _logic getVariable "wfbe_teams"; if (isNil "_teams") then {_teams = []};
+if (typeName _teams != "ARRAY" || {!(_claimTeam in _teams)}) exitWith {
+	["WARNING", "RequestClaimCommander.sqf: rejected claim team not on side roster."] Call WFBE_CO_FNC_LogContent;
+};
+//--- Guard: never promote an AICOM-HC founded field team into the commander seat.
+if ([_claimTeam, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) exitWith {
+	["WARNING", "RequestClaimCommander.sqf: rejected claim team tagged as aicom-hc."] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- Promote EXACTLY like the elected path (RequestNewCommander.sqf:12-13).
 //--- Round-3 review (P1-1/P1-3): with the lease enabled the writer ONLY ENQUEUES a grant
