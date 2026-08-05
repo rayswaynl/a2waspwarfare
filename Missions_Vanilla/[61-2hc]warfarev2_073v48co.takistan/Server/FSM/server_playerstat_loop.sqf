@@ -37,8 +37,9 @@ if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 
 ["INITIALIZATION", Format ["server_playerstat_loop.sqf: Armed. Emitting PLAYERSTAT rows every %1s.", _interval]] Call WFBE_CO_FNC_LogContent;
 
-while {true} do {
+while {!gameOver} do {
 	sleep _interval;                                   //--- wait first, so we do not spam at t=0 boot.
+	if (gameOver || {WFBE_GameOver}) exitWith {};
 
 	private ["_hcs","_min","_players"];
 	_hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
