@@ -42,6 +42,26 @@
             };
         };
     };
+
+    //--- AICOM-WILDCARD-JIP: WildcardMarker creates a local marker, so the original side broadcast cannot
+    //--- reach a player whose client was not ready when the draw happened. Replay from CLIENT_INIT_READY,
+    //--- after the joiner's PVF receiver exists, and target the player directly. The snapshot is copied before
+    //--- the loop; each record is re-checked against the joiner's side and absolute expiry before sending.
+    //--- The final false payload element suppresses the historical chat line for a replay; the live create path
+    //--- still uses its default notification behavior.
+    [_player] Spawn {
+        private ["_jipPlayer","_jipSide","_wildReplay"];
+        _jipPlayer = _this select 0;
+        if (isNull _jipPlayer) exitWith {};
+        _jipSide = side _jipPlayer;
+        _wildReplay = + (missionNamespace getVariable ["WFBE_AICOM_WILDCARD_ACTIVE", []]);
+        {
+            if ((_x select 0) == _jipSide && {(_x select 7) > time}) then {
+                [_jipPlayer, "WildcardMarker", ["create", _x select 1, _x select 2, _x select 3, _x select 4, _x select 5, _x select 6, false]] Call WFBE_CO_FNC_SendToClient;
+                sleep 0.5;
+            };
+        } forEach _wildReplay;
+    };
 };
 
 
