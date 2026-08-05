@@ -518,6 +518,8 @@ while {true} do {
 				_mbuPT = missionNamespace getVariable ['WFBE_PopTier', 0]; if (_mbuPT < 0) then {_mbuPT = 0};
 				if (_mbuPT <= ((count _mbuByTier) - 1)) then {_mbu = _mbuByTier select _mbuPT};
 			};
+			//--- Keep the RHUD denominator aligned with the buyer: tier resolution must not erase Soldier's class allowance.
+			if (!isNil "WFBE_SK_V_AI_CAP_MULTIPLIER" && {typeName WFBE_SK_V_AI_CAP_MULTIPLIER == "SCALAR"}) then {_mbu = ceil (_mbu * WFBE_SK_V_AI_CAP_MULTIPLIER)};
 			//--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
 			//--- B76 DEFENSIVE: resolve GetSideUpgrades ONCE and guard the select math. GetSideUpgrades returns objNull
 			//--- for a civilian side (Common_GetSideUpgrades default) - selecting an index off objNull throws a per-tick

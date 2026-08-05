@@ -59,7 +59,8 @@ if (playerType in WFBE_SK_V_Medics) then {WFBE_SK_V_Type = "Medic"};
 
 /* Special one time init */
 /* The soldier can hire more units than the others leader */
-if (WFBE_SK_V_Type == 'Soldier') then {missionNamespace setVariable ['WFBE_C_PLAYERS_AI_MAX',ceil (1.5*(missionNamespace getVariable "WFBE_C_PLAYERS_AI_MAX"))]};
+//--- The tiered buyer/HUD cap resolves after this module; retain the class modifier separately so that resolution cannot erase it.
+WFBE_SK_V_AI_CAP_MULTIPLIER = if (WFBE_SK_V_Type == 'Soldier') then {1.5} else {1};
 
 //--- QoL S4: broadcast this player's class so updateteamsmarkers can show a class tag on the map marker.
 //--- WFBE_SK_V_Type is LOCAL-only; setVariable with broadcast=true propagates to all clients.
