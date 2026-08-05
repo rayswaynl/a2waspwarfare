@@ -237,7 +237,7 @@ while {alive player && dialog} do {
 		titleCut["","BLACK FADED",0];
 		_pos = position player;
 		_vehi = "Lada1" createVehicle [0,0,0];
-		//--- r44: missing Lada1 (class/mod strip) -> moveInCargo/delete on null is a no-op leave black-fade stuck path.
+		//--- r44: missing Lada1 (class/mod strip) -> moveInCargo/delete on null is a no-op leave black-fade stuck path. (dup-fixed by #1699 + #1700)
 		if (isNull _vehi) then {
 			["WARNING", "GUI_Menu.sqf: headbug fix Lada1 createVehicle failed; restoring player pose only."] Call WFBE_CO_FNC_LogContent;
 			player setPos _pos;
