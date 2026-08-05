@@ -313,27 +313,32 @@ if (!_fromFocus) then {
 		if (!isNull _best) then {_fist set [count _fist, _best]};
 	};
 	//--- FIST DWELL / HYSTERESIS (port of Strategy.sqf cmdcon41-w2 FRONT_DWELL; flag WFBE_C_AICOM2_FIST_DWELL
-	//--- default 0 = inert/byte-identical). The AUTO scorer re-ranks every ~60s strategy tick, so with 2-3 towns
+	//--- mission default mirrors FRONT_DWELL (480s); fallback/override 0 = inert/byte-identical). The AUTO scorer re-ranks every ~60s strategy tick, so with 2-3 towns
 	//--- inside the flat REPICK_PENALTY band the published fist primary round-robins forever (server.rpt showed
 	//--- Pulkovo->Bor->Nadezhdino->Pulkovo while concentrate=true) and every marching team is redirected
 	//--- mid-journey. Once an AUTO primary is chosen, DWELL on it: keep it at fist slot 0 (skip the re-score flip)
-	//--- until the window elapses OR it flips to us / neutralises / drops off the capturable list. A flat penalty
+	//--- until the window elapses OR it flips to us / neutralises / is stall-blacklisted / drops off the capturable list. A flat penalty
 	//--- is always beaten by a big enough score gap; a time pin is not. AUTO-only: a fresh commander FOCUS
 	//--- overrides via _fromFocus and never reaches this block. Selection-only: reorders _fist before publish,
 	//--- never moves a unit. Own state vars, distinct from Strategy's wfbe_aicom_front_* (separate worker).
 	//--- A2-OA-safe: OBJECT/time/getVariable, ==/!= on the sideID scalar + isNull only; result capped at _fistMax.
-	private ["_fdWin","_fdPrim","_fdT0","_fdFresh","_fdValid"];
+	private ["_fdWin","_fdPrim","_fdT0","_fdFresh","_fdValid","_fdBl","_fdBlHit"];
 	_fdWin = missionNamespace getVariable [format ["WFBE_C_AICOM2_FIST_DWELL_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_FIST_DWELL", 0]];
 	if (_fdWin > 0 && {count _fist > 0}) then {
 		_fdFresh = _fist select 0;
 		_fdPrim  = _logik getVariable "wfbe_aicom_fist_dwell_prim";
 		_fdT0    = _logik getVariable "wfbe_aicom_fist_dwell_t0";
+		_fdBl    = _logik getVariable ["wfbe_aicom_spearhead_bl", []];
+		_fdBlHit = false;
+		if (!isNil "_fdPrim") then {
+			{ if ((typeName _x == "ARRAY") && {(count _x > 1)} && {(_x select 0) == _fdPrim} && {(_x select 1) > time}) then {_fdBlHit = true} } forEach _fdBl;
+		};
 		//--- Is the stored dwell pick still a VALID capturable enemy/neutral target (not null, not ours, not
-		//--- neutralised (sideID -1), still on this tick's capturable list)?
+		//--- neutralised (sideID -1), not stall-blacklisted, still on this tick's capturable list)?
 		_fdValid = false;
 		if (!isNil "_fdPrim" && {!isNull _fdPrim} && {!isNil "_fdT0"}) then {
 			private "_fdSID"; _fdSID = _fdPrim getVariable ["sideID", -1];
-			if (_fdSID != _sideID && {_fdSID != -1} && {_fdPrim in _tgtTowns}) then {_fdValid = true};
+			if (_fdSID != _sideID && {_fdSID != -1} && {!_fdBlHit} && {_fdPrim in _tgtTowns}) then {_fdValid = true};
 		};
 		if (_fdValid && {(time - _fdT0) < _fdWin}) then {
 			//--- Dwell active + pick valid: pin it to slot 0 (skip the re-score flip). Rebuild capped at _fistMax so
