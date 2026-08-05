@@ -104,6 +104,12 @@ def _exitwith_block_spans(source: str) -> list:
 # release (one sitting inside an `exitWith {}` block) shares a block with any of these, that
 # block is not a clean bail-out - it is doing real camp-mutation work AND releasing the guard
 # in the same breath, which reopens the double-spawn race harden-repair-camp closed.
+# The two named early-exit branches that must EACH release the reentrancy flag on their own.
+_EARLY_EXIT_BRANCHES = (
+    ("if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {", "alive-reject"),
+    ("if (isNull _townModel) exitWith {", "createVehicle-fail"),
+)
+
 _CAMP_MUTATION_MARKERS = (
     "createVehicle [",
     "setDir (",
@@ -194,6 +200,27 @@ def test_handlespecial_reentrancy_guard_present() -> None:
             assert marker not in tail, (
                 f"{terrain}: camp-mutation work ({marker!r}) still runs AFTER the reentrancy flag "
                 f"is released - the guard no longer covers the full repair"
+            )
+
+        # Each NAMED early-exit branch must carry its OWN release. The aggregate ">= 2 clean
+        # releases" check above is satisfied by either branch alone, so dropping exactly one of
+        # them slips through - and dropping either one permanently latches the flag the first
+        # time that branch fires, blocking every future repair of that camp.
+        for anchor, label in _EARLY_EXIT_BRANCHES:
+            anchor_index = body.find(anchor)
+            assert anchor_index != -1, (
+                f"{terrain}: could not locate the {label} early-exit branch "
+                f"({anchor!r}) - the reentrancy guard's shape has changed"
+            )
+            open_brace = anchor_index + len(anchor) - 1
+            span = next(((o, c) for (o, c) in blocks if o == open_brace), None)
+            assert span is not None, (
+                f"{terrain}: the {label} branch is no longer a brace-matched exitWith block"
+            )
+            assert REENTRANCY_GUARD_RELEASE in body[span[0]:span[1]], (
+                f"{terrain}: the {label} early-exit branch does not release the reentrancy flag - "
+                f"the first time it fires, wfbe_camp_repairing latches true forever and no further "
+                f"repair of that camp can ever start"
             )
 
 
