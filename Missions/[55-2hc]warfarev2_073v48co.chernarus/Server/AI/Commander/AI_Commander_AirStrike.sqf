@@ -226,6 +226,51 @@ if (_canDispatch) then {
 	_airList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 	_attackClasses = [];
 	{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_D_TK_EP1","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_attackClasses = _attackClasses + [_x]} } forEach _airList;
+	//--- OWNER FIX 2026-08-01 ("AI commanders can build units from factory levels they haven't
+	//--- unlocked yet"): the allowlist pick above bypassed the per-class QUERYUNITUPGRADE tier check
+	//--- every sibling AI buy path runs (Common_IsUnitUnlocked) - a tier-5 airframe (Su34/Ka52Black)
+	//--- could spawn at researched AIR tier 0 because _airOK is a binary capability signal, not a
+	//--- per-class gate. Owner pick: FOUNDING PARITY (AI_Commander_Teams.sqf:518-596) - a held
+	//--- airfield waives heli+plane AIR tiers (B74 free-buy), a live Aircraft Factory waives HELI
+	//--- tiers only (Build83), everything else passes the same per-class check the player UI runs.
+	//--- _hasAirFactory/_upgrades computed above; airfield scan mirrors Teams.sqf:519-529 verbatim;
+	//--- the waiver-copy idiom (`+ []`, AIR slot -> 1e6) mirrors Teams.sqf:588-594. The helper is
+	//--- FAIL-OPEN for unmapped classnames and FAIL-CLOSED on nil _upgrades, so missing research
+	//--- data grounds planes (no airfield) while the factory waiver still fields helis - Build83
+	//--- intent preserved.
+	private ["_afTownNames","_hasAirfield","_freeAirWaive","_airHeliWaive","_gatedClasses","_cnUpgrades","_afWaive","_tierPass"];
+	_hasAirfield = false;
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0) then {
+		_afTownNames = ["NWAF","NEAF","Balota","Rasman AF"];
+		{
+			if (!((_x select 1) in _afTownNames)) then {_afTownNames = _afTownNames + [_x select 1]};
+		} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []]);
+		{
+			if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {(_x getVariable ["name",""]) in _afTownNames} || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true};
+		} forEach towns;
+	} else {
+		_hasAirfield = true;
+	};
+	_freeAirWaive = _hasAirfield && {(missionNamespace getVariable ["WFBE_C_AICOM_AIRFIELD_FREE_AIR", 1]) > 0};
+	_airHeliWaive = _hasAirFactory && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI", 1]) > 0};
+	_gatedClasses = [];
+	{
+		_afWaive = _freeAirWaive || {_airHeliWaive && {!(_x isKindOf "Plane")}};
+		_tierPass = false;
+		if (_afWaive) then {
+			_cnUpgrades = [0,0,0,0];
+			if (!isNil "_upgrades") then {_cnUpgrades = _upgrades + []};
+			_cnUpgrades set [WFBE_UP_AIR, 1e6];
+			_tierPass = ([_x, _sideText, _cnUpgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0;
+		} else {
+			_tierPass = ([_x, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0;
+		};
+		if (_tierPass) then {_gatedClasses = _gatedClasses + [_x]};
+	} forEach _attackClasses;
+	if ((count _gatedClasses) < (count _attackClasses)) then {
+		diag_log Format ["AICOM2|v1|AIRSTRIKE|%1|tiergate|all=%2|ok=%3|waiveAF=%4|waiveHeli=%5", _sideText, count _attackClasses, count _gatedClasses, _freeAirWaive, _airHeliWaive];
+	};
+	_attackClasses = _gatedClasses;
 	_pilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
 	if (count _attackClasses > 0 && {_pilotClass != ""}) then {
 		_tgtPos = getPos _tgt;

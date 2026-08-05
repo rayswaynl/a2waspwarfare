@@ -98,13 +98,26 @@ $scriptTimeout = @($deployAst.ParamBlock.Parameters | Where-Object { $_.Name.Var
 Assert ($null -ne $scriptTimeout) "-VerifyTimeoutSec is an operator-settable script param"
 Assert ([int]$scriptTimeout.DefaultValue.Extent.Text -ge $OBSERVED_LAG_SEC) "-VerifyTimeoutSec default outlasts the observed build= lag"
 
-# every Test-WaspLive CALL (deploy verify + rollback verify) must thread the operator's value.
+# every Test-WaspLive CALL (deploy verify + manual rollback verify + auto-rollback verify) must
+# thread the operator's value. The manual rollback call is pinned separately because it was the
+# missing call site that allowed restart=OK to masquerade as a completed restore.
 $calls = @($deployAst.FindAll({ param($n)
     $n -is [System.Management.Automation.Language.CommandAst] -and $n.GetCommandName() -eq 'Test-WaspLive' }, $true))
-Assert ($calls.Count -eq 2) "both verify call sites present (deploy + rollback)"
+Assert ($calls.Count -eq 3) "all verify call sites present (deploy + manual rollback + auto-rollback)"
 $threaded = @($calls | Where-Object { @($_.CommandElements | Where-Object {
     $_ -is [System.Management.Automation.Language.CommandParameterAst] -and $_.ParameterName -eq 'TimeoutSec' }).Count -eq 1 })
 Assert ($threaded.Count -eq $calls.Count) "every Test-WaspLive call passes -TimeoutSec (no call left on the bare default)"
+
+$manualRollbackCalls = @($calls | Where-Object { $_.Extent.Text -match '\$restoreMissionName' })
+Assert ($manualRollbackCalls.Count -eq 1) "manual rollback verifies the restored mission build"
+if ($manualRollbackCalls.Count -eq 1) {
+    $manualRollbackText = $manualRollbackCalls[0].Extent.Text
+    Assert ($manualRollbackText -match '(?s)-ServiceName\s+\$ServiceName') "manual rollback verify uses the configured service"
+    Assert ($manualRollbackText -match '(?s)-RptPath\s+\$RptPath') "manual rollback verify reads the configured RPT"
+    Assert ($manualRollbackText -match '(?s)-ExpectBuild\s+\(Get-ExpectedBuildToken\s+\$restoreMissionName\)') "manual rollback verify expects the restored mission token"
+    Assert ($manualRollbackText -match '(?s)-TimeoutSec\s+\$VerifyTimeoutSec') "manual rollback verify uses the operator timeout"
+    Assert ($manualRollbackText -match '(?s)-HcMin\s+\$HcCount') "manual rollback verify uses the configured HC floor"
+}
 
 Write-Host ""
 if ($script:fails -eq 0) { Write-Host "ALL PASS" -ForegroundColor Green; exit 0 }

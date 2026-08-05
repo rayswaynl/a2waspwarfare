@@ -46,11 +46,15 @@ def test_idle_rtb_reuses_the_existing_hc_air_watcher_and_safety_guards():
 
 
 def test_idle_rtb_keeps_delete_order_local_and_crew_first():
+    # PR #1885 (staging wave 2026-08-02): the reap now dispatches to the seat-safe helper instead of
+    # inline deletes; the crew-before-hull invariant lives in Common_SafeCrewDelete.sqf.
     source = RUNNER.read_text(encoding="utf-8")
     start = source.index("//--- B74.2 HELI BASE-REAP")
     block = source[start:]
-    crew_delete = block.index("deleteVehicle _x")
-    hull_delete = block.index("deleteVehicle _rh")
+    assert "[_rh, true] Spawn WFBE_CO_FNC_SafeCrewDelete" in block
+    helper = (RUNNER.parent / "Common_SafeCrewDelete.sqf").read_text(encoding="utf-8")
+    crew_delete = helper.index("deleteVehicle _crewMember")
+    hull_delete = helper.index("deleteVehicle _hull")
     assert crew_delete < hull_delete
 
 

@@ -26,7 +26,10 @@ def test_vehicle_refills_reserve_all_potential_crew_before_queueing() -> None:
     text = PRODUCE.read_text(encoding="utf-8-sig")
 
     assert '_capCost = 1;' in text
-    assert 'if (!(_toBuild isKindOf "Man")) then {_capCost = 3 + count (_ud select QUERYUNITTURRETS)};' in text
+    # PR #1854 (staging wave 2026-08-02): crew-cap cost is now derived from the vehicle's actual
+    # crew seats (QUERYUNITCREW gunner/commander flags) instead of the flat 3 + turret count.
+    assert 'if (_hasGunner) then {_capCost = _capCost + 1};' in text
+    assert 'if (_hasCommander) then {_capCost = _capCost + 1};' in text
     assert 'if (_capRemaining < _capCost) exitWith {};' in text
     assert '_capRemaining = _capRemaining - _capCost;' in text
     assert text.index('if (_capRemaining < _capCost) exitWith {};') < text.index('Spawn AIBuyUnit;')
@@ -39,5 +42,7 @@ def test_hc_topup_requests_reserve_the_same_remaining_side_cap() -> None:
 
     assert '_wm_missing = ((6 - _wm_alive) min 4) min _capRemaining;' in text
     assert '_capRemaining = _capRemaining - _wm_missing;' in text
-    assert text.index('_wm_missing = ((6 - _wm_alive) min 4) min _capRemaining;') < text.index('"wfbe_aicom_topup_req"')
-    assert text.index('_capRemaining = _capRemaining - _wm_missing;') > text.index('"wfbe_aicom_topup_req"')
+    # Econ-triad fold (staging wave 2026-08-02) added a dedup READ of wfbe_aicom_topup_req before
+    # the computation; the reservation invariant is compute-before-WRITE, so anchor on setVariable.
+    assert text.index('_wm_missing = ((6 - _wm_alive) min 4) min _capRemaining;') < text.index('_team setVariable ["wfbe_aicom_topup_req"')
+    assert text.index('_capRemaining = _capRemaining - _wm_missing;') > text.index('_team setVariable ["wfbe_aicom_topup_req"')

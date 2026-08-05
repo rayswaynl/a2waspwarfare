@@ -307,7 +307,7 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 //--- L584-689, minus the fly-off/refund - the transport RETURNS to base + HOLDS to persist).
 //--- ===================================================================
 [_h, _lzPos, _flat, _lifted, _team, _dest, _side, _sideID, _liftVeh, _vehDrop] Spawn {
-	private ["_h","_lz","_fl","_pax","_tm","_obj","_sd","_sID","_t0","_lveh","_vdrop","_approachLimited"];
+	private ["_h","_lz","_fl","_pax","_tm","_obj","_sd","_sID","_t0","_lveh","_vdrop","_approachLimited","_hDropPos"];
 	_h    = _this select 0;
 	_lz   = _this select 1;
 	_fl   = _this select 2;
@@ -432,7 +432,8 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 		waitUntil {
 			sleep 2;
 			_tm setVariable ["wfbe_aicom_airborne_until", time + 120, true];
-			time > _t0 || isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || {(_h distance _vdrop) < 90}
+			_hDropPos = getPosATL _h;
+			time > _t0 || isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || {(_hDropPos distance [_vdrop select 0, _vdrop select 1, _hDropPos select 2]) < 90}
 		};
 		//--- Descend to ~15m so the released vehicle drops onto the deck, not from altitude.
 		if (!isNull _h && {alive _h} && {!isNull (driver _h)} && {alive (driver _h)}) then {

@@ -122,6 +122,8 @@ While {!isNull _rkt && {!isNull _nearest} && {alive _nearest}} do {
         (_vgnrd select 1) * _spd,
         (_vgnrd select 2) * _spd
     ];
+    //--- Fired starts one scheduled guidance worker per missile; yield each steering tick so concurrent launches cannot monopolise the scheduler.
+    sleep 0.01;
 
 };
 

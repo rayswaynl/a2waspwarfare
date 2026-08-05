@@ -25,6 +25,10 @@ if (alive _vehicle) then {
 					(_vehicle) Spawn WFBE_CO_MOD_IRS_DeploySmoke;
 					_vehicle setVariable ["wfbe_irs_lastfired", time];
 					_vehicle setVariable ["wfbe_irs_flares", (_vehicle getVariable "wfbe_irs_flares") - 1, true];
+					//--- fix(irsmoke): always-on state-transition line (unconditional - fires for every deploy,
+					//--- crewed by a player or not) so a soak can grep IRS_DEPLOY to prove AICOM/town/patrol
+					//--- vehicles are actually popping smoke now that Common_CreateTeam.sqf wires the module.
+					["INFORMATION", Format ["IRS_DEPLOY|v1|veh=%1|side=%2|flaresLeft=%3", typeOf _vehicle, side _vehicle, (_vehicle getVariable ["wfbe_irs_flares", 0])]] Call WFBE_CO_FNC_LogContent;
 					if ((local player) && (player in crew _vehicle)) then {
 						
 						_upgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;

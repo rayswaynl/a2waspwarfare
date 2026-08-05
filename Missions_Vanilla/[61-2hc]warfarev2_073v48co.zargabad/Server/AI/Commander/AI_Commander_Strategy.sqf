@@ -86,6 +86,11 @@ if (_snapOk) then {
 	_enemyTowns = _snap select WFBE_SNAP_ENTOWNS;
 	_ownTownObjs = _snap select WFBE_SNAP_OWNTOWNOBJS;
 	_candTowns   = _snap select WFBE_SNAP_TGTTOWNOBJS;
+	//--- AICOM v2: consume the same server-authoritative strength sample used by
+	//--- Allocate/closers.  Recomputing the team/unit scans here created a split-
+	//--- brain window when a remote team changed between Snapshot and Strategy.
+	_myStr      = _snap select WFBE_SNAP_MYSTR;
+	_enStr      = _snap select WFBE_SNAP_ENSTR;
 } else {
 	_myTowns = 0; _enemyTowns = 0; _ownTownObjs = []; _candTowns = [];
 	{
@@ -104,25 +109,27 @@ if (_snapOk) then {
 //--- survivors do not deflate strength below the enemy and falsely trip the defensive gates (the b67 "EAST amasses
 //--- but never attacks" stall). A2-OA: plain get + isNil for the GROUP refit var ([name,default] is unreliable on groups).
 private ["_myHQ","_loneAlive","_loneFar","_tAlive","_rf","_isRemnant"];
-_myHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
-_loneAlive = missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_ALIVE", 2];
-_loneFar   = missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_FARHQ", 1500];
-_myStr = 0;
-{
-	if (!isNull _x) then {
-		_tAlive = {alive _x} count (units _x);
-		if (_tAlive > 0) then {
-			_isRemnant = false;
-			_rf = _x getVariable "wfbe_aicom_refit";
-			if (!isNil "_rf" && {_rf}) then {_isRemnant = true};
-			if (!_isRemnant && {_tAlive < _loneAlive} && {_loneFar > 0} && {!isNull (leader _x)} && {!isNull _myHQ} && {((leader _x) distance _myHQ) > _loneFar}) then {_isRemnant = true};
-			if (!_isRemnant) then {_myStr = _myStr + _tAlive};
+if (!_snapOk) then {
+	_myHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+	_loneAlive = missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_ALIVE", 2];
+	_loneFar   = missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_FARHQ", 1500];
+	_myStr = 0;
+	{
+		if (!isNull _x) then {
+			_tAlive = {alive _x} count (units _x);
+			if (_tAlive > 0) then {
+				_isRemnant = false;
+				_rf = _x getVariable "wfbe_aicom_refit";
+				if (!isNil "_rf" && {_rf}) then {_isRemnant = true};
+				if (!_isRemnant && {_tAlive < _loneAlive} && {_loneFar > 0} && {!isNull (leader _x)} && {!isNull _myHQ} && {((leader _x) distance _myHQ) > _loneFar}) then {_isRemnant = true};
+				if (!_isRemnant) then {_myStr = _myStr + _tAlive};
+			};
 		};
-	};
-} forEach _teams;
-Call _sliceYield;
-_enStr = 0;
-{ if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
+	} forEach _teams;
+	Call _sliceYield;
+	_enStr = 0;
+	{ if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
+};
 
 //--- 0) LAST-STAND: fewer than 2 own towns AND clearly outnumbered - recall all, skip attack.
 //--- AICOM v2 M3 (Ray "almost never defensive"): gate last-stand on EFFECTIVE strength (maneuver + held-town credit), NOT raw maneuver _myStr - so a territory-leader that garrisons towns never trips the recall-all-to-HQ (the dominant-but-passive STALL the 18h soak showed). Last-stand now fires only at <=1 town AND genuinely effectively-crushed = base under real threat.
@@ -752,6 +759,7 @@ _relieved = 0;
 				//--- when diverting it to relief, exactly as the FOOT_STAGE re-task does (AI_Commander_AssignTowns.sqf ~L1094-1095).
 				//--- Without this the AssignTowns assault watcher keeps counting the abandoned dispatch timeout against a team now
 				//--- doing relief, logging a spurious ASSAULT_STRANDED and tallying wfbe_aicom_failedjourneys (which can later recycle it).
+				if ([_free, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {_logik setVariable ["wfbe_aicom_arrival_cleared", (_logik getVariable ["wfbe_aicom_arrival_cleared", 0]) + 1]}; //--- F1 fable/aicom-econ-triad: window outcome counter (ARRIVAL_BANDS cleared=)
 				_free setVariable ["wfbe_aicom_townorder", [], false];
 				_free setVariable ["wfbe_aicom_dispatch_open", false];
 				//--- r27 ownership: also drop a stale Allocator pin so offense does not re-grab this team mid-relief
@@ -791,12 +799,29 @@ Call _sliceYield;
 				case "move": {_wWatched = true};
 			};
 		};
+		//--- r85 MANUAL-PIN EXEMPTION (wasp-bughunt-aicom-order-watchdog-r85): a team under a FRESH
+		//--- human console order (wfbe_aicom_manualpin, stamped by the war-room handlers in
+		//--- Server_HandleSpecial.sqf, TTL WFBE_C_AICOM_MANUALPIN_TTL=600s) is DELIBERATELY stationary
+		//--- on its HOLD/defend point - the 210s wedge release below revoked live human orders ~7min
+		//--- early and force-flipped the team back to offense mid-pin. AssignTowns honours the same pin;
+		//--- the watchdog now does too. Pin expiry re-arms the watchdog with a fresh breadcrumb via the
+		//--- else-branch clear below. A2-OA-safe: 1-arg get + isNil (G1), numeric compare only.
+		if (_wWatched) then {
+			private "_wPin";
+			_wPin = _wTeam getVariable "wfbe_aicom_manualpin";
+			if (!isNil "_wPin" && {(time - _wPin) < (missionNamespace getVariable ["WFBE_C_AICOM_MANUALPIN_TTL", 600])}) then {_wWatched = false};
+		};
+		//--- A relief group already stationed at its threatened town is deliberately holding, not wedged en route.
+		//--- Keep the watchdog armed until arrival so a genuinely stuck reliever still returns to offense for re-tasking.
+		private ["_wRelief"];
+		_wRelief = [_wTeam, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+		_wLdr = leader _wTeam;
+		if (_wWatched && {_wMode == "defense"} && {!isNull _wRelief} && {!isNull _wLdr} && {(_wLdr distance _wRelief) <= (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_FAR", 300])}) then {_wWatched = false};
 		//--- Lane-325: last-stand recall deliberately parks defenders at HQ; do not let the
 		//--- wedge watchdog release them back to offense while that round-state is active.
 		if (_wWatched && {
 			(!_lastStand) || {(missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_LASTSTAND_SKIP", 1]) <= 0}
 		}) then {
-			_wLdr = leader _wTeam;
 			if (!isNull _wLdr && {alive _wLdr} && {behaviour _wLdr != "COMBAT"}) then {
 				//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
 				_wBc = _wTeam getVariable "wfbe_aicom_wedge_bc";
@@ -891,6 +916,81 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 					if (_gwWant) then {_gwTrigger = true};
 					private ["_gwCoolUntil"]; _gwCoolUntil = _gwTeam getVariable "wfbe_aicom_rally_cooldown_until"; if (isNil "_gwCoolUntil") then {_gwCoolUntil = 0}; //--- claude/aicom-west-stuck: rally re-arm cooldown (bug M) - group-safe 1-arg get + isNil (2-arg group default is the GROUPGETVAR trap)
 					if (!_gwTrigger && {_gwAlive > 0} && {_gwAlive < _gwMinAlive} && {!_gwRallying} && {time >= _gwCoolUntil}) then {_gwTrigger = true}; //--- claude/aicom-west-stuck: cooldown-gated (was ungated) - blocks instant re-rally of a still-understrength team; the explicit driver wantrally arm one line above stays ungated
+					//--- fable/aicom-disband-merge (2026-08-02, overnight telemetry): a DECIMATED team (alive <= WFBE_C_AICOM_DISBAND_ALIVE_MAX)
+					//--- that already burned a full rally cycle (cooldown stamp > 0 = a prior rally order was issued) and STILL sits at the
+					//--- floor is a proven barren loop (53x GRACEFUL-WITHDRAW/TOPUP_REQ cycles at alive=1 in the 2026-08-01 Takistan overnight;
+					//--- the lone survivor trekking to a distant rally reads as broken AI pathing). Instead of ANOTHER rally march: MERGE the
+					//--- survivors into the nearest same-side same-owner HC foot-infantry team (proven B69 aicom-team-merge HC executor), else
+					//--- flag the proven wfbe_aicom_disband destructive retire (HC-local executor in Common_RunCommanderTeam.sqf; its
+					//--- aicom-team-ended chain deregisters wfbe_teams + WFBE_ACTIVE_AICOM_TEAMS and clears wfbe_persistent so the 60s
+					//--- groupsGC reaps the empty husk - no 144/side group-slot leak, no bare crew-delete loops). Master flag
+					//--- WFBE_C_AICOM_DISBAND_MERGE_ENABLE default 0 = byte-inert. Explicit driver wantrally requests are never diverted.
+					//--- A2-OA-safe: GroupGetBool / plain get + isNil for GROUP vars, best-pick forEach (no exitWith-skip), lazy && braces.
+					if (_gwTrigger && {!_gwWant} && {(missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_MERGE_ENABLE", 0]) > 0} && {_gwCoolUntil > 0} && {_gwAlive <= (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_ALIVE_MAX", 2])}) then {
+						if ([_gwTeam, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool) then {
+							_gwTrigger = false;   //--- already flagged for HC teardown: never issue a fresh rally to a disbanding team
+						} else {
+							private ["_dmReq","_dmPend"];
+							//--- pending PAID top-up: let it fill or age out (TTL 300s refund path clears it to []) - never strand the charge.
+							_dmReq = _gwTeam getVariable "wfbe_aicom_topup_req";
+							_dmPend = !isNil "_dmReq" && {(typeName _dmReq) == "ARRAY"} && {(count _dmReq) > 0};
+							if (!_dmPend) then {
+								private ["_dmTried","_dmBest","_dmBestD","_dmTypes","_dmT","_dmL","_dmA","_dmTT","_dmTReq"];
+								_gwTrigger = false;
+								_dmBest = grpNull;
+								_dmBestD = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_MERGE_RANGE", 500];
+								_dmTried = [_gwTeam, "wfbe_aicom_merge_tried", false] Call WFBE_CO_FNC_GroupGetBool;
+								_dmTypes = missionNamespace getVariable Format ["WFBE_%1AITEAMTYPES", _sideText];
+								//--- merge scan only while the HC-side executor flag is armed (its PVF case self-gates and would no-op silently)
+								//--- and only ONE dispatch attempt per team (wfbe_aicom_merge_tried, server-local): a silently failed dispatch
+								//--- must fall through to the disband arm on the next episode, never loop.
+								if (!_dmTried && {!isNil "_dmTypes"} && {(missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_ENABLE", 0]) > 0}) then {
+									{
+										_dmT = _x;
+										if (!isNull _dmT && {!(_dmT == _gwTeam)} && {[_dmT, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} && {!([_dmT, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+											//--- FOOT-INFANTRY keepers only (type index 0, same WFBE_%1AITEAMTYPES classifier DisbandLowTier uses):
+											//--- never pad armour/air with rifles (mirrors the B69 merge pass armour exclusion).
+											_dmTT = _dmT getVariable "wfbe_teamtype"; if (isNil "_dmTT") then {_dmTT = -1};
+											if (_dmTT >= 0 && {_dmTT < count _dmTypes} && {(_dmTypes select _dmTT) == 0}) then {
+												_dmL = leader _dmT;
+												//--- same-owner requirement mirrors the B69 picker: joinSilent is locality-bound; cross-HC pairs are never selected.
+												if (!isNull _dmL && {alive _dmL} && {!isPlayer _dmL} && {(owner _dmL) == (owner _gwLdr)}) then {
+													_dmTReq = _dmT getVariable "wfbe_aicom_topup_req";
+													if (!(!isNil "_dmTReq" && {(typeName _dmTReq) == "ARRAY"} && {(count _dmTReq) > 0})) then {
+														_dmA = {!isNull _x && {alive _x}} count (units _dmT);
+														if (_dmA > 0 && {(_dmA + _gwAlive) <= (missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 10])} && {(_gwLdr distance _dmL) <= _dmBestD}) then {
+															_dmBestD = _gwLdr distance _dmL;
+															_dmBest = _dmT;
+														};
+													};
+												};
+											};
+										};
+									} forEach _teams;
+								};
+								if (!isNull _dmBest) then {
+									_gwTeam setVariable ["wfbe_aicom_merge_tried", true];   //--- server-local: one dispatch attempt, then the disband arm
+									_gwTeam setVariable ["wfbe_aicom_rally_cooldown_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_COOLDOWN", 240])];   //--- no evaluator re-fire while the merge is in flight
+									if ((local _gwLdr) && {local (leader _dmBest)}) then {
+										//--- both server-local (re-adopted teams): inline join + immediate deregistration (HCTopUp L122-125 idiom).
+										(units _gwTeam) joinSilent _dmBest;
+										_gwTeam setVariable ["wfbe_persistent", false, true];
+										["aicom-team-ended", _sideID, _gwTeam] Call HandleSpecial;
+									} else {
+										//--- HC-resident: the owning HC joins locally and sends aicom-team-ended itself (proven aicom-team-merge PVF).
+										[leader _dmBest, "HandleSpecial", ["aicom-team-merge", _dmBest, _gwTeam]] Call WFBE_CO_FNC_SendToClient;
+									};
+									["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] DISBAND-MERGE (%3 alive) -> merge into %4 (%5m).", _sideText, _gwTeam, _gwAlive, _dmBest, round _dmBestD]] Call WFBE_CO_FNC_AICOMLog;
+									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|DISBAND_MERGE|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|target=" + (str _dmBest));
+								} else {
+									//--- no reachable keeper: proven destructive retire (owner ruling 2026-07-22) + full deregistration chain.
+									_gwTeam setVariable ["wfbe_aicom_disband", true, true];
+									["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] DISBAND-MERGE (%3 alive) -> no merge target, disband flagged.", _sideText, _gwTeam, _gwAlive]] Call WFBE_CO_FNC_AICOMLog;
+									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|DISBAND_MERGE|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|target=DISBAND");
+								};
+							};
+						};
+					};
 				};
 				if (_gwTrigger) then {
 					//--- Rally = NEAREST of [own HQ pos] + every OWN-side town centre. Hand-rolled scalar min (no A3 sort).

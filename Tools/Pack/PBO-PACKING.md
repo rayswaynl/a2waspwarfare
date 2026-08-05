@@ -131,6 +131,7 @@ implementation of that format — this tool is a generalized continuation of the
 | `.template`/`.bak`/`.orig` exclusion | present in every recovered script | Keeps stray backup/template files out of the pack. |
 | `version.sqf` existence/non-empty/marker check | `pack_release_ch.py` (07-09) | Full release-candidate marker matching (`WF_RELEASE_MARKER "...candidate=<BUILD>|..."`) — this was a one-off ritual for a specific release branch/tag pairing, not reproduced verbatim here since it assumes a marker format that isn't guaranteed for every future build. `pack_pbo.py` keeps the *existence/non-empty* half of this guard generically (see "version.sqf" below) but does not enforce a specific marker string. |
 | Lowercase-collision guard | `pack_release_ch.py` (07-09) | Refuses to pack if lowercasing would make two originally-different-case source paths collide onto one entry (silently dropping one). Reproduced in `pack_pbo.py` as `check_lowercase_collisions()`. Note: unreachable when the source tree lives on a Windows/NTFS disk (case-insensitive filesystem — two such files literally can't coexist there); it matters if a source is ever drawn from a case-sensitive filesystem or an archive. |
+| `WF_MAXPLAYERS`/lobby-slot consistency guard | 2026-08-02 | Refuses to pack when the human capacity in `version.sqf` disagrees with `mission.sqm` after excluding reserved headless-client and caster seats. This catches stale deployment headers before they become live PBO provenance/runtime ambiguity. |
 | Debug-stress-hook absence check | `pack_release_ch.py` (07-09) | Specific to one release lane (asserts a particular stress-test hook string is absent). Not reproduced — too specific to be general. |
 
 `pack_pbo.py` is deliberately **general** (one script, parameterized by `--source`/
@@ -156,6 +157,10 @@ mission title, per-map constants) — only `version.sqf.template` is tracked.
   flagged, not silently written to disk.
 - Pass `--strict-version` to refuse the fallback and require a real file — use this for
   anything that's actually going to be deployed.
+- Before writing the PBO, the packer counts authored `player=` entries in `mission.sqm`,
+  subtracts `forceHeadlessClient=1` and `wfbe_caster_slot` seats, and requires the result
+  to equal `WF_MAXPLAYERS`. A mismatch aborts the build with the counted values; this is
+  a release-integrity check, not a live-runtime fix.
 
 ### Prefix
 
@@ -205,10 +210,11 @@ needs an owner boot-test" below.
    `pack_pbo.py` produces. (Entry counts differ from this worktree's current file counts,
    as expected — the reference PBOs were built from a different point-in-time source tree
    on the box, not this checkout; only the *format* was being compared, not the content.)
-4. **Regression tests**: `Tools/Pack/test_pack_pbo.py` (7 cases — round trip with
+4. **Regression tests**: `Tools/Pack/test_pack_pbo.py` (13 cases — round trip with
    synthesized `version.sqf`, `--strict-version` enforcement, missing-template abort,
    active-`WF_DEBUG` abort/`--allow-debug` override, lowercase-collision guard,
-   overwrite protection, byte-identical diff against a real `version.sqf`). Wired into
+   overwrite protection, byte-identical diff against a real `version.sqf`, and
+   `WF_MAXPLAYERS`/lobby-slot consistency including reserved HC/caster seats). Wired into
    `wasp-ci.yml` alongside the other `Tools/*/test_*.py` suites.
 
 Run it yourself:

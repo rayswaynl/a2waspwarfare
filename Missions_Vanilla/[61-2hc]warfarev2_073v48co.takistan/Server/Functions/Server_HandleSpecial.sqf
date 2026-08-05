@@ -352,7 +352,16 @@ case "RespawnST": {
 			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
 				private ["_ctlUnits7"];
 				_ctlUnits7 = 0;
-				{ if (!isNull _x && {_x getVariable ["wfbe_ctl_ground_wave", false]}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
+				//--- r87 group-var read fix: _x is a GROUP - the 2-arg [name,default] form returns nil-not-default
+				//--- when UNSET on a group (G1 trap), and `if (... && {nil})` throws "Type Nothing", aborting the
+				//--- rest of this update-town-delegation case (lastspawn credit, active_vehicles append, empty-vehicle
+				//--- handlers). Route through GroupGetBool. Default TRUE (count), not false: the delegated groups in
+				//--- _teams are fresh HC/client-local groups (Client_DelegateTownAI.sqf replaces the empty stamped
+				//--- server shells), so the per-group stamp never survives delegation - default false credited ZERO
+				//--- delegated spawn units to wfbe_ctl_lastspawn while the deactivation numerator (server_town_ai.sqf
+				//--- GroupGetBool default true) still counts their survivors, inflating the survival ratio to the
+				//--- 1.0 clamp = CTL attrition silently skipped for every delegated wave.
+				{ if (!isNull _x && {([_x, "wfbe_ctl_ground_wave", true] Call WFBE_CO_FNC_GroupGetBool)}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
 				//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate the HC/client-delegated
 				//--- Man-unit count into the per-town spawn scalar (per-town, so the wave-side snapshot only
 				//--- gates WHETHER to credit - no valid snapshot => skip - not which record to touch).
@@ -801,6 +810,44 @@ if (isNull _base) exitWith {
 					publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
 				};
 				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
+				//--- fable/air-quickstart-v2 (owner 2026-07-28: helicopters linger way too long in base;
+				//--- HC-safe quickstart v2): this handler is the single point EVERY founded team (HC or
+				//--- server-fallback) reports back through, right after it is registered into wfbe_teams
+				//--- above - a narrow, single-team primer belongs exactly here, not in the side-wide
+				//--- WFBE_SE_FNC_AI_Com_AssignTowns tick (HC-unsafe + perturbs every OTHER team's cadence-
+				//--- sensitive state - see PR #1586's rejection writeup for the full trace). Writes ONLY
+				//--- the public wfbe_aicom_order group variable on THIS team, using the exact [seq, mode,
+				//--- pos] contract Common_RunCommanderTeam.sqf already polls every pass (established
+				//--- object/group setVariable-with-public idiom - see e.g. AI_Commander_AssignTowns.sqf:296,
+				//--- AI_Commander_Strategy.sqf:156,622,709 - NOT the banned missionNamespace 3-arg form).
+				//--- Flag default 0: at 0 this whole block is one cheap missionNamespace getVariable read.
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_QUICKSTART", 0]) > 0) then {
+					private ["_qsAirVeh","_qsDestTown","_qsTargets","_qsCand","_qsUncap","_qsBestD","_qsD"];
+					_qsAirVeh = objNull;
+					{
+						private "_qsV";
+						_qsV = vehicle _x;
+						if (!isNull _qsV && {_qsV != _x} && {isNull _qsAirVeh} && {_qsV isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _qsV) >> "transportSoldier")) > 0}) then {_qsAirVeh = _qsV};
+					} forEach (units _cteam);
+					if (!isNull _qsAirVeh && {!isNull _cldr}) then {
+						_qsDestTown = objNull;
+						_qsTargets = _clogik getVariable ["wfbe_aicom_targets", []];
+						if (count _qsTargets > 0) then {
+							_qsCand = _qsTargets select 0;
+							if (typeName _qsCand == "OBJECT" && {!isNull _qsCand} && {(_qsCand getVariable ["sideID", -1]) != _csideID}) then {_qsDestTown = _qsCand};
+						};
+						if (isNull _qsDestTown) then {
+							_qsUncap = [];
+							{ if ((_x getVariable ["sideID", -1]) != _csideID) then {_qsUncap set [count _qsUncap, _x]} } forEach towns;
+							_qsBestD = 1e9;
+							{ _qsD = _cldr distance _x; if (_qsD < _qsBestD) then {_qsBestD = _qsD; _qsDestTown = _x} } forEach _qsUncap;
+						};
+						if (!isNull _qsDestTown) then {
+							_cteam setVariable ["wfbe_aicom_order", [(if (isNil {_cteam getVariable "wfbe_aicom_order"}) then {-1} else {(_cteam getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", getPos _qsDestTown], true];
+							diag_log ("AIRQS|v1|side=" + str _csideID + "|team=" + str _cteam + "|order=" + str (getPos _qsDestTown) + "|town=" + (_qsDestTown getVariable ["name","?"]) + "|src=quickstart");
+						};
+					};
+				};
 			};
 		};
 	};
@@ -1157,6 +1204,28 @@ if (isNull _base) exitWith {
 			};
 		};
 	};
+	case "aicom-manualpin": {
+		//--- Direct map/ALL-HOLD UI orders originate on a client, whose mission clock may differ after JIP/load.
+		//--- Resolve and stamp the pin server-side so AssignTowns compares two values from the same clock.
+		private ["_mpSide","_mpTeam","_mpPlayer","_mpLogik","_mpCmd","_mpTeams","_mpAuth"];
+		_mpSide = _args select 1;
+		_mpTeam = grpNull;
+		_mpPlayer = objNull;
+		if (count _args > 2) then {_mpTeam = _args select 2};
+		if (count _args > 3) then {_mpPlayer = _args select 3};
+		if (_mpSide in [west, east] && {typeName _mpTeam == "GROUP"} && {!isNull _mpTeam}) then {
+			_mpLogik = (_mpSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _mpLogik) then {
+				_mpCmd = (_mpSide) Call WFBE_CO_FNC_GetCommanderTeam;
+				_mpTeams = _mpLogik getVariable ["wfbe_teams", []];
+				_mpAuth = (!isNull _mpPlayer) && {alive _mpPlayer} && {isPlayer _mpPlayer} && {!isNull _mpCmd} && {group _mpPlayer == _mpCmd} && {_mpTeam in _mpTeams};
+				if (_mpAuth) then {
+					_mpTeam setVariable ["wfbe_aicom_manualpin", time, true];
+				};
+			};
+		};
+	};
+
 	case "aicom-rally": {
 		//--- cmdcon41-w3d COMMAND-MENU V2 (RALLY): the human commander ordered ONE team to pull back to the nearest own
 		//--- HQ / OWN-side town centre. Client sends [side, teamIdx] (index into this side's wfbe_teams, resolved the SAME
@@ -1782,7 +1851,7 @@ if (isNull _base) exitWith {
 		_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 		_caicomNew = [];
 		{
-			if (!isNull (_x select 0) && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
+			if (!isNull (_x select 3) && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
 		} forEach _caicomList;
 		missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomNew];
 		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";

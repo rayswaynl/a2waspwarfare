@@ -28,6 +28,13 @@ if (!alive _player) exitWith {
     ["WARNING", format ["RequestAFKKick.sqf: rejected - player [%1] is already dead/disconnected.", name _player]] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- v5 (owner 2026-08-01): never AFK-kick a caster - the camera consumes their input so the body
+//--- always looks idle. Server-authoritative twin of the client-side exemption in updateclient.sqf
+//--- (the seat flag is set by the slot's sqm init on the server, so it IS visible here).
+if (_player getVariable ["wfbe_caster_slot", false]) exitWith {
+    ["INFORMATION", format ["RequestAFKKick.sqf: rejected - [%1] is a caster seat, exempt from AFK kick.", name _player]] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- DR-55 forged-PVF hardening (flag-gated; OFF = byte-equivalent legacy behavior).
 //--- Traced legit callers: Client/Module/AFKkick/monitorAFK.sqf and the legacy
 //--- Client/FSM/updateclient.sqf inactivity block. BOTH only ever report the CALLING

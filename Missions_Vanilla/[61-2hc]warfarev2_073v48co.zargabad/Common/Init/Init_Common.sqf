@@ -128,6 +128,7 @@ WFBE_CO_FNC_AICOMAirLeg = Compile preprocessFileLineNumbers "Common\Functions\Co
 //--- flag WFBE_C_AICOM_AIR_TELEMETRY default 0.
 WFBE_CO_FNC_AICOMAirFoundTelemetry = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirFoundTelemetry.sqf";
 WFBE_CO_FNC_AICOMAirReturn = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirReturn.sqf"; //--- cmdcon42-f shared post-drop RETURN-TO-BASE-AND-HOLD (the founding WFBE_C_AICOM_AIR_RETAIN path + air-mobile legs call this SAME code - no duplication). Scheduled-context only (it sleeps).
+WFBE_CO_FNC_AICOMAirliftV2Deliver = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirliftV2Deliver.sqf"; //--- fable/airlift-v2 (PR #1579 follow-up, owner 2026-07-28): the LIFT half of the requisitioned-transport handshake, run AT the in-loop DELIVERY point (Common_RunCommanderTeam.sqf AIRMOBILE TRANSPORT GRANT CONSUMER) instead of the founding air-insert block that can never reach a hull created later. Mount + fly + unload + RTB reuse the founding air-insert / Common_AICOMAirLeg / Common_AICOMAirReturn idioms. Gate WFBE_C_AICOM_AIRLIFT_V2 default 0. Scheduled-context only (it sleeps) - Spawned, never Called directly.
 WFBE_CO_FNC_AICOMServiceTick = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMServiceTick.sqf"; //--- B48 AICOM self-service (default OFF: WFBE_C_AICOM_SERVICE_ENABLED)
 WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";
 WFBE_CO_FNC_SafeCrewDelete = Compile preprocessFileLineNumbers "Common\Functions\Common_SafeCrewDelete.sqf"; //--- crash 014EFCF4 sweep: shared crew+hull teardown, Spawn-only (see file header).
@@ -175,6 +176,7 @@ Call Compile preprocessFileLineNumbers "Common\Functions\Common_LogVehDelete.sqf
 Call Compile preprocessFileLineNumbers "Common\Functions\Common_CommanderLease.sqf";
 WFBE_CO_FNC_GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideSupply.sqf";
 WFBE_CO_FNC_GetSideStructures = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideStructures.sqf";
+WFBE_CO_FNC_PickForwardFactory = Compile preprocessFileLineNumbers "Common\Functions\Common_PickForwardFactory.sqf"; //--- fable/founding-placement-20260802: forward-factory selection for HC-team founding (WFBE_C_AICOM_FOUND_FACTORY_FORWARD).
 WFBE_CO_FNC_GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
 WFBE_CO_FNC_IsUnitUnlocked = Compile preprocessFileLineNumbers "Common\Functions\Common_IsUnitUnlocked.sqf"; //--- feat/common-isunitunlocked: shared per-unit facMap/QUERYUNITUPGRADE tier-unlock check (was duplicated across AI_Commander_Teams.sqf/Produce.sqf/Base.sqf); returns [unlocked,found].
 WFBE_CO_FNC_GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";

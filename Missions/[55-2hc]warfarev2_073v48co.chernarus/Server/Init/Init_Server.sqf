@@ -2,16 +2,13 @@ if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
-//--- Allow resistance group to be spawned without a placeholder.
+//--- Allow resistance group to be spawned without a placeholder.  Side relations are global
+//--- server state, so configure both directions here even when GUER is AI-only.
 createCenter resistance;
 resistance setFriend [west,0];
 resistance setFriend [east,0];
-//--- GUER harass: setFriend is one-directional, so WEST/EAST must ALSO treat resistance as hostile or their AI
-//--- won't return fire on GUER players. Gated on the GUER param so the base WEST-vs-EAST mission is unchanged when OFF.
-if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
-	west setFriend [resistance, 0];
-	east setFriend [resistance, 0];
-};
+west setFriend [resistance,0];
+east setFriend [resistance,0];
 
 AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
 //--- AICOM HIGH-CLIMB (claude-gaming 2026-07-01): give AI-commander tanks the Valhalla low-gear terrain
@@ -115,6 +112,11 @@ WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Fu
 //--- deadcode-sweep 2026-07-21 (DC-03): removed dead compile WFBE_SE_FNC_GetTownPatrol (zero call sites repo-wide; file deleted)
 WFBE_SE_FNC_HandleEmptyVehicle = Compile preprocessFileLineNumbers "Server\Functions\Server_HandleEmptyVehicle.sqf";
 WFBE_SE_FNC_HandlePVF = Compile preprocessFileLineNumbers "Server\Functions\Server_HandlePVF.sqf";
+//--- Forward FOB (flag WFBE_C_STRUCTURES_FOB): tent 'killed' teardown + the per-FOB ping/repair worker.
+//--- Both self-gate on the flag via their caller (Server\PVFunctions\RequestForwardFOB.sqf), which is the
+//--- only thing that references them - compiling them flag-off costs one preprocess each and runs no code.
+WFBE_SE_FNC_ForwardFOBKilled = Compile preprocessFileLineNumbers "Server\Functions\Server_ForwardFOBKilled.sqf";
+WFBE_SE_FNC_ForwardFOBWorker = Compile preprocessFileLineNumbers "Server\Functions\Server_ForwardFOBWorker.sqf";
 WFBE_SE_FNC_ManageTownDefenses = Compile preprocessFileLineNumbers "Server\Functions\Server_ManageTownDefenses.sqf";
 WFBE_SE_FNC_OnHQKilled = Compile preprocessFileLineNumbers "Server\Functions\Server_OnHQKilled.sqf";
 WFBE_SE_FNC_OperateTownDefensesUnits = Compile preprocessFileLineNumbers "Server\Functions\Server_OperateTownDefensesUnits.sqf";
@@ -123,6 +125,7 @@ WFBE_SE_FNC_ProvisionAirfieldHangar = Compile preprocessFileLineNumbers "Server\
 WFBE_SE_FNC_SetCampsToSide = Compile preprocessFileLineNumbers "Server\Functions\Server_SetCampsToSide.sqf";
 WFBE_SE_FNC_NavalHVT_BubbleComplete = Compile preprocessFileLineNumbers "Server\Functions\Server_NavalHVT_BubbleComplete.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): onComplete callback for a RadiusHold-registered carrier bubble (Init_NavalHVT.sqf, flag WFBE_C_NAVALHVT_BUBBLE_ENABLE).
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
+WFBE_SE_FNC_ValidatePlayerStructurePlacement = Compile preprocessFileLineNumbers "Server\Functions\Server_ValidatePlayerStructurePlacement.sqf";
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
 WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
@@ -289,13 +292,17 @@ Call {
 	if (!isDedicated) exitWith {};
 
 	_oc = 0.05;
+	_rain = 0;
 	switch (_weat) do {
 		case 0: {_oc = 0};
 		case 1: {_oc = 0.5};
-		case 2: {_oc = 1};
+		case 2: {_oc = 1; _rain = 0.5};
 	};
 	60 setOvercast _oc;
-	if (_weat == 2) then {60 setRain 0.5}; //--- lane199(e): Rainy lobby option now actually sets rain.
+	60 setRain _rain;
+	//--- OA weather commands are local. Publish the authoritative transition so remote clients and JIP replay the remaining duration only.
+	WFBE_ENVIRONMENT_WEATHER_STATE = [time, 60, _oc, _rain];
+	publicVariable "WFBE_ENVIRONMENT_WEATHER_STATE";
 };
 
 ["INITIALIZATION", "Init_Server.sqf: Weather module is loaded."] Call WFBE_CO_FNC_LogContent;
@@ -1676,3 +1683,8 @@ if ((missionNamespace getVariable ["WFBE_C_HC_CIV_RESLOT", 0]) > 0) then {
 		};
 	};
 };
+
+//--- spectator v8 (owner mandate 2026-08-01): server-side Fired/Killed event feed for the
+//--- caster auto-director. Self-gates on WFBE_C_SPECTATOR / WFBE_C_SPECTATOR_EVENTFEED after
+//--- commonInitComplete; inert when either flag is 0.
+[] ExecVM "Common\Functions\Common_SpectatorEventFeed.sqf";

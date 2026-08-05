@@ -54,6 +54,16 @@ A3_TRAPS = (
     "groupId",  # A3-only GETTER (setGroupId is A2-fine and unmatched by \b); parse "Missing ]" live-burned wave0721 (teambar probe + commander lease); use str <group>
     "rankId",  # A3-only; A2 OA has string-returning `rank` only; shipped alongside groupId in wave0721
     "currentWaypointPosition",  # invented identifier (exists in NO Arma); parse "Missing ;" killed server_side_patrols.sqf whole-file on the dbg0726e ZG soak; use waypointPosition [grp, currentWaypoint grp]
+    "allPlayers",  # A3-only (BI wiki: Command Group Multiplayer, no A2/OA category entry); shipped in PR #1915's leaderboard feature and passed this gate uncaught - use playableUnits/playersNumber on A2 OA
+    "allUnitsUAV",  # A3-only; not in the A2/OA scripting-commands category
+    "allDeadMen",  # A3-only (introduced Arma 3 0.50) - easily confused with `allDead`, which IS A2/OA-safe (introduced A2 OA 1.57); do not conflate the two
+    "allSites",  # A3-only (introduced Arma 3 0.50, Command Group: Sides)
+    "allMines",  # A3-only (introduced Arma 3 1.24, Command Group: Mines); use nearestObjects/nearestTerrainObjects-free enumeration on A2 OA
+    "curatorCamera",  # A3 Zeus/Curator-only; unavailable on A2 OA 1.64 - plausible reach for anyone extending the WASP spectator/caster camera system
+    "getUnitTrait",  # A3-only (introduced Arma 3 1.58, unit-trait system); no A2/OA equivalent
+    "setUnitTrait",  # A3-only (introduced Arma 3 1.58, unit-trait system); no A2/OA equivalent
+    "addForce",  # A3-only (introduced Arma 3 1.72, PhysX Command Group); no ragdoll-force command exists on A2 OA
+    "getPlayerScores",  # A3-only (introduced Arma 3 1.56); do not confuse with the A2/OA-safe `score`/`scoreSide`/`addScore` family already in production use
     # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
     # on comment/string-masked text (safe), but "insert" appears in plain English
     # comments too frequently to avoid noise.

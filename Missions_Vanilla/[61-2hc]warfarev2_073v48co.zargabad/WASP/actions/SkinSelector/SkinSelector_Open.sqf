@@ -7,9 +7,9 @@
 	  - Init_Keybind.sqf User11 keybind
 */
 
-disableSerialization; //--- BUG-FIX 2026-06-14: suppress "_display does not support serialization" (dialog control held in a local).
+//--- A2 OA: do not call disableSerialization in this scheduled dialog controller.
 
-Private ["_display","_pool","_visiblePool","_i","_cls","_lbl","_isGhillie",
+Private ["_pool","_visiblePool","_i","_cls","_lbl","_isGhillie",
          "_selectedIdx","_selectedCls","_selectedLbl","_portrait",
          "_regEntry","_factionText","_WFBE_MenuAction"];
 
@@ -39,8 +39,6 @@ while {_i < count _pool} do {
 if (count _visiblePool == 0) exitWith {hint "No skins available for your side."};
 
 createDialog "WFBE_SkinSelectorMenu";
-
-_display = findDisplay 27000;
 
 //--- Populate list.
 lbClear 27001;

@@ -611,7 +611,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 			//---   That is perpendicular to heading-90 — correct for lateral.
 			//---   Same rotation identity (cos/sin of the same _dir); only the axis changes.
 			//=============================================================================
-			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
+			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seamMid","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
 			_inlineGap = abs (missionNamespace getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265]);
 			//--- Tuner guard: a gap of 0 would place Hull B exactly on Hull A (silent overlap). Self-heal to the
 			//--- design default and warn in RPT so a bad lobby/constants value is diagnosable, not invisible.
@@ -629,9 +629,9 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 			//--- Seam-bridge piers (only when WFBE_C_NAVAL_SEAM_BRIDGE > 0).
 			//--- 4x Land_nav_pier_m_1 across the Hull A stern / Hull B bow join.
 			//--- Z = average of Hull A and Hull B deck heights (conservative floor to avoid float).
-			//--- Body-space Y offsets from Hull A anchor: nominally -131,-134,-137,-140
-			//--- (i.e. 131-140m aft of the Hull A anchor, inside the seam zone).
-			//--- VERIFY in-editor: adjust these Y values until piers land in the gap centre.
+			//--- Body-space Y offsets from Hull A anchor are DERIVED from the live inline gap
+			//--- (see below), so they follow WFBE_C_NAVAL_INLINE_GAP tunes instead of drifting
+			//--- away from the seam every time the hulls are moved closer together.
 			if ((missionNamespace getVariable ["WFBE_C_NAVAL_SEAM_BRIDGE", 0]) > 0) then {
 				//--- Probe Hull B deckZ from part[3] (same pattern as Hull A above).
 				_deckZB = _ocDeckZ;
@@ -644,7 +644,14 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 					};
 				};
 				_bridgeZ = (_ocDeckZ + _deckZB) / 2;
-				_seam_Y_offsets = [-131, -134, -137, -140];
+				//--- Seam mid-point sits at half the hull-to-hull offset, aft of the Hull A anchor.
+				//--- The four piers keep the original straddle pattern about it: 1.5m fore, then
+				//--- 1.5 / 4.5 / 7.5m aft.  Written as (literal - _seamMid) rather than -(...) so
+				//--- every minus sign is a negative numeric literal, never a unary operator.
+				//--- Identity check: at the original gap 265, _seamMid = 132.5 and this yields
+				//--- exactly [-131, -134, -137, -140] - the literals it replaces.
+				_seamMid = _inlineGap / 2;
+				_seam_Y_offsets = [(1.5 - _seamMid), (-1.5 - _seamMid), (-4.5 - _seamMid), (-7.5 - _seamMid)];
 				{
 					_bY  = _x;
 					//--- Convert body-space Y offset to world coords using the ship heading.
@@ -801,6 +808,33 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 			_sideID = _loc getVariable ["sideID", WFBE_C_GUER_ID];
 			_pos    = getPosASL _loc;
 
+			//--- fix/naval-cap-capture-teardown: the arm gate below only checks GUER ownership when ARMING.
+			//--- Once airborne, the orbit branch never re-checks sideID, so a GUER carrier captured by another
+			//--- side while a player stays inside the 1800m radius keeps its resistance CAP orbiting and engaging
+			//--- the new owner forever (only the player-inactivity path far below despawns it), and no CAP for the
+			//--- new owner can ever arm. Mirror the SCUD action loop in this file (~L399), which re-derives the
+			//--- owning side every iteration. Reuse the exact inactivity teardown so a captured site sheds its
+			//--- bound air population immediately instead of at the next empty-radius timeout.
+			if (_armed && {_sideID != WFBE_C_GUER_ID}) then {
+				_armed = false;
+				_inactiveTime = 0;
+				if (_capMode == "L39" || _capMode == "SUX") then {
+					if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x} forEach (crew _jet1); deleteVehicle _jet1 };
+					if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x} forEach (crew _jet2); deleteVehicle _jet2 };
+				} else {
+					if (_capMode == "MI24") then {
+						if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
+						if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
+						if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+					} else {
+						if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
+						if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+					};
+				};
+				if (!isNull _capGrp) then { deleteGroup _capGrp };
+				["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP torn down at %1 (carrier captured, sideID=%2).", _loc getVariable "name", _sideID]] Call WFBE_CO_FNC_LogContent;
+			};
+
 			//--- Check for any HUMAN player within arming radius (1800m).
 			//--- wasp-navalcap-playableunits (owner review note 19:2x): playableUnits INCLUDES the two
 			//--- headless-client CIV bodies - isPlayer is TRUE for an HC on A2 OA - and ParkSeaHC
@@ -831,7 +865,18 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_rumorLast = time;
 							};
 						};
-						_capGrp = createGroup resistance;
+						_capGrp = [resistance, "naval-cap"] Call WFBE_CO_FNC_CreateGroup;
+						//--- r89 fail-clean (bughunt group-cap/budget): the raw createGroup bypassed the
+						//--- WFBE_CO_FNC_CreateGroup wrapper - no 140-cap emergency GC, no wfbe_group_src tag
+						//--- (the group audited as "untagged"), and no grpNull path. At the 144/side engine cap
+						//--- the pilots' createUnit fallbacks retried into the same grpNull and the CAP hulls
+						//--- flew pilotless while tagged anti-reap (wfbe_naval_cap). Abort this arm cleanly:
+						//--- _armed=false makes the next 10s tick retry once the side is under the cap; the
+						//--- post-roll override below forces _capMode="NONE" so no spawn branch runs.
+						if (isNull _capGrp) then {
+							_armed = false;
+							["WARNING", Format ["Init_NavalHVT.sqf: CAP arm aborted at %1 - resistance group cap (createGroup grpNull).", _loc getVariable ["name", "?"]]] Call WFBE_CO_FNC_LogContent;
+						};
 
 						_navMode = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_MODE", 1]; //--- fable/naval-cap-variety: 0=legacy CAP_L39/THREE_HINDS chain, >0=weighted roll (default).
 						if (_navMode > 0) then {
@@ -859,6 +904,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						//--- self-clean sub-thread (own group, own registry, own cooldown - WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE)
 						//--- only while a mission-wide slot is free, so a saturated cap falls back to the base CAP silently
 						//--- instead of dropping the arm event.
+						if (isNull _capGrp) then {_capMode = "NONE"}; //--- r89: re-apply AFTER the mode roll above -
+						//--- a grpNull arm-abort must match no spawn branch (SKIRMISH/L39/MI24/SUX; legacy else is guarded).
 						if (_capMode == "SKIRMISH") then {
 							_navSkirmishBase = missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_BASE_MODE", "MI24"];
 							if !(_navSkirmishBase in ["MI24","L39","SUX"]) then {_navSkirmishBase = "MI24"};
@@ -1081,6 +1128,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 
 									["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (1x Su34, rare).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 								} else {
+									if (!isNull _capGrp) then { //--- r89: grpNull arm-abort must not spawn the legacy CAP
 								//--- STANDARD path (WFBE_C_NAVAL_CAP_L39=0, THREE_HINDS=0): Hind + An2.
 								//--- naval-air-spawn-easa FIX: An2 is fixed-wing. createVehicle ["FLY"]
 								//---   gives zero velocity at t=0 -> stall-dive. Set forward speed.
@@ -1124,6 +1172,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_biplane setVariable ["wfbe_naval_cap", true, true];
 
 								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2, velocity-fixed).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+									}; //--- r89: closes the !isNull _capGrp legacy guard
 								}; //--- closes the SUX-vs-legacy else (fable/naval-cap-variety)
 							};
 						};
@@ -1196,24 +1245,33 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 					//--- fable/inland-sweep: never quiet-despawn a circuit CAP while it is on the INLAND leg
 					//--- (>2500 m from the carrier) - the old 120 s no-player rule deleted the sweep the moment
 					//--- it left the carrier bubble. The timer holds at 0 until the flight returns seaward.
-					if ((_capMode == "L39" || _capMode == "SUX") && {!isNull _jet1} && {alive _jet1} && {(_jet1 distance _loc) > 2500}) then {
+					//--- r86: the hold must key on EITHER airframe - with the lead (jet1) dead, a live wingman
+					//--- (jet2) deep inland lost the protection and the 120s no-player rule deleted it mid-sweep.
+					if ((_capMode == "L39" || _capMode == "SUX") && {(!isNull _jet1 && {alive _jet1} && {(_jet1 distance _loc) > 2500}) || {!isNull _jet2 && {alive _jet2} && {(_jet2 distance _loc) > 2500}}}) then {
 						_inactiveTime = 0;
 					};
 					if (_inactiveTime >= 120) then {
 						//--- Despawn CAP.
 						_armed = false;
 						_inactiveTime = 0;
+						//--- r86 group-first teardown (wildcard ambient-despawn idiom): A2 deleteGroup NO-OPS while
+						//--- ANY unit remains in the group, and a crew-only delete misses a pilot still WALKING to
+						//--- board (MI24 deck-spawn: assignAsDriver/orderGetIn) or one who bailed from a damaged
+						//--- airframe - he survived the despawn and pinned the group slot forever (nothing reaps him).
+						//--- Delete every non-player unit of the group first (sleep 0 keeps the crash 014EFCF4
+						//--- seat-walk sweep between deletes; already-scheduled spawn context), then live hulls.
+						if (!isNull _capGrp) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _capGrp};
 						if (_capMode == "L39" || _capMode == "SUX") then {
-							if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x; sleep 0} forEach (crew _jet1); deleteVehicle _jet1 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-							if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x; sleep 0} forEach (crew _jet2); deleteVehicle _jet2 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+							if (!isNull _jet1 && alive _jet1) then { deleteVehicle _jet1 };
+							if (!isNull _jet2 && alive _jet2) then { deleteVehicle _jet2 };
 						} else {
 							if (_capMode == "MI24") then {
-								if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x; sleep 0} forEach (crew _hind);  deleteVehicle _hind }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x; sleep 0} forEach (crew _hind2); deleteVehicle _hind2 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x; sleep 0} forEach (crew _hind3); deleteVehicle _hind3 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _hind  && alive _hind)  then { deleteVehicle _hind };
+								if (!isNull _hind2 && alive _hind2) then { deleteVehicle _hind2 };
+								if (!isNull _hind3 && alive _hind3) then { deleteVehicle _hind3 };
 							} else {
-								if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x; sleep 0} forEach (crew _hind);   deleteVehicle _hind }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x; sleep 0} forEach (crew _biplane); deleteVehicle _biplane }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _hind   && alive _hind)   then { deleteVehicle _hind };
+								if (!isNull _biplane && alive _biplane) then { deleteVehicle _biplane };
 							};
 						};
 						if (!isNull _capGrp) then { deleteGroup _capGrp };

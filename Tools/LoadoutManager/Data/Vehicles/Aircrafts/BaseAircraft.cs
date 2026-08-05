@@ -46,8 +46,18 @@ public abstract class BaseAircraft : BaseVehicle, InterfaceAircraft
     // Generates a comment for the Sqf code representing this aircraft's loadout, including details like display name and factory type.
     protected override string GenerateCommentForTheSqfCode()
     {
-        return "// " + inGameDisplayName + " [" + EnumExtensions.GetEnumMemberAttrValue(producedFromFactoryType)
-            + InGameFactoryLevel + "] - " + pylonAmount + " pylons";
+        string factoryTag = EnumExtensions.GetEnumMemberAttrValue(producedFromFactoryType) + InGameFactoryLevel;
+
+        // fable/airfield-quickwins-20260802 (owner "sounds good" 2026-08-02): the generated "[AF3]"/"[AF4]"/"[AF5]"
+        // tag is the Aircraft Factory tier gate, not a physical airfield - disambiguate it here (the single source
+        // for every EASA_Init.sqf/Common_BalanceInit.sqf comment on all 3 terrains) so it reads unambiguously
+        // wherever it is generated, without touching any other factory-type tag (LF/HF are not airfield-confusable).
+        if (producedFromFactoryType == FactoryType.AIRCRAFTFACTORY)
+        {
+            factoryTag += " = Aircraft Factory tier " + InGameFactoryLevel + ", not an airfield";
+        }
+
+        return "// " + inGameDisplayName + " [" + factoryTag + "] - " + pylonAmount + " pylons";
     }
 
     // Generates combinations of allowed ammunition types for this aircraft's pylons.
@@ -177,7 +187,9 @@ public abstract class BaseAircraft : BaseVehicle, InterfaceAircraft
             return _priceWithoutModifier;
         }
 
-        return _priceWithoutModifier * (int)ammunitionTypeCostFloatModifier[_ammunitionType];
+        return (int)Math.Round(
+            _priceWithoutModifier * ammunitionTypeCostFloatModifier[_ammunitionType],
+            MidpointRounding.AwayFromZero);
     }
 
     // Generates a row string that represents a loadout based on the given dictionary of ammunition types and counts.

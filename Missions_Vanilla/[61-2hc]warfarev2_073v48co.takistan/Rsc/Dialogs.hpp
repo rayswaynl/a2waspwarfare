@@ -5454,3 +5454,105 @@ class WFBE_SpectatorMapDialog {
 		};
 	};
 };
+
+/* Streamer menu (spectator v5 P5). Caster-only settings hub for the broadcast toggles -
+   WF-menu idiom: Rsc class here, poll-loop controller in Client\GUI\GUI_Menu_Streamer.sqf,
+   dedicated WFBE_StreamerMenuAction namespace (same separation as MenuAction vs
+   WFBE_MenuAction: `dialog` is true while ANY dialog is open, so a sibling loop surviving
+   a close-then-open handoff must never see these action numbers). J (DIK 36) toggles the
+   dialog through the spectator KeyDown EH while the camera has focus; the EH below lets
+   the same key close it while the DIALOG has focus. Flag WFBE_C_SPECTATOR_STREAMER_MENU
+   (default 0) gates every open path; this class alone is inert data. */
+class WFBE_StreamerMenu {
+	movingEnable = 1;
+	idd = 10264;
+	onLoad = "ExecVM ""Client\GUI\GUI_Menu_Streamer.sqf""; (_this select 0) displayAddEventHandler ['KeyDown', 'if ((_this select 1) == 36) then {closeDialog 0; true} else {false}'];";
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.275; y = 0.135; w = 0.45; h = 0.575;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			y = 0.135 + 0.535;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+		class CA_Border : RscText {
+			x = 0.275; y = 0.135 + 0.06; w = 0.45; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		class CA_Title : RscText_Title {
+			idc = 102641;
+			x = 0.29; y = 0.135 + 0.012; w = 0.40; h = 0.04;
+			text = "STREAMER MENU";
+		};
+		class CA_Quit_Button : RscButton_Main {
+			idc = 102642;
+			x = 0.275 + 0.405; y = 0.135 + 0.0075; w = 0.045; h = 0.045;
+			text = "X";
+			shadow = 2; sizeEx = 0.03;
+			onButtonClick = "WFBE_StreamerMenuAction = 9;";
+		};
+
+		//--- ===== DIRECTOR =====
+		class CA_DirectorHead : RscText_SubTitle {
+			idc = 102643;
+			x = 0.29; y = 0.135 + 0.075; w = 0.40; h = 0.035;
+			text = "DIRECTOR";
+		};
+		//--- Toggle rows, two columns. Text set live by the controller; click flips the value.
+		class CA_DirAuto : RscButton_Main {
+			idc = 102644;
+			x = 0.29; y = 0.135 + 0.115; w = 0.205; h = 0.042;
+			sizeEx = 0.022;
+			text = "Director Auto: OFF";
+			action = "WFBE_StreamerMenuAction = 1";
+		};
+		class CA_Orbit     : CA_DirAuto { idc = 102645; x = 0.505; y = 0.135 + 0.115; text = "Orbit Reveals: ON";   action = "WFBE_StreamerMenuAction = 2"; };
+		class CA_GuerTgt   : CA_DirAuto { idc = 102646; x = 0.29;  y = 0.135 + 0.162; text = "GUER Targets: ON";    action = "WFBE_StreamerMenuAction = 3"; };
+		class CA_ArtyRings : CA_DirAuto { idc = 102647; x = 0.505; y = 0.135 + 0.162; text = "Arty Rings: OFF";     action = "WFBE_StreamerMenuAction = 8"; };
+		class CA_IdleDwell : CA_DirAuto { idc = 102648; x = 0.29;  y = 0.135 + 0.209; w = 0.42; text = "Idle Dwell: 3s"; action = "WFBE_StreamerMenuAction = 6"; };
+
+		//--- ===== CAMERA + HUD =====
+		class CA_CameraHead : RscText_SubTitle {
+			idc = 102649;
+			x = 0.29; y = 0.135 + 0.268; w = 0.40; h = 0.035;
+			text = "CAMERA + HUD";
+		};
+		class CA_CamSpeed : CA_DirAuto { idc = 102650; x = 0.29;  y = 0.135 + 0.308; text = "Cam Speed: 15 m/s"; action = "WFBE_StreamerMenuAction = 7"; };
+		class CA_HudFade  : CA_DirAuto { idc = 102651; x = 0.505; y = 0.135 + 0.308; text = "HUD Fade: 6s";      action = "WFBE_StreamerMenuAction = 5"; };
+		//--- Read-only sensitivity readout (PgUp/PgDn adjust live in the camera; value set live).
+		class CA_SensLabel : RscText {
+			idc = 102652;
+			x = 0.29; y = 0.135 + 0.360; w = 0.42; h = 0.03;
+			sizeEx = 0.022;
+			text = "Sensitivity: 25 (PgUp/PgDn in camera)";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		class CA_HintLabel : CA_SensLabel {
+			idc = 102654;
+			y = 0.135 + 0.395;
+			sizeEx = 0.02;
+			text = "Settings apply live. J or Esc closes.";
+		};
+
+		//--- ===== Footer Close =====
+		class CA_Done : RscButton_Main {
+			idc = 102653;
+			x = 0.29; y = 0.135 + 0.475; w = 0.42; h = 0.045;
+			sizeEx = 0.026;
+			text = "Close";
+			action = "WFBE_StreamerMenuAction = 9";
+		};
+	};
+};

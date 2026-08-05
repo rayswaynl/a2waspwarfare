@@ -19,8 +19,9 @@
 	    OWN locality via the upward team-status channel (added in M1). Until then the slot
 	    is [] and consumers fall back to the coarse server view.
 
-	M0 is behaviour-neutral: nothing reads the snapshot yet (legacy Strategy/AssignTowns
-	still drive the war). This worker only POPULATES the cache and emits AICOM2 telemetry.
+	M0 population was behaviour-neutral; the v2 Strategy/Allocate/closer layers now
+	consume the cache, while legacy/manual calls retain their local fallbacks. This
+	worker remains the single server-authoritative publisher and emits AICOM2 telemetry.
 
 	A2-OA-safe: reuses the legacy _myStr remnant-exclusion idiom (Strategy.sqf:45-63),
 	WFBE_CO_FNC_GroupGetBool for group bools, plain-get+isNil for group vars, no A3 commands.

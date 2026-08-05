@@ -115,10 +115,14 @@ while {!WFBE_GameOver} do {
 					_eState = "inbound"; _eStateT = _now; _eStuck = 0;
 				};
 			} else {
-				if ((_eCur distance _eObj) < _eArrive) then {
-					if (_eState == "outbound") then {
+				if (_eState == "outbound") then {
+					//--- No owned town means hold at base; do not treat the base fallback
+					//--- target as a completed outbound leg and credit a no-op delivery.
+					if (!isNull _eTown && {(_eCur distance _eObj) < _eArrive}) then {
 						_eState = "loading"; _eStateT = _now; _eStuck = 0;
-					} else {
+					};
+				} else {
+					if ((_eCur distance _eObj) < _eArrive) then {
 						//--- Completed round trip: credit the SIDE SUPPLY POOL (AI-usable primitive;
 						//--- W2 Supply Drop precedent). Server-side, clamped at the economy ceiling.
 						[_eSide, _grant, "AICOM supply squad delivery.", false] Call ChangeSideSupply;

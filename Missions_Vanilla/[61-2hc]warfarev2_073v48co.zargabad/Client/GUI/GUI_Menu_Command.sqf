@@ -697,7 +697,11 @@ while {alive player && dialog} do {
 		//--- (the camera's own player-team list is unchanged). Close this console first, then open the camera dialog. -----
 		if (MenuAction == 726) then {
 			MenuAction = -1;
-			if (!isNull _selTeam && {alive (leader _selTeam)}) then {
+			//--- exitWith (r90 loop leak): the unit camera opens in the same pass, so dialog
+			//--- stays true and the command loop SURVIVED - it kept eating the shared
+			//--- mouseButtonUp (dead camera minimap clicks) and could resolve an armed
+			//--- order against the CLOSED map control (bogus position, real server send).
+			if (!isNull _selTeam && {alive (leader _selTeam)}) exitWith {
 				WFBE_CmdCon_CamUnit = leader _selTeam;
 				activeAnimMarker = false;
 				closeDialog 0;
@@ -819,7 +823,7 @@ while {alive player && dialog} do {
 							[_team, _position] Call SetTeamMovePos;
 							[_team, _armed]    Call SetTeamMoveMode;
 							[_team, false]     Call SetTeamAutonomous; //--- pin under manual order (don't let AssignTowns re-grab it)
-							_team setVariable ["wfbe_aicom_manualpin", time, true]; //--- MANUAL-PIN (Build83): stamp the human order time so AssignTowns treats this team as explicit for WFBE_C_AICOM_MANUALPIN_TTL (600s) and does not re-grab it on the next 120s tick. Broadcast so the SERVER's AssignTowns reads it.
+							["RequestSpecial", ["aicom-manualpin", sideJoined, _team, player]] Call WFBE_CO_FNC_SendToServer; //--- Server stamps the pin: client mission time can differ after JIP/load.
 							["TempAnim", _position, "selector_selectedMission", 1, _col, 1, 1.2] Spawn MarkerAnim;
 							hintSilent parseText ("<t color='#A0E060'>" + (name (leader _team)) + " -> " + (toUpper _armed) + ".</t>");
 							_lastDirect = _now; _armed = "";
@@ -858,7 +862,7 @@ while {alive player && dialog} do {
 							[_x, _hp]       Call SetTeamMovePos;
 							[_x, "defense"] Call SetTeamMoveMode;
 							[_x, false]     Call SetTeamAutonomous;
-							_x setVariable ["wfbe_aicom_manualpin", time, true]; //--- MANUAL-PIN (Build83): ALL-HOLD is a human DIRECT defense order, so pin each team (broadcast) - AssignTowns won't re-grab it for WFBE_C_AICOM_MANUALPIN_TTL (600s).
+							["RequestSpecial", ["aicom-manualpin", sideJoined, _x, player]] Call WFBE_CO_FNC_SendToServer; //--- Server stamps each pin: client mission time can differ after JIP/load.
 						};
 						_n = _n + 1;
 					};

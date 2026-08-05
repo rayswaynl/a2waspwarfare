@@ -293,8 +293,12 @@ while {!WFBE_GameOver && _alive} do {
 						for "_ci" from 0 to ((count _townCamps) - 1) do {
 							_campObj = _townCamps select _ci;
 
-							//--- Skip dead camps to avoid nil-access on getPos of a null object.
-							if (isNull _campObj) exitWith {};
+							//--- r83 alife camp-sweep: skip a dead camp PER-ITERATION (if-nesting, the A2 idiom).
+							//--- The old `if (isNull _campObj) exitWith {}` BROKE the whole for-loop at the first
+							//--- deleted camp logic (cmdcon44q: deleted camps leave null refs in the camps array),
+							//--- so every later camp in the town was never visited this sweep - and the once-per-visit
+							//--- wfbe_patrol_sweep_town latch above meant the patrol never retried them on this visit.
+							if (!isNull _campObj) then {
 
 							//--- Order move to camp.
 							if (!isNull leader _team && alive leader _team) then {
@@ -347,6 +351,7 @@ while {!WFBE_GameOver && _alive} do {
 								} forEach _dismounted;
 								sleep 25;
 							};
+							}; //--- end per-camp null-camp guard (r83)
 						};
 
 						//--- After the camp sweep, if all camps belong to us OR the 8-min

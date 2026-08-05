@@ -102,7 +102,7 @@ while {alive player && dialog} do {
 			};
 		} forEach _hvtList;
 		_carrierOwned = !isNull _platform;
-		_scudCost = missionNamespace getVariable ["WFBE_C_SCUD_COST_GUER", 40000];
+		_scudCost = missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000];
 
 		ctrlShow [32020, true]; ctrlShow [32021, true]; ctrlShow [32022, true];
 		ctrlShow [32023, true]; ctrlShow [32024, true];
@@ -210,8 +210,11 @@ while {alive player && dialog} do {
 		};
 	};
 
-	//--- BACK.
-	if (MenuAction == 90) then {
+	//--- BACK. exitWith: without it the while{alive player && dialog} loop SURVIVED the
+	//--- transition (WF_Menu opens in the same pass, so dialog stays true) and kept consuming
+	//--- the shared MenuAction - a later "Purchase Units" click (MenuAction 1) could be eaten
+	//--- by the leaked loop and converted into a $5000 FPV launch. (r90 loop leak)
+	if (MenuAction == 90) exitWith {
 		MenuAction = -1;
 		_scudTargetPos = [];
 		_scudTargeting = false;

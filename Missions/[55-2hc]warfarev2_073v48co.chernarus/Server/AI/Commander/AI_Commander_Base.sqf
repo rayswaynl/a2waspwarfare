@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK","_slopeOK","_treeClearOK","_tp19RoadClearOK","_defense","_artyObj","_fwdDefObj"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK","_slopeOK","_treeClearOK","_tp19RoadClearOK","_defense","_artyObj","_fwdDefObj","_watchConstructionResult","_completionResultKey"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
 
 _side = _this;
 _sideText = str _side;
@@ -28,6 +28,35 @@ _classes = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideTe
 _costs   = missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS", _sideText];
 _scripts = missionNamespace getVariable Format ["WFBE_%1STRUCTURESCRIPTS", _sideText];
 if (isNil "_names" || isNil "_classes" || isNil "_costs" || isNil "_scripts") exitWith {};
+
+//--- AICOM structure workers are asynchronous. They already publish an optional result key on every
+//--- construction abort/success; consume that receipt before deciding whether the pre-paid supply was spent.
+//--- _this = [side, sideLogic, resultKey, cost, structureType, cooldownPrefix].
+_watchConstructionResult = {
+	private ["_watchSide","_watchLogik","_resultKey","_watchCost","_watchType","_cooldownPrefix","_wait","_result"];
+	_watchSide = _this select 0;
+	_watchLogik = _this select 1;
+	_resultKey = _this select 2;
+	_watchCost = _this select 3;
+	_watchType = _this select 4;
+	_cooldownPrefix = _this select 5;
+	_wait = 0;
+	waitUntil {
+		sleep 2;
+		_wait = _wait + 2;
+		!isNil {missionNamespace getVariable _resultKey} || {_wait >= 420}
+	};
+	if (isNil {missionNamespace getVariable _resultKey}) exitWith {
+		["WARNING", Format ["AI_Commander_Base.sqf: [%1] AICOM_BUILD_TIMEOUT type=%2 cost=%3; no construction receipt after %4s.", str _watchSide, _watchType, _watchCost, _wait]] Call WFBE_CO_FNC_AICOMLog;
+	};
+	_result = missionNamespace getVariable _resultKey;
+	missionNamespace setVariable [_resultKey, nil];
+	if (typeName _result == "ARRAY" && {count _result > 0} && {typeName (_result select 0) == "SCALAR"} && {(_result select 0) < 0}) then {
+		[_watchSide, _watchCost, Format ["AI commander structure refund (%1).", _watchType], false] Call ChangeSideSupply;
+		_watchLogik setVariable [Format [_cooldownPrefix, _watchType], -1e6];
+		["WARNING", Format ["AI_Commander_Base.sqf: [%1] AICOM_BUILD_FAIL type=%2 cost=%3 reason=%4; refunded and retry latch cleared.", str _watchSide, _watchType, _watchCost, _result select 1]] Call WFBE_CO_FNC_AICOMLog;
+	};
+};
 
 //--- 1) Deploy the HQ where it stands (the MHQ starts at the side's start location).
 if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
@@ -330,7 +359,10 @@ _findBuildPos = {
 				//--- settle onto flat-empty ground with a SMALL radius so it cannot drift back
 				//--- onto the lane, then validate: dry, and a clear drivable strip between the
 				//--- build pos and the carriageway (sample the midpoint - not water/road-snapped).
-				_cand = [_cand, 8] Call WFBE_CO_FNC_GetEmptyPosition;
+				//--- This settle runs inside the factory placement try loop. Keep its probe budget
+				//--- bounded so a crowded road candidate does not multiply 1000 isFlatEmpty checks
+				//--- before the outer loop tries the next candidate.
+				_cand = [_cand, 8, 32] Call WFBE_CO_FNC_GetEmptyPosition;
 				if (!(surfaceIsWater _cand)) then {
 					if (!_haveDry) then {_best = _cand; _haveDry = true};
 					_blocked = false;
@@ -759,13 +791,17 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				};
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _ordType], false] Call ChangeSideSupply};
 				_logik setVariable [Format ["wfbe_aicom_built_%1", _ordType], time];
+				_completionResultKey = Format ["wfbe_aicom_build_result_%1_%2_%3", _sideText, _ordType, floor (random 1000000)];
 				_script = _scripts select _idx;
 				//--- AICOM v2 (Ray, deliberate layout): face structures toward the FRONT (HQ->spearhead bearing) so
 				//--- spawn pads / doors point at the egress instead of a random spin. Falls back to random if no front.
 				private ["_facDir","_facTgt","_facP"];
 				_facTgt = (_logik getVariable ["wfbe_aicom_targets", []]);
 				_facDir = if (count _facTgt > 0 && {!isNull (_facTgt select 0)}) then {_facP = getPos (_facTgt select 0); ((_facP select 0) - (_hqPos select 0)) atan2 ((_facP select 1) - (_hqPos select 1))} else {random 360};
-				[_class, _side, _pos, _facDir, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
+				//--- Pass the same key as start + completion receipt: start-logic refusal only writes arg5,
+				//--- while all later worker exits write arg6.
+				[_class, _side, _pos, _facDir, _idx, _completionResultKey, _completionResultKey] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
+				[_side, _logik, _completionResultKey, _cost, _ordType, "wfbe_aicom_built_%1"] Spawn _watchConstructionResult;
 				//--- FACTORY RALLY (task #25 / bug a). Warfare has no rally MARKER: "rally" = the
 				//--- destination spawned units inherit. Players set it (shift-click); the AI never
 				//--- did, so AI factory output (troop trucks, combat teams) spawned at the in-base
@@ -1176,9 +1212,11 @@ if (_fwdEnable && {_dual}) then {
 											};
 											if (_dual) then {[_side, -_fwdCost, Format ["AI commander forward outpost (%1).", _ord], false] Call ChangeSideSupply};
 											_logik setVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], time];
+											_completionResultKey = Format ["wfbe_aicom_build_result_%1_%2_%3", _sideText, _ord, floor (random 1000000)];
 											_fwdScript = _scripts select _fwdIdx;
 											_fwdDir = if (_haveFront) then {((_frontPosF select 0) - (_fwdPos select 0)) atan2 ((_frontPosF select 1) - (_fwdPos select 1))} else {random 360};
-											[_fwdClass, _side, _fwdFacP, _fwdDir, _fwdIdx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _fwdScript]);
+											[_fwdClass, _side, _fwdFacP, _fwdDir, _fwdIdx, _completionResultKey, _completionResultKey] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _fwdScript]);
+											[_side, _logik, _completionResultKey, _fwdCost, _ord, "wfbe_aicom_fwdbuilt_%1"] Spawn _watchConstructionResult;
 											["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST building %2 at %3 (town %4, cost %5, distRear %6).", _sideText, _ord, _fwdFacP, (_bestFwdT getVariable ["name","?"]), _fwdCost, round (_fwdPos distance _rearHQpos)]] Call WFBE_CO_FNC_AICOMLog;
 											diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_BUILD|struct=" + _ord + "|cost=" + str _fwdCost + "|town=" + (_bestFwdT getVariable ["name","?"]) + "|distRear=" + str (round (_fwdPos distance _rearHQpos)));
 										};

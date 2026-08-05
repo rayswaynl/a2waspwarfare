@@ -4,7 +4,7 @@
 //--- pure createMarkerLocal, no PV, no server authority. 8-second poll; markers reposition on move,
 //--- auto-delete on kill/null. Self-gates on WFBE_C_ARTY_RING > 0 (default 1, owner-ordered ON).
 
-Private ["_side","_sideText","_artyNames","_artyRanges","_rings","_known","_v","_artIdx","_range","_mk","_artyCooldownActive","_artyIntervals","_artyUps","_artyFireTime","_artyLastFire","_artyLogik","_artySharedLast","_artyElapsed","_visualCap","_drawRange"];
+Private ["_side","_sideText","_artyNames","_artyRanges","_rings","_known","_v","_artIdx","_range","_mk","_artyCooldownActive","_artyIntervals","_artyUps","_artyFireTime","_artyLastFire","_artyLogik","_artySharedLast","_artyElapsed","_artyUpgradeIndex","_artyLevel","_artyIntervalIndex","_visualCap","_drawRange"];
 
 if ((missionNamespace getVariable ["WFBE_C_ARTY_RING", 1]) <= 0) exitWith {};
 
@@ -31,23 +31,35 @@ while {true} do {
 	//--- If the interval table is not initialized yet, fail open to "ready" (orange) rather than a
 	//--- perpetual false "on cooldown" red.
 	_artyCooldownActive = false;
-	_artyIntervals = missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS";
-	if !(isNil "_artyIntervals") then {
+	_artyIntervals = missionNamespace getVariable ["WFBE_C_ARTILLERY_INTERVALS", []];
+	if ((typeName _artyIntervals == "ARRAY") && {count _artyIntervals > 0}) then {
 		_artyUps = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
-		_artyFireTime = _artyIntervals select (_artyUps select WFBE_UP_ARTYTIMEOUT);
-		_artyLastFire = fireMissionTime;
-		if (isNil "_artyLastFire") then {_artyLastFire = -1000};
-		if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
-			_artyLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
-			if (!isNull _artyLogik) then {
-				_artySharedLast = _artyLogik getVariable ["wfbe_arty_last_fire", _artyLastFire];
-				if (typeName _artySharedLast == "SCALAR") then {
-					if (_artySharedLast > _artyLastFire) then {_artyLastFire = _artySharedLast};
+		if ((typeName _artyUps == "ARRAY") && {count _artyUps > 0}) then {
+			_artyUpgradeIndex = missionNamespace getVariable ["WFBE_UP_ARTYTIMEOUT", 0];
+			if ((typeName _artyUpgradeIndex != "SCALAR") || {_artyUpgradeIndex < 0}) then {_artyUpgradeIndex = 0};
+			_artyUpgradeIndex = floor _artyUpgradeIndex;
+			_artyUpgradeIndex = _artyUpgradeIndex min ((count _artyUps) - 1);
+			_artyLevel = _artyUps select _artyUpgradeIndex;
+			if (isNil "_artyLevel" || {typeName _artyLevel != "SCALAR"} || {_artyLevel < 0}) then {_artyLevel = 0};
+			_artyLevel = floor _artyLevel;
+			_artyIntervalIndex = _artyLevel min ((count _artyIntervals) - 1);
+			_artyFireTime = _artyIntervals select _artyIntervalIndex;
+			if (!isNil "_artyFireTime" && {typeName _artyFireTime == "SCALAR"} && {_artyFireTime >= 0}) then {
+				_artyLastFire = fireMissionTime;
+				if (isNil "_artyLastFire") then {_artyLastFire = -1000};
+				if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+					_artyLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+					if (!isNull _artyLogik) then {
+						_artySharedLast = _artyLogik getVariable ["wfbe_arty_last_fire", _artyLastFire];
+						if (typeName _artySharedLast == "SCALAR") then {
+							if (_artySharedLast > _artyLastFire) then {_artyLastFire = _artySharedLast};
+						};
+					};
 				};
+				_artyElapsed = time - _artyLastFire;
+				_artyCooldownActive = (_artyElapsed <= _artyFireTime);
 			};
 		};
-		_artyElapsed = time - _artyLastFire;
-		_artyCooldownActive = (_artyElapsed <= _artyFireTime);
 	};
 
 	//--- Add rings for newly-seen friendly arty pieces not yet tracked.
