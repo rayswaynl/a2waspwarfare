@@ -17,7 +17,7 @@ if (typeName _maxWaypoints != "SCALAR") then {_maxWaypoints = 8};
 if (_maxWaypoints < 1) then {_maxWaypoints = 1}; //--- at least one MOVE before CYCLE needs 2 nodes total (0..max)
 _behaviours = if (count _this > 4) then {_this select 4} else {[]};
 if (typeName _destination == 'OBJECT') then {_destination = getPos _destination};
-_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 0];
+_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 20];
 //--- r41: cap<=0 used to mean "retry forever while water" (unbounded while) AND skipped the dry fallback.
 //--- Match AI_Patrol.sqf: hard retry budget then snap to destination if still water.
 if (typeName _waterRetryCap != "SCALAR" || {_waterRetryCap <= 0}) then {_waterRetryCap = 20};

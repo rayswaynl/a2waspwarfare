@@ -1276,6 +1276,7 @@ while {!WFBE_GameOver && _alive} do {
 				_lastDest = _dest;
 				_arrived = false;
 				_captureDone = false;
+				_team setVariable ["wfbe_aicom_gearslow", false]; //--- r72: reset careful-gear latch on every order accept so steep LIMITED can re-arm (stale true + re-order FULL left governor inert).
 				_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
 				if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_ACCEPT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round ((leader _team) distance _dest)));
@@ -1385,6 +1386,17 @@ while {!WFBE_GameOver && _alive} do {
 							_srThreat2 = {!isNull _x && {alive _x} && {((side _uTeam) getFriend (side _x)) < 0.6}} count (_uVeh nearEntities [["Man","LandVehicle"], _srSafe2]);
 							if (_srThreat2 == 0) then {
 								_uVeh setDamage 0;
+								//--- setDamage only resets the overall scalar.  Clear every configured part too so a
+								//--- wheel, track, or engine hitpoint cannot leave this recovered hull !canMove.
+								private ["_srHp2","_srHpCfg2","_srHpName2"];
+								_srHp2 = configFile >> "CfgVehicles" >> (typeOf _uVeh) >> "HitPoints";
+								if (isClass _srHp2 && {(count _srHp2) > 0}) then {
+									for "_srI2" from 0 to ((count _srHp2) - 1) do {
+										_srHpCfg2 = _srHp2 select _srI2;
+										_srHpName2 = getText (_srHpCfg2 >> "name");
+										if (!(_srHpName2 in [""])) then {_uVeh setHit [_srHpName2, 0]};
+									};
+								};
 								_uVeh setVehicleAmmo 1;
 								diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_REPAIR|team=" + (str _uTeam) + "|tier=" + str _uTier + "|veh=" + (typeOf _uVeh));
 								//--- STUCK_REPAIR_RESETS_TIER (2026-07-06, flag WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER default 0):
@@ -1947,6 +1959,7 @@ while {!WFBE_GameOver && _alive} do {
 					_team setCombatMode _marchCM;      //--- cmdcon41-w2 F1: YELLOW transit when flagged (was hard RED); RED-on-objective re-asserted at arrival.
 					_team setFormation "COLUMN";
 					_team setSpeedMode "FULL";         //--- STANCE (task #1): full road-march speed (was NORMAL).
+					_team setVariable ["wfbe_aicom_gearslow", false]; //--- r72: clear careful-gear latch so steep re-LIMITED can re-engage after re-order (stale true + FULL left LIMITED dead).
 
 					//--- Pull the road-node chain the server snapped for this seq (may be empty).
 					//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
@@ -2333,11 +2346,9 @@ while {!WFBE_GameOver && _alive} do {
 										//--- Idiom matches L475 and L1120 (driver _x for vehicle objects).
 										if (!isNull (driver _x) && {alive (driver _x)}) then {
 											(driver _x) doMove _ascrP;
-											//--- Hull-down watch posture: COMBAT/RED so it returns fire; LIMITED
-											//--- so it settles and watches rather than advancing. A2-safe setters.
-											_x setCombatMode "RED";
-											_x setBehaviour "COMBAT";
-											_x setSpeedMode "LIMITED";
+											//--- r72: vehicle object is not a group/unit for posture. Driver unit for combat/behaviour; no group LIMITED (would slow infantry SAD).
+											(driver _x) setCombatMode "RED";
+											(driver _x) setBehaviour "COMBAT";
 											_ascrIdx = _ascrIdx + 1;
 										}; //--- else: no live driver -> tank is driverless or crew is dead; skip entirely.
 									};
@@ -2707,7 +2718,7 @@ while {!WFBE_GameOver && _alive} do {
 									//--- Reveal the camp's live enemy so the squad prosecutes them.
 									{
 										if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
-									} forEach ((getPos _campObj) nearEntities [["Man"], 60]);
+									} forEach ((getPos _campObj) nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 									sleep 3;
 								};
 								//--- Dwell so the 10m camp scan ticks (presence-based capture).
@@ -2790,7 +2801,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Reveal the camp's live enemy so the squad prosecutes them (sweep pattern).
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
-							} forEach (_campTgtPos nearEntities [["Man"], 60]);
+							} forEach (_campTgtPos nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 							//--- FIX A: in the mode-2 gated path the depot can't flip until the garrison is
 							//--- cleared, so prosecute the camp HARDER: lay a live SAD ring over the camp and
 							//--- doTarget/doFire every live garrison unit so the squad ATTACKS instead of just
@@ -2803,10 +2814,19 @@ while {!WFBE_GameOver && _alive} do {
 										_team reveal _x; //--- A2: 2-operand reveal only.
 										_campEnemy = _campEnemy + [_x];
 									};
-								} forEach (_campTgtPos nearEntities [["Man"], 60]);
+								} forEach (_campTgtPos nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 								if (count _campEnemy > 0) then {
-									_campFoe = _campEnemy select 0;
-									{if (alive _x) then {_x doTarget _campFoe; _x doFire _campFoe}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+									{
+										if (alive _x) then {
+											private ["_campFoe"];
+											_campFoe = [_x, _campEnemy] Call WFBE_CO_FNC_GetClosestEntity;
+											if (!isNull _campFoe) then {
+												_x reveal _campFoe;
+												_x doTarget _campFoe;
+												_x doFire _campFoe;
+											};
+										};
+									} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 								};
 							};
 							//--- Settle: up to ~20s or leader inside the 10m camp range (mirrors the
@@ -2920,7 +2940,7 @@ while {!WFBE_GameOver && _alive} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
 							if (_capAbort) exitWith {}; //--- B69: re-tasked mid depot-hold -> bail; outer loop re-reads the new order
-							_enemyNear = (_townCenter nearEntities [["Man"], _capRange]) unitsBelowHeight 10;
+							_enemyNear = (_townCenter nearEntities [["Man","Car","Motorcycle","Tank","Air"], _capRange]) unitsBelowHeight 10;
 							_resNear = 0;
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {

@@ -459,37 +459,42 @@ _scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [_scudXY select 0, _scudXY se
 //--- hull clears the deck surface. Owner will eyeball and adjust the constant in-engine.
 private ["_scudSpawnZ"];
 _scudSpawnZ = _scudDeckZ + (missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 2.4]);
-_scudModel setPosASL [_scudXY select 0, _scudXY select 1, _scudSpawnZ];
-_scudModel setDir 90;
-_scudModel allowDamage false;
-//--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): store the deck SCUD launcher on the platform logic so
-//--- Support_ScudStrike.sqf can find the firing carrier's launcher and play the erect/backblast at launch. The
-//--- platform logic == the single entry stored in WFBE_NAVAL_HVT_PLATFORMS above (the object ScudStrike validates
-//--- ownership on), so a strike resolves its launcher with one getVariable. Broadcast so any locality can read it.
-//--- fable/naval-camps-on-deck: also store wfbe_scud_model_ref so the addAction proximity gate (below)
-//--- can test distance to the VISUAL launcher, not the invisible pad anchor (50m apart).
-_scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
-_scudLogic setVariable ["wfbe_scud_model_ref", _scudModel, true];
-diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 2.4]];
-[_scudModel, _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckPart] spawn {
-	private ["_s","_px","_py","_dz","_deckPart","_off"];
-	_s        = _this select 0;
-	_px       = _this select 1;
-	_py       = _this select 2;
-	_dz       = _this select 3;
-	_deckPart = _this select 4;
-	_s action ["scudLaunch", _s];		//--- raise the missile to vertical
-	sleep 6;							//--- let the erect animation finish
-	_s setPosASL [_px, _py, _dz];		//--- correct any physics drift during the erect (TRUE deck height)
-	_s setVectorUp [0,0,1];				//--- re-level the launcher
-	//--- Pin it to the carrier so no residual physics can slide it off the deck. attachTo keeps the child at
-	//--- a fixed model-space offset from the (static) parent; worldToModel converts the corrected world pos.
-	if (!isNull _deckPart) then {
-		_off = _deckPart worldToModel (getPosASL _s);
-		_s attachTo [_deckPart, _off];
-		_s setVectorUp [0,0,1];			//--- re-level after the attach re-orients relative to parent
+//--- FAIL-CLEAN (r40): primary SCUD create null must not setPosASL/setDir/stamp logic refs or spawn erect.
+if (isNull _scudModel) then {
+	diag_log Format ["NAVALHVT-SCUD: primary SCUD createVehicle FAILED at [%1,%2] - no model ref stamped.", _scudXY select 0, _scudXY select 1];
+} else {
+	_scudModel setPosASL [_scudXY select 0, _scudXY select 1, _scudSpawnZ];
+	_scudModel setDir 90;
+	_scudModel allowDamage false;
+	//--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): store the deck SCUD launcher on the platform logic so
+	//--- Support_ScudStrike.sqf can find the firing carrier's launcher and play the erect/backblast at launch. The
+	//--- platform logic == the single entry stored in WFBE_NAVAL_HVT_PLATFORMS above (the object ScudStrike validates
+	//--- ownership on), so a strike resolves its launcher with one getVariable. Broadcast so any locality can read it.
+	//--- fable/naval-camps-on-deck: also store wfbe_scud_model_ref so the addAction proximity gate (below)
+	//--- can test distance to the VISUAL launcher, not the invisible pad anchor (50m apart).
+	_scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
+	_scudLogic setVariable ["wfbe_scud_model_ref", _scudModel, true];
+	diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 2.4]];
+	[_scudModel, _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckPart] spawn {
+		private ["_s","_px","_py","_dz","_deckPart","_off"];
+		_s        = _this select 0;
+		_px       = _this select 1;
+		_py       = _this select 2;
+		_dz       = _this select 3;
+		_deckPart = _this select 4;
+		_s action ["scudLaunch", _s];		//--- raise the missile to vertical
+		sleep 6;							//--- let the erect animation finish
+		_s setPosASL [_px, _py, _dz];		//--- correct any physics drift during the erect (TRUE deck height)
+		_s setVectorUp [0,0,1];				//--- re-level the launcher
+		//--- Pin it to the carrier so no residual physics can slide it off the deck. attachTo keeps the child at
+		//--- a fixed model-space offset from the (static) parent; worldToModel converts the corrected world pos.
+		if (!isNull _deckPart) then {
+			_off = _deckPart worldToModel (getPosASL _s);
+			_s attachTo [_deckPart, _off];
+			_s setVectorUp [0,0,1];			//--- re-level after the attach re-orients relative to parent
+		};
+		_s enableSimulation false;			//--- freeze it static (erect)
 	};
-	_s enableSimulation false;			//--- freeze it static (erect)
 };
 
 //--- fable/scud-showpiece (owner 2026-07-07): the SCUD deck is a SHOWPIECE - a second erect launcher
@@ -831,7 +836,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
 					};
 				};
-				if (!isNull _capGrp) then { deleteGroup _capGrp };
+				if (!isNull _capGrp) then {
+					{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _capGrp;
+					deleteGroup _capGrp;
+				};
 				["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP torn down at %1 (carrier captured, sideID=%2).", _loc getVariable "name", _sideID]] Call WFBE_CO_FNC_LogContent;
 			};
 
@@ -933,30 +941,57 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							//---   line 185835  class L39_TK_EP1 : L39_base
 							_jetDir = random 360;
 
+							//--- FAIL-CLEAN (r40): L39 CAP hull/pilot/seat - null hull skips pilot; seat fail tears down pilot+hull (not AICOM AirResp).
 							_jet1 = createVehicle ["L39_TK_EP1", [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600], [], 0, "FLY"];
-							_jet1 setPosASL [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600];
-							_jet1 setDir _jetDir;
-							_jet1 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
-							_jet1 flyInHeight 550;
-							_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							if (isNull _jetPilot1) then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-							if (isNull _jetPilot1) then {deleteVehicle _jet1; ["WARNING", "Init_NavalHVT.sqf: CAP L39 pilot fallback failed; deleted unmanned jet."] Call WFBE_CO_FNC_LogContent};
-							if (!(isNull _jetPilot1)) then {
-								_jetPilot1 moveInDriver _jet1;
-								_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+							if (isNull _jet1) then {
+								diag_log "NAVALCAP|CREATEFAIL|L39|jet1";
+							} else {
+								_jet1 setPosASL [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600];
+								_jet1 setDir _jetDir;
+								_jet1 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+								_jet1 flyInHeight 550;
+								_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNull _jetPilot1) then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+								if (isNull _jetPilot1) then {
+									deleteVehicle _jet1;
+									diag_log "NAVALCAP|PILOTFAIL|L39|jet1";
+								};
+								if (!(isNull _jetPilot1)) then {
+									_jetPilot1 moveInDriver _jet1;
+									if (driver _jet1 != _jetPilot1) then {
+										deleteVehicle _jetPilot1;
+										deleteVehicle _jet1;
+										diag_log "NAVALCAP|SEATFAIL|L39|jet1";
+									} else {
+										_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit
+									};
+								};
 							};
 
 							_jet2 = createVehicle ["L39_TK_EP1", [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650], [], 0, "FLY"];
-							_jet2 setPosASL [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650];
-							_jet2 setDir _jetDir;
-							_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
-							_jet2 flyInHeight 600;
-							_jetPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							if (isNull _jetPilot2) then {_jetPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
-							if (isNull _jetPilot2) then {deleteVehicle _jet2; ["WARNING", "Init_NavalHVT.sqf: CAP L39 pilot fallback failed; deleted unmanned jet."] Call WFBE_CO_FNC_LogContent};
-							if (!(isNull _jetPilot2)) then {
-								_jetPilot2 moveInDriver _jet2;
-								_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
+							if (isNull _jet2) then {
+								diag_log "NAVALCAP|CREATEFAIL|L39|jet2";
+							} else {
+								_jet2 setPosASL [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650];
+								_jet2 setDir _jetDir;
+								_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+								_jet2 flyInHeight 600;
+								_jetPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNull _jetPilot2) then {_jetPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+								if (isNull _jetPilot2) then {
+									deleteVehicle _jet2;
+									diag_log "NAVALCAP|PILOTFAIL|L39|jet2";
+								};
+								if (!(isNull _jetPilot2)) then {
+									_jetPilot2 moveInDriver _jet2;
+									if (driver _jet2 != _jetPilot2) then {
+										deleteVehicle _jetPilot2;
+										deleteVehicle _jet2;
+										diag_log "NAVALCAP|SEATFAIL|L39|jet2";
+									} else {
+										_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
+									};
+								};
 							};
 
 							_capGrp setBehaviour "AWARE";
@@ -975,8 +1010,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								if (_easaIdx >= 0) then {
 									_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
 									_easaRandIdx = floor (random (count _easaLoadouts));
-									_jet1 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
-									_jet2 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+									if (!isNull _jet1) then {_jet1 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true]};
+									if (!isNull _jet2) then {_jet2 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true]};
 								};
 							};
 
@@ -1502,6 +1537,10 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 					_cOff = _x;
 					_cXY = _deckPart modelToWorld _cOff;
 					_cLogic = "HeliHEmpty" createVehicle [_cXY select 0, _cXY select 1, 0];
+					//--- FAIL-CLEAN (r40): null logic/model/flag must not setDir/setPos/setVar or pollute camps/flags arrays.
+					if (isNull _cLogic) then {
+						diag_log Format ["NAVALHVT-CAMP: deck camp logic createVehicle FAILED at %1 - slot skipped.", _cXY];
+					} else {
 					_cLogic setDir (getDir _deckPart);
 					_cLogic setPosASL [_cXY select 0, _cXY select 1, _deckZ];
 					_cLogic allowDamage false;
@@ -1510,19 +1549,30 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 					_cLogic setVariable ["supplyValue", _townSV, true];
 					_cLogic setVariable ["wfbe_camp_deckz", _deckZ]; //--- kimi/naval-deckcamp-repair (2026-07-20): server-local deck-height marker (writer here, reader Server_HandleSpecial "repair-camp") so a repaired deck-camp bunker is reseated ON the flight deck (setPosASL) instead of the ATL z=0 sea-surface bury inside the hull.
 					_cModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+					if (isNull _cModel) then {
+						diag_log Format ["NAVALHVT-CAMP: deck camp bunker createVehicle FAILED at %1 - logic deleted.", _cXY];
+						deleteVehicle _cLogic;
+					} else {
 					_cModel setDir ((getDir _cLogic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
 					_cModel setPosASL [_cXY select 0, _cXY select 1, _deckZ];
 					_campHealth = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
-					if !(isNil '_campHealth') then {
-						_cModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
-					};
+							if !(isNil '_campHealth') then {
+								_cModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
+							};
 					_cFlag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
-					_cFlagPos = _cLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
-					_cFlag setPosASL [_cFlagPos select 0, _cFlagPos select 1, _deckZ];
-					_cLogic setVariable ["wfbe_flag", _cFlag];
+					if (isNull _cFlag) then {
+						diag_log Format ["NAVALHVT-CAMP: deck camp flag createVehicle FAILED at %1 - bunker kept without flag.", _cXY];
+						_cLogic setVariable ["wfbe_flag", objNull];
+					} else {
+						_cFlagPos = _cLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
+						_cFlag setPosASL [_cFlagPos select 0, _cFlagPos select 1, _deckZ];
+						_cLogic setVariable ["wfbe_flag", _cFlag];
+						_newFlags = _newFlags + [_cFlag];
+					};
 					_cLogic setVariable ["wfbe_camp_bunker", _cModel, true];
 					_newCamps = _newCamps + [_cLogic];
-					_newFlags = _newFlags + [_cFlag];
+					};
+					};
 				} forEach [[-10, 18, 0], [-10, -18, 0]];
 				_loc setVariable ["camps", _newCamps, true];
 				[_newCamps, _loc, _newFlags] execVM "Server\FSM\server_town_camp.sqf";

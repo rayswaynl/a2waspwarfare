@@ -171,7 +171,9 @@ while {!gameOver} do {
 										"Bo_FAB_250" createVehicle _p; "Bo_FAB_250" createVehicle _p; "Bo_FAB_250" createVehicle _p;
 									};
 									sleep 3;
-									{deleteVehicle _x; sleep 0} forEach (crew _v); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+									//--- Group-first teardown: crew-only deletion leaks ejected/dead units and can leave _v null.
+									//--- Preserve players, yield between deletes for the engine seat-math race, then reap the group.
+									if (!isNull _g) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _g};
 									if (!isNull _v) then {deleteVehicle _v};
 									if (!isNull _g) then {deleteGroup _g};
 								};

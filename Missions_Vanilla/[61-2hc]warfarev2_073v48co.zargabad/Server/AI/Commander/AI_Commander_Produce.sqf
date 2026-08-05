@@ -478,12 +478,15 @@ if (_airMaxTotalP > 0) then {
 						//--- MERGE: survivor joins healthy team; empty donor fully reclaimed (team-ended + deleteGroup).
 						//--- Net groups -1, body preserved. Bare deleteGroup alone leaked ledger/markers (r29 fix).
 						_mergedInto = _mergeTeam;  //--- capture for the log before _team is gutted
-						(units _team) joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
+						Private ["_liveMerge"];
+						_liveMerge = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
+						_liveMerge joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
+						{if (!alive _x && {!(isPlayer _x)}) then {deleteVehicle _x}} forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] stranded survivor MERGED into [%3] (alive=%4, dist=%5, mergeDist=%6) - body preserved, groups-1.", _sideText, _team, _mergedInto, _aliveNow, _curDist, round _mergeBest]] Call WFBE_CO_FNC_AICOMLog;
 						//--- r29 idle-reclaim: full ledger cleanup (match HCTopUp B69) BEFORE deleteGroup.
 						_team setVariable ["wfbe_persistent", false, true];
 						["aicom-team-ended", _myID, _team] Call HandleSpecial;
-						if (!isNull _team) then {deleteGroup _team};
+						if (!isNull _team && {(count (units _team)) == 0}) then {deleteGroup _team};
 						_canProduce = false;
 					} else {
 						//--- No eligible nearby team: cull then full reclaim (same ledger cleanup as merge).
@@ -522,7 +525,7 @@ if (_airMaxTotalP > 0) then {
 						if (count _cullHulls > 0) then {
 							["INFORMATION", Format ["HULLGC|v1|cull side=%1 team=%2 hulls=%3", _sideText, _team, count _cullHulls]] Call WFBE_CO_FNC_AICOMLog;
 						};
-						{ if (!(isPlayer _x)) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
+						{ if (!isNull _x && {!(isPlayer _x)}) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
 						_team setVariable ["wfbe_persistent", false, true];
 						["aicom-team-ended", _myID, _team] Call HandleSpecial;

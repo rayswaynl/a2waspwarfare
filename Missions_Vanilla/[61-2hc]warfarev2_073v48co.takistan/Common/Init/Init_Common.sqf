@@ -191,7 +191,8 @@ WFBE_CO_FNC_GetTownsSupply = Compile preprocessFileLineNumbers "Common\Functions
 WFBE_CO_FNC_GetUnitConfigGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitConfigGear.sqf";
 //--- wiki-wins: removed dead compile WFBE_CO_FNC_GetUnitsPerSide (zero call sites repo-wide)
 WFBE_CO_FNC_GetVehicleTurretsGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetVehicleTurretsGear.sqf";
-//--- deadcode-sweep 2026-07-21 (DC-01): removed dead compile WFBE_CO_FNC_ValidateCampPos (zero call sites repo-wide; file deleted)
+WFBE_CO_FNC_ValidateCampPos = Compile preprocessFileLineNumbers "Common\Functions\Common_ValidateCampPos.sqf"; //--- StarFort placement gate dependency.
+WFBE_CO_FNC_StarFortStatus = Compile preprocessFileLineNumbers "Common\Functions\Common_StarFortStatus.sqf";
 WFBE_CO_FNC_HandleArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleArtillery.sqf";
 WFBE_CO_FNC_OnUnitHit = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitHit.sqf";
 WFBE_CO_FNC_OnUnitKilled = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitKilled.sqf";

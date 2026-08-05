@@ -217,7 +217,7 @@
 		title = "AI Commander Funds Sink";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_AICOM2_REQDRAW_ENABLE {
 		title = "AI Commander War-Chest Requisition";

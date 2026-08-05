@@ -14,6 +14,10 @@ _pos = _this select 2;
 
 {
 	_reveal = [_x];
-	if (_x != vehicle _x) then {_reveal = _reveal + (crew _x)};
+	if !(_x isKindOf "Man") then {
+		_reveal = _reveal + (crew _x);
+	} else {
+		if (_x != vehicle _x) then {_reveal = _reveal + (crew _x)};
+	};
 	{_unit reveal _x} forEach _reveal;
 } forEach (_pos nearEntities _range);

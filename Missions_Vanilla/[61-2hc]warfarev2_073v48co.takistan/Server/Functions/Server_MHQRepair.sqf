@@ -63,8 +63,8 @@ if (_side == west && !(IS_chernarus_map_dependent)) then {
 	};
 _MHQ setVariable ["WFBE_Taxi_Prohib", true];
 _MHQ setVariable ["wfbe_trashed", false];
-_MHQ setVariable ["wfbe_side", _side];
-_MHQ setVariable ["wfbe_structure_type", "Headquarters"];
+_MHQ setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+_MHQ setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 _MHQ addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}];
 _MHQ setVelocity [0,0,-1];
 _MHQ setVariable ["wfbe_trashable", false];

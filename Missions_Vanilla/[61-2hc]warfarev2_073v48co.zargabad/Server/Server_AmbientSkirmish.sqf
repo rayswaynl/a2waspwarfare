@@ -234,6 +234,11 @@ if (!WFBE_GameOver) then {
 		if (_activeAlive > 0) then {
 			diag_log Format ["AMBSKIRMISH|v1|SKIP|t=%1|reason=active|alive=%2", round time, _activeAlive];
 		} else {
+			//--- Reap corpse-holding groups before re-arm so the one-cell cap also covers the GC window.
+			if ((count _activeGroups) > 0) then {
+				[_activeGroups] Call _cleanupGroups;
+				diag_log Format ["AMBSKIRMISH|v1|REAP|t=%1|reason=rearm_cleanup|groups=%2", round time, count _activeGroups];
+			};
 			_activeGroups = [];
 			_pos = [_center, _radius, _tries, _playerRadius, _townRadius] Call _findPosition;
 

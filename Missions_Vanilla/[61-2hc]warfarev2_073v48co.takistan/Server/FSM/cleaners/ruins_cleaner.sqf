@@ -1,7 +1,7 @@
 private["_batchCount","_batchSize","_clear","_mapHalf","_mapSize","_perfActive","_perfDeleted","_perfItemStart","_perfScanned","_perfStart","_scanCentre","_scanRadius","_timer"];
 
-_timer = missionNamespace getVariable "WFBE_C_RUINS_CLEANER_TIME_PERIOD";
-if (isNil "_timer") then {_timer = 1800};
+_timer = missionNamespace getVariable ["WFBE_C_RUINS_CLEANER_TIME_PERIOD", 1800];
+if (isNil "_timer" || {typeName _timer != "SCALAR"}) then {_timer = 1800};
 if (_timer < 1800) then {_timer = 1800};
 
 //--- Batch cooperative sleeps so large ruin sweeps stay yielded without paying 0.5s per object.
@@ -36,7 +36,7 @@ while {!WFBE_GameOver} do {
 		_perfItemStart = diag_tickTime;
 		//--- fable/cleanup-locality-2: deleteVehicle on a NON-local object silently no-ops (same A2
 		//--- rule as the weaponholder cleaner) - guard + count honestly instead of pretending.
-		if (local _x) then {
+		if (!isNull _x && {local _x}) then {
 			deleteVehicle _x;
 			_perfDeleted = _perfDeleted + 1;
 		};

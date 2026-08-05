@@ -45,7 +45,7 @@ _refundParaAmmoSetup = {
 	};
 	["WARNING", Format ["Support_ParaAmmo.sqf: setup abort refund $%1 (%2).", _cost, _reason]] Call WFBE_CO_FNC_LogContent;
 };
-_ran = round(random((count _ranPos)-1));
+_ran = floor (random (count _ranPos)); //--- uniform; count==0 would still be bad so caller must gate
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 if (isNull _grp) exitWith {
 	["WARNING", Format ["Support_ParaAmmo.sqf: [%1] group create failed.", str _side]] Call WFBE_CO_FNC_LogContent;
