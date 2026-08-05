@@ -4,6 +4,10 @@ _lifter = _this select 0;
 _caller = _this select 1;
 _actionID = _this select 2;
 _param = _this select 3;
+
+//--- Keep release authority aligned with Zeta_Hook: only the active lifter driver may detach cargo.
+if (_caller != driver _lifter) exitWith {};
+
 _vehicle = if ((typeName _param) == "ARRAY" && {count _param > 0}) then {_param select 0} else {objNull};
 
 //--- r50 fail-clean: cargo/lifter can be deleted mid-flight (empty-vehicle GC, combat) before Detach is used.
