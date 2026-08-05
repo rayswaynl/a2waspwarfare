@@ -74,15 +74,127 @@ def test_pvf_gate_present_on_all_terrains() -> None:
         )
 
 
+def _exitwith_block_spans(source: str) -> list:
+    """Return brace-matched (open_brace_index, close_brace_index) spans for every
+    `exitWith {...}` block in ``source``. Brace-matched (not regex-greedy) because these
+    blocks routinely contain their own nested `{}` - e.g. `&& {isPlayer _x}` conditions or an
+    inner `if () then {}` - which would truncate a naive scan early."""
+    marker = "exitWith {"
+    spans = []
+    i = 0
+    while True:
+        idx = source.find(marker, i)
+        if idx == -1:
+            break
+        open_brace = idx + len(marker) - 1
+        depth = 1
+        j = open_brace + 1
+        while depth > 0 and j < len(source):
+            if source[j] == "{":
+                depth += 1
+            elif source[j] == "}":
+                depth -= 1
+            j += 1
+        spans.append((open_brace, j))
+        i = j
+    return spans
+
+
+# Statements that only belong to "the repair actually happened" work. If an early-exit
+# release (one sitting inside an `exitWith {}` block) shares a block with any of these, that
+# block is not a clean bail-out - it is doing real camp-mutation work AND releasing the guard
+# in the same breath, which reopens the double-spawn race harden-repair-camp closed.
+_CAMP_MUTATION_MARKERS = (
+    "createVehicle [",
+    "setDir (",
+    "setPos [",
+    "setPosASL [",
+    "addEventHandler [",
+    'setVariable ["wfbe_camp_bunker"',
+    'setVariable ["sideID"',
+    "WFBE_CO_FNC_SendToClients",
+)
+
+
 def test_handlespecial_reentrancy_guard_present() -> None:
+    """Behavioural version of the harden-repair-camp reentrancy contract: the flag must be
+    acquired exactly once per call, every early-exit release must be a clean bail-out with no
+    camp-mutation work sharing its `exitWith` block, and exactly one release must survive
+    outside any `exitWith` block (the success path) - and that one must come only after the
+    bunker was actually created and registered, with no further camp mutation after it. This
+    intentionally does NOT hard-code a literal release count: a fold may legitimately add
+    another early-abort path (e.g. a `createVehicle` failure guard) without invalidating the
+    test, so long as that path stays a clean bail-out per the checks above.
+    """
     for terrain in TERRAINS:
         source = (ROOT / terrain / HANDLE_SPECIAL).read_text(encoding="utf-8")
         assert REENTRANCY_GUARD_CHECK in source, f"{terrain}: repair-camp reentrancy check missing"
         assert REENTRANCY_GUARD_SET in source, f"{terrain}: repair-camp reentrancy flag never set"
-        # Set once (top of case) + released on the two exit paths (alive-camp reject, success) = 3.
-        assert source.count(REENTRANCY_GUARD_RELEASE) == 2, (
-            f"{terrain}: expected exactly 2 reentrancy-flag releases (alive-reject + success)"
+
+        case_start = source.index('case "repair-camp": {')
+        case_end = source.index('\n\tcase "', case_start + 1)
+        body = source[case_start:case_end]
+
+        assert body.count(REENTRANCY_GUARD_SET) == 1, (
+            f"{terrain}: expected the reentrancy flag to be acquired exactly once per repair-camp call"
         )
+        set_index = body.index(REENTRANCY_GUARD_SET)
+
+        release_indices = []
+        cursor = 0
+        while True:
+            idx = body.find(REENTRANCY_GUARD_RELEASE, cursor)
+            if idx == -1:
+                break
+            release_indices.append(idx)
+            cursor = idx + 1
+
+        assert len(release_indices) >= 2, (
+            f"{terrain}: expected at least 2 reentrancy-flag releases (alive-reject + success)"
+        )
+        assert all(idx > set_index for idx in release_indices), (
+            f"{terrain}: a reentrancy-flag release appears before the flag is even acquired"
+        )
+
+        blocks = _exitwith_block_spans(body)
+
+        tail_releases = []
+        for idx in release_indices:
+            enclosing = next(((o, c) for (o, c) in blocks if o <= idx < c), None)
+            if enclosing is None:
+                tail_releases.append(idx)
+                continue
+            block_text = body[enclosing[0]:enclosing[1]]
+            for marker in _CAMP_MUTATION_MARKERS:
+                assert marker not in block_text, (
+                    f"{terrain}: an early-exit reentrancy release shares its exitWith block with "
+                    f"camp-mutation work ({marker!r}) - this releases the guard while a repair "
+                    f"may still be in flight"
+                )
+
+        # Exactly one release must survive outside every exitWith block: the unconditional
+        # success-path release taken once the repair is actually finished. Zero means a leaked
+        # (never-released) flag on success; two or more means a duplicate/premature release -
+        # both are the reentrancy bug shape this test exists to catch.
+        assert len(tail_releases) == 1, (
+            f"{terrain}: expected exactly 1 unconditional (success-path) reentrancy release, "
+            f"found {len(tail_releases)}"
+        )
+        tail_index = tail_releases[0]
+
+        assert body.index("createVehicle [") < tail_index, (
+            f"{terrain}: success-path reentrancy release happens before the bunker is even created"
+        )
+        assert body.index('setVariable ["wfbe_camp_bunker"') < tail_index, (
+            f"{terrain}: success-path reentrancy release happens before the bunker is registered "
+            f"- a concurrent request could pass the alive-check while the bunker is still unset"
+        )
+        tail = body[tail_index + len(REENTRANCY_GUARD_RELEASE):]
+        for marker in _CAMP_MUTATION_MARKERS:
+            assert marker not in tail, (
+                f"{terrain}: camp-mutation work ({marker!r}) still runs AFTER the reentrancy flag "
+                f"is released - the guard no longer covers the full repair"
+            )
 
 
 def test_server_radius_constant_defined_and_consistent() -> None:
