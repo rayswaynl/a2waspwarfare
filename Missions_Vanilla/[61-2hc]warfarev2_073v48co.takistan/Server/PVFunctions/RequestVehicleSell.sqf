@@ -25,14 +25,19 @@
 
 private ["_seller","_vehicle","_team","_buyTeam","_cmdTeam","_cls","_data","_price","_fraction","_damage","_refund","_vsellLatched"];
 
+//--- BUYUNIT-AUTH (g1606 2026-07-30): always-on envelope before bare selects (short/wrong-type PV forges).
+if (typeName _this != "ARRAY" || {(count _this) < 2}) exitWith {
+	["WARNING", Format ["RequestVehicleSell.sqf: [VSELL] rejected - short/non-array payload (type=%1 count=%2).", typeName _this, if (typeName _this == "ARRAY") then {count _this} else {-1}]] Call WFBE_CO_FNC_LogContent;
+};
 _seller  = _this select 0;
 _vehicle = _this select 1;
+if (typeName _seller != "OBJECT" || {typeName _vehicle != "OBJECT"}) exitWith {
+	["WARNING", Format ["RequestVehicleSell.sqf: [VSELL] rejected - seller/vehicle typeName not OBJECT (seller=%1 vehicle=%2).", typeName _seller, typeName _vehicle]] Call WFBE_CO_FNC_LogContent;
+};
 
 if ((missionNamespace getVariable ["WFBE_C_VEHICLE_SELL", 1]) <= 0) exitWith {};
 
 //--- Basic guards - the PVEH carries no trusted sender.
-if (isNil "_seller") exitWith {};
-if (isNil "_vehicle") exitWith {};
 if (isNull _seller || {!alive _seller} || {!isPlayer _seller}) exitWith {
 	["WARNING", Format ["RequestVehicleSell.sqf: [VSELL] rejected - seller [%1] is not a live player.", _seller]] Call WFBE_CO_FNC_LogContent;
 };
