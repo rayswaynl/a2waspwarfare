@@ -5,7 +5,7 @@ if (!isDedicated) exitWith {};
 
 Private ["_activePlayersOnly","_hcs","_hasHuman"];
 
-while {true} do
+while {!gameOver} do
 {
     _activePlayersOnly = missionNamespace getVariable ["WFBE_C_SERVER_FPS_GUI_ACTIVE_PLAYERS_ONLY", 0];
     _hasHuman = true;
@@ -18,7 +18,7 @@ while {true} do
         } forEach (call BIS_fnc_listPlayers);
     };
 
-    if (_hasHuman) then {
+    if (_hasHuman && {!gameOver}) then {
         // Publish the current server FPS; the client HUD (Client_UpdateRHUD.sqf) reads SERVER_FPS_GUI.
         SERVER_FPS_GUI = round(diag_fps);
         publicVariable "SERVER_FPS_GUI";
