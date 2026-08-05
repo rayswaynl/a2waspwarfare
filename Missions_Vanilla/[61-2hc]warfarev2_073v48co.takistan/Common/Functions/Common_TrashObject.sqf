@@ -145,9 +145,9 @@ if (true) then {
 		if (!_isMan && {!isNull _object}) then {
 			_crewDead = [];
 			{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { _crewDead set [count _crewDead, _x] } } forEach (crew _object);
-			{ deleteVehicle _x } forEach _crewDead;
+			{ if (!isNull _x) then { ["trash-crew", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0; } } forEach _crewDead;
 		};
-		if (!isNull _object) then { deleteVehicle _object };
+		if (!isNull _object) then { ["trash-object", _object, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _object };
 	};
 
 	if (_isMan) then {

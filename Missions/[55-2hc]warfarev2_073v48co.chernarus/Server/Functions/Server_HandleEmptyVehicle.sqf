@@ -57,7 +57,7 @@ while {alive _vehicle && {_reapRounds < _maxReapRounds}} do {
 		if (local _vehicle) then {
 			["emptyveh-reap", _vehicle, ""] Call WFBE_CO_FNC_LogVehDelete;
 			//--- r66: dead crew still blocks A2 deleteVehicle; purge non-player corpses first.
-			{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { deleteVehicle _x } } forEach (crew _vehicle);
+			{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { ["emptyveh-crew", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0; } } forEach (crew _vehicle);
 			if (!isNull _vehicle) then { deleteVehicle _vehicle };
 		} else {
 			if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) > 0) then {

@@ -964,6 +964,7 @@ while {!WFBE_GameOver} do {
 												if (driver _chute != _u) then {
 													//--- seat fail: leave unit at altitude without broken chute attach
 													_u setPos [_ux, _uy, _uz];
+													["guerairdef-chute-seatfail", _chute, ""] Call WFBE_CO_FNC_LogVehDelete;
 													deleteVehicle _chute;
 													_chute = objNull;
 													diag_log format ["GUERAIRDEF|CHUTEFAIL|town=%1|class=%2|reason=chute_seat", (_t getVariable ["name","?"]), _type];
