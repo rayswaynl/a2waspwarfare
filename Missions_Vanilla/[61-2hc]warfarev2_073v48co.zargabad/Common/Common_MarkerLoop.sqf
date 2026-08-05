@@ -78,7 +78,7 @@ _budgetAdaptFpsCeil  = missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_ADAPT
 
 _mapWasClosed = false;
 
-while {true} do {
+while {!gameOver} do {
 
 	sleep 0.2;
 	_perfTick = diag_tickTime;
@@ -727,4 +727,27 @@ if ((_entry select 6) && !(isNull _tracked)) then {
 			["markerloop_tick", diag_tickTime - _perfTick, Format["entries:%1;aarEntries:%2;tombstones:%3;activeMarkers:%4;budgetServiced:%5;budgetMax:%6", _activeEntries, count WFBE_CL_AARMarkerRegistry, _tombstones, missionNamespace getVariable ["PerformanceAuditMarkerScripts", 0], _budgetServiced, _budgetMax], "CLIENT"] Call PerformanceAudit_Record;
 		};
 	};
+};
+
+//--- round-end cleanup: gameOver ends the consolidated worker; clear every local marker it owned
+//--- so unit, AAR, and AI-objective markers cannot survive into the endgame UI.
+if (gameOver) then {
+	{
+		if (typeName _x == "ARRAY") then {
+			_markerName = _x select 1;
+			if (markerType _markerName != "") then {deleteMarkerLocal _markerName};
+		};
+	} forEach WFBE_CL_UnitMarkerRegistry;
+	{
+		if (typeName _x == "ARRAY") then {
+			_markerName = _x select 1;
+			if (markerType _markerName != "") then {deleteMarkerLocal _markerName};
+		};
+	} forEach WFBE_CL_AARMarkerRegistry;
+	if (markerType "wfbe_aicom_objective_mk" != "") then {deleteMarkerLocal "wfbe_aicom_objective_mk"};
+	WFBE_CL_UnitMarkerRegistry = [];
+	WFBE_CL_AARMarkerRegistry = [];
+	WFBE_CL_UnitMarkerLedger = [];
+	if !(isNil "PerformanceAuditMarkerScripts") then {PerformanceAuditMarkerScripts = 0};
+	if !(isNil "PerformanceAuditAARMarkerScripts") then {PerformanceAuditAARMarkerScripts = 0};
 };
