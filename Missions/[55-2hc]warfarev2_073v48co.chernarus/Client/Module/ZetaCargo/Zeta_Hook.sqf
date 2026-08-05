@@ -11,8 +11,9 @@ if (_caller != driver _lifter) exitWith {};
 //--- gates never aborted the hook and airlift still attached cargo. Use top-scope exitWith.
 if (((typeOf _lifter) in Zeta_Special) && {speed _lifter > 20}) exitWith {};
 if (!((typeOf _lifter) in Zeta_Special) && {(speed _lifter > 20) || ((getpos _lifter select 2) < 2)}) exitWith {};
-//--- nearEntities handle living units.
-_vehicles = _lifter nearObjects ["LandVehicle", 10];
+//--- nearObjects uses one CfgVehicles family per query: LandVehicle does not include Ship.
+//--- Zeta_Types declares Ship as liftable, so retain the land query and add the water family.
+_vehicles = (_lifter nearObjects ["LandVehicle", 10]) + (_lifter nearObjects ["Ship", 10]);
 //--- Build83 (Ray 2026-07-01): airlifting your OWN HQ is RE-ENABLED (was disabled by Trello #87). Flag-gated: set WFBE_C_AIRLIFT_OWN_HQ=0 to restore the old exclusion. Enemy-HQ-wreck guard below unchanged.
 if ((missionNamespace getVariable ["WFBE_C_AIRLIFT_OWN_HQ", 1]) == 0) then {
 	_fhq = (side _caller) Call WFBE_CO_FNC_GetSideHQ;
