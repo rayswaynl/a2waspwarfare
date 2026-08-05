@@ -103,7 +103,6 @@ WFBE_CO_FNC_ComputePvpBounty = Compile preprocessFileLineNumbers "Common\Functio
 WFBE_SE_FNC_CreditSidePlayers = Compile preprocessFileLineNumbers "Common\Functions\Common_CreditSidePlayers.sqf"; //--- J1 funds authority: server-side per-player side credit (SyncFundsRecord precedent: Common home, internal !isServer bail).
 WFBE_CO_FNC_RealPlayers = Compile preprocessFileLineNumbers "Common\Functions\Common_RealPlayers.sqf";
 WFBE_CO_FNC_RealPlayersNear = Compile preprocessFileLineNumbers "Common\Functions\Common_RealPlayersNear.sqf";
-WFBE_CO_FNC_ChangeUnitGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_ChangeUnitGroup.sqf";
 WFBE_CO_FNC_ClearVehicleCargo = if (WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargo.sqf"} else {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargoOA.sqf"};
 WFBE_CO_FNC_CreateTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTeam.sqf";
 WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTownUnits.sqf";
