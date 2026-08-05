@@ -106,7 +106,7 @@ _stamp      = time;
 _leaderAtDetach = leader _team;
 _exitReason = "ttl";
 
-while {true} do {
+while {!WFBE_GameOver} do {
 
     //--- (a) TTL expiry
     if (time > _stamp + _ttl) exitWith {_exitReason = "ttl"};
@@ -140,6 +140,8 @@ while {true} do {
 
     sleep 3;
 };
+
+if (WFBE_GameOver) then {_exitReason = "game_over"};
 
 //--- ===== REJOIN: clear stamp + doFollow on every dismounted unit =====
 //--- doFollow is the only reliable way to clear any sticky doStop/doMove in A2 OA.
