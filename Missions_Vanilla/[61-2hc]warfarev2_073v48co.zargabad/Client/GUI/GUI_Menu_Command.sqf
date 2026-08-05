@@ -303,7 +303,7 @@ while {alive player && dialog} do {
 						["RequestSpecial", ["aicom-fieldorder", sideJoined, _pv, player]] Call WFBE_CO_FNC_SendToServer; //--- TP-20: player appended so the server can key its per-UID rate limit (server count-guards for legacy 3-arg senders).
 						_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new field-order line
 						//--- fable/cmd-deck-c4: remember WHICH field-order verb is active so the deck can light it.
-						_deckDoctrine = switch (_b) do {case 762: {"SPLIT"}; case 763: {"MASS"}; case 764: {"HARASS"}; case 765: {"FALLBACK"}; default {_deckDoctrine}};
+						_deckDoctrine = switch (_pb) do {case 762: {"SPLIT"}; case 763: {"MASS"}; case 764: {"HARASS"}; case 765: {"FALLBACK"}; default {_deckDoctrine}};
 						hintSilent parseText (format ["<t color='#A0E060'>Field order sent: %1.</t>", _pv]);
 					};
 				} else {
