@@ -50,7 +50,10 @@ while {alive _vehicle && {_reapRounds < _maxReapRounds}} do {
 	//--- Block-exit falls through to the while condition, which ends the loop cleanly on the dead/deleted vehicle.
 	if (isNull _vehicle) exitWith {emptyQueu = emptyQueu - [_vehicle];};
 	
-	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]} || {_vehicle getVariable ["wfbe_is_guer_fob", false]} || {_vehicle getVariable ["wfbe_is_fob", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung. guer-fob-empty-exempt: a GUER FOB truck is a dismount-by-design base/spawn structure - never reap it as an abandoned empty hull
+	//--- r167 ownership boundary: player/base defenses carry one or both markers below. They are
+	//--- intentionally enrolled in this watcher so a later crew can be re-manned, but an
+	//--- unmanned/auto-manning-off defense must not be reaped as an abandoned vehicle.
+	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]} || {_vehicle getVariable ["wfbe_is_guer_fob", false]} || {_vehicle getVariable ["wfbe_is_fob", false]} || {_vehicle getVariable ["wfbe_defense", false]} || {_vehicle getVariable ["keepAlive", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung. guer-fob-empty-exempt: a GUER FOB truck is a dismount-by-design base/spawn structure - never reap it as an abandoned empty hull
 	if (_timer > _delay) then {
 		_reapAttempts = _reapAttempts + 1;
 		["empty-timeout-hull", _vehicle, Format ["delay=%1 attempt=%2/%3 round=%4/%5", _delay, _reapAttempts, _maxReapAttempts, _reapRounds + 1, _maxReapRounds]] Call WFBE_CO_FNC_LogVehDelete;
