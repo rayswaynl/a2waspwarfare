@@ -18,7 +18,11 @@ _limit = missionNamespace getVariable ["WFBE_C_GAMEPLAY_MISSILES_RANGE", 0];
 
 if (_limit > 0 && {_distance > _limit}) then {
 //--- r53: missile may detonate/despawn during wait - bare distance on null throws; delete only if still live.
-waitUntil {isNull _missile || {_missile distance _source > _limit}};
+//--- Yield inside this event-spawned poll so each in-range missile is not checked every frame.
+waitUntil {
+	sleep 0.05;
+	isNull _missile || {_missile distance _source > _limit}
+};
 if (!isNull _missile) then {deleteVehicle _missile};
 };
 };
