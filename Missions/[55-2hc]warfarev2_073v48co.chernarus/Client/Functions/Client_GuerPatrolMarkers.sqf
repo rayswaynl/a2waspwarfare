@@ -11,7 +11,7 @@ waitUntil {!isNil "sideJoined"};
 if (sideJoined != resistance) exitWith {};
 
 _known = [];
-while {true} do {
+while {!gameOver} do {
 	{ deleteMarkerLocal _x } forEach _known;
 	_known = [];
 	_i = 0;
@@ -96,3 +96,5 @@ while {true} do {
 	} forEach towns;
 	sleep 20;
 };
+
+{ deleteMarkerLocal _x } forEach _known;
