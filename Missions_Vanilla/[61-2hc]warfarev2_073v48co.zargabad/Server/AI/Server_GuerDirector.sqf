@@ -37,7 +37,7 @@ _fnGuerGroups = {
     _t = _this select 0;
     _out = [];
     {
-        if ((side _x == resistance) && {alive (leader _x)} && {(leader _x) distance _t < 600}) then {
+        if ((side _x == resistance) && {!([_x, "wfbe_naval_cap", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_x, "wfbe_usv_flotilla", false] Call WFBE_CO_FNC_GroupGetBool)} && {alive (leader _x)} && {(leader _x) distance _t < 600}) then {
             _out set [count _out, _x];
         };
     } forEach allGroups;
@@ -685,7 +685,7 @@ while {!WFBE_GameOver} do {
                                     //--- WFBE_C_GDIR_VIS: broadcast QRF fire to GUER side.
                                     if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
                                         WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: %1 inbound to %2", _cKind, _cTown];
-                                        publicVariable "WFBE_GDIR_ORDER_MSG";
+                                        ["WFBE_GDIR_ORDER_MSG"] Call WFBE_SE_FNC_PublishResistanceState;
                                     };
                                 } else {
                                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP groupCapExceeded=%3/%4",
@@ -729,7 +729,7 @@ while {!WFBE_GameOver} do {
                                 //--- WFBE_C_GDIR_VIS: broadcast counter-attack fire to GUER side.
                                 if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
                                     WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: Counter-Attack dispatched to %1", _cTown];
-                                    publicVariable "WFBE_GDIR_ORDER_MSG";
+                                    ["WFBE_GDIR_ORDER_MSG"] Call WFBE_SE_FNC_PublishResistanceState;
                                 };
                             };
                         };
@@ -862,7 +862,7 @@ while {!WFBE_GameOver} do {
             _snapTransit set [count _snapTransit, _sRec select 3];
         } forEach _ledger;
         AICOMV2_GDIR_JIP_SNAP = [_snapNames, _snapStr, _snapBase, _snapFund, _snapCD, _snapTransit]; //--- fable/guer-town-intel: index 5 appended - existing consumers read 0-4 unaffected
-        publicVariable "AICOMV2_GDIR_JIP_SNAP";
+        ["AICOMV2_GDIR_JIP_SNAP"] Call WFBE_SE_FNC_PublishResistanceState;
         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_JIP_SNAP published towns=%2", _elmin, count _snapNames];
     };
 

@@ -345,6 +345,7 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 
 					_boat   setVariable ["wfbe_usv_flotilla", true, true];
 					_static setVariable ["wfbe_usv_flotilla", true, true];
+					_grp    setVariable ["wfbe_usv_flotilla", true, true];
 					_boat   setVariable ["wfbe_usv_role", _nextRole, true];
 
 					_grp setBehaviour "AWARE";
@@ -369,6 +370,7 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 					//--- Boat itself still stands (bare hull, matching USV-FLOTILLA-VARIANTS.md #4's
 					//--- "trivial" Scout Skiff hedge) rather than deleting a good hull over a bad static.
 					_boat setVariable ["wfbe_usv_flotilla", true, true];
+					_grp setVariable ["wfbe_usv_flotilla", true, true];
 					_boat setVariable ["wfbe_usv_role", _nextRole, true];
 					_flotilla = _flotilla + [[_nextRole, _boat, objNull, objNull, _driver, _grp, _now, _startI, 0, _spawnPos, 0]];
 				};

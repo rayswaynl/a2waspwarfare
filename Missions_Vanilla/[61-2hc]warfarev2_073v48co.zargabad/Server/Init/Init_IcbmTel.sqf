@@ -103,6 +103,7 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 	[_tel] Call WFBE_SE_FNC_IcbmTelTheatrics;
 
 	missionNamespace setVariable [_key, _tel];
+	publicVariable _key;
 	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL registered in missionNamespace (%2) — isNull=%3.", _sideText, _key, isNull _tel]] Call WFBE_CO_FNC_LogContent;
 	diag_log (Format ["ICBMTEL|v1|REGISTER|%1|key=%2|isNull=%3", _sideText, _key, isNull _tel]);
 	//--- Clear any stale countdown latch on (re)spawn.
@@ -119,6 +120,7 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 		//--- Clear the stored ref if it points at this corpse.
 		if ((missionNamespace getVariable [Format ["WFBE_ICBM_TEL_%1", _dSideText], objNull]) == _dead) then {
 			missionNamespace setVariable [Format ["WFBE_ICBM_TEL_%1", _dSideText], objNull];
+			publicVariable (Format ["WFBE_ICBM_TEL_%1", _dSideText]);
 		};
 		//--- Was a NUKE counting down? (only NUKE arms a countdown latch.) If so -> CANCEL.
 		_cdEnd = missionNamespace getVariable [Format ["WFBE_ICBM_TEL_CD_%1", _dSideText], -1];
@@ -170,7 +172,7 @@ WFBE_SE_FNC_TkScudPlatforms = {
 	_live = [];
 	{ if (!isNull _x && {alive _x}) then {_live set [count _live, _x]} } forEach _arr;
 	//--- write back only if it shrank (avoid needless broadcasts).
-	if (count _live != count _arr) then { missionNamespace setVariable [_key, _live] };
+	if (count _live != count _arr) then { missionNamespace setVariable [_key, _live]; publicVariable _key };
 	_live
 };
 
@@ -274,6 +276,7 @@ WFBE_SE_FNC_TkScudRegister = {
 	_veh setVariable ["wfbe_is_tk_scud", true, true];
 	_arr = _live + [_veh];
 	missionNamespace setVariable [_key, _arr];
+	publicVariable _key;
 	_veh addEventHandler ["Killed", {
 		private ["_dead","_dSide","_dKey","_dArr","_dLive","_x"];
 		_dead = _this select 0;
@@ -285,6 +288,7 @@ WFBE_SE_FNC_TkScudRegister = {
 		_dLive = [];
 		{if (!isNull _x && {alive _x} && {_x != _dead}) then {_dLive set [count _dLive, _x]}} forEach _dArr;
 		missionNamespace setVariable [_dKey, _dLive];
+		publicVariable _dKey;
 		diag_log (Format ["ICBMTEL|v1|SCUD-DESTROYED|%1|remaining=%2 (no respawn)", str _dSide, count _dLive]);
 	}];
 	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REGISTERED (%2/%3 live, serverCost=%4, ai=%5).", str _side, count _arr, _max, _cost, _isAiRegister]] Call WFBE_CO_FNC_LogContent;
