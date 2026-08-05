@@ -7,7 +7,7 @@
 //--- bottom still relays the client (helicopter) sender supplyMissionUnload.sqf.
 WFBE_SE_FNC_HandleSupplyMissionCompleted = {
 
-    private ['_namePlayer', '_associatedSupplyTruck', '_supplyAmount', '_sourceTown', '_sourceTownStr', '_sidePlayer', '_logMessage', '_byHeli', '_cashRun', '_comTeam', '_airLevel', '_cc', '_cp', '_dx', '_dy', '_nearCommandCenter', '_playerObject'];
+    private ['_namePlayer', '_associatedSupplyTruck', '_supplyAmount', '_sourceTown', '_sourceTownStr', '_sidePlayer', '_logMessage', '_byHeli', '_cashRun', '_comTeam', '_airLevel', '_cc', '_cp', '_dx', '_dy', '_nearCommandCenter', '_playerObject', '_rejected', '_rejectReason', '_vehType', '_sideStructures', '_ccSide', '_friendlyCC', '_supUid'];
 
     //--- This handler is also called directly by the server-side ground-truck detector.
     //--- The PV relay is only used for helicopter unloads, so reject malformed/unrelated
@@ -23,9 +23,9 @@ WFBE_SE_FNC_HandleSupplyMissionCompleted = {
     _namePlayer = name _playerObject;
     _supplyAmount = _associatedSupplyTruck getVariable "SupplyAmount";
     _sourceTown = _associatedSupplyTruck getVariable "SupplyFromTown";
-    _sourceTownStr = str (_sourceTown);
     //--- Never trust the client-provided side slot: derive it from the credited player.
-    _sidePlayer = side _playerObject;
+    //--- side group is more stable than bare `side unit` when the unit is mid-state-change.
+    _sidePlayer = side group _playerObject;
 
     if (isNil "_supplyAmount") then {
         _supplyAmount = 0;
@@ -39,26 +39,83 @@ WFBE_SE_FNC_HandleSupplyMissionCompleted = {
         ["INFORMATION", Format ["SupplyMissionCompleted.sqf: Ignored completion for %1 (source:%2 amount:%3).", _associatedSupplyTruck, _sourceTown, _supplyAmount]] call WFBE_CO_FNC_LogContent;
     };
 
-    //--- B74.2: leaderboard supply-run credit to the delivering player (run count + delivered S value). Past the null/<=0 gate above.
-    if (!isNull _playerObject) then {private "_supUid"; _supUid = getPlayerUID _playerObject; if (_supUid != "") then {[_supUid, WFBE_STAT_SUPPLY_RUNS, 1] call WFBE_SE_FNC_RecordStat; [_supUid, WFBE_STAT_SUPPLY_VALUE, _supplyAmount] call WFBE_SE_FNC_RecordStat}};
+    //--- fix(bughunt supply-cargo 20260730): world revalidation uses a _rejected latch, NOT exitWith
+    //--- inside if/then. On A2 OA 1.64, exitWith inside then{} only leaves that block and FALLS THROUGH
+    //--- to the pay path (same engine trap fixed in RequestChangeScore.sqf / RequestVehicleLock.sqf).
+    //--- The prior #1345 heli type/driver/CC exitWith gates were therefore non-rejecting for payment.
+    _rejected = false;
+    _rejectReason = "";
 
-    _byHeli = _associatedSupplyTruck getVariable "SupplyByHeli";
-    if (isNil "_byHeli") then { _byHeli = false; };
+    //--- BUG: ground forged PV accepted ANY object with SupplyAmount/FromTown (no type check).
+    _vehType = typeOf _associatedSupplyTruck;
+    if !(_vehType in WFBE_C_SUPPLY_VEHICLE_TYPES) then {
+        _rejected = true;
+        _rejectReason = format ["non-supply vehicle type %1", _vehType];
+    };
 
-    //--- A helicopter unload is client-requested. Revalidate the authoritative world state
-    //--- server-side so a forged PV cannot credit another side, a remote hull, or a non-heli.
-    if (_byHeli) then {
-        if !((typeOf _associatedSupplyTruck) in WFBE_C_SUPPLY_HELI_TYPES) exitWith {};
-        if (driver _associatedSupplyTruck != _playerObject) exitWith {};
+    //--- byHeli from vehicle class (server truth), not client-stamped SupplyByHeli (cash-run class).
+    _byHeli = _vehType in WFBE_C_SUPPLY_HELI_TYPES;
+
+    //--- BUG: "friendly" CC scan accepted ANY side's Base_WarfareBUAVterminal. Require own-side CC
+    //--- via wfbe_side stamp (Construction_SmallSite/MediumSite) or membership in side structures list.
+    //--- Also: ground path previously skipped ALL world revalidation (heli-only block) so a forged
+    //--- completion PV paid without proximity to any Command Center.
+    if (!_rejected) then {
         _nearCommandCenter = false;
+        _sideStructures = _sidePlayer Call WFBE_CO_FNC_GetSideStructures;
         {
             _cc = _x;
-            _cp = getPos _cc;
-            _dx = ((getPos _associatedSupplyTruck) select 0) - (_cp select 0);
-            _dy = ((getPos _associatedSupplyTruck) select 1) - (_cp select 1);
-            if (((_dx * _dx) + (_dy * _dy)) < 6400) then {_nearCommandCenter = true};
+            if (_cc isKindOf "Base_WarfareBUAVterminal") then {
+                _ccSide = _cc getVariable ["wfbe_side", sideUnknown];
+                _friendlyCC = false;
+                if (_ccSide == _sidePlayer) then { _friendlyCC = true; };
+                if (!_friendlyCC) then {
+                    if (_cc in _sideStructures) then { _friendlyCC = true; };
+                };
+                if (_friendlyCC) then {
+                    _cp = getPos _cc;
+                    _dx = ((getPos _associatedSupplyTruck) select 0) - (_cp select 0);
+                    _dy = ((getPos _associatedSupplyTruck) select 1) - (_cp select 1);
+                    //--- 80 m horizontal (2D) for truck and heli; altitude handled separately for heli.
+                    if (((_dx * _dx) + (_dy * _dy)) < 6400) then { _nearCommandCenter = true; };
+                };
+            };
         } forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 400]);
-        if (!_nearCommandCenter) exitWith {};
+        if (!_nearCommandCenter) then {
+            _rejected = true;
+            _rejectReason = "no friendly Command Center within 80m horizontal";
+        };
+    };
+
+    //--- Heli-only: driver must be the credited player; altitude must stay low (client channel uses 35 m;
+    //--- server allows 40 m slack for network/tick jitter). Client timer then PV is a TOCTOU without this.
+    if (!_rejected && _byHeli) then {
+        if (driver _associatedSupplyTruck != _playerObject) then {
+            _rejected = true;
+            _rejectReason = "heli driver is not the completing player";
+        };
+    };
+    if (!_rejected && _byHeli) then {
+        if (((getPos _associatedSupplyTruck) select 2) > 40) then {
+            _rejected = true;
+            _rejectReason = "heli altitude above unload limit";
+        };
+    };
+
+    if (_rejected) exitWith {
+        ["INFORMATION", Format ["SupplyMissionCompleted.sqf: Rejected completion for %1 (%2).", _associatedSupplyTruck, _rejectReason]] call WFBE_CO_FNC_LogContent;
+    };
+
+    //--- B74.2: leaderboard supply-run credit AFTER final accept only.
+    //--- BUG: stats were previously written before heli revalidation, so failed forgeries still inflated
+    //--- WFBE_STAT_SUPPLY_RUNS / WFBE_STAT_SUPPLY_VALUE (and with the exitWith fall-through, pay also ran).
+    _sourceTownStr = str (_sourceTown);
+    if (!isNull _playerObject) then {
+        _supUid = getPlayerUID _playerObject;
+        if (_supUid != "") then {
+            [_supUid, WFBE_STAT_SUPPLY_RUNS, 1] call WFBE_SE_FNC_RecordStat;
+            [_supUid, WFBE_STAT_SUPPLY_VALUE, _supplyAmount] call WFBE_SE_FNC_RecordStat;
+        };
     };
 
     _airLevel = ((_sidePlayer) call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_AIR;

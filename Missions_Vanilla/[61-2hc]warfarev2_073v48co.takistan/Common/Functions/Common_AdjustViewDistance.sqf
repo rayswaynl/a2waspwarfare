@@ -19,6 +19,7 @@ if (_key in (actionKeys "User18")) then
     if (_toggle_auto_distance_view) then 
     {
         missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false]; // deactivate the feature.
+        if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {['WFBE_TOOGLE_AUTO_DISTANCE_VIEW', false] Call WFBE_CO_FNC_SetProfileVariable};
         "Automatic view distance is now OFF" call GroupChatMessage;
         playSound ["autoViewDistanceToggledOff",true];
         _savedViewDistance = missionNamespace getVariable "SAVED_VIEW_DISTANCE";
@@ -27,6 +28,7 @@ if (_key in (actionKeys "User18")) then
     {
         missionNamespace setVariable ["SAVED_VIEW_DISTANCE", viewDistance];
         missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", true]; // activate the feature.
+        if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {['WFBE_TOOGLE_AUTO_DISTANCE_VIEW', true] Call WFBE_CO_FNC_SetProfileVariable};
         "Automatic view distance is now ON" call GroupChatMessage;
         playSound ["autoViewDistanceToggledOn",true];
     };
@@ -45,7 +47,7 @@ if (_key in (actionKeys "User19")) then {
         } else {
             _newViewDistanceToBeSet = newViewDistance;
         };
-        newViewDistance = _newViewDistanceToBeSet - _adjustViewDistanceBy max 1;
+        newViewDistance = _newViewDistanceToBeSet - _adjustViewDistanceBy max 500;
         (format ["Setting view distance to: %1", str(newViewDistance)]) call GroupChatMessage;
         execVm "Common\Functions\Common_AdjustViewDistanceTimerScript.sqf";
     };

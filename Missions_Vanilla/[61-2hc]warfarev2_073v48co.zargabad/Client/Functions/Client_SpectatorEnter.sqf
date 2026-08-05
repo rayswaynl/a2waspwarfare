@@ -1,62 +1,29 @@
 /* Client_SpectatorEnter.sqf
-   fable/spectator-v1 -> v2 (owner request 2026-07-29: caster-grade watch tool)
+   fable/spectator-v1 -> v8 DEFINITIVE rebuild (owner mandate 2026-08-01)
    -------------------------------------------------------------------------
    Enters the UID-allowlisted spectator overlay for the CALLING client only.
    The UID allowlist gates ACTION VISIBILITY on this client only, under standard
    A2 locality; it is not server-enforced authentication or authorization.
-   addAction target (see Client_SpectatorAttach.sqf); the addAction condition
-   already restricts visibility to the allowlisted UID, an alive body, and past
-   the deadspawn-transit invulnerability window (WFBE_Client_DeadspawnEscaped,
-   Init_Client.sqf) - the re-checks below are belt-and-braces against a
-   stale/duplicated action instance. v1 safety model is unchanged: body parked
-   invulnerable + captive + position-locked, death watchdog auto-exits, exit is
-   idempotent (see Client_SpectatorExit.sqf), no respawn/JIP/enrollment edits.
+   v1 safety model unchanged: body parked invulnerable + captive + position-locked,
+   death watchdog auto-exits, exit is idempotent (Client_SpectatorExit.sqf),
+   no respawn/JIP/enrollment edits.
 
-   v2 control scheme (design: docs/plans/2026-07-29-spectator-v2-design.md):
-     mouse       free-look yaw/pitch (cursor re-centered per event)
-     wheel       FOV zoom (WFBE_C_SPECTATOR_FOV_MIN..MAX)
-     W/S         fly along view direction (incl. pitch), A/D horizontal strafe
-     Space/Ctrl  vertical, Shift boost, Alt precision crawl
-     N / B       arm next/previous target within the current director class
-     F           toggle follow-cam on armed target (8m behind / 3m above)
-     V           toggle through-their-eyes POV (eyePos + eyeDirection)
-     H           hide/show the hint overlay (clean OBS capture)
-     Backspace   quick exit (same path as the "Exit Spectator" addAction)
+   v8 SINGLE-WRITER LAW (the fix for today's three live stomp bugs, all two-writer
+   conflicts): Client_SpectatorAimFrame.sqf (the mission's one onEachFrame slot) is
+   the ONLY writer of camSetPos/camSetTarget/camSetFov/camCommit in EVERY mode.
+   The scheduled loop below NEVER touches the camera or the pos/yaw/pitch globals -
+   it owns the parked body, the death watchdog, mode-state transitions and the HUD
+   text. The 1s director poll (Client_SpectatorDirector.sqf) owns scoring and the
+   SHOT SNAPSHOT (WFBE_C_VAR_SpectShot) only. The mouse handler owns yaw/pitch
+   (event-driven). One writer per piece of state, everywhere.
 
-   Modes: WFBE_C_VAR_SpectatorMode = "free" (default) / "follow" / "eyes".
-   Any movement-key input while in follow/eyes reverts to free at the current
-   camera position; yaw/pitch are tracked every tick in ALL modes so the
-   handoff back to free has no view snap. A dead/null target auto-reverts to
-   free with a chat notice - never a dangling camera (same philosophy as v1's
-   death watchdog). Movement keys are CONSUMED (handler returns true) so the
-   parked body never walks under camera input; the v1 position re-lock stays
-   as pure backup. DELIBERATELY still no disableUserInput (v1 rejection
-   stands: unrecoverable-if-script-fails on a live community server).
+   Controls: mouse look, wheel zoom, WASD fly, Space/Ctrl vertical, Shift boost,
+   Alt crawl, N/B target, F follow, V eyes, TAB class pin (pauses auto), G director
+   auto, O orbit reveals, [ ] legacy dwell, H HUD, M map, J streamer menu,
+   PgUp/PgDn sensitivity, Backspace exit.
 
-   v4 streaming pass (design: docs/plans/2026-07-31-spectator-v4-streaming-design.md):
-   per-frame camera tick (WFBE_C_SPECTATOR_TICK, was a 20Hz hard cap = judder),
-   smoothed follow-cam, EMA subject velocity + speed-scaled lead, adaptive
-   director pan (PAN_MIN/MAX/EASE, mid-shot cut 70deg), FOV snaps on target
-   cuts, town cams gated to active fights + hot linger (Client_SpectatorDirector.sqf),
-   WFBE_C_SPECTATOR_AUTOSTART hands-off entry (Client_SpectatorAttach.sqf).
-   v4.1 free-cam pass (owner 2026-07-31): WASD acceleration/inertia (ACCEL/BRAKE),
-   zoom-scaled mouse sensitivity + delta EMA (scoped-aim feel), eased wheel zoom
-   (ZOOM_RATE toward a wheel target; director-auto FOV logic otherwise unchanged).
-
-   A2-OA-1.64 safe commands used: camCreate / camSetPos / camSetTarget /
-   camSetFov / camCommit / camCommitted / cameraEffect / camDestroy /
-   allowDamage / setCaptive / getPlayerUID / getPos / getDir / setDir /
-   setPos / sin / cos / sqrt / atan2 / min / max / mod(% operator) /
-   displayAddEventHandler / setMousePosition (OA 1.60+) / eyePos /
-   eyeDirection / modelToWorld / isPlayer / allUnits / name / toUpper /
-   parseText / switch - no A3-only commands.
-*/
-//--- NO disableSerialization here: a script that calls it may never suspend, and this
-//--- script suspends (it runs scheduled from addAction). On m0730f it silently died at
-//--- the first waitUntil - handler attach and the movement loop never ran (live RPT:
-//--- SPECTATE|v2|enter logged, nothing after; camera stayed target-locked to the entry
-//--- focus point). The display is never stored in a local (handlers attach inline via
-//--- (findDisplay 46)), so serialization never sees a Display ref in the first place.
+   A2-OA-1.64 safe commands only; no disableSerialization anywhere in the spectator
+   stack (this script suspends - the combination is death, live-proven m0730f). */
 Private ["_myUID","_pos0","_yaw0"];
 
 if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) exitWith {}; //--- already active; ignore a double-click race.
@@ -67,101 +34,109 @@ _myUID = getPlayerUID player;
 if !(_myUID in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])) exitWith {}; //--- belt-and-braces re-check; the addAction condition already gates this.
 
 WFBE_C_VAR_SpectatorActive = true;
+WFBE_C_VAR_SpectatorLastInput = time; //--- HUD fade clock; keybinds show on entry.
 WFBE_C_VAR_SpectatorBody = player; //--- pin the exact body this session belongs to.
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
 WFBE_C_VAR_SpectatorDirectorClass = "PLAYER";
 WFBE_C_VAR_SpectatorDirectorPinned = false;
 WFBE_C_VAR_SpectatorDirectorAuto = false;
-WFBE_C_VAR_SpectatorOrbit = true;
-WFBE_C_VAR_SpectatorOrbitAngle = 0;
-WFBE_C_VAR_SpectatorDirectorDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL", 20];
-WFBE_C_VAR_SpectatorDirectorPosFn = WFBE_CL_FNC_DirectorPosObject;
+WFBE_C_VAR_SpectatorOrbit = true; //--- v8: ORBIT REVEALS preference (static-first shot language).
 WFBE_C_VAR_SpectatorDirectorTargetLabel = "-";
-WFBE_C_VAR_DirectorRecent = [];
-WFBE_C_VAR_DirectorLastSwitch = 0;
+WFBE_C_VAR_SpectatorDirectorShotType = "WIDE";
+WFBE_C_VAR_SpectatorDirectorDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL", 20];
 WFBE_C_VAR_DirectorLastTownPoll = 0;
 WFBE_C_VAR_DirectorTownData = [];
-WFBE_C_VAR_DirectorTownHot = []; //--- v4: per-town last-contest timestamps for the hot linger.
-WFBE_C_VAR_DirectorAutoTime = 0;
-WFBE_C_VAR_DirectorLastBaseCheck = 0;
-WFBE_C_VAR_DirectorLastEstablish = -120;
-WFBE_C_VAR_SpectatorDirectorShotType = "WIDE";
-WFBE_C_VAR_SpectatorDirectorShotMinDwell = 1.5;
-WFBE_C_VAR_SpectatorDirectorShotMaxDwell = 7;
-WFBE_C_VAR_SpectatorDirectorTargetFov = 0.85;
-WFBE_C_VAR_DirectorContactTarget = objNull;
-WFBE_C_VAR_DirectorLastContactScan = 0;
-WFBE_C_VAR_DirectorEngagementActive = false;
-WFBE_C_VAR_DirectorAimHardCut = false;
-WFBE_C_VAR_DirectorReturnClass = "";
-WFBE_C_VAR_DirectorReturnPending = false;
+WFBE_C_VAR_DirectorTownHot = [];
+WFBE_C_VAR_DirectorCutReason = "";
 WFBE_C_VAR_SpectatorLastManualZoom = 0;
 WFBE_C_VAR_SpectatorHideHint = false;
 WFBE_C_VAR_SpectatorHudMode = 2; //--- 2=FULL, 1=MINIMAL, 0=OFF; only read when the broadcast flag is armed.
 WFBE_C_VAR_SpectatorMouseBaseline = true; //--- first MouseMoving event only sets the baseline (recentre-bias fix)
-WFBE_C_VAR_SpectatorVelEma = [0,0,0]; //--- v4: EMA of the watched subject's velocity; raw networked velocity stair-steps and jittered the feed-forward.
-WFBE_C_VAR_SpectatorFreeVel = [0,0,0]; //--- v4.1: free-cam velocity for acceleration/inertia.
-WFBE_C_VAR_SpectatorMouseSdx = 0; //--- v4.1: smoothed mouse deltas (EMA), see SpectatorMouseMoving.
+WFBE_C_VAR_SpectatorVelEma = [0,0,0];
+WFBE_C_VAR_SpectatorFreeVel = [0,0,0];
+WFBE_C_VAR_SpectatorMouseSdx = 0;
 WFBE_C_VAR_SpectatorMouseSdy = 0;
+//--- v8 director/track state.
+WFBE_C_VAR_SpectShot = [];
+WFBE_C_VAR_SpectShotCutN = 0;
+WFBE_C_VAR_SpectFrameCut = -1;
+WFBE_C_VAR_SpectFramePrevMode = "-";
+WFBE_C_VAR_SpectFollowSeeded = false;
+WFBE_C_VAR_SpectFovWasDir = false;
+WFBE_C_VAR_DirTracks = [];
+WFBE_C_VAR_DirTrackNextId = 1;
+WFBE_C_VAR_DirTownEv = [];
+WFBE_C_VAR_DirEvSeq = -1;
+WFBE_C_VAR_DirShownRing = [];
+WFBE_C_VAR_DirTownCool = [];
+WFBE_C_VAR_DirCurKey = "";
+WFBE_C_VAR_DirCurKind = "";
+WFBE_C_VAR_DirCurStart = -999;
+WFBE_C_VAR_DirCurStampScore = 0;
+WFBE_C_VAR_DirCurPushed = false;
+WFBE_C_VAR_DirCurTown = objNull;
+WFBE_C_VAR_DirIntensity = "QUIET";
+WFBE_C_VAR_SpectHudLine1 = "";
+WFBE_C_VAR_SpectHudLine2 = "";
+WFBE_C_VAR_SpectHudCtxT = -99;
 
 _pos0 = getPos player;
 _yaw0 = getDir player;
 
-diag_log Format ["SPECTATE|v2|enter|uid=%1|pos=%2", _myUID, _pos0];
+diag_log Format ["SPECTATE|v8|enter|uid=%1|pos=%2", _myUID, _pos0];
 
 //--- Park the body: invulnerable + non-hostile so it cannot be farmed or trip AI aggro while unattended.
 player allowDamage false;
 player setCaptive true;
 
-WFBE_C_VAR_SpectatorCam = "camera" camCreate _pos0;
+//--- Camera + pose globals. The frame handler paints the first frame from these seeds -
+//--- no camSet* here (single-writer law; cameraEffect is display plumbing, not a pose write).
 WFBE_C_VAR_SpectatorFov = 0.8;
-WFBE_C_VAR_SpectatorFovTarget = 0.8; //--- v4.1: wheel-zoom goal; the camera eases toward it (ZOOM_RATE).
-WFBE_C_VAR_SpectatorCam camSetFov 0.8;
-WFBE_C_VAR_SpectatorCam cameraEffect ["Internal", "Back"];
-WFBE_C_VAR_SpectatorCam camSetPos [_pos0 select 0, _pos0 select 1, (_pos0 select 2) + 2];
-WFBE_C_VAR_SpectatorCam camSetTarget [
-	(_pos0 select 0) + 10 * (sin _yaw0),
-	(_pos0 select 1) + 10 * (cos _yaw0),
-	(_pos0 select 2) + 2
-];
-WFBE_C_VAR_SpectatorCam camCommit 0; //--- instant commit; no waitUntil (movement loop re-commits within 50ms anyway)
-
+WFBE_C_VAR_SpectatorFovTarget = 0.8;
 WFBE_C_VAR_SpectatorPos = [_pos0 select 0, _pos0 select 1, (_pos0 select 2) + 2];
 WFBE_C_VAR_SpectatorYaw = _yaw0;
 WFBE_C_VAR_SpectatorPitch = 0;
 WFBE_C_VAR_SpectatorLastMouseX = 0.5;
 WFBE_C_VAR_SpectatorLastMouseY = 0.5;
+WFBE_C_VAR_SpectatorKeys = [false,false,false,false,false,false,false,false]; //--- W,S,A,D,Space,Ctrl,Shift,Alt
+WFBE_C_VAR_SpectatorFreeLastT = diag_tickTime;
+WFBE_C_VAR_SpectatorAimFrameTick = -99;
+WFBE_C_VAR_SpectatorCam = "camera" camCreate [_pos0 select 0, _pos0 select 1, (_pos0 select 2) + 2];
+WFBE_C_VAR_SpectatorCam cameraEffect ["Internal", "Back"];
 
 if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
-	systemChat "[WASP] Spectator v2: mouse look, wheel zoom, WASD fly, Shift/Alt speed, N/B target, F follow, V eyes, H HUD mode, M map, Backspace exit.";
+	systemChat "[WASP] Spectator v8: mouse look, wheel zoom, WASD fly, N/B target, F follow, V eyes, G director, J streamer menu, H HUD, M map, Backspace exit.";
 } else {
-	systemChat "[WASP] Spectator v2: mouse look, wheel zoom, WASD fly, Shift/Alt speed, N/B target, F follow, V eyes, H hide UI, Backspace exit.";
+	systemChat "[WASP] Spectator v8: mouse look, wheel zoom, WASD fly, N/B target, F follow, V eyes, G director, H hide UI, Backspace exit.";
 };
 if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-	systemChat "[WASP] Spectator v3 director armed: TAB pins class, G pools action, O orbit, [ ] dwell.";
+	systemChat "[WASP] Director v8 armed: G auto (towns + fights), TAB manual class, O orbit reveals.";
 };
 
-WFBE_C_VAR_SpectatorKeys = [false,false,false,false,false,false,false,false]; //--- W,S,A,D,Space,Ctrl,Shift,Alt
-
-//--- Arms the next (+1) or previous (-1) alive player as the watch target. Skips self,
-//--- dead and null units, wraps around the list. Does NOT change mode by itself - F/V engage.
+//--- Arms the next (+1) or previous (-1) watch target. In director mode this delegates to the
+//--- class-pool cycler (which stamps a static POI framing and pauses auto); in free/follow it
+//--- arms players + GUER squad leaders for F/V.
 WFBE_CL_FNC_SpectatorCycleTarget = {
 	Private ["_step","_list","_cur","_idx","_next","_i"];
 	_step = _this;
-	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {WFBE_C_VAR_SpectatorDirectorClass != "PLAYER"}) exitWith {
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "director"}) exitWith {
 		_step Call WFBE_CL_FNC_DirectorCycleTarget;
 	};
 	_list = [];
 	{
 		if (!isNil "_x") then {
 			//--- HC bodies are isPlayer-true; never offer them as watch targets (owner 2026-07-30).
-			if (alive _x && {isPlayer _x} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {_list = _list + [_x]};
+			if (alive _x && {isPlayer _x} && {(side _x) != civilian} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {_list = _list + [_x]}; //--- CIV humans = caster/HC bodies, never watchable (owner 2026-08-01)
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_TARGET_GUER", 1]) > 0) then {
+				//--- ZG town population is resistance-side in civ models: require a weapon to be watchable.
+				if (alive _x && {!(isPlayer _x)} && {(side _x) == resistance} && {_x == (leader (group _x))} && {(count (weapons _x)) > 0}) then {_list = _list + [_x]};
+			};
 		};
 	} forEach allUnits;
 	if (count _list == 0) exitWith {
 		WFBE_C_VAR_SpectatorTarget = objNull;
-		systemChat "[WASP] Spectator: no other alive players to watch.";
+		systemChat "[WASP] Spectator: nothing to watch (no other players, no live GUER squads).";
 	};
 	_cur = WFBE_C_VAR_SpectatorTarget;
 	_idx = -1;
@@ -176,14 +151,15 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 		_next = _list select ((_idx + _step + (count _list)) % (count _list));
 	};
 	WFBE_C_VAR_SpectatorTarget = _next;
-	systemChat Format ["[WASP] Spectator target: %1 (F follow, V eyes)", name _next];
+	if ((side _next) == resistance) then {
+		systemChat Format ["[WASP] Spectator target: GUER squad (%1 alive) (F follow, V eyes)", ({alive _x} count (units (group _next)))];
+	} else {
+		systemChat Format ["[WASP] Spectator target: %1 (F follow, V eyes)", name _next];
+	};
 };
 
-//--- v4: shared subject kinematics for follow/director. _this = [target, dt].
-//--- Returns [subject, subjectPos, leadOffset, emaSpeed]. Velocity runs through an EMA
-//--- (VEL_EMA_RATE per-second blend) because remote-unit velocity arrives in network
-//--- stair-steps; the lead scales with smoothed speed up to LEAD_MAX_SEC at
-//--- LEAD_FULL_SPEED m/s, so walking infantry get ~no lead (was: flat 0.4s raw).
+//--- Shared subject kinematics for the follow mode (consumed by the FRAME handler).
+//--- _this = [target, dt]. Returns [subject, subjectPos, leadOffset, emaSpeed].
 WFBE_CL_FNC_SpectatorKinematics = {
 	Private ["_t","_dt","_subject","_pos","_vel","_a","_ema","_speed","_leadSec","_leadMax","_fullSpeed"];
 	_t = _this select 0;
@@ -206,11 +182,15 @@ WFBE_CL_FNC_SpectatorKinematics = {
 	[_subject, _pos, [(_ema select 0) * _leadSec, (_ema select 1) * _leadSec, (_ema select 2) * _leadSec], _speed]
 };
 
-//--- Broadcast HUD renderer. This helper never suspends: display/control references exist
-//--- only until the synchronous call returns, so the scheduled spectator workers never
-//--- serialize a Display or Control and never need disableSerialization.
+/* STREAMING OVERLAY (deliverable 3): persistent lower-thirds strip for the stream.
+   Line 1: current POI (town name / FIRE FIGHT near X), sides engaged, shot type + cut reason.
+   Line 2: war context - town counts per side, match clock, auto state, contact intensity.
+   Fade-managed chrome: the keybind wall fades after HUD_FADE_SEC idle, the status strip stays.
+   This helper never suspends: display/control refs live only until the call returns, so the
+   scheduled workers never serialize a Display and never need disableSerialization.
+   Structured text: plain text + <t>/<br/> tags only - A2 has NO numeric entities. */
 WFBE_CL_FNC_SpectatorBroadcastHudUpdate = {
-	Private ["_display","_topBg","_topText","_keysBg","_keysText","_hudMode","_mode","_target","_targetText","_shot","_auto","_topHtml","_keysHtml"];
+	Private ["_display","_topBg","_topText","_keysBg","_keysText","_hudMode","_mode","_shot","_l1","_l2","_idle","_keysHtml","_tw","_te2","_tg","_sid","_h","_m","_ms","_reason","_orbActive","_tgt","_tgtTxt","_auto","_wid","_eid","_gid"];
 	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) <= 0) exitWith {};
 	_display = uiNamespace getVariable ["wfbe_spectator_broadcast_display", displayNull];
 	if (isNull _display) exitWith {};
@@ -225,25 +205,61 @@ WFBE_CL_FNC_SpectatorBroadcastHudUpdate = {
 		_keysBg ctrlShow false;
 		_keysText ctrlShow false;
 	};
-	_mode = missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"];
-	_target = missionNamespace getVariable ["WFBE_C_VAR_SpectatorTarget", objNull];
-	_targetText = "-";
-	if (!isNull _target && {alive _target}) then {_targetText = name _target};
-	_shot = "FREE";
-	if (_mode == "director") then {_shot = toUpper (missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorShotType", "WIDE"])};
-	_auto = "OFF";
-	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]}) then {_auto = "ON"};
-	_topHtml = Format [
-		"<t align='left' size='1.05' color='#FFFFFF' shadow='2'>SHOT %1</t><br/><t align='left' size='0.92' color='#D8F3FF' shadow='2'>TARGET %2 | DIRECTOR AUTO %3</t>",
-		_shot,
-		_targetText,
-		_auto
-	];
+	//--- context strings rebuilt at 1Hz (town sweep + clock), rendered every pass.
+	if ((time - (missionNamespace getVariable ["WFBE_C_VAR_SpectHudCtxT", -99])) >= 1) then {
+		WFBE_C_VAR_SpectHudCtxT = time;
+		_mode = missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"];
+		_shot = missionNamespace getVariable ["WFBE_C_VAR_SpectShot", []];
+		_l1 = "FREE CAM";
+		if (_mode == "follow" || {_mode == "eyes"}) then {
+			_tgt = missionNamespace getVariable ["WFBE_C_VAR_SpectatorTarget", objNull];
+			_tgtTxt = "-";
+			if (!isNull _tgt && {alive _tgt}) then {_tgtTxt = name _tgt};
+			_l1 = Format ["%1  -  %2", toUpper _mode, _tgtTxt];
+		};
+		if (_mode == "director" && {(count _shot) >= 16}) then {
+			_reason = _shot select 14;
+			_orbActive = false;
+			if ((_shot select 8) != 0 && {time >= (_shot select 9)} && {((time - (_shot select 9)) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_RATE", 6])) < (_shot select 10)}) then {_orbActive = true};
+			if (_orbActive) then {_reason = "REVEAL"};
+			_l1 = Format ["%1  -  %2", _shot select 13, _shot select 12];
+			if ((_shot select 15) != "") then {_l1 = _l1 + Format ["  -  %1", _shot select 15]};
+			_l1 = _l1 + Format ["  -  %1", _reason];
+		};
+		_tw = 0;
+		_te2 = 0;
+		_tg = 0;
+		_wid = missionNamespace getVariable ["WFBE_C_WEST_ID", 0];
+		_eid = missionNamespace getVariable ["WFBE_C_EAST_ID", 1];
+		_gid = missionNamespace getVariable ["WFBE_C_GUER_ID", 2];
+		{
+			if (!isNull _x) then {
+				_sid = _x getVariable ["sideID", -1];
+				if (_sid == _wid) then {_tw = _tw + 1};
+				if (_sid == _eid) then {_te2 = _te2 + 1};
+				if (_sid == _gid) then {_tg = _tg + 1};
+			};
+		} forEach towns;
+		_h = floor (time / 3600);
+		_m = floor ((time % 3600) / 60);
+		_ms = str _m;
+		if (_m < 10) then {_ms = "0" + _ms};
+		_auto = "OFF";
+		if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]}) then {_auto = "ON"};
+		_l2 = Format ["TOWNS  W %1 - E %2 - G %3     T+%4:%5     AUTO %6     %7", _tw, _te2, _tg, _h, _ms, _auto, missionNamespace getVariable ["WFBE_C_VAR_DirIntensity", "QUIET"]];
+		WFBE_C_VAR_SpectHudLine1 = _l1;
+		WFBE_C_VAR_SpectHudLine2 = _l2;
+	};
 	_topBg ctrlShow true;
 	_topText ctrlShow true;
-	_topText ctrlSetStructuredText (parseText _topHtml);
-	if (_hudMode > 1) then {
-		_keysHtml = "<t align='left' size='0.95' color='#FFFFFF' shadow='2'>H HUD: FULL > MINIMAL > OFF  |  M MAP  |  WASD MOVE  |  SPACE/CTRL ALTITUDE</t><br/><t align='left' size='0.88' color='#D8F3FF' shadow='2'>N/B TARGET  |  F FOLLOW  |  V EYES  |  G DIRECTOR  |  BACKSPACE EXIT</t>";
+	_topText ctrlSetStructuredText (parseText (Format [
+		"<t align='left' size='0.9' color='#F2F7FA' shadow='2'>%1</t><br/><t align='left' size='0.72' color='#9FC4D8' shadow='2'>%2</t>",
+		missionNamespace getVariable ["WFBE_C_VAR_SpectHudLine1", ""],
+		missionNamespace getVariable ["WFBE_C_VAR_SpectHudLine2", ""]
+	]));
+	_idle = time - (missionNamespace getVariable ["WFBE_C_VAR_SpectatorLastInput", 0]);
+	if (_hudMode > 1 && {_idle < (missionNamespace getVariable ["WFBE_C_SPECTATOR_HUD_FADE_SEC", 6])}) then {
+		_keysHtml = "<t align='left' size='0.95' color='#FFFFFF' shadow='2'>G DIRECTOR AUTO  |  TAB CLASS  |  O ORBIT REVEALS  |  J STREAMER MENU  |  M MAP</t><br/><t align='left' size='0.88' color='#D8F3FF' shadow='2'>N/B TARGET  |  F FOLLOW  |  V EYES  |  WASD MOVE  |  H HUD  |  BACKSPACE EXIT</t>";
 		_keysBg ctrlShow true;
 		_keysText ctrlShow true;
 		_keysText ctrlSetStructuredText (parseText _keysHtml);
@@ -253,8 +269,7 @@ WFBE_CL_FNC_SpectatorBroadcastHudUpdate = {
 	};
 };
 
-//--- Map follow/camera teleport helpers are also non-suspending. The one-second worker
-//--- calls them and releases all display/control references before its next sleep.
+//--- Map follow/teleport helpers are also non-suspending.
 WFBE_CL_FNC_SpectatorMapFollow = {
 	Private ["_display","_map","_pos"];
 	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) <= 0) exitWith {};
@@ -267,7 +282,7 @@ WFBE_CL_FNC_SpectatorMapFollow = {
 };
 
 WFBE_CL_FNC_SpectatorMapClick = {
-	Private ["_map","_x","_y","_pos","_camPos","_yaw","_pitch","_cy","_sy","_cp","_sp","_aim"];
+	Private ["_map","_x","_y","_pos","_camPos"];
 	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) <= 0) exitWith {};
 	_map = _this select 0;
 	_x = _this select 1;
@@ -276,26 +291,15 @@ WFBE_CL_FNC_SpectatorMapClick = {
 	if (isNil "_pos" || {typeName _pos != "ARRAY"} || {count _pos < 2}) exitWith {};
 	_camPos = missionNamespace getVariable ["WFBE_C_VAR_SpectatorPos", [0,0,0]];
 	_camPos = [_pos select 0, _pos select 1, _camPos select 2];
+	//--- v8 single-writer law: teleport = seed the free-cam globals, the frame handler paints it.
+	//--- PrevMode is pre-set to free so the frame handler's mode-handoff cannot overwrite the
+	//--- teleported position with the old camera pose.
 	WFBE_C_VAR_SpectatorPos = _camPos;
+	WFBE_C_VAR_SpectatorFreeVel = [0,0,0];
+	WFBE_C_VAR_SpectFramePrevMode = "free";
 	WFBE_C_VAR_SpectatorMode = "free";
 	WFBE_C_VAR_SpectatorDirectorAuto = false;
 	WFBE_C_VAR_SpectatorTarget = objNull;
-	_yaw = missionNamespace getVariable ["WFBE_C_VAR_SpectatorYaw", 0];
-	_pitch = missionNamespace getVariable ["WFBE_C_VAR_SpectatorPitch", 0];
-	_cy = cos _yaw;
-	_sy = sin _yaw;
-	_cp = cos _pitch;
-	_sp = sin _pitch;
-	_aim = [
-		(_camPos select 0) + (_sy * _cp * 100),
-		(_camPos select 1) + (_cy * _cp * 100),
-		(_camPos select 2) + (_sp * 100)
-	];
-	if (!isNull (missionNamespace getVariable ["WFBE_C_VAR_SpectatorCam", objNull])) then {
-		WFBE_C_VAR_SpectatorCam camSetPos _camPos;
-		WFBE_C_VAR_SpectatorCam camSetTarget _aim;
-		WFBE_C_VAR_SpectatorCam camCommit 0;
-	};
 	diag_log Format ["SPECTATE|broadcast-map|teleport|x=%1|y=%2", round (_pos select 0), round (_pos select 1)];
 };
 
@@ -314,11 +318,11 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 		case 42: {WFBE_C_VAR_SpectatorKeys set [6, true]}; //--- LShift
 		case 54: {WFBE_C_VAR_SpectatorKeys set [6, true]}; //--- RShift
 		case 56: {WFBE_C_VAR_SpectatorKeys set [7, true]}; //--- LAlt
-		case 49: {1 Call WFBE_CL_FNC_SpectatorCycleTarget}; //--- N: arm next player
-		case 48: {-1 Call WFBE_CL_FNC_SpectatorCycleTarget}; //--- B: arm previous player
-		case 15: { //--- TAB: cycle director target class
+		case 49: {1 Call WFBE_CL_FNC_SpectatorCycleTarget}; //--- N: arm next target
+		case 48: {-1 Call WFBE_CL_FNC_SpectatorCycleTarget}; //--- B: arm previous target
+		case 15: { //--- TAB: pin a manual class for N/B browsing; pauses auto (G resumes).
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-				_cls = WFBE_C_VAR_SpectatorDirectorClass;
+				_cls = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"];
 				if (_cls == "PLAYER") then {_cls = "TEAM"} else {
 					if (_cls == "TEAM") then {_cls = "TOWN"} else {
 						if (_cls == "TOWN") then {_cls = "HQ"} else {_cls = "PLAYER"};
@@ -326,119 +330,119 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				};
 				WFBE_C_VAR_SpectatorDirectorClass = _cls;
 				WFBE_C_VAR_SpectatorDirectorPinned = true;
-				WFBE_C_VAR_DirectorReturnPending = false;
+				if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]) then {
+					WFBE_C_VAR_SpectatorDirectorAuto = false;
+					systemChat "[WASP] Director auto paused for manual browsing (G resumes).";
+				};
 				WFBE_C_VAR_SpectatorTarget = objNull;
-				WFBE_C_VAR_DirectorLastSwitch = 0;
-				diag_log Format ["SPECTATE|v3|class-switch|class=%1", _cls];
+				diag_log Format ["SPECTATE|v8|class-switch|class=%1", _cls];
 				systemChat Format ["[WASP] Director class: %1 (N/B cycle)", _cls];
 			} else {_handled = false};
 		};
-		case 34: { //--- G: toggle director mode and its 1-second auto-switch loop
+		case 34: { //--- G: toggle the v8 auto director (towns + fight tracks)
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-				if (WFBE_C_VAR_SpectatorMode == "director") then {
+				if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "director" && {missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]}) then {
 					WFBE_C_VAR_SpectatorMode = "free";
 					WFBE_C_VAR_SpectatorDirectorAuto = false;
-					diag_log "SPECTATE|v3|mode-off|reason=key";
+					diag_log "SPECTATE|v8|mode-off|reason=key";
 					systemChat "[WASP] Director mode off - free camera.";
 				} else {
 					WFBE_C_VAR_SpectatorMode = "director";
 					WFBE_C_VAR_SpectatorDirectorPinned = false;
 					WFBE_C_VAR_SpectatorDirectorAuto = true;
-					WFBE_C_VAR_SpectatorOrbit = true;
-					WFBE_C_VAR_SpectatorOrbitAngle = 0;
 					WFBE_C_VAR_SpectatorTarget = objNull;
-					WFBE_C_VAR_DirectorLastSwitch = 0;
-					WFBE_C_VAR_DirectorAutoTime = 0;
-					WFBE_C_VAR_DirectorLastBaseCheck = 0;
-					WFBE_C_VAR_DirectorLastEstablish = -120;
-					WFBE_C_VAR_DirectorContactTarget = objNull;
-					WFBE_C_VAR_DirectorLastContactScan = 0;
-					WFBE_C_VAR_DirectorReturnPending = false;
-					diag_log Format ["SPECTATE|v3|mode-on|class=%1", WFBE_C_VAR_SpectatorDirectorClass];
-					systemChat "[WASP] Director mode on - pooled action auto-switch enabled.";
+					WFBE_C_VAR_DirCurKey = ""; //--- force a fresh pick on the next 1s poll.
+					WFBE_C_VAR_DirCurKind = "";
+					diag_log "SPECTATE|v8|mode-on|auto=1";
+					systemChat "[WASP] Director v8 auto ON - towns + fight tracks.";
 				};
 			} else {_handled = false};
 		};
-		case 24: { //--- O: toggle orbit sweep / static framing
+		case 24: { //--- O: orbit reveals on/off (static-first shot language, owner ruling 14:14)
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-				WFBE_C_VAR_SpectatorOrbit = !WFBE_C_VAR_SpectatorOrbit;
-				systemChat Format ["[WASP] Director orbit: %1", if (WFBE_C_VAR_SpectatorOrbit) then {"ON"} else {"OFF (static)"}];
+				WFBE_C_VAR_SpectatorOrbit = !(missionNamespace getVariable ["WFBE_C_VAR_SpectatorOrbit", true]);
+				systemChat Format ["[WASP] Orbit reveals: %1", if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorOrbit", true]) then {"ON"} else {"OFF (all static)"}];
 			} else {_handled = false};
 		};
-		case 26: { //--- [: reduce director dwell
+		case 26: { //--- [: legacy dwell trim (v8 auto paces itself; kept for the streamer menu readout)
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
 				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
 				_d = ((WFBE_C_VAR_SpectatorDirectorDwell - _step) max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN", 5]));
 				WFBE_C_VAR_SpectatorDirectorDwell = _d;
-				//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			} else {_handled = false};
 		};
-		case 27: { //--- ]: increase director dwell
+		case 27: { //--- ]: legacy dwell trim
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
 				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
 				_d = ((WFBE_C_VAR_SpectatorDirectorDwell + _step) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MAX", 120]));
 				WFBE_C_VAR_SpectatorDirectorDwell = _d;
-				//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			} else {_handled = false};
 		};
 		case 33: { //--- F: toggle follow-cam on the armed target
-			if (WFBE_C_VAR_SpectatorMode == "follow") then {
+			if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "follow") then {
 				WFBE_C_VAR_SpectatorMode = "free";
 				systemChat "[WASP] Free camera.";
 			} else {
 				if (!isNull WFBE_C_VAR_SpectatorTarget && {alive WFBE_C_VAR_SpectatorTarget}) then {
-					if (WFBE_C_VAR_SpectatorMode == "director") then {
+					if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "director") then {
 						WFBE_C_VAR_SpectatorDirectorAuto = false;
-						diag_log "SPECTATE|v3|mode-off|reason=follow";
+						diag_log "SPECTATE|v8|mode-off|reason=follow";
 					};
 					WFBE_C_VAR_SpectatorMode = "follow";
 					systemChat Format ["[WASP] Follow-cam: %1 (WASD to detach)", name WFBE_C_VAR_SpectatorTarget];
 				} else {
-					systemChat "[WASP] No target - press N/B to arm a player first.";
+					systemChat "[WASP] No target - press N/B to arm a target first.";
 				};
 			};
 		};
-		case 47: { //--- V: toggle through-their-eyes POV on the armed target
-			if (WFBE_C_VAR_SpectatorMode == "eyes") then {
+		case 47: { //--- V: toggle through-their-eyes POV on the armed target (manual only)
+			if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "eyes") then {
 				WFBE_C_VAR_SpectatorMode = "free";
 				systemChat "[WASP] Free camera.";
 			} else {
 				if (!isNull WFBE_C_VAR_SpectatorTarget && {alive WFBE_C_VAR_SpectatorTarget}) then {
-					if (WFBE_C_VAR_SpectatorMode == "director") then {
+					if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "director") then {
 						WFBE_C_VAR_SpectatorDirectorAuto = false;
-						diag_log "SPECTATE|v3|mode-off|reason=eyes";
+						diag_log "SPECTATE|v8|mode-off|reason=eyes";
 					};
 					WFBE_C_VAR_SpectatorMode = "eyes";
 					systemChat Format ["[WASP] POV: %1 (WASD to detach)", name WFBE_C_VAR_SpectatorTarget];
 				} else {
-					systemChat "[WASP] No target - press N/B to arm a player first.";
+					systemChat "[WASP] No target - press N/B to arm a target first.";
 				};
 			};
 		};
-		case 201: { //--- PgUp: raise mouse sensitivity (live tuning for streaming setups)
+		case 201: { //--- PgUp: raise mouse sensitivity
 			private "_s";
 			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 25]) + 10) min 400;
 			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
-			//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			true
 		};
 		case 209: { //--- PgDn: lower mouse sensitivity
 			private "_s";
 			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 25]) - 10) max 10;
 			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
-			//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			true
 		};
 		case 35: { //--- H: FULL -> MINIMAL -> OFF when broadcast HUD is armed; legacy hide/show otherwise.
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
-				WFBE_C_VAR_SpectatorHudMode = (WFBE_C_VAR_SpectatorHudMode + 1) % 3;
+				WFBE_C_VAR_SpectatorHudMode = ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorHudMode", 2]) + 1) % 3;
 				[] Call WFBE_CL_FNC_SpectatorBroadcastHudUpdate;
 			} else {
-				WFBE_C_VAR_SpectatorHideHint = !WFBE_C_VAR_SpectatorHideHint;
-				if (WFBE_C_VAR_SpectatorHideHint) then {12455 cutText ["", "PLAIN", 0]}; WFBE_C_VAR_SpectatorCardLast = ""; //--- reset the card cache either way so the next draw re-cuts (flicker fix, merged)
+				WFBE_C_VAR_SpectatorHideHint = !(missionNamespace getVariable ["WFBE_C_VAR_SpectatorHideHint", false]);
+				if (WFBE_C_VAR_SpectatorHideHint) then {12455 cutText ["", "PLAIN", 0]}; WFBE_C_VAR_SpectatorCardLast = ""; //--- reset the card cache either way so the next draw re-cuts
 			};
 		};
-		case 50: { //--- M: open/close spectator map dialog; DIK 50 is not used by the spectator key set.
+		case 36: { //--- J: open/close the streamer settings menu
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_STREAMER_MENU", 0]) > 0) then {
+				if (dialog) then {closeDialog 0} else {
+					diag_log Format ["SPECTATE|v8|streamer-menu|createDialog=%1", createDialog "WFBE_StreamerMenu"];
+				};
+			} else {
+				_handled = false;
+			};
+		};
+		case 50: { //--- M: open/close spectator map dialog
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
 				if (dialog) then {closeDialog 0} else {createDialog "WFBE_SpectatorMapDialog"};
 			} else {
@@ -448,6 +452,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 		case 14: {[] Call WFBE_CL_FNC_SpectatorExit}; //--- Backspace: quick exit
 		default {_handled = false}; //--- unhandled keys (Esc, chat, etc.) fall through to the game.
 	};
+	if (_handled) then {WFBE_C_VAR_SpectatorLastInput = time}; //--- fade-timer reference for operator chrome.
 	_handled //--- consume handled keys so the parked body never acts on camera input.
 };
 
@@ -469,11 +474,8 @@ WFBE_CL_FNC_SpectatorKeyUp = {
 	false
 };
 
-//--- Mouse look, edge-recentre model: EVERY event steers at full rate (no alternating
-//--- baseline half-rate, no per-event warp). The cursor is only warped home when it nears
-//--- the UI edge; the event right after a warp only re-anchors, never steers, so the
-//--- anchor is always a real reported position and no recentre bias can accumulate.
-//--- Sensitivity is WFBE_C_SPECTATOR_SENS scaled by zoom (v4.1: SENS_REF_FOV anchor, scoped-aim feel).
+//--- Mouse look, edge-recentre model (v4.2, live-proven). The mouse handler is the ONLY writer
+//--- of yaw/pitch (event-driven); the frame handler integrates them.
 WFBE_CL_FNC_SpectatorMouseMoving = {
 	Private ["_x","_y","_dx","_dy","_sens","_cap","_sm","_sdx","_sdy","_fovFac"];
 	_x = _this select 1;
@@ -483,11 +485,6 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 		WFBE_C_VAR_SpectatorLastMouseX = _x;
 		WFBE_C_VAR_SpectatorLastMouseY = _y;
 		WFBE_C_VAR_SpectatorMouseBaseline = false;
-		//--- v4.2 (owner jank report): do NOT zero the EMA here. Entry already initialises
-		//--- Sdx/Sdy to 0; this branch also runs after every EDGE WARP, and zeroing there
-		//--- hitched the camera mid-swipe each time the cursor crossed the warp margin.
-		//--- Keeping the smoothed momentum across the warp is exactly what makes a long
-		//--- continuous swipe feel continuous.
 	} else {
 		_dx = _x - WFBE_C_VAR_SpectatorLastMouseX;
 		_dy = _y - WFBE_C_VAR_SpectatorLastMouseY;
@@ -496,9 +493,6 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 		_dx = (_dx max -_cap) min _cap;
 		_dy = (_dy max -_cap) min _cap;
 		if (WFBE_C_VAR_SpectatorMode == "free") then {
-			//--- v4.1: light delta EMA kills per-event jitter without noticeable lag, and the
-			//--- sensitivity scales with zoom (scoped-aim feel): at max zoom the screen shows
-			//--- ~3deg, so a flat 25deg-per-swipe sens spun the view way past the subject.
 			_sm = missionNamespace getVariable ["WFBE_C_SPECTATOR_MOUSE_SMOOTH", 0.55];
 			_sdx = WFBE_C_VAR_SpectatorMouseSdx + ((_dx - WFBE_C_VAR_SpectatorMouseSdx) * _sm);
 			_sdy = WFBE_C_VAR_SpectatorMouseSdy + ((_dy - WFBE_C_VAR_SpectatorMouseSdy) * _sm);
@@ -509,9 +503,6 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 			WFBE_C_VAR_SpectatorYaw = WFBE_C_VAR_SpectatorYaw + _sdx * _sens;
 			WFBE_C_VAR_SpectatorPitch = ((WFBE_C_VAR_SpectatorPitch - _sdy * _sens) max -89) min 89;
 		};
-		//--- v4.2: margins widened 0.2/0.8 -> 0.1/0.9 - the old band warped every ~0.6 screen
-		//--- widths of travel, so long swipes stuttered; the wider band halves warp frequency
-		//--- while still keeping the cursor safely away from the real screen edge.
 		if (_x < 0.1 || {_x > 0.9} || {_y < 0.1} || {_y > 0.9}) then {
 			setMousePosition [0.5, 0.5];
 			WFBE_C_VAR_SpectatorMouseBaseline = true; //--- next event re-anchors at the warped position
@@ -523,20 +514,25 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 	false
 };
 
-//--- Wheel zoom: multiplicative FOV steps, clamped. Returns true so the wheel does not
-//--- also cycle the parked body's weapon.
+//--- Wheel zoom: sets a TARGET fov; the frame handler eases toward it. Returns true so the
+//--- wheel does not also cycle the parked body's weapon.
 WFBE_CL_FNC_SpectatorWheel = {
 	Private ["_z","_f"];
 	_z = _this select 1;
 	WFBE_C_VAR_SpectatorLastManualZoom = time;
-	//--- v4.1: the wheel now sets a TARGET fov; the movement loop eases SpectatorFov
-	//--- toward it at ZOOM_RATE/s (was: instant multiplicative jumps = steppy zoom on stream).
 	_f = missionNamespace getVariable ["WFBE_C_VAR_SpectatorFovTarget", WFBE_C_VAR_SpectatorFov];
 	if (_z > 0) then {_f = _f * 0.85} else {_f = _f * 1.18};
 	_f = (_f max (missionNamespace getVariable ["WFBE_C_SPECTATOR_FOV_MIN", 0.05])) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_FOV_MAX", 1.2]);
 	WFBE_C_VAR_SpectatorFovTarget = _f;
 	true
 };
+
+//--- v8: arm the ONE camera writer AFTER every function it consumes is defined and every pose
+//--- global is seeded. If onEachFrame is unavailable the statement fails and execution continues
+//--- (A2 failed-statement semantics) - the camera then simply never paints, and Backspace/exit
+//--- still work through the scheduled loop below.
+WFBE_C_VAR_SpectatorFrameAimArmed = true;
+onEachFrame {Call WFBE_CL_FNC_SpectatorAimFrame};
 
 if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
 	12456 cutRsc ["WFBE_SpectatorBroadcastHud", "PLAIN", 0];
@@ -553,42 +549,27 @@ WFBE_C_VAR_SpectatorKeyDownIdx = (findDisplay 46) displayAddEventHandler ["KeyDo
 WFBE_C_VAR_SpectatorKeyUpIdx = (findDisplay 46) displayAddEventHandler ["KeyUp", "_this Call WFBE_CL_FNC_SpectatorKeyUp"];
 WFBE_C_VAR_SpectatorMouseMovingIdx = (findDisplay 46) displayAddEventHandler ["MouseMoving", "_this Call WFBE_CL_FNC_SpectatorMouseMoving"];
 WFBE_C_VAR_SpectatorWheelIdx = (findDisplay 46) displayAddEventHandler ["MouseZChanged", "_this Call WFBE_CL_FNC_SpectatorWheel"];
-diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
+diag_log Format ["SPECTATE|v8|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
 
+//--- HOUSEKEEPING LOOP (v8): the parked body, the death watchdog, key-driven mode transitions
+//--- and the HUD text. NO camera writes, NO pos/yaw/pitch writes - single-writer law.
 [] spawn {
-	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget","_lastDirectorShotType","_shotChanged","_shotType","_engaged","_shotRadius","_shotHeight","_shotDir","_targetFov","_fovStep","_fovDelta","_manualZoomLock","_baseRemain","_subject","_leadSec","_subjectPos","_subjectVelocity","_leadOffset","_subjectSpeed","_standoffMult","_subjectFovMin","_lastDirectorStandoffTarget","_lastFollowTarget","_followSmoothPos","_followSmoothAim","_kin","_wantVel","_accel","_accelF","_vel","_fovRate","_fovWasDirector"];
+	Private ["_body","_lockPos","_lockDir","_k","_mode","_t","_tgtTxt","_dirCard","_shotType"];
 	_body = WFBE_C_VAR_SpectatorBody;
 	_lockPos = getPos _body;
-	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
-	_last = time;
-	_lastDirectorTarget = objNull;
-	_lastDirectorShotType = "";
-	_lastDirectorStandoffTarget = objNull;
-	_lastFollowTarget = objNull;
-	_fovWasDirector = false;
-	_followSmoothPos = WFBE_C_VAR_SpectatorPos;
-	_followSmoothAim = WFBE_C_VAR_SpectatorPos;
-	diag_log "SPECTATE|v2|loop-alive";
-	//--- START THE DIRECTOR POLL THREAD **BEFORE** the movement loop below, not after it.
-	//--- It used to sit after that loop's closing brace, which is plain sequential SQF: the loop only
-	//--- exits once WFBE_C_VAR_SpectatorActive has already gone false, and DirectorLoopStart guards its
-	//--- own loop on that exact same variable - so the poll body ran ZERO times in a real session and
-	//--- G reported "auto-switch on" while nothing ever auto-switched. DirectorLoopStart opens with its
-	//--- own [] spawn {}, so this Call returns immediately and the movement loop still starts on the
-	//--- next line; the two threads then run in parallel for the whole session, which is what
-	//--- Init_Client.sqf's own registration comment already promised.
+	_lockDir = getDir _body; //--- the body must not spin under the mouse.
+	diag_log "SPECTATE|v8|loop-alive";
+	//--- START THE DIRECTOR POLL THREAD BEFORE the housekeeping loop (live-burned ordering bug:
+	//--- sequential SQF after a while loop runs only once the loop has already exited).
 	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
 		Call WFBE_CL_FNC_DirectorLoopStart;
 	};
 	while {WFBE_C_VAR_SpectatorActive && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
-		sleep (missionNamespace getVariable ["WFBE_C_SPECTATOR_TICK", 0.01]); //--- v4: was sleep 0.05 = 20Hz hard cap - judder on a 60fps capture
-		//--- Safety: auto-exit if the parked body died while unattended (allowDamage/setCaptive should
-		//--- prevent this outright, but this loop is the last line of defence against a dangling camera).
+		sleep 0.1;
+		//--- Safety: auto-exit if the parked body died while unattended.
 		if (isNull _body || {!alive _body}) exitWith {[] Call WFBE_CL_FNC_SpectatorExit};
 		_body setPos _lockPos;
 		_body setDir _lockDir;
-		_dt = time - _last;
-		_last = time;
 		_k = WFBE_C_VAR_SpectatorKeys;
 		_mode = WFBE_C_VAR_SpectatorMode;
 		_t = WFBE_C_VAR_SpectatorTarget;
@@ -598,303 +579,52 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 			_mode = "free";
 			systemChat "[WASP] Spectator target lost - back to free camera.";
 		};
-		//--- Any movement-key input detaches from follow/eyes back to free at the current position.
+		//--- Any movement-key input detaches from follow/eyes/director back to free.
 		if (_mode != "free") then {
 			if ((_k select 0) || {(_k select 1)} || {(_k select 2)} || {(_k select 3)} || {(_k select 4)} || {(_k select 5)}) then {
 				if (_mode == "director") then {
 					WFBE_C_VAR_SpectatorDirectorAuto = false;
-					diag_log "SPECTATE|v3|mode-off|reason=manual";
+					diag_log "SPECTATE|v8|mode-off|reason=manual";
 				};
 				WFBE_C_VAR_SpectatorMode = "free";
 				_mode = "free";
 			};
 		};
-		if (_mode != "free") then {WFBE_C_VAR_SpectatorFreeVel = [0,0,0]}; //--- v4.1: the fly-cam stays at rest until WASD actually drives it (no lurch on mode handoff).
-		_spd = missionNamespace getVariable ["WFBE_C_SPECTATOR_SPEED", 15];
-		if (_k select 6) then {_spd = _spd * (missionNamespace getVariable ["WFBE_C_SPECTATOR_BOOST", 4])};
-		if (_k select 7) then {_spd = _spd * (missionNamespace getVariable ["WFBE_C_SPECTATOR_SLOW", 0.25])};
-		_p = WFBE_C_VAR_SpectatorPos;
-		_y = WFBE_C_VAR_SpectatorYaw;
-		_pt = WFBE_C_VAR_SpectatorPitch;
-		_subjectFovMin = 0;
-		if !(isNull WFBE_C_VAR_SpectatorCam) then {
-			switch (_mode) do {
-				case "follow": {
-					_kin = [_t, _dt] Call WFBE_CL_FNC_SpectatorKinematics;
-					_subject = _kin select 0;
-					_subjectPos = _kin select 1;
-					_leadOffset = _kin select 2;
-					_subjectSpeed = _kin select 3;
-					_wantPos = _subject modelToWorld [0, -8, 3];
-					_wantPos = [(_wantPos select 0) + (_leadOffset select 0), (_wantPos select 1) + (_leadOffset select 1), (_wantPos select 2) + (_leadOffset select 2)];
-					_wantAim = [(_subjectPos select 0) + (_leadOffset select 0), (_subjectPos select 1) + (_leadOffset select 1), (_subjectPos select 2) + (_leadOffset select 2) + 1.5];
-					//--- v4: exponential smoothing on BOTH camera pos and aim (was: raw per-tick snap = the yanky follow-cam). Snaps only on a target switch.
-					if (_t != _lastFollowTarget) then {
-						_lastFollowTarget = _t;
-						_followSmoothPos = _wantPos;
-						_followSmoothAim = _wantAim;
-					} else {
-						_smoothK = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING", 5];
-						if (_subjectSpeed > 8) then {_smoothK = _smoothK * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FAST_GAIN_MULT", 2.5])};
-						_smoothFactor = ((_smoothK * _dt) min 1) max 0;
-						_followSmoothPos = [
-							(_followSmoothPos select 0) + (((_wantPos select 0) - (_followSmoothPos select 0)) * _smoothFactor),
-							(_followSmoothPos select 1) + (((_wantPos select 1) - (_followSmoothPos select 1)) * _smoothFactor),
-							(_followSmoothPos select 2) + (((_wantPos select 2) - (_followSmoothPos select 2)) * _smoothFactor)
-						];
-						_followSmoothAim = [
-							(_followSmoothAim select 0) + (((_wantAim select 0) - (_followSmoothAim select 0)) * _smoothFactor),
-							(_followSmoothAim select 1) + (((_wantAim select 1) - (_followSmoothAim select 1)) * _smoothFactor),
-							(_followSmoothAim select 2) + (((_wantAim select 2) - (_followSmoothAim select 2)) * _smoothFactor)
-						];
-					};
-					_p = _followSmoothPos;
-					_tx = _followSmoothAim select 0;
-					_ty = _followSmoothAim select 1;
-					_tz = _followSmoothAim select 2;
-					_hd = sqrt (((_tx - (_p select 0)) ^ 2) + ((_ty - (_p select 1)) ^ 2));
-					_y = (((_tx - (_p select 0)) atan2 (_ty - (_p select 1))) + 360) % 360;
-					_pt = (((_tz - (_p select 2)) atan2 (_hd max 0.01)) max -80) min 80;
-					WFBE_C_VAR_SpectatorCam camSetPos _p;
-					WFBE_C_VAR_SpectatorCam camSetTarget [_tx, _ty, _tz];
-				};
-				case "eyes": {
-					_e = eyePos _t;
-					_d = eyeDirection _t;
-					_p = _e;
-					_hd = sqrt (((_d select 0) ^ 2) + ((_d select 1) ^ 2));
-					_y = (((_d select 0) atan2 (_d select 1)) + 360) % 360;
-					_pt = (((_d select 2) atan2 (_hd max 0.01)) max -80) min 80;
-					WFBE_C_VAR_SpectatorCam camSetPos _e;
-					WFBE_C_VAR_SpectatorCam camSetTarget [(_e select 0) + (_d select 0) * 100, (_e select 1) + (_d select 1) * 100, (_e select 2) + (_d select 2) * 100];
-				};
-				case "director": {
-					if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {!isNull _t}) then {
-						_center = _t call WFBE_C_VAR_SpectatorDirectorPosFn;
-						_kin = [_t, _dt] Call WFBE_CL_FNC_SpectatorKinematics;
-						_subject = _kin select 0;
-						_subjectPos = _kin select 1;
-						_leadOffset = _kin select 2;
-						_subjectSpeed = _kin select 3;
-						_center = [(_subjectPos select 0) + (_leadOffset select 0), (_subjectPos select 1) + (_leadOffset select 1), (_subjectPos select 2) + (_leadOffset select 2)];
-						_shotType = WFBE_C_VAR_SpectatorDirectorShotType;
-						_wantAim = [_t, WFBE_C_VAR_SpectatorDirectorClass, _center] Call WFBE_CL_FNC_DirectorAimPoint;
-						_engaged = WFBE_C_VAR_DirectorEngagementActive;
-						//--- fix (v3.2 review): radius/height now derive from _shotType alone (was gated behind
-						//--- _engaged, so an idle/non-engaged MEDIUM shot - the common case - fell through to the
-						//--- legacy 40/25 ORBIT constants instead of its own 18/12 MEDIUM constants). Orbit sweep
-						//--- now applies to any shot that is not the fixed engagement angle (v3.1 parity - was
-						//--- narrowed to WIDE/BASE only, freezing the camera on every idle PLAYER/TEAM MEDIUM shot).
-						_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_RADIUS", 40];
-						_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_HEIGHT", 25];
-						switch (_shotType) do {
-							case "TIGHT": {
-								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS", 8];
-								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT", 4];
-							};
-							case "MEDIUM": {
-								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS", 18];
-								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT", 12];
-							};
-							case "WIDE": {
-								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS", 180];
-								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT", 110];
-							};
-							case "BASE": {
-								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS", 180];
-								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT", 110];
-							};
-						};
-						_standoffMult = 1;
-						_subjectFovMin = 0;
-						if (!(_subject isKindOf "Man")) then {
-							_standoffMult = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_VEH_STANDOFF_MULT", 2.5];
-							_subjectFovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_VEH_FOV_MIN", 0.55];
-							if (_subject isKindOf "Air") then {
-								_standoffMult = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_AIR_STANDOFF_MULT", 4.0];
-								_subjectFovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN", 0.45];
-							};
-							_shotRadius = _shotRadius * _standoffMult;
-							_shotHeight = _shotHeight * _standoffMult;
-						};
-						if (_t != _lastDirectorStandoffTarget) then {
-							_lastDirectorStandoffTarget = _t;
-							if (!(_subject isKindOf "Man")) then {diag_log Format ["SPECTATE|v3|veh-standoff|mult=%1", _standoffMult]};
-						};
-						if (_engaged && {(_shotType == "TIGHT") || {_shotType == "MEDIUM"}}) then {
-							_shotDir = getDir _t;
-							_angle = (_shotDir + 180) % 360;
-						} else {
-							if (WFBE_C_VAR_SpectatorOrbit) then {
-								_rate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC", 4];
-								if (_rate > (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8])) then {
-									_rate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8];
-								};
-								_angle = (WFBE_C_VAR_SpectatorOrbitAngle + (_rate * _dt)) % 360;
-								WFBE_C_VAR_SpectatorOrbitAngle = _angle;
-							} else {
-								_angle = WFBE_C_VAR_SpectatorOrbitAngle;
-							};
-						};
-						_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
-						if (_t != _lastDirectorTarget) then {
-							WFBE_C_VAR_DirectorAimHardCut = false;
-							_smoothPos = _wantPos;
-							_smoothAim = _wantAim;
-							_lastDirectorTarget = _t;
-							_lastDirectorShotType = _shotType;
-							WFBE_C_VAR_SpectatorVelEma = velocity _subject; //--- v4: re-seed the EMA at the new subject; stale velocity must not bleed past the cut.
-							//--- v4: a target cut snaps FOV with the frame (was: kept easing from the previous shot's FOV = "too slow zoomed in" after every switch).
-							if ((time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])) then {
-								WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
-								WFBE_C_VAR_SpectatorFovTarget = WFBE_C_VAR_SpectatorDirectorTargetFov; //--- v4.1: keep the wheel goal in agreement after a director cut.
-							};
-						} else {
-							_shotChanged = _shotType != _lastDirectorShotType;
-							_smoothK = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING", 5];
-							if (_subjectSpeed > 8) then {_smoothK = _smoothK * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FAST_GAIN_MULT", 2.5])};
-							_smoothFactor = ((_smoothK * _dt) min 1) max 0;
-							_smoothPos = [
-								(_smoothPos select 0) + (((_wantPos select 0) - (_smoothPos select 0)) * _smoothFactor),
-								(_smoothPos select 1) + (((_wantPos select 1) - (_smoothPos select 1)) * _smoothFactor),
-								(_smoothPos select 2) + (((_wantPos select 2) - (_smoothPos select 2)) * _smoothFactor)
-							];
-							_smoothAim = [_smoothPos, _smoothAim, _wantAim, _dt, _shotChanged] Call WFBE_CL_FNC_DirectorAimStep;
-							if (WFBE_C_VAR_DirectorAimHardCut) then {
-								_smoothPos = _wantPos;
-								_smoothAim = _wantAim;
-							};
-							_lastDirectorShotType = _shotType;
-						};
-						_p = _smoothPos;
-						_tx = _smoothAim select 0;
-						_ty = _smoothAim select 1;
-						_tz = _smoothAim select 2;
-						_hd = sqrt (((_tx - (_p select 0)) ^ 2) + ((_ty - (_p select 1)) ^ 2));
-						_y = (((_tx - (_p select 0)) atan2 (_ty - (_p select 1))) + 360) % 360;
-						_pt = (((_tz - (_p select 2)) atan2 (_hd max 0.01)) max -80) min 80;
-						WFBE_C_VAR_SpectatorCam camSetPos _smoothPos;
-						WFBE_C_VAR_SpectatorCam camSetTarget _smoothAim;
-					};
-				};
-				default {
-					_cy = cos _y; _sy = sin _y; _cp = cos _pt; _sp = sin _pt;
-					_fwd = [_sy * _cp, _cy * _cp, _sp];
-					_right = [_cy, -_sy, 0];
-					//--- v4.1: acceleration/inertia - keys set a DESIRED velocity and the camera eases
-					//--- toward it (was: instant full speed / instant stop = robotic motion on stream).
-					_wantVel = [0,0,0];
-					if (_k select 0) then {_wantVel = [(_wantVel select 0) + (_fwd select 0) * _spd, (_wantVel select 1) + (_fwd select 1) * _spd, (_wantVel select 2) + (_fwd select 2) * _spd]};
-					if (_k select 1) then {_wantVel = [(_wantVel select 0) - (_fwd select 0) * _spd, (_wantVel select 1) - (_fwd select 1) * _spd, (_wantVel select 2) - (_fwd select 2) * _spd]};
-					if (_k select 3) then {_wantVel = [(_wantVel select 0) + (_right select 0) * _spd, (_wantVel select 1) + (_right select 1) * _spd, _wantVel select 2]};
-					if (_k select 2) then {_wantVel = [(_wantVel select 0) - (_right select 0) * _spd, (_wantVel select 1) - (_right select 1) * _spd, _wantVel select 2]};
-					if (_k select 4) then {_wantVel set [2, (_wantVel select 2) + _spd]};
-					if (_k select 5) then {_wantVel set [2, (_wantVel select 2) - _spd]};
-					_accel = missionNamespace getVariable ["WFBE_C_SPECTATOR_ACCEL", 6];
-					if ((_wantVel select 0) == 0 && {(_wantVel select 1) == 0} && {(_wantVel select 2) == 0}) then {_accel = missionNamespace getVariable ["WFBE_C_SPECTATOR_BRAKE", 9]};
-					_accelF = ((_accel * _dt) min 1) max 0;
-					_vel = WFBE_C_VAR_SpectatorFreeVel;
-					_vel = [
-						(_vel select 0) + (((_wantVel select 0) - (_vel select 0)) * _accelF),
-						(_vel select 1) + (((_wantVel select 1) - (_vel select 1)) * _accelF),
-						(_vel select 2) + (((_wantVel select 2) - (_vel select 2)) * _accelF)
-					];
-					WFBE_C_VAR_SpectatorFreeVel = _vel;
-					_p = [(_p select 0) + (_vel select 0) * _dt, (_p select 1) + (_vel select 1) * _dt, (_p select 2) + (_vel select 2) * _dt];
-					_tx = (_p select 0) + (_fwd select 0) * 100;
-					_ty = (_p select 1) + (_fwd select 1) * 100;
-					_tz = (_p select 2) + (_fwd select 2) * 100;
-					WFBE_C_VAR_SpectatorCam camSetPos _p;
-					WFBE_C_VAR_SpectatorCam camSetTarget [_tx, _ty, _tz];
-				};
-			};
-			if (_subjectFovMin > 0) then {
-				if (WFBE_C_VAR_SpectatorFov < _subjectFovMin) then {WFBE_C_VAR_SpectatorFov = _subjectFovMin};
-				if (WFBE_C_VAR_SpectatorDirectorTargetFov < _subjectFovMin) then {WFBE_C_VAR_SpectatorDirectorTargetFov = _subjectFovMin};
-				if (WFBE_C_VAR_SpectatorFovTarget < _subjectFovMin) then {WFBE_C_VAR_SpectatorFovTarget = _subjectFovMin}; //--- v4.1: keep the manual zoom goal above the subject floor too.
-			};
-			//--- v4.1 unified zoom goal: director-auto drives the shot FOV (unless the wheel
-			//--- locked zoom recently); every other mode eases toward the wheel target.
-			_targetFov = WFBE_C_VAR_SpectatorFovTarget;
-			_fovRate = missionNamespace getVariable ["WFBE_C_SPECTATOR_ZOOM_RATE", 8];
-			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {_mode == "director"} && {WFBE_C_VAR_SpectatorDirectorAuto} && {(time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])}) then {
-				_targetFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
-				_fovRate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE", 0.35];
-				_fovWasDirector = true;
-			} else {
-				//--- leaving director-driven zoom without a recent wheel touch: hand manual zoom
-				//--- off from where the director left it, not from a stale wheel value.
-				if (_fovWasDirector && {(time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])}) then {
-					WFBE_C_VAR_SpectatorFovTarget = WFBE_C_VAR_SpectatorFov;
-				};
-				_fovWasDirector = false;
-			};
-			_fovStep = _fovRate * _dt;
-			_fovDelta = _targetFov - WFBE_C_VAR_SpectatorFov;
-			if (abs _fovDelta > _fovStep) then {
-				if (_fovDelta > 0) then {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov + _fovStep} else {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov - _fovStep};
-			} else {
-				WFBE_C_VAR_SpectatorFov = _targetFov;
-			};
-			WFBE_C_VAR_SpectatorCam camSetFov WFBE_C_VAR_SpectatorFov;
-			WFBE_C_VAR_SpectatorCam camCommit 0;
-		};
-		WFBE_C_VAR_SpectatorPos = _p;
-		WFBE_C_VAR_SpectatorYaw = _y;
-		WFBE_C_VAR_SpectatorPitch = _pt;
 		if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
 			[] Call WFBE_CL_FNC_SpectatorBroadcastHudUpdate;
 		} else {
 			if !(WFBE_C_VAR_SpectatorHideHint) then {
-			_tgtTxt = "-";
-			if (!isNull _t && {alive _t}) then {_tgtTxt = name _t};
-			_baseRemain = "--";
-			_shotType = "-";
-			if (_mode == "director") then {
-				_shotType = WFBE_C_VAR_SpectatorDirectorShotType;
-				if (WFBE_C_VAR_SpectatorDirectorAuto) then {
-					_baseRemain = round (((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_BASE_CHECK_SEC", 420]) - (WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastBaseCheck)) max 0);
+				_tgtTxt = "-";
+				if (!isNull _t && {alive _t}) then {_tgtTxt = name _t};
+				_shotType = "-";
+				if (_mode == "director") then {
+					_shotType = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorShotType", "-"];
+					_tgtTxt = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorTargetLabel", "-"];
+				};
+				//--- CUTTEXT, NOT HINT (live-proven 2026-07-30): hints do NOT render under a scripted
+				//--- cameraEffect camera; title layers composite fine. Layer 12455; re-cut only when
+				//--- the card STRING changed (flicker fix, live-proven).
+				_dirCard = Format [
+					"SPECTATOR [%1]  target %2\nFOV %3%4 | sens %5",
+					toUpper _mode, _tgtTxt, round ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorFov", 0.8]) * 100), "%",
+					round (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45])
+				];
+				_dirCard = _dirCard + "\nMOVE  mouse look | WASD | Space/Ctrl | Shift boost | Alt crawl | wheel zoom";
+				_dirCard = _dirCard + "\nTARGETS  N/B cycle | F follow | V eyes";
+				if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+					_dirCard = _dirCard + Format [
+						"\nDIRECTOR  G auto %1 | TAB class | O reveals %2 | shot %3",
+						if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]) then {"ON"} else {"OFF"},
+						if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorOrbit", true]) then {"ON"} else {"OFF"},
+						_shotType
+					];
+				};
+				_dirCard = _dirCard + "\nSETUP  PgUp/PgDn sens | H hide card | Backspace exit";
+				if (_dirCard != (missionNamespace getVariable ["WFBE_C_VAR_SpectatorCardLast", ""])) then {
+					WFBE_C_VAR_SpectatorCardLast = _dirCard;
+					12455 cutText [_dirCard, "PLAIN DOWN", 0];
 				};
 			};
-			_dirCard = "";
-			if (_mode == "director" && {!isNull _t}) then {
-				_tgtTxt = Format ["%1: %2", WFBE_C_VAR_SpectatorDirectorClass, WFBE_C_VAR_SpectatorDirectorTargetLabel];
-			};
-			//--- CUTTEXT, NOT HINT (live-proven 2026-07-30): hints do NOT render while a scripted
-			//--- cameraEffect camera is live - PgUp gave no readout and this card never drew in
-			//--- spectator, while the SAME client sees normal gameplay hints fine in first person
-			//--- (owner-confirmed) and the lobby-lock hold's cutText rendered during the join hold.
-			//--- Title layers composite over camera effects; the hint layer does not.
-			//--- Layer 12455 (12454 belongs to the lobby-lock hold; 12450-12452/12461 are taken).
-			//--- cutText takes a plain STRING; "\n" line breaks are the in-tree proven pattern
-			//--- (Client_TitleTextMessage.sqf). The opt-in broadcast HUD now uses the cutRsc path above.
-			_dirCard = Format [
-				"SPECTATOR [%1]  target %2\nspeed %3 m/s | FOV %4%5 | sens %6",
-				toUpper _mode, _tgtTxt, round _spd, round (WFBE_C_VAR_SpectatorFov * 100), "%",
-				round (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45])
-			];
-			_dirCard = _dirCard + "\nMOVE  mouse look | W/S fly | A/D strafe | Space/Ctrl up-down | Shift boost | Alt crawl | wheel zoom";
-			_dirCard = _dirCard + "\nTARGETS  N/B cycle | F follow | V eyes";
-			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-				_dirCard = _dirCard + Format [
-					"\nDIRECTOR  TAB pin | G auto %1 | O orbit %2 | shot %3 | base %4s | dwell %5s",
-					if (WFBE_C_VAR_SpectatorDirectorAuto) then {"ON"} else {"OFF"},
-					if (WFBE_C_VAR_SpectatorOrbit) then {"ON"} else {"OFF"},
-					_shotType,
-					_baseRemain,
-					round WFBE_C_VAR_SpectatorDirectorDwell
-				];
-			};
-			_dirCard = _dirCard + "\nSETUP  PgUp/PgDn sens | H hide card | Backspace exit";
-			//--- FLICKER FIX (owner live report 2026-07-31: "H menu just flashed small white text"):
-			//--- re-issuing cutText every 0.05s tick makes the engine restart the title each frame,
-			//--- which renders as a flash instead of a steady card. Only re-cut when the card STRING
-			//--- actually changed (speed/FOV/target update at ~1Hz, not 20Hz).
-			if (_dirCard != (missionNamespace getVariable ["WFBE_C_VAR_SpectatorCardLast", ""])) then {
-				WFBE_C_VAR_SpectatorCardLast = _dirCard;
-				12455 cutText [_dirCard, "PLAIN DOWN", 0];
-			};
-		};
 		};
 	};
 	//--- Fail-clean: while can exit on WFBE_gameover (or Active cleared externally) without the

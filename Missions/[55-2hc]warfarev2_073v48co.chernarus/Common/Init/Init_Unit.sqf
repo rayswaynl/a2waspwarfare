@@ -153,6 +153,36 @@ if (!(_unit isKindOf "Man") && {!(_unit isKindOf "StaticWeapon")}) then {
 	];
 };
 
+//--- Forward FOB (flag WFBE_C_STRUCTURES_FOB, 2026-07-17): Build action on a WEST/EAST repair truck.
+//--- Mirrors the GUER Build-FOB block above, with three differences from owner ruling 2: it gates on the
+//--- standard per-side repair-truck roster (WFBE_%1REPAIRTRUCKS - the PLURAL array is the one actually
+//--- read at runtime below (RepairVehicle marker) and aggregated into WFBE_REPAIRTRUCKS in Init_Common.sqf;
+//--- it is the same roster that already carries the Repair / Repair-Camp actions above) instead of a
+//--- dedicated delivery-truck list, it has no commander/token gate, and it is cash-priced + capped.
+//--- OWNER CORRECTION 2026-07-17: v1 mistakenly gated this on the SUPPLY-truck roster
+//--- (WFBE_%1SUPPLYTRUCKS); the ruled intent (Radio Tower "engineer truck only" ruling) is the REPAIR
+//--- truck. Corrected before WFBE_C_STRUCTURES_FOB ever shipped at non-zero.
+//--- Flag-off: the action is never attached, so the truck is byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FOB", 0]) > 0 && {_side in [west, east]} && {_unit_kind in (missionNamespace getVariable [Format ['WFBE_%1REPAIRTRUCKS', str _side], []])}) then {
+	_unit addAction [
+		"<t color='#76F563'>Build Forward FOB</t>",
+		"Client\Action\Action_BuildForwardFOB.sqf",
+		[],
+		99,
+		false,
+		true,
+		"",
+		Format ["side group player == side _target && alive _target && player distance _target <= %1", missionNamespace getVariable ["WFBE_C_FOB_BUILD_RANGE", 30]]
+	];
+};
+
+//--- Starting armor is created by Init_Server.sqf, where addAction would be server-local and invisible
+//--- on dedicated clients. The server broadcasts this marker; each client registers its own local entry.
+if (_unit getVariable ["wfbe_engine_stealth_action", false]) then {
+	_unit addEventHandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
+	_unit addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];
+};
+
 if (_unit isKindOf "Tank") then { //--- Tanks.
 	//--- Valhalla Low gear.
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(vehicle player == _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
@@ -204,17 +234,16 @@ if (_unit isKindOf "Air") then { //--- Air units.
 	};
 
 	if (!WF_A2_Vanilla && (missionNamespace getVariable ["WFBE_C_MODULE_AUTO_CM_OA", 0]) > 0) then { //--- OA opt-in: AUTO-deploy flares on incoming IR missile (native OA flares are manual). Default OFF; shares the FLARES master switch + FlareCount budget.
-		if (isNil "WFBE_CL_FNC_AutoCM_OA") then {WFBE_CL_FNC_AutoCM_OA = compile preprocessFileLineNumbers "Client\Module\CM\CM_AutoCM_OA.sqf"};
 		switch (missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") do {
 			case 1: { //--- Enabled with upgrades.
 				if ((_upgrades select WFBE_UP_FLARESCM) > 0) then {
 					(_unit) ExecVM 'Client\Module\CM\CM_Set.sqf';
-					_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CL_FNC_AutoCM_OA}];
+					_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CO_FNC_AutoCM_OA}];
 				};
 			};
 			case 2: { //--- Enabled.
 				(_unit) ExecVM 'Client\Module\CM\CM_Set.sqf';
-				_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CL_FNC_AutoCM_OA}];
+				_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CO_FNC_AutoCM_OA}];
 			};
 		};
 	};

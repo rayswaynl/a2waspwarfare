@@ -1,5 +1,5 @@
 scriptName "Client\GUI\GUI_VoteMenu.sqf";
-disableSerialization; //--- cmdcon42 (Ray 2026-07-02): scheduled dialog loop touches display/controls across sleep; guard against "does not support serialization" (matches the convention already in the other GUI_Menu_* handlers).
+//--- A2 OA: display is held only in uiNamespace; do not call disableSerialization before this scheduled loop.
 
 //--- Register the UI.
 uiNamespace setVariable ["wfbe_display_vote", _this select 0];

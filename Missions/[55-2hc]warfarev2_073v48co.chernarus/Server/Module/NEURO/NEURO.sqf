@@ -76,13 +76,15 @@ NEURO_BE_GetSuitableVehicles = {
 };
 
 NEURO_BE_GetGroupWPDestination = {
-	Private ["_destination"];
+	Private ["_destination","_waypointCount","_waypointIndex"];
 	_destination = [0,0,0];
 	
 	if (isNull _this) exitWith {_destination};
 	
-	if (count waypoints _this > 0) then {
-		_destination = waypointPosition [_this, currentWaypoint _this];
+	_waypointCount = count (waypoints _this);
+	_waypointIndex = currentWaypoint _this;
+	if (_waypointIndex < _waypointCount) then {
+		_destination = waypointPosition [_this, _waypointIndex];
 	};
 	
 	_destination

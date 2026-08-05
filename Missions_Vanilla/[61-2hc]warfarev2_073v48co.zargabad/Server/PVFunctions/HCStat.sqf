@@ -22,12 +22,22 @@ if (((count _this) >= 5) && {(typeName (_this select 4)) == "STRING"}) then {_wh
 //--- WASPSCALE hc_fps feed (claude-gaming 2026-07-01): cache THIS HC's reported diag_fps (already carried
 //--- in every 60s HCStat report) so the server-side WASPSCALE emitter (AI_Commander.sqf) can publish an
 //--- hc_fps field without any new cross-machine mechanism. We stamp [fps, time] per HC id in a registry
-//--- (WFBE_HCFPS_REG) keyed by name; the emitter takes the MIN across HCs that reported within the last
-//--- ~2 min (2x the 60s cadence) so a dead/silent HC ages out instead of pinning a stale value. Pure server
-//--- writes; typeName-guarded above; no A3 commands (str-key registry via find, plain arrays).
+//--- (WFBE_HCFPS_REG) keyed by name; the emitter takes the MIN across REGISTERED live HCs whose rows are fresh within the last
+//--- ~2 min (2x the 60s cadence). The sink prunes malformed/expired rows at each report so reconnect-era
+//--- netId keys cannot grow the registry without bound. Pure server writes; typeName-guarded above; no A3
+//--- commands (str-key registry via find, plain arrays).
 if ((typeName _fps) == "SCALAR") then {
-	private ["_reg","_idx","_slot"];
+	private ["_reg","_clean","_idx","_slot","_row"];
 	_reg = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
+	if ((typeName _reg) != "ARRAY") then {_reg = []};
+	_clean = [];
+	{
+		_row = _x;
+		if ((typeName _row) == "ARRAY" && {(count _row) >= 3} && {(typeName (_row select 0)) == "STRING"} && {(typeName (_row select 1)) == "SCALAR"} && {(typeName (_row select 2)) == "SCALAR"} && {((time - (_row select 2)) <= 180)}) then {
+			_clean set [count _clean, _row];
+		};
+	} forEach _reg;
+	_reg = _clean;
 	_idx = -1;
 	{ if ((_x select 0) == _name) exitWith {_idx = _forEachIndex} } forEach _reg;
 	_slot = [_name, _fps, time];

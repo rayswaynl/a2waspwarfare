@@ -4,6 +4,7 @@ _display = _this select 0;
 MenuAction = -1;
 
 _currentVD = viewDistance;
+_currentVD = (_currentVD max 500) min (missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 5000]);
 _funds = Call GetPlayerFunds;
 
 if (votePopUp) then {
@@ -33,7 +34,7 @@ if ((missionNamespace getVariable ["WFBE_C_HQ_REPAIR_SCALING", 1]) > 0) then {
 };
 
 
-SliderSetRange[13003, 1, missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_VIEW"];
+SliderSetRange[13003, 500, missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_VIEW"];
 SliderSetRange[13005, 1, missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_CLUTTER"];
 SliderSetRange[13007,0,_funds];
 SliderSetPosition[13003,_currentVD];
@@ -209,7 +210,13 @@ while {alive player && dialog} do {
 	};
 	
 	if (_currentVD != _lastvd) then {
+		_currentVD = (_currentVD max 500) min (missionNamespace getVariable ["WFBE_C_ENVIRONMENT_MAX_VIEW", 5000]);
+		if (missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false]) then {
+			missionNamespace setVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
+			if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {['WFBE_TOOGLE_AUTO_DISTANCE_VIEW', false] Call WFBE_CO_FNC_SetProfileVariable};
+		};
 		setViewDistance _currentVD;
+		missionNamespace setVariable ["SAVED_VIEW_DISTANCE", _currentVD];
 		if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {['WFBE_PERSISTENT_CONST_VIEW_DISTANCE', _currentVD] Call WFBE_CO_FNC_SetProfileVariable; _need_save = true};
 	};
 	if (currentTG != _lasttg) then {

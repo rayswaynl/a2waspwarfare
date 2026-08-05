@@ -17,7 +17,14 @@ if (isNull _team || {isNull _town_assigned}) exitWith {
 	["WARNING", Format ["Server_AI_SetTownAttackPath: skipped culled dispatch team=%1 town=%2.", _team, _town_assigned]] Call WFBE_CO_FNC_LogContent;
 };
 
-_wp_origin = getPos (leader _team);
+//--- r78b: empty/culled group has null leader — getPos objNull throws and aborts path planning
+//--- for the whole dispatch (no depot SAD either). Guard after team null-check, before getPos.
+_fallbackLeader = leader _team;
+if (isNull _fallbackLeader) exitWith {
+	["WARNING", Format ["Server_AI_SetTownAttackPath: skipped dispatch with null leader team=%1 town=%2.", _team, _town_assigned]] Call WFBE_CO_FNC_LogContent;
+};
+
+_wp_origin = getPos _fallbackLeader;
 _wp_dest = getPos _town_assigned;
 _select = _wp_origin;
 
@@ -54,7 +61,9 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 		_nodes_a = _nodes_a + [[(_wp_dest select 0) + _distance_node * sin(_a),(_wp_dest select 1) + _distance_node * cos(_a)]];
 	};
 	_nodes_a = [_wp_origin, _nodes_a] Call WFBE_CO_FNC_SortByDistance;
-	_max_hops = (missionNamespace getVariable "WFBE_C_AI_TOWN_ATTACK_HOPS_WP")-2;
+	//--- r78b: bare getVariable can be nil if constants failed to init / missionNamespace wiped;
+	//--- nil-2 throws and kills path planning mid-function (no depot assault). Default 4 matches Init_CommonConstants.
+	_max_hops = ((missionNamespace getVariable ["WFBE_C_AI_TOWN_ATTACK_HOPS_WP", 4]) max 2) - 2;
 	
 	//--- First WP
 	_wp_sel = [[([_nodes_a select 0, 20, 100] Call WFBE_CO_FNC_GetRandomPosition), 'MOVE', 40, 20, [], [], ["AWARE",_marchCombat,"COLUMN","FULL"]]];  //--- STANCE (task #1): RED/FULL advance-and-engage (was ""/NORMAL). cmdcon41-w2: transit combat mode = _marchCombat (RED->YELLOW behind WFBE_C_AICOM_MARCH_YELLOW).
@@ -110,15 +119,23 @@ _wp_sel = [];
 //--- Todo: May secure the camp.
 if (random 100 > 50) then {
 	Private ["_behaviour","_camps"];
-	if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") == 1) then {
-		_camps = _town_assigned getVariable "camps";
-		_camps = [_select, _camps] Call WFBE_CO_FNC_SortByDistance;
-		_behaviour = ["AWARE","","VEE","NORMAL"];
-		{
-			[_wp_sel, [([_x, 10, 35] Call WFBE_CO_FNC_GetRandomPosition), 'SAD', 40, 20, [], [], _behaviour]] Call WFBE_CO_FNC_ArrayPush;
-			if (random 100 < 65) exitWith {};
-			_behaviour = [];
-		} forEach _camps;
+	//--- r78b: camps flag + array nil-guard. Bare getVariable "camps" is nil on towns that never
+	//--- finished camp init (or after capture wipe); SortByDistance on nil throws and skips the
+	//--- depot SAD/MOVE that follows this block. 2-arg default + type check; empty list is fine.
+	if ((missionNamespace getVariable ["WFBE_C_CAMPS_CREATE", 1]) == 1) then {
+		_camps = _town_assigned getVariable ["camps", []];
+		if (isNil "_camps" || {typeName _camps != "ARRAY"}) then {_camps = []};
+		if ((count _camps) > 0) then {
+			_camps = [_select, _camps] Call WFBE_CO_FNC_SortByDistance;
+			_behaviour = ["AWARE","","VEE","NORMAL"];
+			{
+				if (!isNull _x) then {
+					[_wp_sel, [([_x, 10, 35] Call WFBE_CO_FNC_GetRandomPosition), 'SAD', 40, 20, [], [], _behaviour]] Call WFBE_CO_FNC_ArrayPush;
+					if (random 100 < 65) exitWith {};
+					_behaviour = [];
+				};
+			} forEach _camps;
+		};
 	};
 };
 

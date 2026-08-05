@@ -1,7 +1,10 @@
 //--- Dynamic Labels.
 _upgrade_paratroopers_xlabel = {
-	Private ["_label","_levels"];
-	_levels = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText]) select WFBE_UP_PARATROOPERS;
+	Private ["_label","_levels","_tbl"];
+	//--- CIV-caster/order guard (owner client RPT 2026-08-01, ZG h5): no side upgrade table -> the raw select threw and killed this file. Empty label instead.
+	_tbl = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText];
+	if (isNil "_tbl") exitWith {""};
+	_levels = _tbl select WFBE_UP_PARATROOPERS;
 	_label = "";
 
 	for '_i' from 1 to _levels do {
@@ -12,8 +15,11 @@ _upgrade_paratroopers_xlabel = {
 	_label
 };
 _upgrade_supply_xlabel = {
-	Private ["_label","_levels","_rates"];
-	_levels = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText]) select WFBE_UP_SUPPLYRATE;
+	Private ["_label","_levels","_rates","_tbl"];
+	//--- CIV-caster/order guard (owner client RPT 2026-08-01, ZG h5): no side upgrade table -> the raw select threw and killed this file. Empty label instead.
+	_tbl = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText];
+	if (isNil "_tbl") exitWith {""};
+	_levels = _tbl select WFBE_UP_SUPPLYRATE;
 	_label = "";
 
 	_rates = if ((missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_SYSTEM") == 1) then {missionNamespace getVariable "WFBE_C_TOWNS_SUPPLY_LEVELS_TIME"} else {missionNamespace getVariable "WFBE_C_TOWNS_SUPPLY_LEVELS_TRUCK"};
@@ -26,8 +32,11 @@ _upgrade_supply_xlabel = {
 	_label
 };
 _upgrade_respawn_xlabel = {
-	Private ["_label","_levels"];
-	_levels = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText]) select WFBE_UP_RESPAWNRANGE;
+	Private ["_label","_levels","_tbl"];
+	//--- CIV-caster/order guard (owner client RPT 2026-08-01, ZG h5): no side upgrade table -> the raw select threw and killed this file. Empty label instead.
+	_tbl = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText];
+	if (isNil "_tbl") exitWith {""};
+	_levels = _tbl select WFBE_UP_RESPAWNRANGE;
 	_label = "";
 
 	for '_i' from 0 to _levels do {
@@ -38,8 +47,11 @@ _upgrade_respawn_xlabel = {
 	_label
 };
 _upgrade_artillery_xlabel = {
-	Private ["_label","_levels"];
-	_levels = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText]) select WFBE_UP_ARTYTIMEOUT;
+	Private ["_label","_levels","_tbl"];
+	//--- CIV-caster/order guard (owner client RPT 2026-08-01, ZG h5): no side upgrade table -> the raw select threw and killed this file. Empty label instead.
+	_tbl = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText];
+	if (isNil "_tbl") exitWith {""};
+	_levels = _tbl select WFBE_UP_ARTYTIMEOUT;
 	_label = "";
 
 	for '_i' from 0 to _levels do {
@@ -50,8 +62,11 @@ _upgrade_artillery_xlabel = {
 	_label
 };
 _upgrade_icbm_xlabel = {
-	Private ["_cost","_costs","_dep","_depId","_depLabel","_depText","_deps","_d","_label","_labels","_levels","_links","_time","_times","_unlock","_unlocks"];
-	_levels = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText]) select WFBE_UP_ICBM;
+	Private ["_cost","_costs","_dep","_depId","_depLabel","_depText","_deps","_d","_label","_labels","_levels","_links","_time","_times","_unlock","_unlocks","_tbl"];
+	//--- CIV-caster/order guard (owner client RPT 2026-08-01, ZG h5): no side upgrade table -> the raw select threw and killed this file. Empty label instead.
+	_tbl = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText];
+	if (isNil "_tbl") exitWith {""};
+	_levels = _tbl select WFBE_UP_ICBM;
 	_costs = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_COSTS", WFBE_Client_SideJoinedText]) select WFBE_UP_ICBM;
 	_links = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LINKS", WFBE_Client_SideJoinedText]) select WFBE_UP_ICBM;
 	_times = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_TIMES", WFBE_Client_SideJoinedText]) select WFBE_UP_ICBM;
@@ -88,6 +103,16 @@ _upgrade_icbm_xlabel = {
 	_label
 };
 
+//--- CIV-caster guard (owner client RPT 2026-08-01): WFBE_CIVPARACARGO does not exist - the raw
+//--- configFile >> read below fed WFBE_CO_FNC_GetConfigEntry a nil config (RPT: Common_GetConfigEntry.sqf:14).
+//--- Resolve the paratroop cargo display name defensively before the descriptions array is built.
+Private ["_paracargo_name"];
+_paracargo_name = "";
+if (!isNil {missionNamespace getVariable Format["WFBE_%1PARACARGO", WFBE_Client_SideJoinedText]}) then {
+	_paracargo_name = [configFile >> 'CfgVehicles' >> (missionNamespace getVariable Format["WFBE_%1PARACARGO", WFBE_Client_SideJoinedText]), "displayName"] Call WFBE_CO_FNC_GetConfigEntry;
+};
+if (isNil "_paracargo_name") then {_paracargo_name = ""};
+
 //--- UI Labels
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_LABELS"], [
 	localize 'strwfbarracks',
@@ -121,7 +146,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_DESCRIPTIONS"], [
 	localize 'STR_WF_UPGRADE_lightfactory_Desc',
 	localize 'STR_WF_UPGRADE_heavyfactory_Desc',
 	localize 'STR_WF_UPGRADE_aircraftfactory_Desc',
-	Format[localize 'STR_WF_UPGRADE_Paratroop_Desc', Format["<t color='#B6F563'>%1</t>",[configFile >> 'CfgVehicles' >> (missionNamespace getVariable Format["WFBE_%1PARACARGO", WFBE_Client_SideJoinedText]), "displayName"] Call WFBE_CO_FNC_GetConfigEntry], call _upgrade_paratroopers_xlabel],
+	Format[localize 'STR_WF_UPGRADE_Paratroop_Desc', Format["<t color='#B6F563'>%1</t>", _paracargo_name], call _upgrade_paratroopers_xlabel],
 	localize 'STR_WF_UPGRADE_uav_Desc',
 	Format[localize 'STR_WF_UPGRADE_Supply_Desc', call _upgrade_supply_xlabel],
 	Format[localize 'STR_WF_UPGRADE_RespawnRange_Desc', call _upgrade_respawn_xlabel],

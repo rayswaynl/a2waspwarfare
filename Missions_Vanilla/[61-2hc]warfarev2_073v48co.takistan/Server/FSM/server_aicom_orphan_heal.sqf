@@ -146,9 +146,24 @@ while {!WFBE_GameOver} do {
 											_combat = (behaviour _ldr == "COMBAT");
 											if (_never || {(!_pNear) && {!_combat}}) then {
 												_delN = 0;
-												{ if (!isNull _x && {local _x}) then {["hcheal-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; _delN = _delN + 1} } forEach (units _g);
 												_hulls = [_g, false] Call GetTeamVehicles;
-												{ _h = _x; if (!isNull _h && {local _h} && {({isPlayer _x} count (crew _h)) == 0}) then {["hcheal-hull", _h, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _h; _delN = _delN + 1} } forEach _hulls;
+												//--- crash 014EFCF4: capture hulls before the yielded unit purge, then serialize seated-crew teardown.
+												{
+													if (!isNull _x && {local _x}) then {
+														["hcheal-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete;
+														deleteVehicle _x;
+														sleep 0;
+														_delN = _delN + 1;
+													};
+												} forEach (units _g);
+												{
+													_h = _x;
+													if (!isNull _h && {local _h} && {({isPlayer _x} count (crew _h)) == 0} && {(count (crew _h)) == 0}) then {
+														["hcheal-hull", _h, ""] Call WFBE_CO_FNC_LogVehDelete;
+														deleteVehicle _h;
+														_delN = _delN + 1;
+													};
+												} forEach _hulls;
 												["aicom-team-ended", _sideID, _g] Call HandleSpecial;
 												_healed = _healed + 1;
 												_reason = "stale-thread"; if (_never) then {_reason = "never-moved"};

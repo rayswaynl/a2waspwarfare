@@ -10,8 +10,9 @@ WF_SkinSelector_Hotkey = {
 			};
 		};
 	};
+
+	false
 };
-player addEventHandler ["KeyDown", WF_SkinSelector_Hotkey];
 
 /* Gear keybinding */
 WF_Gear_Hotkeys = {
@@ -37,5 +38,13 @@ WF_Gear_Hotkeys = {
 	if (_key in (actionKeys "User20")) then {
 		WF_Logic setVariable ['filler','misc'];
 	};
+
+	false
 };
+
+//--- REVERTED 2026-08-03 (live regression, wave0803c): #1960 armed these on display 46. In game
+//--- the Skin Selector dialog then opened on unrelated keys (owner-reported: SHIFT, and repeatedly
+//--- while the map was open), thrashing dialog create/close and tanking CLIENT fps. The pre-#1960
+//--- player-unit form was inert but harmless and shipped for months. Left UNARMED until the
+//--- User11 match condition is fixed and verified IN GAME on the test box, not just at boot.
 

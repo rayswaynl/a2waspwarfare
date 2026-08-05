@@ -54,7 +54,7 @@ if ((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_ENABLE", 0]) != 1) exitW
 ["INITIALIZATION", "Server_USVFlotilla.sqf : USV flotilla feature ENABLED - waiting for townInit."] Call WFBE_CO_FNC_LogContent;
 
 waitUntil { !isNil "townInit" && townInit };
-waitUntil { !isNil "towns" };
+waitUntil { !isNil "towns" && {count towns > 0} };
 
 private ["_coastalRadius","_coastalSamples","_coastalCount","_tPos","_isCoastal","_s","_ang","_probe",
          "_wps","_wpIdx","_wpVar","_wpLogic","_route","_count","_side","_hull","_roles","_loadouts",
@@ -227,6 +227,10 @@ while {!WFBE_GameOver} do {
 
 		//--- Hull destroyed -> prune.
 		if (isNull _eBoat || {!(alive _eBoat)}) then { _drop = true; _reason = "hull_destroyed"; };
+		//--- r76 boat-patrol lifecycle: living hull with dead/null driver never reaped before (only hull
+		//--- destroyed). Driverless boats beach and hold the flotilla slot so coastal sites cannot repopulate.
+		//--- Spawn-time driver fail is open #1687; this is mid-life driver death.
+		if (!_drop && {(isNull _eDriver) || {!alive _eDriver}}) then { _drop = true; _reason = "driver_lost"; };
 
 		//--- Gate closed -> count down the FLOTILLA-WIDE quiet-despawn timer (shared across all
 		//--- boats, since the gate itself is a flotilla-wide condition, not per-boat).
@@ -278,10 +282,20 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 							//--- Player-near velocity hop (Common_RunSidePatrol.sqf:358-359), generalizes to water.
 							_eBoat setVelocity [(velocity _eBoat) select 0, (velocity _eBoat) select 1, 4];
 						} else {
-							//--- No player near: setPos to the PREVIOUS route point (known-good water
-							//--- position) - reuses data already on hand instead of a nearRoads-style
-							//--- search (boats have no roads).
-							_eBoat setPos (getPos (_route select ((_eRouteI - 1 + (count _route)) mod (count _route))));
+							//--- No player near: setPos to a known-good WATER route point (prev first).
+							//--- r76: if prev WP is dry (misplaced logic), scan route for water instead of beaching.
+							private ["_uPos","_uTry","_uI","_uP"];
+							_uPos = getPos (_route select ((_eRouteI - 1 + (count _route)) mod (count _route)));
+							if (!(surfaceIsWater _uPos)) then {
+								_uTry = 0;
+								while {_uTry < (count _route) && {!(surfaceIsWater _uPos)}} do {
+									_uI = (_eRouteI + _uTry) mod (count _route);
+									_uP = getPos (_route select _uI);
+									if (surfaceIsWater _uP) then {_uPos = _uP};
+									_uTry = _uTry + 1;
+								};
+							};
+							if (surfaceIsWater _uPos) then {_eBoat setPos _uPos};
 						};
 						diag_log format ["USVFLOTILLA|UNSTUCK|role=%1|streak=%2", _eRole, _eUnstuck + 1];
 						_eUnstuck = _eUnstuck + 1;
@@ -303,15 +317,23 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 
 	//=== (3) MAINTAIN: spawn missing boats up to WFBE_C_USV_FLOTILLA_COUNT while gate is active =====
 	if (_gateActive && {count _flotilla < _count} && {count _route > 0}) then {
-		private ["_nextRole","_nextClass","_spawnPos","_spawnDir","_boat","_static","_grp","_driver","_gunner","_startI","_nextI","_nextWpPos","_toFirst"];
+		private ["_nextRole","_nextClass","_spawnPos","_spawnDir","_boat","_static","_grp","_driver","_gunner","_startI","_nextI","_nextWpPos","_toFirst","_candidateRole","_rolePresent"];
 
-		//--- Round-robin role pick by current flotilla size, so COUNT=3 spawns one-of-each in order
-		//--- (owner default) and COUNT>3 cycles the 3 roles again - a one-line tune, matching the
-		//--- WFBE_C_USV_COUNT precedent in USV-DESIGN.md SS1. NOTE: this does not "refill the exact
-		//--- role that died" - if a mid-cycle boat is lost, the next spawn follows the round-robin
-		//--- index, not a role-gap-fill. Owner language ("any mix of these 3 is fine") makes this an
-		//--- acceptable simplification for a 3-boat feature - see USV-FLOTILLA-BUILD.md SS4.
-		_nextRole = (_roles select ((count _flotilla) mod (count _roles)));
+		//--- Refill the first missing configured role before normal round-robin selection. This keeps
+		//--- the owner-default AA/ROCKET/HMG composition intact after a mid-cycle loss; once every
+		//--- configured role is present, COUNT>3 still cycles roles by fleet size as before.
+		_nextRole = "";
+		{
+			_candidateRole = _x;
+			_rolePresent = false;
+			{
+				if ((_x select 0) == _candidateRole) then {_rolePresent = true};
+			} forEach _flotilla;
+			if (!_rolePresent && {_nextRole == ""}) then {_nextRole = _candidateRole};
+		} forEach _roles;
+		if (_nextRole == "") then {
+			_nextRole = (_roles select ((count _flotilla) mod (count _roles)));
+		};
 		_nextClass = "";
 		{ if ((_x select 0) == _nextRole) exitWith {_nextClass = _x select 1}; } forEach _loadouts;
 

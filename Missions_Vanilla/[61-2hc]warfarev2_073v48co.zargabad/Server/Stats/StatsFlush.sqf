@@ -1,10 +1,13 @@
 // Server-only flush loop (Arma 2 dialect). Every WFBE_C_STATS_FLUSH_INTERVAL seconds: credit
 // playtime + current side to each connected player, then emit ONE batched WASPSTAT line to the
 // RPT and zero the buffers. The DiscordBot tails the RPT, accumulates lifetime totals, writes
-// stats.json. Wire format: WASPSTAT|v1|<seq>|<uid>:<d0..d14>,<side>|<uid2>:...
+// stats.json. Wire format: WASPSTAT|v1|<seq>|<uid>:<d0..d14>,<side>~name|<uid2>:...
 //
 // SEQ: WFBE_WASPSTAT_SEQ is a shared server global so that KILL/CAPTURE/ROUNDEND emitters
 // (Task 10) share one ordered sequence across all WASPSTAT v1 record types.
+//
+// r78: body lives in RecordStat.sqf (WFBE_SE_FNC_CreditPlaytimeConnected / FlushStatsDirty) so
+// ROUNDEND + disconnect can force the same emit path without racing the interval sleep.
 
 if (isNil "WFBE_C_STATS_ENABLED") exitWith {};
 if (!WFBE_C_STATS_ENABLED) exitWith {};
@@ -16,59 +19,8 @@ while {true} do {
 	sleep WFBE_C_STATS_FLUSH_INTERVAL;
 
 	// 1) Credit playtime + record current side for every connected human player.
-	{
-		// cmdcon41 (P0-5): HC-FILTER AT SOURCE. A headless client is an isPlayer unit but is NOT a human
-		// participant - crediting it here leaks a phantom "HC" entry into WASPSTAT -> leaderboard/report.
-		// Skip any unit whose name is a known HC name (A2-OA-safe exact `in` check - no A3 string find/substring).
-		if ((isPlayer _x) && {!((name _x) in WFBE_C_HC_NAMES)}) then {
-			private ["_uid","_sideNum"];
-			_uid = getPlayerUID _x;
-			//--- Stamp check in addition to the name list above. The name list is now the single shared
-			//--- WFBE_C_HC_NAMES (Init_CommonConstants.sqf) rather than one of several drifting literals,
-			//--- but this stays as defence in depth: WFBE_HEADLESS_<uid> is set by connected-hc
-			//--- registration and does not depend on the HC's profile name at all.
-			if ((_uid != "") && {!(_uid call WFBE_SE_FNC_IsHeadlessUid)}) then {
-				[_uid, WFBE_STAT_PLAYTIME, WFBE_C_STATS_FLUSH_INTERVAL] call WFBE_SE_FNC_RecordStat;
-				_sideNum = switch (side _x) do { case west: {1}; case east: {2}; case resistance: {3}; default {0} };
-				[_uid, _sideNum] call WFBE_SE_FNC_RecordStatSide;
-				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, name _x]; //--- PR#84: cache the in-game name to attach to this UID's next flushed segment.
-			};
-		};
-	} forEach (call BIS_fnc_listPlayers);
+	[] call WFBE_SE_FNC_CreditPlaytimeConnected;
 
-	// 2) Build and emit one line for all dirty UIDs, then reset.
-	if (count WFBE_STATS_DIRTY_UIDS > 0) then {
-		private "_line";
-		WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-		_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ;
-		{
-			private ["_uid","_buf","_sideNum","_csv"];
-			_uid = _x;
-			_buf = missionNamespace getVariable ["WFBE_STAT_BUF_" + _uid, []];
-			//--- HC RETROACTIVE PURGE: RecordStat now refuses stamped HC uids, but rows can still be
-			//--- buffered during the transient window between an HC connecting and connected-hc
-			//--- registration stamping it (card: transient EAST player-team enrollment window).
-			//--- Emptying _buf here drops the uid: the emit block below needs WFBE_STAT_FIELD_COUNT
-			//--- entries and skips it. No exitWith - that would abort the whole forEach, not one pass.
-			if (_uid call WFBE_SE_FNC_IsHeadlessUid) then {
-				_buf = [];
-				missionNamespace setVariable ["WFBE_STAT_BUF_" + _uid, nil];
-				missionNamespace setVariable ["WFBE_STAT_SIDE_" + _uid, nil];
-				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, nil];
-				diag_log ("HCSTAT|v1|PURGE|" + _uid + "|buffered rows dropped: uid is a registered headless client");
-			};
-			if (count _buf >= WFBE_STAT_FIELD_COUNT) then {
-				_sideNum = missionNamespace getVariable ["WFBE_STAT_SIDE_" + _uid, 0];
-				_csv = "";
-				{ _csv = _csv + (str _x) + ","; } forEach _buf;   // 15 deltas
-				_csv = _csv + (str _sideNum);                      // + trailing side
-				_line = _line + "|" + _uid + ":" + _csv + "~" + (missionNamespace getVariable ["WFBE_STAT_NAME_" + _uid, ""]); //--- PR#84: append ~<name> after the numeric csv+side (numeric stays before the ~).
-				missionNamespace setVariable ["WFBE_STAT_BUF_" + _uid, nil];   // clear buffer (delta sent)
-				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, nil]; //--- PR#84: clear cached name.
-			};
-		} forEach WFBE_STATS_DIRTY_UIDS;
-		WFBE_STATS_DIRTY_UIDS = [];
-
-		diag_log _line;
-	};
+	// 2) Build and emit one line for all dirty UIDs, then reset (no-op when empty / all purged).
+	[] call WFBE_SE_FNC_FlushStatsDirty;
 };

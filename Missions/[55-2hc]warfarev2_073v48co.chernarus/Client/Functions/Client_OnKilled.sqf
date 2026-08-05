@@ -127,6 +127,13 @@ if (dialog) then {
 	closeDialog 0;
 };
 
+//--- r78 UAV/FPV terminal handover: force control teardown on death so the new life does not
+//--- inherit remoteControl / playerUAV binding (interfaces wait on !alive player but left the
+//--- binding set). Kick the terminate flags early so cam/PP/EH cleanup races the death camera.
+bis_uav_terminate = true;
+WFBE_FPV_Terminate = true;
+if (!isNil "playerUAV") then {playerUAV = objNull};
+
 WFBE_DeathLocation = getPos _body;
 
 
@@ -136,6 +143,12 @@ titleCut ["", "BLACK OUT", 1];
 private ["_respawnWaitT0"]; _respawnWaitT0 = time;
 //--- SCHEDULER-LEAK: sleep + 10 min bound if respawn never restores alive player.
 waitUntil {sleep 0.2; alive player || {(time - _respawnWaitT0) > 600}};
+
+//--- The bound prevents a suspended death handler from leaking forever, but it does not create a
+//--- replacement body. Do not run leader/EH/menu restore work against the still-dead body after it expires.
+if (!alive player) exitWith {
+	diag_log "[WFBE][RESPAWN TIMEOUT] Client_OnKilled: no living replacement body after 600s; restore aborted.";
+};
 
 //--- fable/onkilled-team-resync (owner report "units kept renumbering themselves after I die",
 //--- correctness fix): resync WFBE_Client_Team to the player's POST-RESPAWN group BEFORE the

@@ -356,7 +356,7 @@ _i = 0;
 	};
 	
 	//--- Repairs Trucks.
-	_checks = (getPos _x) nearEntities[_typeRepair, missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"];
+	_checks = {alive _x} select ((getPos _x) nearEntities[_typeRepair, missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"]);
 	if (count _checks > 0) then {
 		_add = true;
 		_nearSupport set [_i,(_nearSupport select _i) + _checks];
@@ -394,7 +394,7 @@ _i = 0;
 	};
 } forEach _vehi;
 
-_checks = (getPos player) nearEntities[_typeRepair, missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"];
+_checks = {alive _x} select ((getPos player) nearEntities[_typeRepair, missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"]);
 if (count _checks > 0) then {
 	_repair = _checks select 0;
 	_vehi = ((getPos _repair) nearEntities[["Car","Motorcycle","Tank","Air","Ship","StaticWeapon"],100]) - [_repair];
@@ -625,8 +625,12 @@ while {true} do {
 		};
 	};
 	
-	//--- EASA. TBD: Add dialog;
-	if (MenuAction == 7) then {
+	//--- EASA. TBD: Add dialog. exitWith (r90 loop leak): the while{true} loop only dies on
+	//--- !dialog, and EASA/WF_Menu keep dialog true - without exitWith the leaked loop kept
+	//--- running beside the next menu and its batch handlers (MenuAction 11/12/13/15) could
+	//--- swallow WF_Menu clicks (Headbug fix = 11, Parameters = 12) and CHARGE the stale
+	//--- rearm/repair batch price for them.
+	if (MenuAction == 7) exitWith {
 		MenuAction = -1;
 		closeDialog 0;
 		createDialog "RscMenu_EASA";

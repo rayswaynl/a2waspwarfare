@@ -1,15 +1,41 @@
-Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_refunded","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
+Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_refunded","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitConfig","_unitType","_unitTypeGet","_vehicle","_waitTime","_authBad","_sideStructs","_unlockRes","_unitFound","_teamSide"];
+//--- BUYUNIT-AUTH (g1606 2026-07-30): envelope + class/side/team/factory authority before queue/spawn.
+//--- Does NOT retread #1607 nil-safe queue release (open draft); only rejects bad purchase payloads.
+//--- N8: exact funds/supply charged for THIS buy (threaded through from AI_Commander_Produce.sqf's
+//--- Spawn AIBuyUnit call so a live W15 Black Market discount refunds at the SAME rate it was charged).
+_authBad = "";
+_id = [];
+_building = objNull;
+_unitType = "";
+_side = sideUnknown;
+_team = grpNull;
+_isVehicle = false;
+_price = 0;
+if (typeName _this != "ARRAY" || {(count _this) < 6}) then {_authBad = "short/non-array buy payload"};
+if (_authBad == "") then {
 _id = _this select 0;
 _building = _this select 1;
 _unitType = _this select 2;
 _side = _this select 3;
-_sideID = (_side) Call GetSideID;
 _team = _this select 4;
 _isVehicle = _this select 5;
-//--- N8 fix: exact funds/supply charged for THIS buy (threaded through from AI_Commander_Produce.sqf's
-//--- Spawn AIBuyUnit call so a live W15 Black Market discount refunds at the SAME rate it was charged,
-//--- not re-derived from list price). Defaults to 0 for any other/older caller (defensive, back-compat).
 _price = if (count _this > 6) then {_this select 6} else {0};
+if (typeName _id != "ARRAY" || {(count _id) < 1}) then {_authBad = "invalid queue id token"};
+if (_authBad == "" && {typeName _building != "OBJECT"}) then {_authBad = "building is not OBJECT"};
+if (_authBad == "" && {typeName _unitType != "STRING" || {_unitType == ""}}) then {_authBad = "unitType is not a non-empty STRING"};
+if (_authBad == "" && {typeName _side != "SIDE" || {!(_side in [west,east,resistance])}}) then {_authBad = "side is not a playable SIDE"};
+if (_authBad == "" && {typeName _team != "GROUP" || {isNull _team}}) then {_authBad = "team is not a live GROUP"};
+if (_authBad == "" && {typeName _isVehicle != "BOOL"}) then {_authBad = "isVehicle flag type invalid"};
+if (_authBad == "" && {typeName _price != "SCALAR" || {_price < 0}}) then {_authBad = "price is not a non-negative SCALAR"};
+};
+if (_authBad != "") exitWith {
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH rejected payload: %1.", _authBad]] Call WFBE_CO_FNC_LogContent;
+if (typeName _side == "SIDE" && {_side in [west,east,resistance]} && {typeName _price == "SCALAR"} && {_price > 0}) then {
+[_side, _price] Call ChangeAICommanderFunds;
+};
+};
+
+_sideID = (_side) Call GetSideID;
 //--- fable/aicom-treasury-refund-on-abort: track whether the pre-charged _price has already been
 //--- refunded, so the mid-loop exitWith further below (which - per the ENGINE-VERIFIED note there -
 //--- only breaks the while loop and always falls through to the post-wait re-check) cannot pay out
@@ -18,16 +44,79 @@ _refunded = false;
 
 _sideText = str _side;
 
-if (!(alive _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
-	if (!isNull _team) then {
-		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
-	};
-	//--- fable/aicom-treasury-refund-on-abort: this early abort (before the build queue is even
-	//--- entered) still runs AFTER AI_Commander_Produce.sqf pre-charged _price - refund it, same
-	//--- idiom as the createVehicle->objNull guard further down.
-	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
-	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+//--- AICOM can be handed a mission-listed asset whose addon/config is unavailable on this runtime.
+//--- Reject it before any isKindOf/queue work: release this team's pending token and refund the
+//--- exact pre-charged price. AI_Commander_Produce skips the bad template entry and can select
+//--- a valid sibling instead; this guard also protects direct/older AIBuyUnit callers.
+_unitConfig = configFile >> "CfgVehicles" >> _unitType;
+if !(isClass _unitConfig) exitWith {
+	if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
+	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+	["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL unavailable CfgVehicles classname [%1] - refunded %2 to side [%3]; no queue/spawn attempted.", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
+	diag_log Format ["BUYFAIL|v1|aicom-unavailable-class|side=%1|class=%2", _sideText, _unitType];
+};
+
+//--- Forged classname / wrong-side roster: require registered unit data AND membership in a
+//--- side factory unit-list (IsUnitUnlocked _found). Unregistered classes previously fell through
+//--- with waitTime=0 and still CreateVehicle'd.
+_unitTypeGet = missionNamespace getVariable _unitType;
+if (isNil "_unitTypeGet" || {typeName _unitTypeGet != "ARRAY"}) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH forged/unregistered classname [%1] - refunded %2 to [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
+};
+_unlockRes = [_unitType, _sideText, (_side) Call WFBE_CO_FNC_GetSideUpgrades] Call WFBE_CO_FNC_IsUnitUnlocked;
+_unitFound = if (typeName _unlockRes == "ARRAY" && {(count _unlockRes) > 1}) then {_unlockRes select 1} else {false};
+if (!_unitFound) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH classname [%1] not on side [%2] factory rosters - refunded %3.", _unitType, _sideText, _price]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Team/side mismatch: claimed purchase side must match warfare team stamp (or engine side).
+_teamSide = _team getVariable "wfbe_side";
+if (isNil "_teamSide") then {_teamSide = side _team};
+if (typeName _teamSide != "SIDE" || {_teamSide != _side}) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH team/side mismatch (claim=%1 team=%2) for [%3] - refunded %4.", _side, _teamSide, _unitType, _price]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Man/vehicle flag must match the class (prevents wrong branch: free crew / empty hull path abuse).
+if ((_unitType isKindOf "Man") && {_isVehicle}) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH isVehicle flag mismatch for Man class [%1] - refunded %2.", _unitType, _price]] Call WFBE_CO_FNC_LogContent;
+};
+if (!(_unitType isKindOf "Man") && {!_isVehicle}) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH isVehicle flag mismatch for vehicle class [%1] - refunded %2.", _unitType, _price]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Factory ownership: building must be an alive structure of the claimed side.
+_sideStructs = _side Call WFBE_CO_FNC_GetSideStructures;
+if (isNil "_sideStructs" || {typeName _sideStructs != "ARRAY"}) then {_sideStructs = []};
+if (isNull _building || {!alive _building} || {!(_building in _sideStructs)}) exitWith {
+if (!isNull _team) then {private "_tq"; _tq = _team getVariable "wfbe_queue"; if (isNil "_tq") then {_tq = []}; if (typeName _tq != "ARRAY") then {_tq = []}; _team setVariable ["wfbe_queue", _tq - [_id]]};
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
+if (isNull _building || {!alive _building}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
+if (!isNull _building && {alive _building} && {!(_building in _sideStructs)}) then {["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH factory not owned by side [%1] for [%2] - refunded %3.", _sideText, _unitType, _price]] Call WFBE_CO_FNC_LogContent};
+};
+
+//--- fold-resolve #1607 into #1606 (BUYUNIT-AUTH): nil-safe wfbe_queue release + null-safe
+//--- isPlayer(leader _team), so the treasury refund below always runs even with a nil/non-array
+//--- queue var or a team whose group currently has no living leader (leader _team == objNull).
+if (!isNull (leader _team) && {isPlayer (leader _team)}) exitWith {
+if (!isNull _team) then {
+private "_tq";
+_tq = _team getVariable "wfbe_queue";
+if (isNil "_tq") then {_tq = []};
+if (typeName _tq != "ARRAY") then {_tq = []};
+_team setVariable ["wfbe_queue", _tq - [_id]];
+};
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
+["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent;
 };
 
 ["INFORMATION", Format ["Server_BuyUnit.sqf: [%1] Team [%2] has purchased [%3].", _side,_team,_unitType]] Call WFBE_CO_FNC_LogContent;
@@ -183,19 +272,28 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 	//--- aborts the script for real before anything spawns, and (b) the wfbe_queue release is an ARRAY
 	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
 	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
-	if (!(alive _building)||(isNull _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
+	if (!(alive _building)||(isNull _building)||{isNull _team}||{!isNull (leader _team) && {isPlayer (leader _team)}}) exitWith {
 		if (!isNull _team) then {
-			_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+			//--- A2-safe: nil/non-array wfbe_queue must not throw before refund paths below.
+			private "_tq";
+			_tq = _team getVariable "wfbe_queue";
+			if (isNil "_tq") then {_tq = []};
+			if (typeName _tq != "ARRAY") then {_tq = []};
+			_team setVariable ["wfbe_queue", _tq - [_id]];
 		};
 		_queu = _building getVariable "queu";
-		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
+		//--- r127 wrong-victim fix: remove OUR token, never the shared head. This abort only fires
+		//--- while our token is NOT at the head (the while condition above exits the loop the moment
+		//--- it is), so the old head-removal always deleted another buyer's queued slot - a player
+		//--- victim then waited forever (or the coroutine died on `[] select 0` once the queue drained).
+		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_id select 0]};
 		_building setVariable ["queu",_queu,true];
 		//--- fable/aicom-treasury-refund-on-abort: refund the pre-charged _price here (the flag guards
 		//--- against the post-wait re-check below also paying out for this same abort, since - per the
 		//--- ENGINE-VERIFIED note above - this exitWith only breaks the loop and always falls through).
 		if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted mid-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 		if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-		if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+		if (!isNull (leader _team) && {isPlayer (leader _team)}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	};
 
 	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: guard empty queu/queu2 before head-compare + type-safe head-compare (mirror Client_BuildUnit.sqf:302) - a mixed player/AI head token would throw Generic error on raw ==
@@ -216,6 +314,8 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 sleep _waitTime;
 
 _queu = _building getVariable "queu";
+if (isNil "_queu") then {_queu = []};
+if (typeName _queu != "ARRAY") then {_queu = []};
 _queu = _queu - [_id select 0];
 _building setVariable ["queu",_queu,true];
 
@@ -227,15 +327,20 @@ _building setVariable ["queu",_queu,true];
 //--- double-value; for a vehicle that then hits the objNull guard below, a second full refund on top of
 //--- that). Once ANY earlier abort has paid a refund, this exitWith is now TERMINAL regardless of whether
 //--- the original abort condition still holds - the build must never happen after a refund fired.
-if (_refunded || {!(alive _building)} || {isNull _team} || {isPlayer (leader _team)}) exitWith {
+if (_refunded || {!(alive _building)} || {isNull _team} || {!isNull (leader _team) && {isPlayer (leader _team)}}) exitWith {
 	if (!isNull _team) then {
-		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+		//--- A2-safe: nil/non-array wfbe_queue must not throw before refund paths below.
+		private "_tq";
+		_tq = _team getVariable "wfbe_queue";
+		if (isNil "_tq") then {_tq = []};
+		if (typeName _tq != "ARRAY") then {_tq = []};
+		_team setVariable ["wfbe_queue", _tq - [_id]];
 	};
 	//--- fable/aicom-treasury-refund-on-abort: catches the abort when it first manifests here (no
 	//--- earlier mid-loop abort fired) - the flag guard is a no-op if the block above already refunded.
 	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted post-wait - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+	if (!isNull (leader _team) && {isPlayer (leader _team)}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	//--- fable/aicom-refund-then-build-fix: reached solely because _refunded was already true (the abort
 	//--- condition itself reverted during the sleep) - neither log line above fired, so make the RPT read
 	//--- clearly instead of silently looking like a no-op exit.
@@ -255,11 +360,16 @@ if (_unitType isKindOf "Man") then {
 	[_sideText,'UnitsCreated',1] Call UpdateStatistics;
 	//--- AI FACTORY RALLY (task #25): the AI commander stamps wfbe_aicom_factory_rally (a forward,
 	//--- road-snapped egress point) on factories it builds. Without a destination a fresh AI unit just
-	//--- stands on the factory apron (the "troops standing still in base" bug). Walk it out to the
-	//--- rally. Player factories never set the var, so the count-guard makes this AI-only.
-	private "_aiRally";
+	//--- stands on the factory apron (the "troops standing still in base" bug). If the stamp is absent,
+	//--- rejoin the live team position only when that team is already clear of the factory; a team parked
+	//--- at the factory needs no arbitrary extra route. Player-led teams remain outside this AI-only guard.
+	private ["_aiRally","_aiLeader"];
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull _soldier}) then {
+	if (isNil "_aiRally" || {typeName _aiRally != "ARRAY"} || {count _aiRally < 2}) then {
+		_aiLeader = leader _team;
+		if (!isNull _aiLeader && {alive _aiLeader} && {(_aiLeader distance _building) > 200}) then {_aiRally = getPosATL _aiLeader;};
+	};
+	if (!isNil "_aiRally" && {typeName _aiRally == "ARRAY"} && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull _soldier}) then {
 		_soldier commandMove _aiRally;
 	};
 } else {
@@ -285,7 +395,14 @@ if (_unitType isKindOf "Man") then {
 	//--- (Client_BuildUnit.sqf naval-air-spawn-easa): give the FLY-spawned fixed-wing the deck height so it
 	//--- air-starts with clearance instead of at sea level. wfbe_is_carrier_hvt / wfbe_naval_deckz are broadcast
 	//--- by Init_NavalHVT (public=true), so this reads correctly wherever the buy script runs.
-	if ((_unitType isKindOf "Plane") && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
+	//--- fable/carrier-heli-deckspawn (2026-07-27): widened from isKindOf "Plane" to isKindOf "Air" - helis
+	//--- are "Helicopter", never "Plane" (identical class-gating bug already fixed in AI_Commander_Teams.sqf's
+	//--- cmdcon41, and already relied on correctly by THIS file's own _crew/_special/AA-missile isKindOf
+	//--- "Air" checks at lines 284/387 above). WFBE_AIRFIELD_UNITS (Init_Common.sqf) lists carrier-buyable
+	//--- helis (Mi17_Ins, Mi171Sh_rockets_CZ_EP1) alongside fixed-wing; without this widen they skipped this
+	//--- Z correction entirely and spawned at the waterline. Z-only, safe for any Air hull - mirrors the
+	//--- player path's unconditional carrier-deck Z assignment (Client_BuildUnit.sqf:710).
+	if ((_unitType isKindOf "Air") && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
 		_position set [2, (_building getVariable ["wfbe_naval_deckz", 16])];
 	};
 	_vehicle = [_unitType, _position, _sideID, _dir, true, true, true, _special] Call WFBE_CO_FNC_CreateVehicle;
@@ -330,7 +447,19 @@ if (_unitType isKindOf "Man") then {
 	if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) > 0) then {_vehicle addEventHandler ["HandleDamage", {_this Call HandleJetAADamage}];};
     if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 	//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0
-	if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {_vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];};
+	if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {
+		Private ["_seadEhIdx"];
+		_seadEhIdx = _vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];
+		//--- fix(sead-easa-row double-attach): stamp the same tracking vars EASA_AttachSEADRow.sqf uses so
+		//--- that if a player later takes control of this AI-bought jet and picks the [SEAD] EASA row (only
+		//--- reachable when WFBE_C_SEAD_EASA_ROW is armed), AttachSEADRow's existing "already active" guard
+		//--- refuses a second EH instead of stacking one - closes the AI-origin double-attach/shot-cap-race
+		//--- gap. Gated on the same flag so flag-off behavior (var never set) stays untouched.
+		if ((missionNamespace getVariable ["WFBE_C_SEAD_EASA_ROW", 0]) > 0) then {
+			_vehicle setVariable ["WFBE_SEAD_EhIndex", _seadEhIdx, true];
+			_vehicle setVariable ["WFBE_SEAD_EasaRowActive", true, true];
+		};
+	};
 	if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base","BTR90_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}]};
 	if(typeOf _vehicle in ['T90','BMP3']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleATReload;}];};
 	if(typeOf _vehicle in ['Pandur2_ACR']) then {
@@ -348,7 +477,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 0) then { //--- AI8: use the buying side (_side), not client-side sideJoined (wrong/nil on a dedicated server). Make sure the unit is defined in IRS_Init and the upgrade is available.
 			_get = missionNamespace getVariable Format ["%1_IRS", (typeOf _vehicle)];
 			if !(isNil '_get') then {
-				_vehicle setVariable ["wfbe_irs_flares", _get select 1, true];
+				_vehicle setVariable ["wfbe_irs_flares", (_get select 1) * (if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 1) then {2} else {1}), true]; //--- r120: mirror the Client_BuildUnit L2 doubling - AI-bought armor was stuck at the base smoke count.
 				_vehicle addEventHandler ["incomingMissile", {_this spawn WFBE_CO_MOD_IRS_OnIncomingMissile}];
 			};
 		};
@@ -357,7 +486,11 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 	emptyQueu = emptyQueu + [_vehicle];
 	[_vehicle] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
-	if (_vehicle distance (leader _team) < 200) then {(units _team) allowGetIn true;_team addVehicle _vehicle};
+	//--- AI refills may be spawned at a forward factory while the team is still up to the
+	//--- commander reinforce range away. Register the hull with the team unconditionally;
+	//--- the distance gate left a crewed, paid vehicle outside the team's vehicle graph.
+	(units _team) allowGetIn true;
+	_team addVehicle _vehicle;
 
 	//--- Clear the vehicle.
 	(_vehicle) call WFBE_CO_FNC_ClearVehicleCargo;
@@ -458,12 +591,40 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 _vehicle allowCrewInImmobile true;
 	//--- AI FACTORY RALLY (task #25): drive the fresh hull off the apron toward the commander's
-	//--- forward rally (set on the factory by AI_Commander_Base). commandMove the driver so the
-	//--- vehicle takes the lane out instead of idling in base. AI-only via the count-guard.
-	private "_aiRally";
+	//--- forward rally (set on the factory by AI_Commander_Base). Ground-only fallback below keeps
+	//--- air/ship orders out of a ground command; the carrier plane climb-out remains the next path.
+	private ["_aiRally","_aiLeader"];
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
+	if (isNil "_aiRally" || {typeName _aiRally != "ARRAY"} || {count _aiRally < 2}) then {
+		_aiLeader = leader _team;
+		if (!isNull _aiLeader && {alive _aiLeader} && {_vehicle isKindOf "LandVehicle"} && {(_aiLeader distance _building) > 200}) then {_aiRally = getPosATL _aiLeader;};
+	};
+	if (!isNil "_aiRally" && {typeName _aiRally == "ARRAY"} && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
 		(driver _vehicle) commandMove _aiRally;
+	};
+	//--- fable/carrier-heli-deckspawn (2026-07-27): CORRECTNESS FIX. Helis were previously invisible to both
+	//--- carrier gates in this file - "helis are 'Helicopter', never 'Plane'", the identical class-gating bug
+	//--- already fixed in AI_Commander_Teams.sqf's cmdcon41. Site 1 above now widens the pre-create
+	//--- deck-height Z correction to isKindOf "Air" so a carrier-bought helicopter's _position Z is set
+	//--- correctly before createVehicle - but A2-OA createVehicle over water can still seat the hull at the
+	//--- water surface despite that _position Z (the exact quirk the player path documents at
+	//--- Client_BuildUnit.sqf:737-744: "FORM createVehicle over water may seat the hull at the water surface
+	//--- despite _position Z"). Add the same belt-and-braces post-create reseat here, HELICOPTER-ONLY - the
+	//--- Plane arm immediately below is untouched, byte-identical, and already field-tested. Then cancel
+	//--- Common_CreateVehicle.sqf's setVelocity [0,0,-1] spawn kick (helis pass _special="NONE" here, which is
+	//--- != "FLY" and so receives that downward nudge) with setVelocity [0,0,0] and STOP - no flyInHeight, no
+	//--- doMove. Per the player path (Client_BuildUnit.sqf:743-745, Helicopter arm) and cmdcon41's own comment
+	//--- ("Keep the FLY air-start + runway heading + dispatch flag PLANE-only -> helis spawn GROUNDED"), a
+	//--- freshly-crewed rotary hull with no established rotor-borne flight state must NOT get the fixed-wing
+	//--- 80 m/s unstick kick - it is left parked, correctly seated on deck, ready to be tasked normally by the
+	//--- AI commander (same baseline as any ordinary land-factory heli).
+	if ((_building getVariable ["wfbe_is_carrier_hvt", false]) && {_vehicle isKindOf "Helicopter"}) then {
+		private ["_ccReseatZ","_ccReseatP"];
+		_ccReseatZ = _building getVariable ["wfbe_naval_deckz", 16];
+		_ccReseatP = getPosASL _vehicle;
+		_vehicle setPosASL [_ccReseatP select 0, _ccReseatP select 1, _ccReseatZ];
+		_vehicle setVelocity [0, 0, 0];
+		["INFORMATION", Format ["Server_BuyUnit.sqf: carrier deck reseat + heli settle applied to [%1].", _unitType]] Call WFBE_CO_FNC_LogContent;
 	};
 	//--- fable/aicom-carrier-velocity (2026-07-07): carrier fixed-wing air-start chip - the AI-path equivalent of
 	//--- Client_BuildUnit.sqf:598-604 (player carrier velocity override). Common_CreateVehicle's FLY kick is only
@@ -487,5 +648,10 @@ _vehicle allowCrewInImmobile true;
 };
 
 if (!isNull _team) then {
-	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+	//--- A2-safe: nil/non-array wfbe_queue must not throw before refund paths below.
+	private "_tq";
+	_tq = _team getVariable "wfbe_queue";
+	if (isNil "_tq") then {_tq = []};
+	if (typeName _tq != "ARRAY") then {_tq = []};
+	_team setVariable ["wfbe_queue", _tq - [_id]];
 };

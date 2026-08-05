@@ -54,15 +54,50 @@ WFBE_Allow_HostileGearSaving = true;
 //--- permanently invulnerable. Initial join + JIP rejoin both pass through here; respawns do not.
 player allowDamage false;
 missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", false];
-[] spawn {
-	private ["_t0"];
-	_t0 = time;
-	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
-	sleep 3;
-	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
-		if (alive player) then { player allowDamage true };
+//--- CASTER SEAT DETECTION (fix 2026-08-01 #2, owner live repro on m0801e): the sqm init
+//--- `this setVariable ["wfbe_caster_slot", true]` is the 2-ARG LOCAL form and editor inits run
+//--- where the unit is created - a JIP-joining caster's client never receives it, so every gate
+//--- below silently failed open and the caster still drowned in the pen with no spectator action.
+//--- Derive the seat CLIENT-LOCALLY from replication-free facts: the only CIV playables in this
+//--- mission are 2 HC + 2 Caster, and HC names are excluded via WFBE_C_HC_NAMES. A human on CIV
+//--- that is not an HC is therefore a Caster, by construction of the slot table.
+//--- (review 2026-08-01: MUST be the corrected sideJoined, never raw `side player` - the CIV-SIDE
+//--- GUARD above documents the engine transiently reporting civilian for real combat players during
+//--- JIP churn; a raw read here would tag such a soldier as caster = permanently invulnerable.)
+if (sideJoined == civilian && {!((name player) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {
+	player setVariable ["wfbe_caster_slot", true];
+	diag_log Format ["SPECTATE|v5|caster-seat-derived|name=%1|uid=%2", name player, getPlayerUID player];
+};
+//--- CASTER SLOTS (fix 2026-08-01, owner live repro): a Caster seat never enrolls and never
+//--- transits, so nothing ever sets DeadspawnEscaped for it -> the spectator addAction gate and
+//--- the caster auto-enter both waited forever, the pen positioning below dumped the body into
+//--- the offshore holding pen, and the 120s watchdogs re-enabled damage on a body nobody would
+//--- ever move - the caster drowned in the pen. Exempt the whole flow: mark escaped instantly
+//--- (unlocks the spectator gates), and the guards added to both watchdogs + the pen setPos keep
+//--- the body invulnerable at its editor slot until Client_SpectatorEnter parks it properly.
+if (player getVariable ["wfbe_caster_slot", false]) then {
+	missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", true];
+};
+//--- The damage command is not reference-counted: every re-arm invalidates older watchdogs
+//--- before they can release the current deadspawn hold. Folded in from wave reconcile of #1989:
+//--- the release gate also keeps the CASTER SEAT DETECTION exemption above (a caster slot must
+//--- stay invulnerable until Client_SpectatorEnter parks it, same as the two call sites below).
+WFBE_CL_FNC_ArmDeadspawnDamageGuard = {
+	private ["_epoch"];
+	_epoch = (missionNamespace getVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", 0]) + 1;
+	missionNamespace setVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", _epoch];
+	[_epoch] spawn {
+		private ["_epoch", "_t0"];
+		_epoch = _this select 0;
+		_t0 = time;
+		waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) || (_epoch != (missionNamespace getVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", 0])) };
+		if (_epoch == (missionNamespace getVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", 0])) then {
+			sleep 3;
+			if (_epoch == (missionNamespace getVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", 0]) && {!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])} && {!(player getVariable ["wfbe_caster_slot", false])} && {alive player}) then {player allowDamage true};
+		};
 	};
 };
+[] Call WFBE_CL_FNC_ArmDeadspawnDamageGuard;
 
 // Set the default target fps to 60
 missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
@@ -85,27 +120,35 @@ if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
 	//--- owner's live report ("deadspawn was at my team HQ"). Fixed the same way the ELSE branch two lines
 	//--- below already avoids this exact hazard (its own comment: "Common is not yet init'd so we call is
 	//--- straight away") - compile the function inline instead of depending on the async registration.
-	player setPos ([] call Compile preprocessFile "Common\Functions\Common_DeadspawnPenPos.sqf");
+	if (!(player getVariable ["wfbe_caster_slot", false])) then {
+		player setPos ([] call Compile preprocessFile "Common\Functions\Common_DeadspawnPenPos.sqf");
+	};
 } else {
-	player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
+	if (!(player getVariable ["wfbe_caster_slot", false])) then {
+		player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
+	};
 };
-(vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}]; (vehicle player) addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
+//--- fix/sqf-eh-hygiene-20260730: store FEH indices + BlinkFired handle so PreRespawn /
+//--- MarkerLoop can remove by index (A2 re-index safe when removed high-to-low).
+WFBE_PLAYERFEH_UNIT = vehicle player;
+WFBE_PLAYERFEH_UNIT setVariable ["WFBE_PLAYERFEH_AT", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired",{_this Spawn HandleAT}]];
+WFBE_PLAYERFEH_UNIT setVariable ["WFBE_PLAYERFEH_TRACER", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}]];
 // Marty: Only attach the combat marker blinking Fired EH when the mission parameter enables the feature.
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
-	(vehicle player) addEventHandler ["Fired", {
+	WFBE_PLAYERFEH_UNIT setVariable ["WFBE_BlinkFiredEH", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired", {
 		_u = _this select 0;                 // unit that fired
 		_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
-	}];
+	}], false];
 };
 
 //--- wiring-sweep 2026-07-22: satchel TK-near-structure detection (Client_FNC_OnFired.sqf, compiled
 //--- below but never attached anywhere until now) - flag-gated attach, ships default 0 (owner call).
 //--- isNil guard: the compile at the bottom of this file runs a moment after this line.
 if ((missionNamespace getVariable ["WFBE_C_SATCHEL_TK_DETECT", 0]) > 0) then {
-	(vehicle player) addEventHandler ["Fired", {if (!isNil "WFBE_CL_FNC_OnFired") then {_this Call WFBE_CL_FNC_OnFired}}];
+	WFBE_PLAYERFEH_UNIT addEventHandler ["Fired", {if (!isNil "WFBE_CL_FNC_OnFired") then {_this Call WFBE_CL_FNC_OnFired}}];
 };
 
-(vehicle player) setVariable ["OriginalMarkerColor", "ColorOrange", false];
+WFBE_PLAYERFEH_UNIT setVariable ["OriginalMarkerColor", "ColorOrange", false];
 
 _rearmor = {
    				_ammo = _this select 4;
@@ -127,7 +170,11 @@ _rearmor = {
 //--- Command Deck: store _rearmor code in a global so SkinSelector_Apply.sqf can re-attach it post-swap.
 WFBE_CL_VAR_ReArmorCode = _rearmor;
 
-player addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+//--- fix/sqf-eh-hygiene-20260730: store HandleDamage index + unit so PreRespawn can remove
+//--- before re-add (first-life previously left the handle untracked).
+_rearmorEH = player addEventHandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+player setVariable ["WFBE_PLAYERHDMEH", _rearmorEH, false];
+WFBE_PLAYERHDMEH_UNIT = player;
 [] execVM "Common\Functions\Common_Bipod.sqf";
 
 UpdateMarker = Compile preprocessFile "Common\Functions\Common_UpdateMarker.sqf";
@@ -292,6 +339,11 @@ WFBE_CL_FNC_UI_Gear_UpdatePrice = Compile preprocessFileLineNumbers "Client\Func
 WFBE_CL_FNC_UI_Gear_UpdateTarget = Compile preprocessFileLineNumbers "Client\Functions\Client_UI_Gear_UpdateTarget.sqf";
 WFBE_CL_FNC_UI_Gear_UpdateView = Compile preprocessFileLineNumbers "Client\Functions\Client_UI_Gear_UpdateView.sqf";
 WFBE_CL_FNC_UI_Respawn_Selector = Compile preprocessFileLineNumbers "Client\Functions\Client_UI_Respawn_Selector.sqf";
+//--- fable/cmd-troopmon-freelook: commander tooling, own module (never touches Client_Spectator*.sqf).
+//--- TroopMonBuildList is a plain cached-array data function (called from GUI_Menu_TroopMon.sqf); the
+//--- freelook camera is spawned from GUI_Menu_Command.sqf's new RECON CAM war-room button.
+WFBE_CL_FNC_TroopMonBuildList = Compile preprocessFileLineNumbers "Client\Functions\Client_TroopMonBuildList.sqf";
+WFBE_CL_FNC_CommanderFreelook = Compile preprocessFileLineNumbers "Client\Functions\Client_CommanderFreelook.sqf";
 WFBE_CL_FNC_SupplyMissionCompletedMessage = Call Compile preprocessFileLineNumbers "Client\Module\supplyMission\supplyMissionCompletedMessage.sqf";
 WFBE_CL_FNC_TownSupplyStatus = Call Compile preprocessFileLineNumbers "Client\Module\supplyMission\townSupplyStatus.sqf";
 //--- SM9/XR2: removed dead WFBE_CL_FNC_CheckCCProximity (checkCCProximity.sqf) -- compiled, zero callers.
@@ -307,6 +359,7 @@ WFBE_CL_FNC_BlinkMapIcon = Compile preprocessFileLineNumbers "Client\Functions\C
 //--- attaches. The UID allowlist check itself lives inside Client_SpectatorAttach.sqf.
 WFBE_CL_FNC_SpectatorAttach = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorAttach.sqf";
 WFBE_CL_FNC_SpectatorEnter = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorEnter.sqf";
+WFBE_CL_FNC_SpectatorAimFrame = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorAimFrame.sqf"; //--- v5 P1: unscheduled follow-aim easing (onEachFrame body)
 Call Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorDirector.sqf"; //--- spectator v3 director helpers; definitions only, loop starts from Enter when flag is armed.
 WFBE_CL_FNC_SpectatorExit = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorExit.sqf";
 
@@ -497,7 +550,11 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 			//--- _tcnt plainly after assignment (if-nesting, not lazy && {_tcnt > 0}) - kills the live
 			//--- "Error Undefined variable in expression: _tcnt" RPT spam that pinned shownTallies at 0.
 			{
+				//--- tags-fix-20260805: a candidate deleted mid-frame makes getVariable return nil,
+				//--- and assigning nil UN-defines the local - the 07-24 outer-private fix did not
+				//--- cover that, so "Undefined variable _tcnt" still fired and pinned shownTallies=0.
 				_tcnt = _x getVariable ["wfbe_kill_tally", 0];
+				if (isNil "_tcnt") then {_tcnt = 0};
 				if (_shown < _max && _tcnt > 0 && alive _x && _x != vehicle player) then {
 					if ((count crew _x == 0) || {side _x == sideJoined}) then {
 						_tpp = visiblePosition _x;
@@ -574,23 +631,46 @@ missionNamespace setVariable ['WFBE_C_QUEUE_DEPOT',0];
 missionNamespace setVariable ['WFBE_C_QUEUE_DEPOT_MAX',4];
 
 //--- Handle the weather.
-// Marty: Accelerated skipTime makes low clouds stutter, so day/night owns the weather and keeps each client sky clear.
-Call {
+// OA weather commands are local, so replay the server-authored state rather than restart an independent 60-second transition on each client.
+WFBE_CL_FNC_ApplyEnvironmentWeather = {
+	private ["_state","_remaining","_overcast","_rain"];
+	_state = _this;
+	if ((typeName _state) != "ARRAY" || {(count _state) < 4}) exitWith {};
+	if ((typeName (_state select 0)) != "SCALAR" || {(typeName (_state select 1)) != "SCALAR"} || {(typeName (_state select 2)) != "SCALAR"} || {(typeName (_state select 3)) != "SCALAR"}) exitWith {};
+	_remaining = (_state select 1) - (time - (_state select 0));
+	_remaining = _remaining max 0;
+	_overcast = (_state select 2) max 0 min 1;
+	_rain = (_state select 3) max 0 min 1;
+	_remaining setOvercast _overcast;
+	_remaining setRain _rain;
+};
+
+"WFBE_ENVIRONMENT_WEATHER_STATE" addPublicVariableEventHandler {
+	[_this select 1] Call WFBE_CL_FNC_ApplyEnvironmentWeather;
+};
+
+_state = missionNamespace getVariable ["WFBE_ENVIRONMENT_WEATHER_STATE", []];
+if ((typeName _state) == "ARRAY" && {(count _state) >= 4}) then {
+	[_state] Call WFBE_CL_FNC_ApplyEnvironmentWeather;
+} else {
+	//--- Fallback only while server initialization has not yet published its state.
 	_weat = missionNamespace getVariable "WFBE_C_ENVIRONMENT_WEATHER";
-	if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) exitWith {
+	if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 		0 setOvercast 0;
 		0 setRain 0;
+	} else {
+		if (_weat != 3) then {
+			_oc = 0.05;
+			_rain = 0;
+			switch (_weat) do {
+				case 0: {_oc = 0};
+				case 1: {_oc = 0.5};
+				case 2: {_oc = 1; _rain = 0.5};
+			};
+			60 setOvercast _oc;
+			60 setRain _rain;
+		};
 	};
-	if (_weat == 3) exitWith {};
-
-	_oc = 0.05;
-	switch (_weat) do {
-		case 0: {_oc = 0};
-		case 1: {_oc = 0.5};
-		case 2: {_oc = 1};
-	};
-	60 setOvercast _oc;
-	if (_weat == 2) then {60 setRain 0.5}; //--- Keep rainy lobby weather consistent with the server-local path.
 };
 
 // Marty: Volumetric clouds are disabled globally; never start the BIS cloud system on clients.
@@ -618,7 +698,13 @@ keyPressedForAutoSendSpawnedUnitsToWaypoint = compile preprocessFile "Common\Fun
 keyPressedForAdjustingViewDistance = compile preprocessFile "Common\Functions\Common_AdjustViewDistance.sqf";
 _display = findDisplay 46;
 _display displayAddEventHandler ["KeyDown","_this call keyPressed"];
-_display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
+private ["_autoSendEH"];
+_autoSendEH = uiNamespace getVariable ["WFBE_CL_VAR_AutoSendWaypointKeyDownEH", -1];
+if ((typeName _autoSendEH) == "SCALAR" && {_autoSendEH >= 0}) then {
+	_display displayRemoveEventHandler ["KeyDown", _autoSendEH];
+};
+_autoSendEH = _display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
+uiNamespace setVariable ["WFBE_CL_VAR_AutoSendWaypointKeyDownEH", _autoSendEH];
 if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) > 0) then {
 	[] call WFBE_CL_FNC_AutoRunAttach;
 	//--- Autorun toggle keybind (User12, bindable in Configure Controls). Attached ONCE here
@@ -654,6 +740,9 @@ player setVariable ["lastPosition", position player];
 ["INFORMATION", Format ["AFK Diagnostic: initialized for player [%1]. time [%2] position [%3].", name player, time, position player]] Call WFBE_CO_FNC_LogContent;
 
 _display displayAddEventHandler ["KeyDown", "_this call WFBE_CO_FNC_HandleAFKkeys"];
+
+//--- The single updateclient AFK clock also treats mouse-driven map/terminal activity as input.
+_display displayAddEventHandler ["MouseButtonDown", "if (!isNull player) then {player setVariable ['lastActionTime', time]}; false"];
 
 //--- ============================================================================
 //--- b67 item #3 (claude-gaming 2026-06-21): VEHICLE-TINT LEGEND (top-right pop-up).
@@ -724,7 +813,8 @@ if (WFBE_CL_VAR_TintLegendEnabled) then {
 };
 //--- ============================================================================
 
-[] execVM "Client\Module\AFKkick\monitorAFK.sqf";
+//--- updateclient.sqf owns the lobby-configured AFK timeout. Do not start the legacy
+//--- fixed 30-minute monitor here: two clocks can otherwise kick at conflicting times.
 
 //--- wiki-wins: removed duplicate HandleAT Fired EH (already added near the top of Init_Client); was double-spawning HandleAT per AT rocket
 execVM "WASP\global_marking_monitor.sqf";
@@ -838,10 +928,13 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0) then {[] spawn W
 //--- watchdog, and finally the UID allowlist (casters are merged into WFBE_C_SPECTATOR_UIDS by
 //--- Init_CommonConstants). A non-allowlisted human in the seat just gets a hint and keeps the disarmed,
 //--- invulnerable civilian body - nothing else in the mission changes for them.
-if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_CASTER_AUTOSPECTATE", 0]) > 0} && {player getVariable ["wfbe_caster_slot", false]}) then {
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_CASTER_AUTOSPECTATE", 0]) > 0}) then {
 	[] spawn {
 		private ["_casterUID"];
 		waitUntil { sleep 1; !isNull player && {alive player} };
+		//--- fix 2026-08-01: seat marker read AFTER the player body is valid - the old outer-condition
+		//--- read raced JIP (player not yet seated when Init_Client evaluated it) and never armed.
+		if (!(player getVariable ["wfbe_caster_slot", false])) exitWith {};
 		waitUntil { sleep 1; missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false] };
 		_casterUID = getPlayerUID player;
 		if !(_casterUID in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])) exitWith {
@@ -871,6 +964,10 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 	waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _t0) > 90)};
 	diag_log format ["[WFBE][B64 RECON] reconciliation live after %1s cic=%2", round (time - _t0), (!isNil "clientInitComplete" && {clientInitComplete})];
 	waitUntil {!isNil "WFBE_Client_SideID"};
+	//--- CIV caster bail (owner client RPT 2026-08-01, Init_Client.sqf:945): civilian has no side
+	//--- logic - the wfbe_hq read on objNull returned Nothing and the undefined _hqObj killed this
+	//--- reconciliation spawn. A caster has no own-side teams/structures to heal; mirror cmdcon26.
+	if (sideJoined == civilian) exitWith { diag_log "[WFBE][B64 RECON] CIV-ABORT: skipped on civilian client."; };
 	_sideText = WFBE_Client_SideJoinedText;
 	_logik = WFBE_Client_Logic;
 	_didTeams = false;
@@ -1076,6 +1173,8 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 //--- absolute stored value, never adds), so even a redundant request cannot duplicate money. Covers WEST/EAST/GUER
 //--- (all three keep wfbe_funds on the group). A2-OA-1.64 safe: group player / getVariable / typeName == / mod;
 //--- no A3 commands. No frozen AI / no sim-gating touched.
+//--- Caster seats are civilian spectator bodies, never warfare wallets: skip the retry loop.
+if !(player getVariable ["wfbe_caster_slot", false]) then {
 [] spawn {
 	private ["_grp","_f","_n","_done","_sentAny","_t0","_grace"];
 	waitUntil {(!isNil "WFBE_Client_SideJoinedText") && {!isNil "WFBE_Client_SideJoined"}};
@@ -1121,7 +1220,11 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 	};
 	if (!_done && _sentAny) then { diag_log format ["[WFBE][B76 FUNDS-HEAL] GAVE UP after %1 polls; funds never landed on own group.", _n]; };
 };
+};
 
+//--- Keep one action FSM authoritative. The respawn flow starts a replacement only after the
+//--- new player is alive, so the old FSM can otherwise miss its !alive player exit.
+missionNamespace setVariable ["WFBE_CL_UpdateActionsEpoch", (missionNamespace getVariable ["WFBE_CL_UpdateActionsEpoch", 0]) + 1];
 [] execFSM "Client\FSM\updateactions.fsm";
 //--- QoL trio feat.3: spawn advisor nudge loop after common init is done.
 [] spawn WFBE_CL_FNC_QOL_Advisor;
@@ -1153,6 +1256,9 @@ waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "w
 
 [] Spawn {
 	Private ["_commanderTeam"];
+	//--- CIV caster bail (2026-08-01): objNull side logic never carries wfbe_commander - this
+	//--- waitUntil parked a leaked script forever on caster clients.
+	if (sideJoined == civilian) exitWith {};
 	waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_commander"}};
 	/* Commander Handling */
 	["INITIALIZATION", "Init_Client.sqf: Initializing the Commander Update FSM"] Call WFBE_CO_FNC_LogContent;
@@ -1173,7 +1279,12 @@ if (isNil "WFBE_Client_BriefingLoaded") then {
 //--- builds the matching wfbe_radio_hq speaker on WFBE_L_GUE under the same gate (Init_Server.sqf), so the
 //--- waitUntil below resolves. west/east and the civilian pass-through keep their exact previous behaviour;
 //--- resistance stays skipped (sideHQ=objNull) when GUER is AI-defender-only (no human resistance slots exist).
-if ((sideJoined != resistance) || {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+//--- CIV caster fix (owner client RPT 2026-08-01, ZG h5): civilian passed the resistance-only
+//--- gate, entered this block, and the wfbe_radio_hq waitUntil on objNull side logic NEVER
+//--- resolved - the whole rest of Init_Client (through clientInitComplete, line ~2145) hung
+//--- forever on every caster client (RPT: cic=false at 90s and no line after :945 ever ran).
+//--- Casters take the objNull sideHQ pass-through instead.
+if ((sideJoined != civilian) && {(sideJoined != resistance) || {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}}) then {
 waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_radio_hq"}};
 _HQRadio = WFBE_Client_Logic getVariable "wfbe_radio_hq";
 ["INITIALIZATION", Format["Init_Client.sqf: Initialized the Radio Announcer [%1]", _HQRadio]] Call WFBE_CO_FNC_LogContent;
@@ -1302,17 +1413,10 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 //--- that gate is still holding the player in the deadspawn holding area. The gate above now re-asserts
 //--- `allowDamage false` for as long as it holds, which means nothing would ever re-enable damage once
 //--- that first watchdog has gone. This is the same re-arm the HC lobby lock below already performs on
-//--- release; both watchdogs firing is harmless (allowDamage true is idempotent) and both exit at once
-//--- on WFBE_Client_DeadspawnEscaped.
-[] spawn {
-	private ["_t0"];
-	_t0 = time;
-	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
-	sleep 3;
-	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
-		if (alive player) then { player allowDamage true };
-	};
-};
+//--- release; re-arming invalidates prior watchdogs so only the current hold may restore damage.
+//--- All watchdogs still exit once WFBE_Client_DeadspawnEscaped becomes true. The caster-slot
+//--- exemption from the CASTER SEAT DETECTION fix above is enforced inside the shared helper.
+[] Call WFBE_CL_FNC_ArmDeadspawnDamageGuard;
 
 //--- HC LOBBY LOCK (feat/hc-lobby-lock 2026-07-26, WFBE_C_HC_LOBBY_LOCK default 0): hold a joining player
 //--- HERE - after the existing join / anti-teamswap gate above, still parked in the deadspawn holding area,
@@ -1379,17 +1483,9 @@ if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
 			diag_log Format ["HCLOBBY|v1|CLIENT-RELEASE|name=%1|heldFor=%2|at=%3", name player, _hcllWaited, round time];
 			//--- Re-arm the deadspawn damage restore: the original watchdog near the top of this file may
 			//--- already have expired during the hold, and nothing else re-enables damage once the code below
-			//--- sets WFBE_Client_DeadspawnEscaped. Same shape and 120s budget as that watchdog; both firing
-			//--- is harmless (allowDamage true is idempotent).
-			[] spawn {
-				private ["_t0"];
-				_t0 = time;
-				waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
-				sleep 3;
-				if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
-					if (alive player) then { player allowDamage true };
-				};
-			};
+			//--- sets WFBE_Client_DeadspawnEscaped. The guarded helper retains the same 120s budget while
+			//--- invalidating older watchdogs that could otherwise release this newer hold.
+			[] Call WFBE_CL_FNC_ArmDeadspawnDamageGuard;
 		};
 	};
 };
@@ -1405,6 +1501,12 @@ if (!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}) then {
 };
 ["INITIALIZATION", "Init_Client.sqf: Retrieving the client spawn location."] Call WFBE_CO_FNC_LogContent;
 _base = objNull;
+//--- CIV caster (owner client RPT 2026-08-01): civilian has no side logic/startpos - the old
+//--- W/E branch read objNull and teleported the caster body to the [0,0] sea corner (live RPT:
+//--- enter pos=[39.9,10.0]). Keep the body where the caster flow already parked it.
+if (sideJoined == civilian) then {
+	_base = getPos player;
+} else {
 if (sideJoined == resistance) then {
 	private ["_fr"]; _fr = [];
 	{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_fr = _fr + [_x]} } forEach towns;
@@ -1434,16 +1536,19 @@ if (time < 30) then {
 	    if (isNull _base || {!alive _base}) then { _base = WFBE_Client_Logic getVariable "wfbe_startpos" };
 };
 };
+}; //--- close the civilian branch (2026-08-01)
 
 ["INITIALIZATION", Format["Init_Client.sqf: Client spawn location has been determined at [%1].", _base]] Call WFBE_CO_FNC_LogContent;
 
 /* Position the client at the previously defined location */
-player setPos ([_base,20,30] Call GetRandomPosition);
+if (sideJoined != civilian) then {player setPos ([_base,20,30] Call GetRandomPosition)}; //--- CIV caster: never relocate the caster body (2026-08-01)
 missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", true]; //--- DEADSPAWN SAFETY: escaped the holding area to base - let the spawn-protection watchdog re-enable damage.
 
 /* HQ Building Init. */
 _isDeployed = true; //--- B751: default so resistance/GUER (which skips the block below) never reads an undefined _isDeployed at the `!isServer && !_isDeployed` HQ-killed-EH guard (~L824). WEST/EAST reassign the real status below.
-if (sideJoined != resistance) then {
+//--- 2026-08-01: civilian excluded too - GetSideHQDeployStatus on a CIV caster returns Nothing,
+//--- which would leave _isDeployed undefined and abort the rest of this file at the next if.
+if (!(sideJoined in [resistance, civilian])) then {
 waitUntil {(sideJoined == civilian) || !isNil {WFBE_Client_Logic getVariable "wfbe_hq_deployed"}};
 ["INITIALIZATION", "Init_Client.sqf: Initializing COIN Module."] Call WFBE_CO_FNC_LogContent;
 _isDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
@@ -1663,12 +1768,13 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 	diag_log Format ["COINPLACE|v1|placement-method-fallback|value=%1", missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING"];
 };
 		missionNamespace setVariable ["WFBE_C_STRUCTURES_PLACEMENT_METHOD",{
-           		 Private ["_color","_itemcategory","_preview","_area","_eside","_restricted"];
+		Private ["_color","_itemcategory","_preview","_area","_enemySides","_restricted"];
 			_restricted = false;
 			_itemcategory = _this select 0;
 			_preview = _this select 1;
 			_color = _this select 2;
-            _eside = if (side commanderTeam == west) then {east} else {west};
+            //--- GUER can be playable: every other playable side is hostile, not only a west/east opposite.
+            _enemySides = [west, east, resistance] - [sideJoined];
             	_affected = ["Warfare_HQ_base_unfolded","Base_WarfareBBarracks","Base_WarfareBLightFactory","Base_WarfareBHeavyFactory",
             					"Base_WarfareBAircraftFactory","Base_WarfareBUAVterminal","Base_WarfareBVehicleServicePoint","BASE_WarfareBAntiAirRadar"];
 			_area = [_preview,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
@@ -1697,14 +1803,26 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
                 	Private["_i","_factory","_sorted","_walls","_factories","_area","_lx","_ly","_type","_p","_entities"];
 
                 	_color = _colorGreen;
+                	//--- wave0804b (placement rejected inside HQ circle): WFBE_C_DEF_PREVIEW_MAP (armed 2026-08-04, Init_CommonConstants.sqf)
+                	//--- now makes typeOf _preview a REAL WDDM composition-child classname (e.g. Concrete_Wall_EP1, Base_WarfareBBarrier10xTall)
+                	//--- instead of a decoy prop, so these two same-classname/DEFENSENAMES proximity checks now trip on ANY existing WDDM
+                	//--- composition nearby (HQ walls, weapon-position walls, an adjacent Wall Row/HESCO segment, etc.), rejecting placement
+                	//--- well inside the HQ build circle. Exempt just the preview-map representative classnames from these two checks - real
+                	//--- density/spacing control for these WDDM compositions is the server-side WFBE_C_WDDM_COMP_CAP / fortification cap in
+                	//--- RequestDefense.sqf, not this client-side gate. The factory-clearance ring check below (~1808-1831) is intentionally
+                	//--- NOT exempted and still applies unconditionally.
+                	if !((typeOf _preview) in WFBE_ANCHOR_PREVIEW_CLASSES) then {
                 	_walls = nearestObjects [_preview,[typeOf _preview],2];
 
                 	if(count _walls > 1) then {_color = _colorRed} else{_color = _colorGreen};
                 if(count (nearestObjects [_preview,missionNamespace getVariable (Format["WFBE_%1DEFENSENAMES",sideJoined]),((((boundingbox _preview) select 1) select 0) max (((boundingbox _preview) select 1) select 1)) max 2] - [_preview]) > 0) then {_color = _colorRed} else{_color = _colorGreen};
+                	};
 				_entities = (position _preview) nearEntities [['Man','Car','Motorcycle','Tank','Air','Ship'],12];
 				if ((count _entities > 0) && {side _x != sideJoined} count _entities !=0) then {_color = _colorRed};
                 _factories =	 nearestObjects[_preview,["Warfare_HQ_base_unfolded","WarfareBBaseStructure","Base_WarfareBContructionSite"],25];
-				if (count _factories == 0) exitWith {};
+				//--- A fortification beyond this local factory-clearance radius is valid. Do not exit the
+				//--- placement callback here: an empty return leaves CoIn without its required green color.
+				if (count _factories > 0) then {
                 _sorted = [_preview,_factories] Call SortByDistance;
                 _factory = _sorted select 0;
                 _type=typeOf _factory;
@@ -1721,16 +1839,16 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 					case ( _factory isKindOf "Base_WarfareBContructionSite"):{_p=12};
 
 					default {_p=1};
-				};
+					};
 
                 	if(_preview distance _factory < _p*(_lx min _ly)) then {_color = _colorRed};
+				};
 
 			}else{
-				private ["_objects","_sideEfacs","_object"];
-				_sideEfacs = if (side commanderTeam == west) then {east} else {west};
+				private ["_objects","_object"];
 				_objects = nearestObjects [_preview,["WarfareBBaseStructure","Base_WarfareBContructionSite"],25];
 				if (count _objects > 0) then {
-					if (side (_objects select 0) == _sideEfacs && _preview distance (_objects select 0) < 10)then {_color = _colorRed};
+					if (side (_objects select 0) in _enemySides && _preview distance (_objects select 0) < 10)then {_color = _colorRed};
 				};
 			};
 
@@ -1759,7 +1877,8 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 				Private ["_town","_townside","_eArea"];
 				_town = [_preview] Call GetClosestLocation;
 			    _townside =  (_town getVariable "sideID") Call GetSideFromID;
-			    _eArea = [_preview,((_eside) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity3;
+			    _eArea = objNull;
+			    {if (isNull _eArea) then {_eArea = [_preview,((_x) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity3}} forEach _enemySides;
 	            //--- fable/restricted-diag (owner live 2026-07-29: "near impossible to find a spot where
 	            //--- you are allowed to build factories ... says i entered a restricted area nearly
 	            //--- everywhere"). Radius is now a constant, but set to 550 per owner 2026-07-29 (was 600).
@@ -1783,24 +1902,15 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 	        };
 
             	if( !((typeOf _preview) iskindOf "Warfare_HQ_base_unfolded"))then{
-                    _current_side  = side commanderTeam;
-                    _opposite_side = east;
-
-                    if(_current_side == west)then{
-                        _opposite_side = east;
-	} else{
-                        _opposite_side = west;
-	};
-
             		_detected = if (isNull _area) then {[]} else {(_area nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], missionNamespace getVariable "WFBE_C_BASE_AREA_RANGE"]) unitsBelowHeight 20}; //--- patch R1: guard null _area (GetClosestEntity2 -> objNull when no base area) that made nearEntities throw ~89x/session
             		if (missionNamespace getVariable ["WFBE_C_DEFENSE_CLIENT_GATE_ALIGN", 0] > 0) then {
-            			if (_itemcategory != 0 && ({side _x == _opposite_side} count _detected) >= (missionNamespace getVariable ["WFBE_C_DEFENSE_THREAT_MIN", 3])) then {
+				if (_itemcategory != 0 && ({side _x in _enemySides} count _detected) >= (missionNamespace getVariable ["WFBE_C_DEFENSE_THREAT_MIN", 3])) then {
             				_color = _colorRed;
             				if (!((typeOf _preview) isKindOf "StaticWeapon")) then { hintSilent parseText "<t color='#fb0808'> Enemies are detected near your base! </t>"; };
             			};
             		} else {
             			{
-            				if(_itemcategory !=0 && side _x == _opposite_side)exitwith{
+				if(_itemcategory !=0 && side _x in _enemySides)exitwith{
             					_color = _colorRed;
             					if (!((typeOf _preview) isKindOf "StaticWeapon")) then { hintSilent parseText "<t color='#fb0808'> Enemies are detected near your base! </t>"; };
             				};
@@ -1876,7 +1986,9 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 //--- B745 (Ray 2026-06-24): intro video removed (Videos\intro720p.ogv deleted, ~2.3MB mission shrink). Playback line disabled.
 
 /* Vote System, define whether a vote is already running or not */
-if (sideJoined != resistance) then {
+//--- 2026-08-01: civilian excluded - the civ bail below let a caster fall through to the
+//--- unguarded wfbe_votetime read on objNull logic (Nothing > 0 = abort of the file tail).
+if (!(sideJoined in [resistance, civilian])) then {
 waitUntil {(sideJoined == civilian) || !isNil {WFBE_Client_Logic getVariable "wfbe_votetime"}};
 ["INITIALIZATION", "Init_Client.sqf: Vote system is initialized."] Call WFBE_CO_FNC_LogContent;
 if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFBE_VoteMenu"};

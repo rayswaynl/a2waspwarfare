@@ -352,7 +352,16 @@ case "RespawnST": {
 			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
 				private ["_ctlUnits7"];
 				_ctlUnits7 = 0;
-				{ if (!isNull _x && {_x getVariable ["wfbe_ctl_ground_wave", false]}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
+				//--- r87 group-var read fix: _x is a GROUP - the 2-arg [name,default] form returns nil-not-default
+				//--- when UNSET on a group (G1 trap), and `if (... && {nil})` throws "Type Nothing", aborting the
+				//--- rest of this update-town-delegation case (lastspawn credit, active_vehicles append, empty-vehicle
+				//--- handlers). Route through GroupGetBool. Default TRUE (count), not false: the delegated groups in
+				//--- _teams are fresh HC/client-local groups (Client_DelegateTownAI.sqf replaces the empty stamped
+				//--- server shells), so the per-group stamp never survives delegation - default false credited ZERO
+				//--- delegated spawn units to wfbe_ctl_lastspawn while the deactivation numerator (server_town_ai.sqf
+				//--- GroupGetBool default true) still counts their survivors, inflating the survival ratio to the
+				//--- 1.0 clamp = CTL attrition silently skipped for every delegated wave.
+				{ if (!isNull _x && {([_x, "wfbe_ctl_ground_wave", true] Call WFBE_CO_FNC_GroupGetBool)}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
 				//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate the HC/client-delegated
 				//--- Man-unit count into the per-town spawn scalar (per-town, so the wave-side snapshot only
 				//--- gates WHETHER to credit - no valid snapshot => skip - not which record to touch).
@@ -780,120 +789,200 @@ if (isNull _base) exitWith {
 		};
 	};
 	case "aicom-team-created": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr","_cpendingId","_cpendingIds","_cpendingKeep","_cpendingKnown"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
-			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
-			if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
-			if (!isNull _cteam) then {
-				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
-				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
-				//--- [leader, sideID, dir, team] so every client can draw a side-coloured
-				//--- mil_arrow2 at the commander team's leader. dir is patched later by the
-				//--- aicom-team-heading case once the HC's heading loop reports a bearing.
-				_cldr = leader _cteam;
-				if (!isNull _cldr) then {
-					_cdir = getDir _cldr;
-					_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
-					missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
-					publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+			_cpendingId = -1;
+			if (!isNull _cteam) then {_cpendingId = _cteam getVariable "wfbe_aicom_pending_id"; if (isNil "_cpendingId") then {_cpendingId = -1}};
+			_cpendingIds = _clogik getVariable ["wfbe_aicom_pending_ids", []];
+			_cpendingKeep = [];
+			_cpendingKnown = false;
+			{
+				if (typeName _x == "ARRAY" && {count _x > 0} && {(_x select 0) == _cpendingId}) then {_cpendingKnown = true} else {_cpendingKeep set [count _cpendingKeep, _x]};
+			} forEach _cpendingIds;
+			if (_cpendingId >= 0) then {
+				_clogik setVariable ["wfbe_aicom_pending_ids", _cpendingKeep];
+				_clogik setVariable ["wfbe_aicom_pending", count _cpendingKeep];
+				if ((count _cpendingKeep) == 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+				if (_cpendingKnown) then {
+					//--- r114 (founding-charge ledger): dispatch delivered on time - pop the head charge, no
+					//--- refund. A late/expired ack (id already dropped by the B69 reaper) must not touch the
+					//--- ledger again here; the reaper already popped and refunded that entry.
+					private ["_fifo"];
+					_fifo = _clogik getVariable ["wfbe_aicom_pending_funds", []];
+					if ((count _fifo) > 0) then {
+						_fifo set [0, "WFBE_R114_POP"];
+						_clogik setVariable ["wfbe_aicom_pending_funds", _fifo - ["WFBE_R114_POP"]];
+					};
 				};
-				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
+			};
+			if (!isNull _cteam) then {
+				if (_cpendingId >= 0 && {!_cpendingKnown}) then {
+					//--- The original request timed out and was replaced; do not register both teams.
+					_cteam setVariable ["wfbe_aicom_disband", true, true];
+					["WARNING", Format ["Server_HandleSpecial.sqf: rejected late HC team acknowledgement %1 (expired pending id %2).", _cteam, _cpendingId]] Call WFBE_CO_FNC_AICOMLog;
+				} else {
+					_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+					//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
+					//--- [leader, sideID, dir, team] so every client can draw a side-coloured
+					//--- mil_arrow2 at the commander team's leader. dir is patched later by the
+					//--- aicom-team-heading case once the HC's heading loop reports a bearing.
+					_cldr = leader _cteam;
+					if (!isNull _cldr) then {
+						_cdir = getDir _cldr;
+						_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+						missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
+						publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+					};
+					["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
+					//--- fable/air-quickstart-v2 (owner 2026-07-28: helicopters linger way too long in base;
+					//--- HC-safe quickstart v2): this handler is the single point EVERY founded team (HC or
+					//--- server-fallback) reports back through, right after it is registered into wfbe_teams
+					//--- above - a narrow, single-team primer belongs exactly here, not in the side-wide
+					//--- WFBE_SE_FNC_AI_Com_AssignTowns tick (HC-unsafe + perturbs every OTHER team's cadence-
+					//--- sensitive state - see PR #1586's rejection writeup for the full trace). Writes ONLY
+					//--- the public wfbe_aicom_order group variable on THIS team, using the exact [seq, mode,
+					//--- pos] contract Common_RunCommanderTeam.sqf already polls every pass (established
+					//--- object/group setVariable-with-public idiom - see e.g. AI_Commander_AssignTowns.sqf:296,
+					//--- AI_Commander_Strategy.sqf:156,622,709 - NOT the banned missionNamespace 3-arg form).
+					//--- Flag default 0: at 0 this whole block is one cheap missionNamespace getVariable read.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_QUICKSTART", 0]) > 0) then {
+						private ["_qsAirVeh","_qsDestTown","_qsTargets","_qsCand","_qsUncap","_qsBestD","_qsD"];
+						_qsAirVeh = objNull;
+						{
+							private "_qsV";
+							_qsV = vehicle _x;
+							if (!isNull _qsV && {_qsV != _x} && {isNull _qsAirVeh} && {_qsV isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _qsV) >> "transportSoldier")) > 0}) then {_qsAirVeh = _qsV};
+						} forEach (units _cteam);
+						if (!isNull _qsAirVeh && {!isNull _cldr}) then {
+							_qsDestTown = objNull;
+							_qsTargets = _clogik getVariable ["wfbe_aicom_targets", []];
+							if (count _qsTargets > 0) then {
+								_qsCand = _qsTargets select 0;
+								if (typeName _qsCand == "OBJECT" && {!isNull _qsCand} && {(_qsCand getVariable ["sideID", -1]) != _csideID}) then {_qsDestTown = _qsCand};
+							};
+							if (isNull _qsDestTown) then {
+								_qsUncap = [];
+								{ if ((_x getVariable ["sideID", -1]) != _csideID) then {_qsUncap set [count _qsUncap, _x]} } forEach towns;
+								_qsBestD = 1e9;
+								{ _qsD = _cldr distance _x; if (_qsD < _qsBestD) then {_qsBestD = _qsD; _qsDestTown = _x} } forEach _qsUncap;
+							};
+							if (!isNull _qsDestTown) then {
+								_cteam setVariable ["wfbe_aicom_order", [(if (isNil {_cteam getVariable "wfbe_aicom_order"}) then {-1} else {(_cteam getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", getPos _qsDestTown], true];
+								diag_log ("AIRQS|v1|side=" + str _csideID + "|team=" + str _cteam + "|order=" + str (getPos _qsDestTown) + "|town=" + (_qsDestTown getVariable ["name","?"]) + "|src=quickstart");
+							};
+						};
+					};
+				};
 			};
 		};
 	};
 	case "aicom-focus": {
-		//--- AICOM v2 M4: the human commander set a side FOCUS town from the command center ("Move All"
-		//--- doubles as the AI focus). Stamp it on the side logic; the Allocator reads it (TTL'd) and makes
-		//--- it the side's fist - honoured every tick. side validated west/east (the command menu is commander-only).
-		//--- TP-13 SERVER-SIDE RATE LIMIT (WFBE_C_TEAM_FOCUS_COOLDOWN, 0 disables): the only guard was the
-		//--- CLIENT cooldown in GUI_Menu_Command (_lastSend) - a modified client could spam this case every
-		//--- frame and whipsaw the Allocator fist. UID-keyed on the side logic, mirroring the CMD_NUDGE
-		//--- cooldown idiom below; legacy/malicious 3-arg senders (no player appended) share ONE "anon" key
-		//--- per side = the side-wide backstop a spoofed sender cannot bypass by omitting the arg.
-		private ["_fSide","_fTown","_fLogik","_fPlayer","_fUID","_fKey","_fCd","_fNow","_fLast"];
+		//--- AICOM v2 M4: a same-side player set a side FOCUS town (command console STATE-A advisory / war-room).
+		//--- Stamp it on the side logic; the Allocator reads it (TTL'd) and makes it the side's fist.
+		//--- TP-13 SERVER-SIDE RATE LIMIT (WFBE_C_TEAM_FOCUS_COOLDOWN, 0 disables): UID-keyed on the side logic.
+		//--- ORDER-AUTH 20260730: REQUIRE a live same-side player before applying. The previous "anon" path still
+		//--- stamped focus after the shared cooldown, so a forged RequestSpecial naming the victim side (no player /
+		//--- wrong-side player) could pin that side's Allocator fist. Cross-side and no-player sends now reject.
+		private ["_fSide","_fTown","_fLogik","_fPlayer","_fUID","_fKey","_fCd","_fNow","_fLast","_fAuth"];
 		_fSide = _args select 1;
 		_fTown = _args select 2;
+		_fPlayer = objNull; if (count _args > 3) then {_fPlayer = _args select 3};
 		if (!isNil "_fTown" && {!isNull _fTown} && {_fSide in [west, east]}) then {
 			_fLogik = (_fSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _fLogik) then {
-				_fNow = time;
-				_fCd  = missionNamespace getVariable ["WFBE_C_TEAM_FOCUS_COOLDOWN", 120];
-				if (count _args > 3) then {_fPlayer = _args select 3};
-				_fUID = "anon";
-				//--- TP-13 stack-pass: only a REAL player on THIS side earns a per-UID key. A spoofed sender passing an
-				//--- arbitrary object (str-of-object = fresh key per object) would otherwise bypass the limit; such
-				//--- senders now fall through to the shared "anon" side key (throttled). No str-of-object fallback.
-				if (!isNil "_fPlayer" && {!isNull _fPlayer} && {isPlayer _fPlayer} && {side (group _fPlayer) == _fSide}) then {
+				_fAuth = (!isNull _fPlayer) && {alive _fPlayer} && {isPlayer _fPlayer} && {side (group _fPlayer) == _fSide};
+				if (_fAuth) then {
+					_fNow = time;
+					_fCd  = missionNamespace getVariable ["WFBE_C_TEAM_FOCUS_COOLDOWN", 120];
+					_fUID = "anon";
 					private "_u"; _u = getPlayerUID _fPlayer;
 					if (!isNil "_u" && {_u != ""}) then {_fUID = _u};
-				};
-				_fKey = "wfbe_cmd_focus_" + _fUID;
-				_fLast = _fLogik getVariable [_fKey, -1e9];
-				if ((_fNow - _fLast) >= _fCd) then {
-					_fLogik setVariable [_fKey, _fNow];
-					_fLogik setVariable ["wfbe_aicom_focus", _fTown];
-					_fLogik setVariable ["wfbe_aicom_focus_t0", time];
-					diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]) + "|uid=" + _fUID);
+					_fKey = "wfbe_cmd_focus_" + _fUID;
+					_fLast = _fLogik getVariable [_fKey, -1e9];
+					if (_fCd <= 0 || {(_fNow - _fLast) >= _fCd}) then {
+						_fLogik setVariable [_fKey, _fNow];
+						_fLogik setVariable ["wfbe_aicom_focus", _fTown];
+						_fLogik setVariable ["wfbe_aicom_focus_t0", time];
+						diag_log ("AICOM2|v1|FOCUS|" + str _fSide + "|" + str (round (time / 60)) + "|set=" + (_fTown getVariable ["name", "?"]) + "|uid=" + _fUID);
+					} else {
+						diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|uid=" + _fUID + "|cdLeft=" + str (round (_fCd - (_fNow - _fLast))));
+					};
 				} else {
-					diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|uid=" + _fUID + "|cdLeft=" + str (round (_fCd - (_fNow - _fLast))));
+					diag_log ("AICOM2|v1|FOCUS|REJECT|" + str _fSide + "|auth=false");
 				};
 			};
 		};
 	};
 	case "aicom-defend": {
-		//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): a player set a DEFEND town for the AI commander (modeled
-		//--- EXACTLY on aicom-focus). Stamp it (+ a t0 timestamp) on the side logic; AI_Commander_Strategy.sqf
-		//--- reads it (TTL'd by WFBE_C_AICOM_DEFEND_TTL) and biases a reliever team to that town. side validated west/east.
-		//--- TP-20 SERVER-SIDE RATE LIMIT (WFBE_C_CMD_VERB_COOLDOWN, 0 disables): defend/reinforce/posture/fieldorder each
-		//--- had only a client-side cooldown gate; a modified client could spam them server-side. UID-keyed on the side
-		//--- logic (wfbe_cmd_ prefix) identical to the aicom-focus guard (TP-13); legacy/anon senders share one side key.
-		private ["_dSide","_dTown","_dLogik","_dPlayer","_dUID","_dKey","_dCd","_dNow","_dLast"];
+		//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): a same-side player set a DEFEND town for the AI commander.
+		//--- Stamp it (+ t0) on the side logic; Strategy reads it (TTL WFBE_C_AICOM_DEFEND_TTL).
+		//--- TP-20 SERVER-SIDE RATE LIMIT (WFBE_C_CMD_VERB_COOLDOWN). ORDER-AUTH 20260730: require live same-side
+		//--- player before applying (closes forged cross-side / no-player defend stamps that previously rode the "anon" key).
+		private ["_dSide","_dTown","_dLogik","_dPlayer","_dUID","_dKey","_dCd","_dNow","_dLast","_dAuth"];
 		_dSide = _args select 1;
 		_dTown = _args select 2;
+		_dPlayer = objNull; if (count _args > 3) then {_dPlayer = _args select 3};
 		if (!isNil "_dTown" && {!isNull _dTown} && {_dSide in [west, east]}) then {
 			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _dLogik) then {
-				_dNow = time;
-				_dCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
-				if (count _args > 3) then {_dPlayer = _args select 3};
-				_dUID = "anon";
-				if (!isNil "_dPlayer" && {!isNull _dPlayer} && {isPlayer _dPlayer} && {side (group _dPlayer) == _dSide}) then {
+				_dAuth = (!isNull _dPlayer) && {alive _dPlayer} && {isPlayer _dPlayer} && {side (group _dPlayer) == _dSide};
+				if (_dAuth) then {
+					_dNow = time;
+					_dCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
+					_dUID = "anon";
 					private "_u"; _u = getPlayerUID _dPlayer;
 					if (!isNil "_u" && {_u != ""}) then {_dUID = _u};
-				};
-				_dKey  = "wfbe_cmd_defend_" + _dUID;
-				_dLast = _dLogik getVariable [_dKey, -1e9];
-				if (_dCd <= 0 || {(_dNow - _dLast) >= _dCd}) then {
-					_dLogik setVariable [_dKey, _dNow];
-					_dLogik setVariable ["wfbe_aicom_defend_focus", _dTown];
-					_dLogik setVariable ["wfbe_aicom_defend_focus_t0", time];
-					diag_log ("AICOM2|v1|DEFEND|" + str _dSide + "|" + str (round (time / 60)) + "|set=" + (_dTown getVariable ["name", "?"]) + "|uid=" + _dUID);
+					_dKey  = "wfbe_cmd_defend_" + _dUID;
+					_dLast = _dLogik getVariable [_dKey, -1e9];
+					if (_dCd <= 0 || {(_dNow - _dLast) >= _dCd}) then {
+						_dLogik setVariable [_dKey, _dNow];
+						_dLogik setVariable ["wfbe_aicom_defend_focus", _dTown];
+						_dLogik setVariable ["wfbe_aicom_defend_focus_t0", time];
+						diag_log ("AICOM2|v1|DEFEND|" + str _dSide + "|" + str (round (time / 60)) + "|set=" + (_dTown getVariable ["name", "?"]) + "|uid=" + _dUID);
+					} else {
+						diag_log ("AICOM2|v1|DEFEND|REJECT|" + str _dSide + "|uid=" + _dUID + "|cdLeft=" + str (round (_dCd - (_dNow - _dLast))));
+					};
 				} else {
-					diag_log ("AICOM2|v1|DEFEND|REJECT|" + str _dSide + "|uid=" + _dUID + "|cdLeft=" + str (round (_dCd - (_dNow - _dLast))));
+					diag_log ("AICOM2|v1|DEFEND|REJECT|" + str _dSide + "|auth=false");
 				};
 			};
 		};
 	};
 	case "aicom-arty-here": {
-		//--- COMMAND CONSOLE: a player called an ARTILLERY-HERE strike from the war room. We stamp a fresh [pos,time]
-		//--- request on the side logic; the assist-mode resolver (AI_Com_PlayerArty, every supervisor tick) consumes it
-		//--- fire-once - so it works even under a HUMAN commander, where the brain's own Strategy arty block is dormant.
-		//--- PRODUCTION FIX (claude-gaming 2026-06-28): gate on the SEPARATE player-arty flag (WFBE_C_AICOM_PLAYER_ARTY),
-		//--- NOT WFBE_C_AI_COMMANDER_ARTILLERY (the AI's OWN fire/build gate - default ON since 2026-07-08
-		//--- fable/alife-arty-dwell, was Steff-hard-locked to 0 before that; see Init_CommonConstants.sqf).
-		//--- The player request is serviced in assist-mode by AI_Com_PlayerArty and only ever fires friendly pieces
-		//--- that already exist (it never builds guns), so it stays independent of the AI's own arty state either way.
-		private ["_aSide","_aPos","_aLogik"];
+		//--- COMMAND CONSOLE: human commander called ARTILLERY-HERE from the war room. Stamp [pos,time] on side logic;
+		//--- assist-mode resolver AI_Com_PlayerArty consumes it fire-once (works under human commander).
+		//--- Flag: WFBE_C_AICOM_PLAYER_ARTY (independent of AI-own arty flag).
+		//--- ORDER-AUTH 20260730: previously accepted ANY forged RequestSpecial naming a side + position with NO
+		//--- player, NO commander bind, NO server cooldown - an enemy client could aim the victim side's existing
+		//--- guns. Require acting commander identity (same pattern as aicom-team-disband) + per-side cooldown
+		//--- (reuses WFBE_C_CMD_VERB_COOLDOWN default 60; 0 disables). Client always appends live player.
+		private ["_aSide","_aPos","_aLogik","_aPlayer","_aCmd","_aAuth","_aCd","_aNow","_aLast","_aKey"];
 		_aSide = _args select 1;
 		_aPos  = _args select 2;
+		_aPlayer = objNull; if (count _args > 3) then {_aPlayer = _args select 3};
 		if ((typeName _aPos == "ARRAY") && {_aSide in [west, east]} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0}) then {
 			_aLogik = (_aSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _aLogik) then {
-				_aLogik setVariable ["wfbe_aicom_arty_request", [_aPos, time]];
-				diag_log ("AICOM2|v1|ARTYREQ|" + str _aSide + "|" + str (round (time / 60)) + "|pos=" + str _aPos);
+				_aCmd = (_aSide) Call WFBE_CO_FNC_GetCommanderTeam;
+				_aAuth = (!isNull _aPlayer) && {alive _aPlayer} && {isPlayer _aPlayer} && {!isNull _aCmd} && {side (group _aPlayer) == _aSide} && {group _aPlayer == _aCmd};
+				if (_aAuth) then {
+					_aNow = time;
+					_aCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
+					_aKey = "wfbe_cmd_artyhere";
+					_aLast = _aLogik getVariable [_aKey, -1e9];
+					if (_aCd <= 0 || {(_aNow - _aLast) >= _aCd}) then {
+						_aLogik setVariable [_aKey, _aNow];
+						_aLogik setVariable ["wfbe_aicom_arty_request", [_aPos, time]];
+						diag_log ("AICOM2|v1|ARTYREQ|" + str _aSide + "|" + str (round (time / 60)) + "|pos=" + str _aPos + "|uid=" + (getPlayerUID _aPlayer));
+					} else {
+						diag_log ("AICOM2|v1|ARTYREQ|REJECT|" + str _aSide + "|cdLeft=" + str (round (_aCd - (_aNow - _aLast))));
+					};
+				} else {
+					diag_log ("AICOM2|v1|ARTYREQ|REJECT|" + str _aSide + "|auth=false");
+				};
 			};
 		};
 	};
@@ -903,7 +992,7 @@ if (isNull _base) exitWith {
 		//--- Allocator (AI_Commander_Allocate.sqf) reads it while fresh (WFBE_C_AICOM_REINFORCE_TTL) and routes ONE eligible
 		//--- team into that town as part of the fist/expand set - additive, reversible, TTL-clears. AI-commander-run gate +
 		//--- west/east validation; the reinforced town must currently be OURS (you reinforce what you hold).
-		private ["_rSide","_rTown","_rLogik","_rCmd","_rHuman","_rRun","_rSID","_rPlayer","_rUID","_rKey","_rCd","_rNow","_rLast"];
+		private ["_rSide","_rTown","_rLogik","_rCmd","_rHuman","_rRun","_rSID","_rPlayer","_rUID","_rKey","_rCd","_rNow","_rLast","_rAuth"];
 		_rSide = _args select 1;
 		_rTown = _args select 2;
 		if (!isNil "_rTown" && {!isNull _rTown} && {_rSide in [west, east]}) then {
@@ -921,19 +1010,28 @@ if (isNull _base) exitWith {
 					_rNow = time;
 					_rCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
 					if (count _args > 3) then {_rPlayer = _args select 3};
+					//--- ORDER-AUTH 20260730: sibling of PR #1629 (focus/defend), which hardened those verbs but left
+					//--- reinforce/posture/fieldorder on the old "anon" fallback - it still stamped this side's bias after the
+					//--- shared cooldown, so a forged cross-side / no-player RequestSpecial could poison the victim side's AI
+					//--- commander. Require a LIVE same-side player before applying; cross-side and no-player sends now reject.
+					_rAuth = (!isNil "_rPlayer") && {!isNull _rPlayer} && {alive _rPlayer} && {isPlayer _rPlayer} && {side (group _rPlayer) == _rSide};
 					_rUID = "anon";
-					if (!isNil "_rPlayer" && {!isNull _rPlayer} && {isPlayer _rPlayer} && {side (group _rPlayer) == _rSide}) then {
+					if (_rAuth) then {
 						private "_u"; _u = getPlayerUID _rPlayer;
 						if (!isNil "_u" && {_u != ""}) then {_rUID = _u};
 					};
 					_rKey  = "wfbe_cmd_reinforce_" + _rUID;
 					_rLast = _rLogik getVariable [_rKey, -1e9];
-					if (_rCd <= 0 || {(_rNow - _rLast) >= _rCd}) then {
+					if (_rAuth && {_rCd <= 0 || {(_rNow - _rLast) >= _rCd}}) then {
 						_rLogik setVariable [_rKey, _rNow];
 						_rLogik setVariable ["wfbe_aicom_reinforce", [_rTown, time]];
 						diag_log ("AICOM2|v1|ORDER|aicom-reinforce|" + str _rSide + "|" + str (round (time / 60)) + "|town=" + (_rTown getVariable ["name", "?"]) + "|uid=" + _rUID);
 					} else {
-						diag_log ("AICOM2|v1|ORDER|aicom-reinforce|REJECT|" + str _rSide + "|uid=" + _rUID + "|cdLeft=" + str (round (_rCd - (_rNow - _rLast))));
+						if (!_rAuth) then {
+							diag_log ("AICOM2|v1|ORDER|aicom-reinforce|REJECT|" + str _rSide + "|auth=false");
+						} else {
+							diag_log ("AICOM2|v1|ORDER|aicom-reinforce|REJECT|" + str _rSide + "|uid=" + _rUID + "|cdLeft=" + str (round (_rCd - (_rNow - _rLast))));
+						};
 					};
 				} else {
 					diag_log ("AICOM2|v1|ORDER|aicom-reinforce|REJECT|" + str _rSide + "|run=" + str _rRun + "|ownsTown=" + str ((_rTown getVariable ["sideID", -1]) == _rSID));
@@ -946,7 +1044,7 @@ if (isNull _base) exitWith {
 		//--- consolidate). Stamp the string + a t0 on the side logic; the brain reads it (TTL WFBE_C_AICOM_POSTURE_TTL) and
 		//--- applies a SMALL bias only - it never hard-overrides the stance machine. AI-commander-run gate + west/east + a
 		//--- string whitelist so a malformed arg cannot poison the read.
-		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun","_pPlayer","_pUID","_pKey","_pCd","_pNow","_pLast","_pOk"];
+		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun","_pPlayer","_pUID","_pKey","_pCd","_pNow","_pLast","_pOk","_pAuth"];
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
 		//--- COMMAND V2 pillar (b), side scope: the whitelist gains a third value GARRISON behind
@@ -972,20 +1070,29 @@ if (isNull _base) exitWith {
 					_pNow = time;
 					_pCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
 					if (count _args > 3) then {_pPlayer = _args select 3};
+					//--- ORDER-AUTH 20260730: sibling of PR #1629 (focus/defend), which hardened those verbs but left
+					//--- reinforce/posture/fieldorder on the old "anon" fallback - it still stamped this side's bias after the
+					//--- shared cooldown, so a forged cross-side / no-player RequestSpecial could poison the victim side's AI
+					//--- commander. Require a LIVE same-side player before applying; cross-side and no-player sends now reject.
+					_pAuth = (!isNil "_pPlayer") && {!isNull _pPlayer} && {alive _pPlayer} && {isPlayer _pPlayer} && {side (group _pPlayer) == _pSide};
 					_pUID = "anon";
-					if (!isNil "_pPlayer" && {!isNull _pPlayer} && {isPlayer _pPlayer} && {side (group _pPlayer) == _pSide}) then {
+					if (_pAuth) then {
 						private "_u"; _u = getPlayerUID _pPlayer;
 						if (!isNil "_u" && {_u != ""}) then {_pUID = _u};
 					};
 					_pKey  = "wfbe_cmd_posture_" + _pUID;
 					_pLast = _pLogik getVariable [_pKey, -1e9];
-					if (_pCd <= 0 || {(_pNow - _pLast) >= _pCd}) then {
+					if (_pAuth && {_pCd <= 0 || {(_pNow - _pLast) >= _pCd}}) then {
 						_pLogik setVariable [_pKey, _pNow];
 						_pLogik setVariable ["wfbe_aicom_player_posture", _pPos];
 						_pLogik setVariable ["wfbe_aicom_player_posture_t0", time];
 						diag_log ("AICOM2|v1|ORDER|aicom-posture|" + str _pSide + "|" + str (round (time / 60)) + "|posture=" + _pPos + "|uid=" + _pUID);
 					} else {
-						diag_log ("AICOM2|v1|ORDER|aicom-posture|REJECT|" + str _pSide + "|uid=" + _pUID + "|cdLeft=" + str (round (_pCd - (_pNow - _pLast))));
+						if (!_pAuth) then {
+							diag_log ("AICOM2|v1|ORDER|aicom-posture|REJECT|" + str _pSide + "|auth=false");
+						} else {
+							diag_log ("AICOM2|v1|ORDER|aicom-posture|REJECT|" + str _pSide + "|uid=" + _pUID + "|cdLeft=" + str (round (_pCd - (_pNow - _pLast))));
+						};
 					};
 				};
 			};
@@ -997,7 +1104,7 @@ if (isNull _base) exitWith {
 		//--- WFBE_C_AICOM_POSTURE_TTL (reused), and shifts its levers while fresh. Same AI-commander-run gate +
 		//--- west/east + string whitelist as aicom-posture so a malformed arg cannot poison the read. Cloned from
 		//--- "aicom-posture" above.
-		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun","_pPlayer","_pUID","_pKey","_pCd","_pNow","_pLast"];
+		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun","_pPlayer","_pUID","_pKey","_pCd","_pNow","_pLast","_pAuth"];
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
 		if ((typeName _pPos == "STRING") && {_pPos in ["SPLIT","MASS","HARASS","FALLBACK"]} && {_pSide in [west, east]}) then {
@@ -1014,20 +1121,29 @@ if (isNull _base) exitWith {
 					_pNow = time;
 					_pCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
 					if (count _args > 3) then {_pPlayer = _args select 3};
+					//--- ORDER-AUTH 20260730: sibling of PR #1629 (focus/defend), which hardened those verbs but left
+					//--- reinforce/posture/fieldorder on the old "anon" fallback - it still stamped this side's bias after the
+					//--- shared cooldown, so a forged cross-side / no-player RequestSpecial could poison the victim side's AI
+					//--- commander. Require a LIVE same-side player before applying; cross-side and no-player sends now reject.
+					_pAuth = (!isNil "_pPlayer") && {!isNull _pPlayer} && {alive _pPlayer} && {isPlayer _pPlayer} && {side (group _pPlayer) == _pSide};
 					_pUID = "anon";
-					if (!isNil "_pPlayer" && {!isNull _pPlayer} && {isPlayer _pPlayer} && {side (group _pPlayer) == _pSide}) then {
+					if (_pAuth) then {
 						private "_u"; _u = getPlayerUID _pPlayer;
 						if (!isNil "_u" && {_u != ""}) then {_pUID = _u};
 					};
 					_pKey  = "wfbe_cmd_fieldorder_" + _pUID;
 					_pLast = _pLogik getVariable [_pKey, -1e9];
-					if (_pCd <= 0 || {(_pNow - _pLast) >= _pCd}) then {
+					if (_pAuth && {_pCd <= 0 || {(_pNow - _pLast) >= _pCd}}) then {
 						_pLogik setVariable [_pKey, _pNow];
 						_pLogik setVariable ["wfbe_aicom_player_fieldorder", _pPos];
 						_pLogik setVariable ["wfbe_aicom_player_fieldorder_t0", time];
 						diag_log ("AICOM2|v1|ORDER|aicom-fieldorder|" + str _pSide + "|" + str (round (time / 60)) + "|order=" + _pPos + "|uid=" + _pUID);
 					} else {
-						diag_log ("AICOM2|v1|ORDER|aicom-fieldorder|REJECT|" + str _pSide + "|uid=" + _pUID + "|cdLeft=" + str (round (_pCd - (_pNow - _pLast))));
+						if (!_pAuth) then {
+							diag_log ("AICOM2|v1|ORDER|aicom-fieldorder|REJECT|" + str _pSide + "|auth=false");
+						} else {
+							diag_log ("AICOM2|v1|ORDER|aicom-fieldorder|REJECT|" + str _pSide + "|uid=" + _pUID + "|cdLeft=" + str (round (_pCd - (_pNow - _pLast))));
+						};
 					};
 				};
 			};
@@ -1112,51 +1228,82 @@ if (isNull _base) exitWith {
 		};
 	};
 	case "aicom-ai-command": {
-		//--- COMMAND CONSOLE (claude-gaming 2026-06-29): the human commander toggled SQUAD-COMMAND MODE from the war
-		//--- room - "ON" (delegate squad MANEUVER to the AI: it runs Strategy + AssignTowns UNDER the human while the
-		//--- player keeps the economy) or "OFF" (today's DIRECT player control). Stamp a BROADCAST bool on the side
-		//--- logic; AI_Commander.sqf reads it to widen the strategy gate (_aiStrategy = _canBuild || _aiDelegate) and
-		//--- the war-room client reads it back to label the toggle. Default-ABSENT reads as direct-ON everywhere.
-		//--- DELIBERATELY no human-commander gate: this flag's whole purpose is to change whether the AI strategy runs
-		//--- UNDER a human commander. Modeled on aicom-posture: ENABLED + HQ-alive + west/east + string whitelist.
-		private ["_dSide","_dVal","_dLogik"];
+		//--- COMMAND CONSOLE: human commander toggled SQUAD-COMMAND MODE - "ON" (delegate squad MANEUVER to AI strategy
+		//--- under the human) or "OFF" (DIRECT player control). Stamp broadcast bool on side logic; AI_Commander.sqf
+		//--- reads it for _aiStrategy. Default-ABSENT => TRUE (cmdcon27 THREAD B).
+		//--- ORDER-AUTH 20260730: previously NO player / NO commander / NO same-side check - any client could forge
+		//--- RequestSpecial ["aicom-ai-command", victimSide, "ON"|"OFF"] and flip that side's strategy delegation.
+		//--- Require acting commander identity always-on (C4/C2 ruling, same as aicom-team-disband). Client appends player.
+		//--- Note: we do NOT require "human already commands" via _dHuman - the toggle is how a commander enables/disables
+		//--- AI assist; group==commanderTeam is the seat bind.
+		private ["_dSide","_dVal","_dLogik","_dPlayer","_dCmd","_dAuth"];
 		_dSide = _args select 1;
 		_dVal  = _args select 2;
+		_dPlayer = objNull; if (count _args > 3) then {_dPlayer = _args select 3};
 		if ((typeName _dVal == "STRING") && {(_dVal == "ON") || (_dVal == "OFF")} && {_dSide in [west, east]}) then {
 			if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_dSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
 				_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 				if (!isNull _dLogik) then {
-					_dLogik setVariable ["wfbe_aicom_player_delegate", (_dVal == "ON"), true];
-					diag_log ("AICOM2|v1|ORDER|aicom-ai-command|" + str _dSide + "|" + str (round (time / 60)) + "|delegate=" + _dVal);
+					_dCmd = (_dSide) Call WFBE_CO_FNC_GetCommanderTeam;
+					_dAuth = (!isNull _dPlayer) && {alive _dPlayer} && {isPlayer _dPlayer} && {!isNull _dCmd} && {side (group _dPlayer) == _dSide} && {group _dPlayer == _dCmd};
+					if (_dAuth) then {
+						_dLogik setVariable ["wfbe_aicom_player_delegate", (_dVal == "ON"), true];
+						diag_log ("AICOM2|v1|ORDER|aicom-ai-command|" + str _dSide + "|" + str (round (time / 60)) + "|delegate=" + _dVal + "|uid=" + (getPlayerUID _dPlayer));
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-ai-command|REJECT|" + str _dSide + "|auth=false|val=" + _dVal);
+					};
 				};
 			};
 		};
 	};
 	case "aicom-request-unit": {
-		//--- COMMAND CONSOLE (PR backend): a player asked the AI commander to favour a UNIT CLASS next time it founds a
-		//--- team - "armor" / "air" / "infantry". Stamp [type,time]; AssignTypes + Teams nudge the next founding type pick
-		//--- toward that class (a weight bias, NOT a hard force). Reuses the POSTURE TTL. AI-commander-run gate + west/east +
-		//--- class whitelist.
-		//--- PRODUCTION FIX (claude-gaming 2026-06-28): the client sends aicom-request-unit ONLY from the war room
-		//--- (the player IS the commander). The old _uRun=!_uHuman gate rejected EXACTLY that case, so every Build
-		//--- press was silently dropped (a root cause of ORDERS(war-room)=0). The consumer is SELF-PROTECTING and
-		//--- reachable under a human commander: the HYBRID-REFILL team-founding worker (AI_Commander_Teams.sqf:467)
-		//--- reads this [type,time] stamp TTL-gated (WFBE_C_AICOM_POSTURE_TTL) and applies only a SOFT weight bias,
-		//--- so a player order can neither pin nor destabilise the brain. We therefore gate only on ENABLED + HQ-alive
-		//--- + side + class whitelist - no human-commander gate. The TTL ages the stamp out on its own.
-		private ["_uSide","_uType","_uLogik"];
+		//--- COMMAND CONSOLE: human commander asked HYBRID-REFILL to favour a UNIT CLASS next founding
+		//--- ("armor"/"air"/"infantry"). Stamp [type,time]; soft weight bias only (WFBE_C_AICOM_POSTURE_TTL).
+		//--- PRODUCTION FIX (2026-06-28) removed !_uHuman so war-room orders land under a human commander.
+		//--- ORDER-AUTH 20260730: previously NO player / NO side bind - any client could forge production bias for
+		//--- either side. Require acting commander identity always-on. Client appends player. Soft bias + TTL kept.
+		private ["_uSide","_uType","_uLogik","_uPlayer","_uCmd","_uAuth"];
 		_uSide = _args select 1;
 		_uType = _args select 2;
+		_uPlayer = objNull; if (count _args > 3) then {_uPlayer = _args select 3};
 		if ((typeName _uType == "STRING") && {(_uType == "armor") || (_uType == "air") || (_uType == "infantry")} && {_uSide in [west, east]}) then {
 			_uLogik = (_uSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _uLogik) then {
 				if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0 && {alive ((_uSide) Call WFBE_CO_FNC_GetSideHQ)}) then {
-					_uLogik setVariable ["wfbe_aicom_request_type", [_uType, time]];
-					diag_log ("AICOM2|v1|ORDER|aicom-request-unit|" + str _uSide + "|" + str (round (time / 60)) + "|type=" + _uType);
+					_uCmd = (_uSide) Call WFBE_CO_FNC_GetCommanderTeam;
+					_uAuth = (!isNull _uPlayer) && {alive _uPlayer} && {isPlayer _uPlayer} && {!isNull _uCmd} && {side (group _uPlayer) == _uSide} && {group _uPlayer == _uCmd};
+					if (_uAuth) then {
+						_uLogik setVariable ["wfbe_aicom_request_type", [_uType, time]];
+						diag_log ("AICOM2|v1|ORDER|aicom-request-unit|" + str _uSide + "|" + str (round (time / 60)) + "|type=" + _uType + "|uid=" + (getPlayerUID _uPlayer));
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-request-unit|REJECT|" + str _uSide + "|auth=false|type=" + _uType);
+					};
 				};
 			};
 		};
 	};
+	case "aicom-manualpin": {
+		//--- Direct map/ALL-HOLD UI orders originate on a client, whose mission clock may differ after JIP/load.
+		//--- Resolve and stamp the pin server-side so AssignTowns compares two values from the same clock.
+		private ["_mpSide","_mpTeam","_mpPlayer","_mpLogik","_mpCmd","_mpTeams","_mpAuth"];
+		_mpSide = _args select 1;
+		_mpTeam = grpNull;
+		_mpPlayer = objNull;
+		if (count _args > 2) then {_mpTeam = _args select 2};
+		if (count _args > 3) then {_mpPlayer = _args select 3};
+		if (_mpSide in [west, east] && {typeName _mpTeam == "GROUP"} && {!isNull _mpTeam}) then {
+			_mpLogik = (_mpSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _mpLogik) then {
+				_mpCmd = (_mpSide) Call WFBE_CO_FNC_GetCommanderTeam;
+				_mpTeams = _mpLogik getVariable ["wfbe_teams", []];
+				_mpAuth = (!isNull _mpPlayer) && {alive _mpPlayer} && {isPlayer _mpPlayer} && {!isNull _mpCmd} && {group _mpPlayer == _mpCmd} && {_mpTeam in _mpTeams};
+				if (_mpAuth) then {
+					_mpTeam setVariable ["wfbe_aicom_manualpin", time, true];
+				};
+			};
+		};
+	};
+
 	case "aicom-rally": {
 		//--- cmdcon41-w3d COMMAND-MENU V2 (RALLY): the human commander ordered ONE team to pull back to the nearest own
 		//--- HQ / OWN-side town centre. Client sends [side, teamIdx] (index into this side's wfbe_teams, resolved the SAME
@@ -1267,6 +1414,19 @@ if (isNull _base) exitWith {
 									_rfAfford = true;
 									if (_rfCostOn) then {_rfAfford = (_rfFunds >= _rfCharge)};
 									if (_rfAfford) then {
+										//--- r114: this verb restamps wfbe_aicom_topup_req unconditionally below
+										//--- (unlike Produce/HCTopUp, which gate on a pending request). An unconsumed
+										//--- charged request (element 4 > 0) would be silently overwritten and its
+										//--- up-front treasury charge lost - refund it before restamping.
+										private ["_rfOldReq","_rfOldCharge"];
+										_rfOldReq = _rfTeam getVariable "wfbe_aicom_topup_req";
+										if (!isNil "_rfOldReq" && {(typeName _rfOldReq) == "ARRAY"} && {count _rfOldReq > 4}) then {
+											_rfOldCharge = _rfOldReq select 4;
+											if ((typeName _rfOldCharge) == "SCALAR" && {_rfOldCharge > 0}) then {
+												[_rfSide, _rfOldCharge] Call ChangeAICommanderFunds;
+												diag_log ("AICOM2|v1|ORDER|aicom-refit|OVERWRITE_REFUND|" + str _rfSide + "|idx=" + str _rfIdx + "|refund=" + str _rfOldCharge);
+											};
+										};
 										_rfChargedAmt = 0;
 										if (_rfCostOn) then {[_rfSide, -_rfCharge] Call ChangeAICommanderFunds; _rfChargedAmt = _rfCharge};
 										//--- fable/aicom-topup-refund-on-stale: store the ACTUAL charged amount (0 on the
@@ -1782,16 +1942,32 @@ if (isNull _base) exitWith {
 		_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 		_caicomNew = [];
 		{
-			if (!isNull (_x select 0) && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
+			if (!isNull (_x select 3) && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
 		} forEach _caicomList;
 		missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomNew];
 		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
 			if (isNull _cteam) then {
-				//--- Creation failed before registration: just release the pending slot.
+				//--- Creation failed before registration: release the pending slot AND refund its booked
+				//--- treasury charge (r114 founding-charge ledger) - Teams.sqf pre-charged the full
+				//--- template price before dispatch; the HC reported CreateTeam failure.
 				_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 				if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+				private ["_fifo","_r114Pop","_r114Side"];
+				_fifo = _clogik getVariable ["wfbe_aicom_pending_funds", []];
+				if ((count _fifo) > 0) then {
+					_r114Pop = _fifo select 0;
+					_fifo set [0, "WFBE_R114_POP"];
+					_clogik setVariable ["wfbe_aicom_pending_funds", _fifo - ["WFBE_R114_POP"]];
+					if ((typeName _r114Pop) == "SCALAR" && {_r114Pop > 0}) then {
+						_r114Side = (_csideID) Call WFBE_CO_FNC_GetSideFromID;
+						if (_r114Side in [west,east,resistance]) then {
+							[_r114Side, _r114Pop] Call ChangeAICommanderFunds;
+							diag_log ("AICOMSTAT|v1|EVENT|" + str _csideID + "|" + str (round (time / 60)) + "|FOUND_FAIL_REFUND|refund=" + str _r114Pop);
+						};
+					};
+				};
 			} else {
 				_cteams = _clogik getVariable ["wfbe_teams", []];
 				_cregistered = false;
@@ -1877,7 +2053,7 @@ if (isNull _base) exitWith {
 		//--- emptyQueu de-dupe SET. This handler previously appended only to emptyQueu and spawned the
 		//--- handler inline, so the collector loop never saw the hull and the abandoned-hull enrollment
 		//--- never actually went through the collector. Retarget to enroll into "emptyVehicles" exactly
-		//--- like every other producer (Client_BuildUnit.sqf:314-315); the collector then owns dedupe
+		//--- like the server-side producers (player buys now arrive server-routed via the "player-vehicle-enroll-empty" case below); the collector then owns dedupe
 		//--- (emptyQueu), the WFBE_SE_FNC_HandleEmptyVehicle spawn, and removal from the list - keeping
 		//--- the crew-safe delete timer authoritative and avoiding a double-spawn. The emptyQueu guard
 		//--- still skips a hull already in flight from a previous enrollment.
@@ -1886,6 +2062,35 @@ if (isNull _base) exitWith {
 		if (!isNull _avVeh && {alive _avVeh} && {!(_avVeh in _avList)} && {!(_avVeh in emptyQueu)}) then {
 			WF_Logic setVariable ["emptyVehicles", _avList + [_avVeh], true];
 			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-vehicle-abandoned enrolled hull [%1] type [%2] into empty-collector.", _avVeh, typeOf _avVeh]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+	//--- PLAYER-BUY EMPTY-VEHICLE ENROLLMENT (r102 bughunt): Client_BuildUnit previously appended its
+	//--- freshly bought hull to WF_Logic "emptyVehicles" with a client-side read-modify-write on a
+	//--- STALE REPLICA - two players buying within one replication window clobbered each other's append
+	//--- (and could erase a concurrent server-side aicom enrollment), silently dropping hulls from the
+	//--- empty-vehicle reaper: an abandoned player hull was never reaped and leaked for the rest of the
+	//--- match (the disconnecting-owner case included). The client now REQUESTS enrollment and the
+	//--- server appends authoritatively - server-side read+write has no replication window and matches
+	//--- the collector's own re-read-at-write hardening (emptyvehiclescollector.sqf). NARROWINGS
+	//--- (RequestSpecial is an unauthenticated bus): object-typed, alive, non-null, non-Man, and the
+	//--- buy-time wfbe_buyteam tag must be present - a forged enroll can then only target the exact
+	//--- hull class already subject to this reaper, and the crew-safe delete timer
+	//--- (Server_HandleEmptyVehicle.sqf) still gates the actual delete. Worst case = early reaper
+	//--- enrollment of a player-bought hull = the accepted class of aicom-vehicle-abandoned above.
+	case "player-vehicle-enroll-empty": {
+		Private ["_pvVeh","_pvList"];
+		if (count _args < 2) exitWith {};
+		_pvVeh = _args select 1;
+		if (typeName _pvVeh != "OBJECT") exitWith {};
+		if (isNull _pvVeh || {!alive _pvVeh} || {_pvVeh isKindOf "Man"}) exitWith {};
+		if (isNil {_pvVeh getVariable "wfbe_buyteam"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: player-vehicle-enroll-empty rejected hull [%1] type [%2] - no buy-team tag (forged request, or the tag broadcast lost the arrival-order race).", _pvVeh, typeOf _pvVeh]] Call WFBE_CO_FNC_LogContent;
+		};
+		_pvList = WF_Logic getVariable "emptyVehicles";
+		if (isNil "_pvList") then {_pvList = []};
+		if (!(_pvVeh in _pvList) && {!(_pvVeh in emptyQueu)}) then {
+			WF_Logic setVariable ["emptyVehicles", _pvList + [_pvVeh], true];
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: player-vehicle-enroll-empty enrolled hull [%1] type [%2] into empty-collector.", _pvVeh, typeOf _pvVeh]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 	//--- HELI FLY-OFF REFUND (user request): a commander team's empty AIR transport flew off
@@ -2149,9 +2354,10 @@ if (isNull _base) exitWith {
 	//--- tree, so its only consumer (the WFBE_CLIENT_%1_OBJECTS disconnect cleanup in
 	//--- Server_OnPlayerDisconnected.sqf) could never run either; removed together.
 	case "repair-camp": {
-		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY"];
+		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY","_repairRequester"];
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
+		_repairRequester = if ((count _args) > 3 && {(typeName (_args select 3)) == "OBJECT"}) then {_args select 3} else {objNull};
 
 		//--- harden-repair-camp (2026-07-25): reentrancy guard, mirrors Server_MHQRepair.sqf's
 		//--- precedent (PR #1361) - check+set BEFORE the alive read so two near-simultaneous
@@ -2160,12 +2366,14 @@ if (isNull _base) exitWith {
 		//--- server-internal presence-repair `call HandleSpecial` (server_town_camp.sqf) hit this
 		//--- safely. Released on every exit branch below.
 		if (_logic getVariable ["wfbe_camp_repairing", false]) exitWith {
+			if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair is already in progress."]] Call WFBE_CO_FNC_SendToClient};
 			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - repair already in progress."] Call WFBE_CO_FNC_LogContent;
 		};
 		_logic setVariable ["wfbe_camp_repairing", true, true];
 
 		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {
 			_logic setVariable ["wfbe_camp_repairing", false, true];
+			if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair is no longer needed."]] Call WFBE_CO_FNC_SendToClient};
 		};
 
 		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
@@ -2218,6 +2426,7 @@ if (isNull _base) exitWith {
 
 		//--- harden-repair-camp: release the reentrancy flag taken above now the repair is complete.
 		_logic setVariable ["wfbe_camp_repairing", false, true];
+		if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", true, "Camp repair completed."]] Call WFBE_CO_FNC_SendToClient};
 	};
 
 	//--- GUER PLAYER VBIED manual detonation (Feature B player-side, Ray 2026-06-16). The GUER player driver
@@ -2239,7 +2448,7 @@ if (isNull _base) exitWith {
 		if ((count _args) > 3 && {typeName (_args select 3) == "STRING"}) then {_requestToken = _args select 3};
 		_vbiedOK = false;
 		_vbiedMsg = "VBIED detonation denied; you must still be driving a live GUER VBIED.";
-		if (_requestToken != "" && {!isNull _veh} && {alive _veh} && {!isNull _driver} && {isPlayer _driver} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC). fable/guer-suicide-bike: OR the flag-gated suicide motorcycle -- SAME body below keeps the established attribution/reward flow.
+		if (_requestToken != "" && {!isNull _veh} && {alive _veh} && {!isNull _driver} && {isPlayer _driver} && {alive _driver} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC). fable/guer-suicide-bike: OR the flag-gated suicide motorcycle -- SAME body below keeps the established attribution/reward flow.
 			if (_veh getVariable ["wfbe_vbied_server_fired", false]) then {
 				_vbiedMsg = "VBIED detonation was already accepted.";
 			} else {
@@ -2556,7 +2765,7 @@ if (isNull _base) exitWith {
 		};
 		_pos    = _args select 1;
 		_player = _args select 2;
-		if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0 && {typeName _pos == "ARRAY"} && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {  //--- sweep-fix: master-flag re-check server-side so the feature is truly inert when WFBE_C_GUER_HELIBOMB_ENABLE=0 (a client can send the request even with its addAction hidden).
+		if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0 && {typeName _pos == "ARRAY"} && {!isNull _player} && {alive _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {  //--- sweep-fix: master-flag re-check server-side so the feature is truly inert when WFBE_C_GUER_HELIBOMB_ENABLE=0 (a client can send the request even with its addAction hidden).
 			//--- KILL-TIER GATE (server-authoritative re-check): the addAction's own condition string already
 			//--- hides this from a not-yet-unlocked player client-side, but that is a UX convenience, not a
 			//--- trust boundary - re-check here before any funds move.

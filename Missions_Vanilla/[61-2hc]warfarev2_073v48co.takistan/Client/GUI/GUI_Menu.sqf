@@ -45,6 +45,8 @@ if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hanga
 [11006, commandInRange && (player == leader WFBE_Client_Team)] call _setWFMenuState; //--- Special Menu
 if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {[11006, true] call _setWFMenuState}; //--- fable/drones-menu: restore DRONES enable overridden by line above
 
+private ["_gvisLastLabel"];
+_gvisLastLabel = "";
 MenuAction = -1;
 WFBE_ForceUpdate = true;
 
@@ -69,6 +71,18 @@ while {alive player && dialog} do {
 			if ((missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) <= 0) then {[11006, false] call _setWFMenuState}; //--- fable/drones-menu: keep Drones button live when flag on
 				[11007, true] call _setWFMenuState; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
 				if (((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time) then { {[_x, false] call _setWFMenuState} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
+				//--- r95: refresh the Towns wallet readout in-loop; it was set once at dialog open, so stipend income
+				//--- and Commissar spending never showed while the hub stayed open (stale label).
+				if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+					private ["_gvisW2","_gvisL2"];
+					_gvisW2 = (group player) getVariable "wfbe_funds";
+					if (isNil "_gvisW2") then {_gvisW2 = 0};
+					_gvisL2 = Format ["Towns ($%1)", round _gvisW2];
+					if (_gvisL2 != _gvisLastLabel) then {
+						_gvisLastLabel = _gvisL2;
+						ctrlSetText [11008, _gvisL2];
+					};
+				};
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};

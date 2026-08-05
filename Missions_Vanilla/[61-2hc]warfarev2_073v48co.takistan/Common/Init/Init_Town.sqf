@@ -15,6 +15,9 @@ if ((count _this) > 6) then {
 };
 _townRange = 600;
 
+//--- TOWNENTRY|v1: prove the mission.sqm execVM reached this worker before the readiness gate.
+diag_log format ["TOWNENTRY|v1|START|name=%1|modeNil=%2|paramsNil=%3|templateNil=%4", _townName, isNil "townModeSet", isNil "WFBE_Parameters_Ready", isNil "TownTemplate"];
+
 if(isNil "WFBE_Parameters_Ready")then{
 	WFBE_Parameters_Ready = false;
 };
@@ -39,6 +42,9 @@ if (!townModeSet || !WFBE_Parameters_Ready || isNil "TownTemplate") then {
 	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: town mode/parameters were not ready after 60s - proceeding (town=%1).", (_town getVariable ["name", "?"])];
 };
 
+//--- TOWNGATE|v1: pair with TOWNENTRY to distinguish a queued worker from a gate stall/timeout.
+diag_log format ["TOWNGATE|v1|AFTER|name=%1|waitTicks=%2|mode=%3|params=%4|templateNil=%5", _townName, _wTownMode, townModeSet, WFBE_Parameters_Ready, isNil "TownTemplate"];
+
 //--- Prevent the isServer bug on the client.
 sleep (1.2 + random 0.2);
 
@@ -53,8 +59,10 @@ if (isNil "TownTemplate") then {
 	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: TownTemplate was still undefined after the readiness wait - defaulting to [] (town=%1).", (_town getVariable ["name", "?"])];
 };
 
-//todo, opposite system.
-if ((str _town) in TownTemplate) exitWith {
+//--- r93 equality/identity: TownTemplate holds hand-written town NAME strings (mission.sqm Towns_Removed*
+//--- lists); str of a depot LOGIC is the engine handle form ("<id>: <class>") and can never match a
+//--- bare name - compare the town-name argument instead so the Towns-amount lobby mode actually removes towns.
+if (_townName in TownTemplate) exitWith {
 	["INITIALIZATION",Format ["Init_Town.sqf : Removed town [%1] since it is disabled.", _townName]] Call WFBE_CO_FNC_LogContent;
 	_town setVariable ["wfbe_inactive", true];
 };

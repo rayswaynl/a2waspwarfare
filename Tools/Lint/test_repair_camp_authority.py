@@ -58,6 +58,8 @@ REENTRANCY_GUARD_SET = '_logic setVariable ["wfbe_camp_repairing", true, true];'
 REENTRANCY_GUARD_RELEASE = '_logic setVariable ["wfbe_camp_repairing", false, true];'
 
 CLIENT_PAYLOAD = '["repair-camp", _camp, WFBE_Client_SideID, player]'
+ENGINEER_ON_FOOT_GUARD = 'if (vehicle _vehicle != _vehicle) exitWith {};'
+ENGINEER_LOOP_ON_FOOT_GUARD = 'if (!alive _vehicle || (vehicle _vehicle != _vehicle)'
 
 
 def test_pvf_gate_present_on_all_terrains() -> None:
@@ -102,6 +104,37 @@ def test_client_actions_send_requester_identity() -> None:
             assert CLIENT_PAYLOAD in source, (
                 f"{terrain}/{relative}: repair-camp request no longer sends `player` as the 4th element"
             )
+
+
+def test_engineer_repair_requires_an_on_foot_animation_subject() -> None:
+    """The engineer action must not run its foot medic animation from a vehicle seat.
+
+    Unlike the standard repair-camp action, this action is attached directly to the
+    player and repeatedly issues ``playMove`` to that action unit.  A seated unit
+    cannot perform the foot animation, so reject a seated caller before charging
+    and also cancel/refund if the player boards during the repair delay.
+    """
+    for terrain in TERRAINS:
+        source = (ROOT / terrain / "Client/Action/Action_RepairCampEngineer.sqf").read_text(encoding="utf-8")
+        assert ENGINEER_ON_FOOT_GUARD in source, (
+            f"{terrain}: engineer repair does not reject a seated player before charging"
+        )
+        assert source.index(ENGINEER_ON_FOOT_GUARD) < source.index("//--- Check if the repair is free"), (
+            f"{terrain}: engineer on-foot guard must precede the funds debit path"
+        )
+        loop_start = source.index("while {_delay > 0} do {")
+        assert ENGINEER_LOOP_ON_FOOT_GUARD in source, (
+            f"{terrain}: engineer repair loop does not cancel when the player boards"
+        )
+        assert source.index(ENGINEER_LOOP_ON_FOOT_GUARD, loop_start) < source.index("_vehicle playMove", loop_start), (
+            f"{terrain}: engineer repair issues playMove before checking for a vehicle seat"
+        )
+        cancellation_start = source.index("if (!(alive _vehicle)")
+        cancellation_end = source.index("};", cancellation_start)
+        cancellation = source[cancellation_start:cancellation_end]
+        assert "(vehicle _vehicle != _vehicle)" in cancellation, (
+            f"{terrain}: engineer repair does not refund when boarding cancels the action"
+        )
 
 
 def test_internal_presence_repair_caller_untouched() -> None:

@@ -28,6 +28,7 @@ from matchdata import (
 from matchfacts import parse_match_family
 
 WASPSTAT_PREFIX = "WASPSTAT|v1|"
+WASPSTAT_EXTENDED_RECORDS = ("CAMP", "BUILDINGKILL")
 
 #--- Fixed faction order for every table and chart in the report. Never rank-ordered:
 #--- a filter or a zero-score faction must not repaint or reorder the others.
@@ -66,6 +67,14 @@ def pct(n, total):
     return (100.0 * n / total) if total else 0.0
 
 
+def _is_playerstats_token(token):
+    """A PLAYERSTATS head has a UID and all 15 deltas plus the side field."""
+    if ":" not in token:
+        return False
+    uid, fields = token.split(":", 1)
+    return bool(uid) and len(fields.split(",")) >= 16
+
+
 class DeepMatch(object):
     """Every derived table the in-depth report renders. Build via `parse_deep`."""
 
@@ -80,6 +89,7 @@ class DeepMatch(object):
         self.caps = []               # {t, town, old, new, exact}
         self.kills = []              # {t, killer, victim, kside, vside, weapon, cat, dist, exact}
         self.support_events = []
+        self.auxiliary_times = []    # measured t= values on coverage-only WASPSTAT records
         self.players = []
         self.excluded_players = []   # HC / AI-controller rows, kept only for the audit
         self.pvp_pairs = Counter()
@@ -465,6 +475,14 @@ class DeepMatch(object):
         if self.unresolved_uids:
             warns.append("%d operator UID(s) had no display name and render as Op-XXXX. Supply a "
                          "UID<TAB>name file with --names to label them." % self.unresolved_uids)
+        extended = sum(self.record_counts.get(rtype, 0) for rtype in WASPSTAT_EXTENDED_RECORDS)
+        if extended:
+            warns.append("%d CAMP/BUILDINGKILL record(s) are recognized but not included in event "
+                         "tables; their counts remain visible in Telemetry coverage." % extended)
+        unknown = self.record_counts.get("UNKNOWN", 0)
+        if unknown:
+            warns.append("%d WASPSTAT record(s) had an unrecognized type and were excluded from "
+                         "the report." % unknown)
         if not self.coverage["towns_known"]:
             warns.append("No static town table for '%s'; only towns that changed hands appear, and "
                          "territory-seconds exclude towns that never flipped." % self.map_name)
@@ -532,7 +550,13 @@ def parse_deep(lines, names=None):
             cat = _clean(parts[10]) if len(parts) > 10 else "INF"
             kills_raw.append((seq, kuid, vuid, kside, vside, _pretty_weapon(weap),
                               cat, dist, _time_token(parts[8:])))
-        else:
+        elif rtype in WASPSTAT_EXTENDED_RECORDS:
+            dm.record_counts[rtype] += 1
+            if rtype == "CAMP":
+                t = _time_token(parts[7:])
+                if t is not None:
+                    dm.auxiliary_times.append(t)
+        elif _is_playerstats_token(rtype):
             dm.record_counts["PLAYERSTATS"] += 1
             for tok in parts[3:]:
                 if ":" not in tok:
@@ -554,6 +578,8 @@ def parse_deep(lines, names=None):
                     acc["name"] = nm
                 for j in range(15):
                     acc["d"][j] += d[j]
+        else:
+            dm.record_counts["UNKNOWN"] += 1
 
     #--- identity: END wins, then ROUNDEND, then START.
     f = dm.facts
@@ -574,6 +600,7 @@ def parse_deep(lines, names=None):
         observed = [t for t in
                     [r[4] for r in caps_raw] + [r[8] for r in kills_raw]
                     + [s["t"] for (_ln, s) in support_raw]
+                    + dm.auxiliary_times
                     + [m["t"] for m in (f.milestones if f else [])]
                     if t is not None]
         dm.duration = max(observed) if observed else 0

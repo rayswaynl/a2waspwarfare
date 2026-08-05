@@ -10,13 +10,23 @@
 	(base "GrenadeHand" is impact-fused with fuseDistance=5 and can fail to arm at rest).
 */
 
-Private ["_team","_leader","_units","_vehicles","_vehicle","_sideID","_cmd","_uCount","_vCount"];
-
+Private ["_team","_leader","_units","_vehicles","_vehicle","_sideID","_cmd","_uCount","_vCount","_disbandDone","_hasPlayerCrew"];
 if (count _this < 1) exitWith {false};
 _team = _this select 0;
 if (isNull _team) exitWith {false};
 _leader = leader _team;
 if (isNull _leader || {!local _leader}) exitWith {false};
+
+//--- r90 single-execution gate: an explicit commander disband (Server_HandleSpecial
+//--- "aicom-team-disband") stamps wfbe_aicom_disband AND routes "aicom-team-disband-execute"
+//--- to the leader owner, so TWO executors reach this function for the same team - the
+//--- team's own driver loop (Common_RunCommanderTeam.sqf, fires on the flag) and the routed
+//--- handler (after its combat wait). The second call used to land inside the 4s grenade
+//--- fuse window: every soldier still alive ate a SECOND live grenade and a duplicate
+//--- aicom-team-ended went out. The first call is synchronous and stamps ended_fired below,
+//--- so a later duplicate exits here. 1-arg getVariable + isNil (GROUP receiver).
+_disbandDone = _team getVariable "wfbe_aicom_ended_fired";
+if (!isNil "_disbandDone" && {_disbandDone}) exitWith {false};
 
 _sideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 _cmd = _team getVariable "wfbe_aicom_disband_cmd";
@@ -30,7 +40,15 @@ _vehicles = [];
 	};
 } forEach _units;
 
-//--- Vehicles first: cook the hull (mounted crew dies with it); never touch a player-crewed hull.
+//--- Vehicles first: a player-crewed hull is a hard stand-down for the whole destructive retire.
+//--- Otherwise the later driver-tail cleanup deletes its AI crew while the player remains seated.
+_hasPlayerCrew = false;
+{
+	if (!isNull _x) then {
+		if ({isPlayer _x} count (crew _x) > 0) then {_hasPlayerCrew = true};
+	};
+} forEach _vehicles;
+if (_hasPlayerCrew) exitWith {false};
 _vCount = 0;
 {
 	if (!isNull _x && {local _x} && {alive _x} && {({isPlayer _x} count (crew _x)) == 0}) then {

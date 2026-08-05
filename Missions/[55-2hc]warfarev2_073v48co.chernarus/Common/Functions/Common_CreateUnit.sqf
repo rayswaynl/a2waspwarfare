@@ -9,7 +9,7 @@
 		- {PLacement}
 */
 
-Private ["_get", "_global", "_globalInitMode", "_leaderIsPlayer", "_perfScope", "_perfStart", "_position", "_side", "_sideValue", "_skill", "_special", "_team", "_teamLeader", "_trackInfantry", "_type", "_unit"];
+Private ["_deferGlobalInit", "_get", "_global", "_globalInitMode", "_leaderIsPlayer", "_perfScope", "_perfStart", "_position", "_side", "_sideValue", "_skill", "_special", "_team", "_teamLeader", "_trackInfantry", "_type", "_unit"];
 
 _type = _this select 0;
 _team = _this select 1;
@@ -17,6 +17,7 @@ _position = _this select 2;
 _side = _this select 3;
 _global = if (count _this > 4) then {_this select 4} else {true};
 _special = if (count _this > 5) then {_this select 5} else {"FORM"};
+_deferGlobalInit = if (count _this > 6) then {_this select 6} else {false};
 // Marty: Performance Audit tracks whether unit creation causes global client initialization.
 _perfStart = diag_tickTime;
 _globalInitMode = "globalFalse";
@@ -45,7 +46,11 @@ if (isNull _team) exitWith {
 };
 
 _get = missionNamespace getVariable _type;
-_skill = if !(isNil '_get') then {_get select QUERYUNITSKILL} else {missionNamespace getVariable "WFBE_C_UNITS_SKILL_DEFAULT"};
+_skill = if !(isNil '_get') then {_get select QUERYUNITSKILL} else {missionNamespace getVariable ["WFBE_C_UNITS_SKILL_DEFAULT", 0.5]};
+//--- r76b: setSkill on nil/non-scalar (missing QUERYUNITSKILL / broken registry) throws; clamp [0,1].
+if (isNil "_skill" || {typeName _skill != "SCALAR"}) then {_skill = missionNamespace getVariable ["WFBE_C_UNITS_SKILL_DEFAULT", 0.5]};
+if (isNil "_skill" || {typeName _skill != "SCALAR"}) then {_skill = 0.5};
+_skill = (_skill max 0) min 1;
 _unit = _team createUnit [_type, _position, [], 5, _special];
 
 // Marty: Stop cleanly if the engine refused the unit, usually because a group/unit limit was reached.
@@ -54,7 +59,7 @@ if (isNull _unit) exitWith {
 	objNull
 };
 
-_unit setSkill _skill;
+if (alive _unit) then {_unit setSkill _skill};
 
 // Claude: weapon-backfill. Some specialist EP1 / crew classes come back from
 // createUnit with an EMPTY primary loadout (engine quirk), producing the
@@ -91,11 +96,19 @@ if (_type == "Ins_Soldier_AT") then {
 
 // Add custom RPG-7 VR soldier (MVD_Soldier_AT)
 if (_type == "MVD_Soldier_AT") then {
+	private ["_mvdMuzzles", "_mvdPreviousWeapon"];
+	_mvdPreviousWeapon = currentWeapon _unit;
 	_unit removeMagazine "PG7VL";
 	_unit removeMagazine "PG7VL";
 	_unit removeMagazine "OG7";
+	// Bind PG7VR to the RPG-7V muzzle instead of the built-in Pecheneg muzzle.
+	_unit removeWeapon "RPG7V";
+	_unit addWeapon "RPG7V";
+	_mvdMuzzles = getArray (configFile >> "CfgWeapons" >> "RPG7V" >> "muzzles");
+	if (count _mvdMuzzles == 0 || {"this" in _mvdMuzzles}) then {_unit selectWeapon "RPG7V"} else {_unit selectWeapon (_mvdMuzzles select 0)};
 	_unit addMagazine "PG7VR";
 	_unit addMagazine "PG7VR";
+	if (_mvdPreviousWeapon != "" && {_unit hasWeapon _mvdPreviousWeapon}) then {_unit selectWeapon _mvdPreviousWeapon};
 };
 
 if (_global) then {
@@ -109,7 +122,7 @@ if (_global) then {
 			if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_INFANTRY") > 0) then {
 				_globalInitMode = "vehicleInit";
 				_unit setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _side];
-				processInitCommands;
+				if (!_deferGlobalInit) then {processInitCommands};
 			} else {
 				_leaderIsPlayer = isPlayer leader _team;
 				if (_leaderIsPlayer) then {

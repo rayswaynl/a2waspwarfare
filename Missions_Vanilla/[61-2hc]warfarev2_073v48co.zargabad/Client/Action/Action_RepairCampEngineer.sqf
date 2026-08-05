@@ -7,6 +7,9 @@ Private ["_camp","_camp_sideID","_camps","_delay","_price","_range","_temp","_to
 
 _vehicle = _this select 0;
 
+//--- This player-held action drives a foot medic animation; do not charge or start it from a vehicle seat.
+if (vehicle _vehicle != _vehicle) exitWith {};
+
 _range = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_RANGE";
 _price = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE";
 
@@ -61,14 +64,14 @@ hint (localize "STR_WF_Repair_Camp_IsBeingRepaired");
 _delay = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_DELAY";
 
 while {_delay > 0} do {
+	if (!alive _vehicle || (vehicle _vehicle != _vehicle) || alive (if (isNil {_camp getVariable 'wfbe_camp_bunker'}) then {objNull} else {_camp getVariable 'wfbe_camp_bunker'}) || (_vehicle distance _camp > _range)) exitWith {};
     _vehicle playMove "AinvPknlMstpSlayWrflDnon_medic";
-	if (!alive _vehicle || alive (if (isNil {_camp getVariable 'wfbe_camp_bunker'}) then {objNull} else {_camp getVariable 'wfbe_camp_bunker'}) || (_vehicle distance _camp > _range)) exitWith {};
 	
 	sleep 1;
 	_delay = _delay - 1;
 }; 
 
-if (!(alive _vehicle) || (_vehicle distance _camp > _range)) exitWith {
+if (!(alive _vehicle) || (vehicle _vehicle != _vehicle) || (_vehicle distance _camp > _range)) exitWith {
 	hint (localize "STR_WF_Repair_TooFar");
 	if (_price > 0) then {_price Call WFBE_CL_FNC_ChangeClientFunds;};
 };
@@ -82,6 +85,7 @@ if (alive (if (isNil {_camp getVariable 'wfbe_camp_bunker'}) then {objNull} else
 //--- Repair order is sent to the server.
 //--- harden-repair-camp (2026-07-25): now sends `player` too so the server can verify the requester
 //--- is a live player, near the camp, and actually of the claimed repair side (RequestSpecial.sqf).
+missionNamespace setVariable ["WFBE_CampRepairPending", true];
 ["RequestSpecial", ["repair-camp", _camp, WFBE_Client_SideID, player]] Call WFBE_CO_FNC_SendToServer;
 
 sleep 4;

@@ -1,3 +1,9 @@
+/*
+	Structure damage gate. Parameters (from a HandleDamage EH): [_this select 0, _this select 2,
+	_this select 3, _this select 4] = [building, damage, origin, ammo]. Callers MUST pass all four
+	args (see Construction_HQSite.sqf deployed-HQ site); a 3-arg call leaves _ammo nil and the
+	B_30mm_HE/B_23mm_AA reduction in Server_HandleBuildingDamage.sqf can never engage.
+*/
 Private ['_building','_dammages','_origin','_side','_sideBuilding','_side'];
 
 _building = _this select 0;

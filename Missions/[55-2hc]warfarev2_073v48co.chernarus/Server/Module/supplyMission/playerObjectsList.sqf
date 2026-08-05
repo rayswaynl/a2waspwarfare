@@ -3,7 +3,14 @@
 		private ["_playerObject","_currentPlayerUID","_i","_arrayPosMatch","_iteratedPlayerUID","_matchFound"];
 
 		_playerObject = _this select 0;
-		_currentPlayerUID = _this select 1;
+		//--- fix(bughunt supply-cargo 20260730): never trust the client-claimed UID half of [playerObject, UID].
+		//--- Derive from the object server-side (same unflagged narrowing as #1404 Finding 3; legitimate
+		//--- Init_Client already sends getPlayerUID player, so honest clients are a no-op).
+		//--- A forged [attackerObj, victimUID] pair previously poisoned WFBE_SE_PLAYERLIST, which the
+		//--- truck-delivery attribution scan trusts.
+		if ((typeName _playerObject) != "OBJECT" || {isNull _playerObject}) exitWith {};
+		_currentPlayerUID = getPlayerUID _playerObject;
+		if (_currentPlayerUID == "") exitWith {};
 
 		_matchFound = false;
 		_arrayPosMatch = 0;

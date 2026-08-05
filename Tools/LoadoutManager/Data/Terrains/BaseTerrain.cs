@@ -153,6 +153,15 @@ class CfgSounds
                 _destinationDirection + @"\Client\Module\EASA\EASA_Init.sqf",
                 "//LoadoutManagerGuerEasaInsert",
                 "//LoadoutManagerGuerEasaInsert_END");
+
+            // SEAD opt-in EASA row (owner ruling 2026-08-02): same regen-safe marker-insert
+            // pattern as the Ka-137 block above, scoped to the three terrains we ship (CH main +
+            // TK/ZG vanilla mirrors) - modded terrains never carried F35B/Su34 SEAD to begin with.
+            FileManager.InsertGeneratedCodeInToAFile(
+                FileManager.GenerateSeadEasaRowBlock(),
+                _destinationDirection + @"\Client\Module\EASA\EASA_Init.sqf",
+                "//LoadoutManagerSeadEasaInsert",
+                "//LoadoutManagerSeadEasaInsert_END");
         }
 
         WriteToFile(_destinationDirection, _commonBalanceFileString, @"\Common\Functions\Common_BalanceInit.sqf");

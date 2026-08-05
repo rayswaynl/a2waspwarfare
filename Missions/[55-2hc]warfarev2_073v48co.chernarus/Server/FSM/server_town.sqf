@@ -439,7 +439,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			};
 		};
 
-		if(_captured) then {
+		if(_captured && !WFBE_GameOver) then {
 			["INFORMATION", Format ["server_town.sqf: Town [%1] was captured by [%2] From [%3].", _location, _newSide, _side]] Call WFBE_CO_FNC_LogContent;
 
 			if (_sideID != WFBE_C_UNKNOWN_ID) then {
@@ -583,6 +583,41 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
 			//--- Also clear episode latch so the new owner's activation episode is not blocked.
+			//--- DESPAWN-BUDGET INTEGRITY (2026-07-30): FM-5 used to clear only the active/episode flags.
+			//--- That left the previous owner's mobile town AI in wfbe_town_teams + live on HC while the new
+			//--- owner could immediately re-activate and APPEND a second garrison into the same registry.
+			//--- Deactivation cleanup is side-scoped (cleanup-townai + current owner), so the old-side HC
+			//--- groups never got reaped and kept burning the GUER/side group budget after capture.
+			//--- Reclaim here with the same locality rules as server_town_ai deactivation: broadcast
+			//--- cleanup-townai for the OLD side, delete server-local units, free empty groups, then
+			//--- wipe the registry so the new owner's first episode starts clean. Static defenses still
+			//--- use the separate DEFENDER_LINGER path below (Task 32).
+			private ["_capOldTeams","_capOldTeam","_capOldVehs"];
+			_capOldTeams = _location getVariable ["wfbe_town_teams", []];
+			if (typeName _capOldTeams != "ARRAY") then {_capOldTeams = []};
+			if (isMultiplayer) then {
+				[nil, "HandleSpecial", ["cleanup-townai", _location, _side]] Call WFBE_CO_FNC_SendToClients;
+			};
+			{
+				_capOldTeam = _x;
+				if (!isNil "_capOldTeam" && {!isNull _capOldTeam}) then {
+					{if (local _x && {!(isPlayer _x)}) then {["town-capture-unit", _x, Format ["town=%1", _location getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _capOldTeam);
+					if (({!(local _x)} count (units _capOldTeam)) == 0) then {deleteGroup _capOldTeam};
+				};
+			} forEach _capOldTeams;
+			_capOldVehs = _location getVariable ["wfbe_active_vehicles", []];
+			if (typeName _capOldVehs != "ARRAY") then {_capOldVehs = []};
+			{
+				if (!isNull _x && {alive _x} && {local _x} && {({isPlayer _x} count (crew _x)) == 0}) then {
+					["town-capture-hull", _x, Format ["town=%1", _location getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete;
+					deleteVehicle _x;
+				};
+			} forEach _capOldVehs;
+			_location setVariable ["wfbe_town_teams", []];
+			_location setVariable ["wfbe_active_vehicles", []];
+			_location setVariable ["wfbe_sortie_grp", grpNull, true];
+			_location setVariable ["wfbe_sortie_started", 0];
+			_location setVariable ["wfbe_sortie_rtb", false];
 			_location setVariable ["wfbe_active", false];
 			_location setVariable ["wfbe_active_air", false];
 			_location setVariable ["wfbe_episode_spawned", false];
@@ -612,7 +647,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					if !(isNull _airLogicRef) then {
 						//--- Delete previous owner's hangar.
 						_oldHangar = _location getVariable ["wfbe_airfield_hangar_obj", objNull];
-						if !(isNull _oldHangar) then { deleteVehicle _oldHangar };
+						if !(isNull _oldHangar) then { ["town-hangar-old", _oldHangar, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _oldHangar };
 
 						//--- Spawn new hangar for the new owner (same pattern as ~line 492 airfield block).
 						//--- B74.2: place at the carrier DECK height (deckZ), not sea level, so the re-captured
@@ -663,7 +698,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 								_x setVariable ["wfbe_structures", _navSpOldStructures - [_navSpOld], true];
 							};
 						} forEach [WFBE_L_BLU, WFBE_L_OPF, WFBE_L_GUE];
-						deleteVehicle _navSpOld;
+						["town-navsp-old", _navSpOld, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _navSpOld;
 					};
 
 					//--- Deck placement: modelToWorld XY off the stored hull reference part, then setPosASL to deckZ
@@ -780,13 +815,13 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 								_oldGunner = gunner _def;
 								if (!isNull _oldGunner && {!isPlayer _oldGunner}) then {
 									if (local _oldGunner) then {
-										deleteVehicle _oldGunner;
+										["town-defense-gunner-reap", _oldGunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _oldGunner;
 									} else {
 										[_oldGunner, "HandleSpecial", ["cleanup-town-defense-gunner", _oldGunner, "capture-teardown"]] Call WFBE_CO_FNC_SendToClient;
 									};
 								};
 							};
-							deleteVehicle _def;
+							["town-defense-structure", _def, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _def;
 						};
 						_x setVariable ["wfbe_defense", nil];
 					} forEach (_location getVariable ["wfbe_town_defenses", []]);
@@ -870,7 +905,9 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 						_townRange   = 600 * (missionNamespace getVariable ["WFBE_C_TOWNS_DETECTION_RANGE_COEF", 1]);
 						_mopupEnd   = time + (missionNamespace getVariable ["WFBE_C_TOWNS_MOPUP_TTL", 600]);
 
-						while {_scanActive && !isNull _squadGrp && {count (units _squadGrp) > 0} && {time < _mopupEnd}} do {
+						//--- r87: alive-only guard - `units` includes dead-but-unreaped bodies, so a fully wiped squad
+						//--- kept 30s-scanning until the TTL. Exit as soon as no live member remains.
+						while {_scanActive && !isNull _squadGrp && {({alive _x} count (units _squadGrp)) > 0} && {time < _mopupEnd}} do {
 							sleep 30;
 
 							//--- Hard-despawn if town deactivated or flipped.
@@ -902,8 +939,13 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 
 						//--- Despawn the mop-up squad.
 						if !(isNull _squadGrp) then {
-							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach (units _squadGrp);
-							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach _squadVehicles;
+							//--- r87 despawn-integrity: purge corpses too (no alive filter) - A2 deleteGroup silently NO-OPS
+							//--- on a non-empty group, so dead-but-unreaped members held the group slot until the corpse GC.
+							//--- Match the town_ai deactivation teardown shape; !isPlayer guard kept (B67 wiki-wins).
+							{if (!isNull _x && !(isPlayer _x)) then {["town-mopup-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _squadGrp);
+							//--- r128: player-crew guard merged with r87 VEHDEL probe - a player (GUER is playable) riding
+							//--- a mop-up squad vehicle must not be deleted with the hull.
+							{if (!isNull _x && {alive _x} && {({isPlayer _x} count (crew _x)) == 0}) then {["town-mopup-vehicle", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _squadVehicles;
 							if !(isNull _squadGrp) then {deleteGroup _squadGrp};
 						};
 						_loc setVariable ["wfbe_mopup_group", grpNull, false];
@@ -931,7 +973,7 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 						if !(isNull _garUnit) then {
 							if (alive _garUnit) then {
 								if (local _garUnit) then {
-									deleteVehicle _garUnit;
+									["town-garrison-unit-cleanup", _garUnit, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _garUnit;
 								};
 								//--- Non-local units are cleaned up by the broadcast below.
 							};
@@ -972,7 +1014,7 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 							_x setVariable ["wfbe_structures", _oldStructures - [_oldSP], true];
 						};
 					} forEach [WFBE_L_BLU, WFBE_L_OPF, WFBE_L_GUE];
-					deleteVehicle _oldSP;
+					["town-sp-old", _oldSP, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _oldSP;
 				};
 
 				//--- Create new repair point 80m north of the airfield logic position.
@@ -1025,8 +1067,8 @@ if (isNull _sp) then { //--- r49 fail-clean: null create must not setPos/registe
 						missionNamespace setVariable ["WFBE_CBR_EAST", (missionNamespace getVariable ["WFBE_CBR_EAST", []]) - [_oldRadar]];
 						//--- Delete dressing props explicitly (Killed EH won't fire on deleteVehicle).
 						_oldDressing = _oldRadar getVariable ["wfbe_dressing", []];
-						{if !(isNull _x) then {deleteVehicle _x}} forEach _oldDressing;
-						deleteVehicle _oldRadar;
+						{if !(isNull _x) then {["town-dressing-prop", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _oldDressing;
+						["town-radar-old", _oldRadar, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _oldRadar;
 						["INFORMATION", Format ["server_town.sqf: [%1] airfield CBR removed on recapture.", str _side]] Call WFBE_CO_FNC_LogContent;
 					};
 

@@ -230,7 +230,7 @@ while {!WFBE_GameOver} do {
 	};
 	sleep _interval;
 
-	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_enemyAirScanBudget","_enemyAirScanCount","_enemyAirScanned"];
+	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups","_flyAwayGroups","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_enemyAirScanBudget","_enemyAirScanCount","_enemyAirScanned"];
 	_perfStart = diag_tickTime;
 	_perfAirBefore = count _defenders;
 	_perfDropsBefore = count _drops;
@@ -247,6 +247,7 @@ while {!WFBE_GameOver} do {
 	_kept         = [];
 	_townsWithAir = [];
 	_prunedGroups = [];
+	_flyAwayGroups = [];
 	{
 		private ["_entry","_eTown","_eVeh","_eGrp","_ePilot","_eGunner","_eSpawn","_eLastEnemy","_drop","_reason","_enemiesNow","_townSide","_townActive","_flyAway"];
 		_entry      = _x;
@@ -321,10 +322,21 @@ while {!WFBE_GameOver} do {
 				&& {({isPlayer _x} count (crew _eVeh)) == 0};
 
 			if (_flyAway) then {
-				//--- Self-contained: this thread does its OWN player-safe teardown and only frees the
-				//--- group once it is empty (alive-unit count == 0), so it never races the deferred
-				//--- group-teardown post-pass below for a swarm-shared group. _eGrp is deliberately NOT
-				//--- added to _prunedGroups on this path.
+				//--- fix(airdef) AIRDEFGC v1: the comment this replaces claimed _eGrp deliberately staying
+				//--- OUT of _prunedGroups meant this path "never races the deferred group-teardown post-pass"
+				//--- - that was false. The post-pass frees any pruned group no longer referenced by a KEPT
+				//--- registry entry, and a flyaway-dropped entry is ALSO absent from _kept (dropped either
+				//--- way, same as immediate despawn). With WFBE_C_GUER_KA137_SWARM sharing one group across
+				//--- a leader + extras, if a SIBLING in the group prunes via the immediate path in the SAME
+				//--- tick this entry takes the flyaway path, the post-pass deleted the WHOLE shared group -
+				//--- including this thread's still-alive, still-flying pilot+gunner - out from under it,
+				//--- leaving the hull a crewless derelict (visibly "not despawning") until this thread's own
+				//--- bounded wait eventually notices the empty crew and tears the hull down itself. Register
+				//--- the group as flyaway-owned so the post-pass leaves it strictly to this thread, which
+				//--- already only frees the group once it holds no living unit (see below) - restoring the
+				//--- "never touch a group another live claim still needs" idiom (mirrors #1862's ambient-air
+				//--- group-first teardown).
+				_flyAwayGroups = _flyAwayGroups + [_eGrp];
 				[_eTown, _eVeh, _eGrp, _ePilot, _eGunner, _flyHeight] Spawn {
 					private ["_t","_v","_g","_p","_gu","_h","_tPos","_vPos","_dx","_dy","_ang","_flyPos","_climbH","_timeout","_tick","_done","_finalDist"];
 					_t = _this select 0;
@@ -414,13 +426,20 @@ while {!WFBE_GameOver} do {
 	//--- registry entry still references it (leader + every swarm extra that shared it have
 	//--- ALL been pruned). Any pruned group still shared by a surviving sibling is left alone -
 	//--- its crew/hull were untouched above, so the sibling keeps its group and orders intact.
+	//--- fix(airdef) AIRDEFGC v1: a group still owned by an in-flight flyaway thread (_flyAwayGroups,
+	//--- populated above) must never be torn down here - see that block for why a swarm-shared group
+	//--- raced this sweep otherwise. One always-on diag_log line marks every time this guard actually
+	//--- has to hold a group back, so a soak can grep AIRDEFGC to confirm the race is closed.
 	private ["_keptGroups"];
 	_keptGroups = [];
 	{ _keptGroups = _keptGroups + [(_x select 2)]; } forEach _defenders;
 	{
 		private ["_pg"];
 		_pg = _x;
-		if (!isNull _pg && {!(_pg in _keptGroups)}) then {
+		if (!isNull _pg && {_pg in _flyAwayGroups}) then {
+			diag_log format ["AIRDEFGC|v1|flyaway-group-protect|grp=%1", _pg];
+		};
+		if (!isNull _pg && {!(_pg in _keptGroups)} && {!(_pg in _flyAwayGroups)}) then {
 			{if (!(isPlayer _x)) then {["guerairdef-L254", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _pg);
 			deleteGroup _pg;
 		};
@@ -519,7 +538,9 @@ while {!WFBE_GameOver} do {
 	//--- retained shot-down hulls. Preserve the exact live west/east-air candidate semantics, but
 	//--- close a scheduler slice every bounded number of registry entries so dead wreck growth cannot
 	//--- create a single multi-frame hitch. The cache is then reused by every town below.
-	_enemyAirScanBudget = 32;
+	//--- A2's isKindOf lookup is costly on the large, long-lived Chernarus vehicle registry. Four
+	//--- entries target a sub-second air-scan slice on the armed Chernarus run.
+	_enemyAirScanBudget = 4;
 	_enemyAirScanCount = 0;
 	_enemyAirScanned = 0;
 	{
@@ -602,13 +623,18 @@ while {!WFBE_GameOver} do {
 			//--- loadout selector below; only would-spawn towns pay it). Quiet-recall already despawns when
 			//--- the threat ends - this is the symmetric spawn half. 0 = legacy always-spawn.
 			&& {((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) <= 0)
-				|| {({alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)])) > 0}}) then {
+				|| {
+					_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+					_enemies > 0
+				}}) then {
 
 			_pos = getPos _town;
 
 			//--- Enemies near the town (west + east, GUER's foes).
 			//--- fix(hunt): nearEntities "Man" returns only DISMOUNTED infantry - fully mounted assaults were invisible (defenders recalled as "quiet" mid-attack, paradrop/Mi-24 response never triggered). Include vehicle hulls: a crewed hull carries its crew's side; empty hulls resolve CIVILIAN and stay filtered by the side check.
-			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+			if (!((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) > 0)) then {
+				_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+			};
 
 			//--- Enemy AIR near the town (crewed west/east aircraft) - use the one bounded live-air
 			//--- cache built above. Empty parked hulls still read CIVILIAN and are excluded at cache build.
@@ -887,6 +913,9 @@ while {!WFBE_GameOver} do {
 									//--- Let the delivery bird approach the town before troops appear overhead.
 									sleep 20;
 									if (isNull _g) exitWith {};
+									//--- Round ended while the drop was inbound: do not land a fresh squad after teardown -
+									//--- every reaper has already stood down, so these troops would never be cleaned up.
+									if (WFBE_GameOver) exitWith {};
 
 									//--- Phase 1: create the whole stick at altitude over the town + chute each man, quickly
 									//--- (0.3s apart, like the supply-drop cadence) so the stick descends TOGETHER, not serially.

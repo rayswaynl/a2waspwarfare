@@ -15,7 +15,10 @@ private ["_vehicle","_cls","_data","_price","_fraction","_damage","_refund","_ke
 if ((missionNamespace getVariable ["WFBE_C_VEHICLE_SELL", 1]) <= 0) exitWith {};
 
 _vehicle = _this select 0;
-if (isNull _vehicle || !alive _vehicle) exitWith {};
+//--- r74: type/null/alive fail-clean before crew/price paths (sold/deleted hull race).
+if (isNil "_vehicle") exitWith {};
+if (typeName _vehicle != "OBJECT") exitWith {};
+if (isNull _vehicle || {!alive _vehicle}) exitWith {};
 
 //--- Re-check crew (addAction condition string gates this, but re-check to handle the window between clicks).
 if (count crew _vehicle > 0) exitWith {
@@ -37,9 +40,13 @@ if (!(lightInRange || heavyInRange || depotInRange || aircraftInRange || hangarI
 if !(player == leader clientTeam || (!isNull commanderTeam && {commanderTeam == clientTeam})) exitWith {};
 
 //--- Look up base price from missionNamespace unit-data tuple (keyed by classname; nil for non-bought vehicles).
+//--- r74: match RequestVehicleSell server bounds — short/malformed tuples throw on select QUERYUNITPRICE
+//--- and abort the confirm path mid-dialog (display refund never computed; second click still races).
 _cls  = typeOf _vehicle;
 _data = missionNamespace getVariable _cls;
-if (isNil "_data") exitWith {hint "Cannot determine sell price for this vehicle type."};
+if (isNil "_data" || {typeName _data != "ARRAY"} || {count _data <= QUERYUNITPRICE} || {typeName (_data select QUERYUNITPRICE) != "SCALAR"}) exitWith {
+	hint "Cannot determine sell price for this vehicle type.";
+};
 
 _fraction = (missionNamespace getVariable ["WFBE_C_VEHICLE_SELL_FRACTION", 0.5]) max 0;
 _damage   = (getDammage _vehicle) max 0;

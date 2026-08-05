@@ -30,6 +30,20 @@ def test_player_artillery_discards_stale_or_malformed_request():
     assert 'setVariable ["wfbe_aicom_arty_request", []]' in source[branch_start:branch_end]
 
 
+def test_player_artillery_consumption_stamps_the_side_fire_cadence():
+    source = Path(
+        "Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_PlayerArty.sqf"
+    ).read_text(encoding="utf-8-sig")
+    cadence = 'setVariable ["wfbe_aicom_arty_last", time];'
+    launch = 'Spawn WFBE_CO_FNC_FireArtillery;'
+    gate = 'if ((time - _artyLast) > _artyCooldown && {!_fired}'
+
+    assert cadence in source
+    assert gate in source
+    assert source.index(cadence) > source.index(launch)
+
+
 if __name__ == "__main__":
     test_artillery_reservation_follows_preflight_validation()
     test_player_artillery_discards_stale_or_malformed_request()
+    test_player_artillery_consumption_stamps_the_side_fire_cadence()

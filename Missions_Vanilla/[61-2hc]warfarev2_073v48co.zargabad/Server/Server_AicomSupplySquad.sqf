@@ -83,6 +83,12 @@ while {!WFBE_GameOver} do {
 			_drop = true; _reason = "destroyed";
 			missionNamespace setVariable [Format ["wfbe_aicomsupply_cd_%1", str _eSide], _now];
 		};
+		//--- A live transport without a live driver cannot execute its route. This includes a pilot that
+		//--- ejected from a damaged helicopter: retain neither its orphaned hull nor its group slot.
+		if (!_drop && {isNull (driver _eVeh) || {!(alive (driver _eVeh))}}) then {
+			_drop = true; _reason = "driver-lost";
+			missionNamespace setVariable [Format ["wfbe_aicomsupply_cd_%1", str _eSide], _now];
+		};
 
 		//--- Human took command (AI_ONLY): stand the squad down, player-safe.
 		if (!_drop && {_aiOnly > 0}) then {
@@ -91,11 +97,13 @@ while {!WFBE_GameOver} do {
 		};
 
 		if (_drop) then {
-			if (_reason != "destroyed" && {!isNull _eVeh} && {({isPlayer _x} count (crew _eVeh)) == 0}) then {
-				{["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eVeh); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
-				["aicomsupply-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh;
-				if (!isNull _eGrp) then {deleteGroup _eGrp};
+			if (_reason != "destroyed" && {!isNull _eGrp}) then {
+				{if (!isNull _x && {!isPlayer _x}) then {["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0}} forEach (units _eGrp); //--- crash 014EFCF4 sweep: includes a pilot no longer returned by crew _eVeh after ejection.
 			};
+			if (_reason != "destroyed" && {!isNull _eVeh} && {({isPlayer _x} count (crew _eVeh)) == 0}) then {
+				["aicomsupply-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh;
+			};
+			if (_reason != "destroyed" && {!isNull _eGrp} && {({isPlayer _x} count (units _eGrp)) == 0}) then {deleteGroup _eGrp};
 			diag_log Format ["AICOMSUPPLY|DESPAWN|side=%1|reason=%2", str _eSide, _reason];
 		} else {
 			//--- Re-check hull after prune gate (TOCTOU): concurrent destroy between isNull and getPos/velocity is native-crash class (014EFCF4).
@@ -115,10 +123,14 @@ while {!WFBE_GameOver} do {
 					_eState = "inbound"; _eStateT = _now; _eStuck = 0;
 				};
 			} else {
-				if ((_eCur distance _eObj) < _eArrive) then {
-					if (_eState == "outbound") then {
+				if (_eState == "outbound") then {
+					//--- No owned town means hold at base; do not treat the base fallback
+					//--- target as a completed outbound leg and credit a no-op delivery.
+					if (!isNull _eTown && {(_eCur distance _eObj) < _eArrive}) then {
 						_eState = "loading"; _eStateT = _now; _eStuck = 0;
-					} else {
+					};
+				} else {
+					if ((_eCur distance _eObj) < _eArrive) then {
 						//--- Completed round trip: credit the SIDE SUPPLY POOL (AI-usable primitive;
 						//--- W2 Supply Drop precedent). Server-side, clamped at the economy ceiling.
 						[_eSide, _grant, "AICOM supply squad delivery.", false] Call ChangeSideSupply;
@@ -239,10 +251,10 @@ while {!WFBE_GameOver} do {
 										diag_log Format ["AICOMSUPPLY|SPAWN|side=%1|mode=%2|class=%3", _sideText, _mode, _cls];
 										["INFORMATION", Format ["Server_AicomSupplySquad.sqf: [%1] %2 supply squad spawned (%3).", _sideText, _mode, _cls]] Call WFBE_CO_FNC_LogContent;
 									} else {
-										deleteVehicle _veh; deleteGroup _grp;
+										["supplysquad-teardown", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh; deleteGroup _grp;
 									};
 								} else {
-									deleteVehicle _veh;
+									["supplysquad-reap", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh;
 									if (!isNull _grp) then {deleteGroup _grp};
 								};
 							};

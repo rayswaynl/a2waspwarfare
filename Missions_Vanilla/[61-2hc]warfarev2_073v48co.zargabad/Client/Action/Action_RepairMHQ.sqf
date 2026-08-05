@@ -1,12 +1,13 @@
 Private ["_currency","_currencySym","_currency_system","_hq","_repairPrice","_vehicle","_counter","_nextCount","_nextPrice"];
 
 _vehicle = _this select 0;
-
+//--- Null/dead repair truck or missing HQ: distance on null throws; only DESTROYED HQ is repairable.
+if (isNull _vehicle || {!alive _vehicle}) exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_None")};
 _hq = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
-if (alive _hq || (_hq distance _vehicle > 30)) exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_None")};
+if (isNull _hq || {alive _hq} || {_hq distance _vehicle > 30}) exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_None")};
 
 //--- Is HQ already being fixed?
-if (WFBE_Client_Logic getVariable "wfbe_hq_repairing") exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_BeingRepaired")};
+if (WFBE_Client_Logic getVariable ["wfbe_hq_repairing", false]) exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_BeingRepaired")};
 
 _currency_system = missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM";
 
@@ -27,7 +28,8 @@ if ((missionNamespace getVariable ["WFBE_C_HQ_REPAIR_SCALING", 1]) > 0) exitWith
 	};
 	["RequestMHQRepair", [sideJoined, player]] Call WFBE_CO_FNC_SendToServer;
 	WF_Logic setVariable [Format ["%1MHQRepair", sideJoinedText], true, true];
-	_counter = missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined];
+	_counter = missionNamespace getVariable [Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined], 0];
+	if (typeName _counter != "SCALAR") then {_counter = 0};
 	missionNamespace setVariable [Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined], _counter + 1];
 	hint Format [localize "STR_WF_INFO_Repair_MHQ_Repair", Format ["%1%2", _scalingSym185, _repairCost185]];
 };
@@ -59,7 +61,8 @@ if (_currency_system == 0) then {
 
 WF_Logic setVariable [Format ["%1MHQRepair",sideJoinedText],true,true];
 
-_counter = missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined];
+_counter = missionNamespace getVariable [Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined], 0];
+if (typeName _counter != "SCALAR") then {_counter = 0};
 missionNamespace setVariable [Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined], _counter + 1];
 
 //--- LIVE next-repair price for the post-repair hint. _counter is the PRE-increment count, so the

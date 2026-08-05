@@ -262,7 +262,7 @@ if (_rlType in ["Reserve","ArtilleryRadar"]) then {
 		if (!isNull _gGrp && {!isNil "_gCrewCls"}) then {
 			_gGuns = 0;
 			{
-				if ((_x isKindOf "StaticWeapon") && {(count crew _x) == 0}) then {
+				if (alive _x && {_x isKindOf "StaticWeapon"} && {({alive _x} count crew _x) == 0}) then {
 					_gUnit = [_gCrewCls, _gGrp, getPos _x, (_side) Call GetSideID] Call WFBE_CO_FNC_CreateUnit;
 					if (!isNull _gUnit) then {
 						_gUnit moveInGunner _x;
@@ -335,9 +335,9 @@ if (!IsNull _site) then {
 	
 	_site addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 	if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_HANDLE_FRIENDLYFIRE") > 0) then {
-		_site addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3] Call BuildingHandleDamages}];
+		_site addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3,_this select 4] Call BuildingHandleDamages}];
 	} else {
-		_site addEventHandler ['handleDamage',{[_this select 0, _this select 2] Call HandleBuildingDamage}];
+		_site addEventHandler ['handleDamage',{[_this select 0, _this select 2, _this select 4] Call HandleBuildingDamage}];
 	};
 	Call Compile Format ["_site AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];",_type];
 	

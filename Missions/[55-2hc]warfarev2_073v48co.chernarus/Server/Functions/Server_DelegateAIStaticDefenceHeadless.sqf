@@ -11,12 +11,23 @@
 
 Private ["_hcUnit", "_groups", "_positions", "_side", "_team", "_defence", "_moveInGunner", "_live", "_x", "_seedIdx", "_rr", "_hcCount", "_delegated"];
 
+//--- r80 fail-clean: short/malformed args or non-array groups/positions must not OOB select.
+if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 6}) exitWith {
+	["WARNING", "Server_DelegateAIStaticDefenceHeadless.sqf: short/malformed args - static HC delegation aborted."] Call WFBE_CO_FNC_LogContent;
+	0
+};
+
 _side = _this select 0;
 _groups = +(_this select 1);
 _positions = +(_this select 2);
 _team = _this select 3;
 _defence = _this select 4;
 _moveInGunner = _this select 5;
+
+if (isNil "_groups" || {typeName _groups != "ARRAY"} || {isNil "_positions"} || {typeName _positions != "ARRAY"}) exitWith {
+	["WARNING", Format["Server_DelegateAIStaticDefenceHeadless.sqf: [%1] groups/positions not arrays - delegation aborted.", _side]] Call WFBE_CO_FNC_LogContent;
+	0
+};
 
 //--- HC PICK HOIST (mirrors the shipped Server_DelegateAITownHeadless.sqf fix): the least-loaded
 //--- picker does an O(allUnits) scan. Calling it once PER GROUP made the cost O(groups x allUnits)
@@ -43,7 +54,13 @@ if (_seedIdx < 0) then {_seedIdx = 0};
 _rr = 0;
 
 _delegated = 0;
-for '_i' from 0 to count(_groups) -1 do {
+//--- r80: never select positions OOB (shorter positions array used to throw and abort remaining AA seats).
+private ["_pairCount"];
+_pairCount = (count _groups) min (count _positions);
+if (_pairCount < (count _groups)) then {
+	["WARNING", Format["Server_DelegateAIStaticDefenceHeadless.sqf: [%1] groups/positions mismatch (g=%2 p=%3) - clamping.", _side, count _groups, count _positions]] Call WFBE_CO_FNC_LogContent;
+};
+for '_i' from 0 to (_pairCount - 1) do {
 	if (_hcCount > 0) then {
 		//--- Cheap local round-robin across the live HCs, anchored at the lightest one (no per-group scan).
 		_hcUnit = _live select ((_seedIdx + _rr) mod _hcCount);

@@ -15,7 +15,7 @@ WFBE_SE_FNC_HandleSideSupplyChange = {
 	//--- never crosses the network) passes _trusted=true as _this select 2 and is exempt - it never
 	//--- had a "requester" to begin with. Flag OFF (default 0): byte-identical to pre-hardening
 	//--- behaviour, no new rejections.
-	Private ['_amount','_change','_channel','_currentSupply','_event','_expectedSide','_maxSupplyLimit','_payload','_reason','_rejected','_reqPlayer','_secHardening','_side','_supplyKey','_trusted'];
+	Private ['_amount','_change','_channel','_commanderLeader','_commanderName','_commanderTeam','_currentSupply','_event','_expectedSide','_maxSupplyLimit','_payload','_reason','_rejected','_reqPlayer','_secHardening','_side','_supplyKey','_trusted'];
 
 	_event = _this select 0;
 	_expectedSide = _this select 1;
@@ -87,7 +87,18 @@ WFBE_SE_FNC_HandleSideSupplyChange = {
 
 	// (_side Call WFBE_CO_FNC_GetSideLogic) setVariable ["wfbe_supply", _change, true];
 
-	["INFORMATION", format ["Server_ChangeSideSupply.sqf: Changing supply value of team %1 with value: %2. New supply value for team: %3. Reason: %4 - Current commander of team: %5.", _side, _amount, _change, _reason, name leader ((_side) call WFBE_CO_FNC_GetCommanderTeam)]] call WFBE_CO_FNC_LogContent;
+	//--- A side without a player commander stores objNull; never pass that through leader/name,
+	//--- because the engine emits "Error: No vehicle" inside this otherwise successful INFO line.
+	_commanderName = "No commander";
+	_commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+	if (typeName _commanderTeam == "GROUP") then {
+		if (!isNull _commanderTeam) then {
+			_commanderLeader = leader _commanderTeam;
+			if (!isNull _commanderLeader) then {_commanderName = name _commanderLeader};
+		};
+	};
+
+	["INFORMATION", format ["Server_ChangeSideSupply.sqf: Changing supply value of team %1 with value: %2. New supply value for team: %3. Reason: %4 - Current commander of team: %5.", _side, _amount, _change, _reason, _commanderName]] call WFBE_CO_FNC_LogContent;
 
 	_supplyKey = format ["wfbe_supply_%1", str _side];
 	missionNamespace setVariable [_supplyKey,_change];

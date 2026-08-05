@@ -37,8 +37,8 @@ git checkout origin/master -- \
 ```
 
 Verify the TK and ZG templates contain their correct per-map values (not CH values):
-- TK: `WF_MAXPLAYERS 31`, `STARTING_DISTANCE 7500`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
-- ZG: `WF_MAXPLAYERS 33`, `STARTING_DISTANCE 5000`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
+- TK: `WF_MAXPLAYERS 34`, `STARTING_DISTANCE 7500`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
+- ZG: `WF_MAXPLAYERS 34`, `STARTING_DISTANCE 5000`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
 
 (The bracketed number in the mission folder name, e.g. `[61-2hc]`, is a player-slot label,
 not the `WF_MAXPLAYERS` define — do not re-derive WF_MAXPLAYERS from the folder name. These
@@ -68,6 +68,11 @@ Never use — these are A3-only or wrong-spelling and will silently corrupt or c
 - `regexFind`, `remoteExecCall`
 - Array-form `reveal`, A3 `find` on strings, substring `select [a, b]`, sort-by-code
 - `#` array selector (`_arr # 0`) — use `(_arr select 0)` instead
+- Bare `exitWith` not directly preceded by `if (..)` — **parse-fails the ENTIRE file** on A2 OA, so
+  the script silently never runs (a dialog still opens from its `.hpp` controls but stays empty).
+  Lint code `BAREEXIT`. Burned live 2026-08-03: an empty Factory Upgrade Menu for every side.
+  ⚠️ Run the gate command from THIS file verbatim — never a selector remembered from an earlier
+  session; that is exactly how this shipped (the rule existed and was already wired here).
 - `inline private _x =` — use `private ["_x"]`
 - `==` / `!=` with Boolean operands — use `if (_flag)` / `if (!_flag)`
 - `missionNamespace setVariable` with a third (public) argument — NSSETVAR3 trap; A2/OA runtime error
@@ -133,7 +138,7 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
    on summaries or prior context alone.
 1. Run the lint gate:
    ```
-   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index
+   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BAREEXIT,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index
    ```
    Per-line suppression: `// noqa: CODE` (e.g. `// noqa: A3CMD`) silences that code on the line;
    bare `// noqa` silences all. Stale suppressions where no finding fires are reported as `DEADNOQA`.

@@ -2,16 +2,13 @@ if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
-//--- Allow resistance group to be spawned without a placeholder.
+//--- Allow resistance group to be spawned without a placeholder.  Side relations are global
+//--- server state, so configure both directions here even when GUER is AI-only.
 createCenter resistance;
 resistance setFriend [west,0];
 resistance setFriend [east,0];
-//--- GUER harass: setFriend is one-directional, so WEST/EAST must ALSO treat resistance as hostile or their AI
-//--- won't return fire on GUER players. Gated on the GUER param so the base WEST-vs-EAST mission is unchanged when OFF.
-if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
-	west setFriend [resistance, 0];
-	east setFriend [resistance, 0];
-};
+west setFriend [resistance,0];
+east setFriend [resistance,0];
 
 AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
 //--- AICOM HIGH-CLIMB (claude-gaming 2026-07-01): give AI-commander tanks the Valhalla low-gear terrain
@@ -115,6 +112,11 @@ WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Fu
 //--- deadcode-sweep 2026-07-21 (DC-03): removed dead compile WFBE_SE_FNC_GetTownPatrol (zero call sites repo-wide; file deleted)
 WFBE_SE_FNC_HandleEmptyVehicle = Compile preprocessFileLineNumbers "Server\Functions\Server_HandleEmptyVehicle.sqf";
 WFBE_SE_FNC_HandlePVF = Compile preprocessFileLineNumbers "Server\Functions\Server_HandlePVF.sqf";
+//--- Forward FOB (flag WFBE_C_STRUCTURES_FOB): tent 'killed' teardown + the per-FOB ping/repair worker.
+//--- Both self-gate on the flag via their caller (Server\PVFunctions\RequestForwardFOB.sqf), which is the
+//--- only thing that references them - compiling them flag-off costs one preprocess each and runs no code.
+WFBE_SE_FNC_ForwardFOBKilled = Compile preprocessFileLineNumbers "Server\Functions\Server_ForwardFOBKilled.sqf";
+WFBE_SE_FNC_ForwardFOBWorker = Compile preprocessFileLineNumbers "Server\Functions\Server_ForwardFOBWorker.sqf";
 WFBE_SE_FNC_ManageTownDefenses = Compile preprocessFileLineNumbers "Server\Functions\Server_ManageTownDefenses.sqf";
 WFBE_SE_FNC_OnHQKilled = Compile preprocessFileLineNumbers "Server\Functions\Server_OnHQKilled.sqf";
 WFBE_SE_FNC_OperateTownDefensesUnits = Compile preprocessFileLineNumbers "Server\Functions\Server_OperateTownDefensesUnits.sqf";
@@ -123,6 +125,7 @@ WFBE_SE_FNC_ProvisionAirfieldHangar = Compile preprocessFileLineNumbers "Server\
 WFBE_SE_FNC_SetCampsToSide = Compile preprocessFileLineNumbers "Server\Functions\Server_SetCampsToSide.sqf";
 WFBE_SE_FNC_NavalHVT_BubbleComplete = Compile preprocessFileLineNumbers "Server\Functions\Server_NavalHVT_BubbleComplete.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): onComplete callback for a RadiusHold-registered carrier bubble (Init_NavalHVT.sqf, flag WFBE_C_NAVALHVT_BUBBLE_ENABLE).
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
+WFBE_SE_FNC_ValidatePlayerStructurePlacement = Compile preprocessFileLineNumbers "Server\Functions\Server_ValidatePlayerStructurePlacement.sqf";
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
 WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
@@ -221,13 +224,58 @@ startingLocations = [0,0,0] nearEntities ["LocationLogicStart", 100000];
 
 ["INITIALIZATION", "Init_Server.sqf: Initializing starting locations."] Call WFBE_CO_FNC_LogContent;
 
-//--- Waiting for the common part to be executed.
-waitUntil {commonInitComplete && townInit};
+//--- Waiting for the common and town parts to be executed. Do not start a partially initialized match if either asynchronous initializer fails.
+private ["_initGateDeadline","_initGateNextReport","_initGateStarted"];
+_initGateStarted = diag_tickTime;
+_initGateDeadline = diag_tickTime + 120;
+_initGateNextReport = diag_tickTime + 30;
+waitUntil {
+	uiSleep 0.25;
+	if ((diag_tickTime >= _initGateNextReport) && {!(commonInitComplete && townInit)}) then {
+		diag_log ("INITWAIT|v1|COMMON_TOWN|elapsed=" + str (round (diag_tickTime - _initGateStarted)) + "|common=" + str commonInitComplete + "|town=" + str townInit + "|commonHandleDone=" + str (scriptDone WFBE_INIT_HANDLE_COMMON) + "|townsHandleDone=" + str (scriptDone WFBE_INIT_HANDLE_TOWNS));
+		_initGateNextReport = diag_tickTime + 30;
+	};
+	(commonInitComplete && townInit) || {diag_tickTime > _initGateDeadline}
+};
+if (!(commonInitComplete && townInit)) exitWith {
+	WFBE_INIT_FAILURE = ["COMMON_TOWN_TIMEOUT", commonInitComplete, townInit, scriptDone WFBE_INIT_HANDLE_COMMON, scriptDone WFBE_INIT_HANDLE_TOWNS, time];
+	publicVariable "WFBE_INIT_FAILURE";
+	diag_log ("INITFAIL|v1|COMMON_TOWN_TIMEOUT|common=" + str commonInitComplete + "|town=" + str townInit + "|commonHandleDone=" + str (scriptDone WFBE_INIT_HANDLE_COMMON) + "|townsHandleDone=" + str (scriptDone WFBE_INIT_HANDLE_TOWNS));
+};
 
 //--- SELFTEST: one-line proof of live tunables, read AFTER params/constants are final (deploy verification).
 diag_log ("SELFTEST|v1|townsMax=" + str (missionNamespace getVariable ["WFBE_C_TOWNS_ACTIVE_MAX", -1]) + "|delegation=" + str (missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1]) + "|aicomLock=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", -1]) + "|aicomEnabled=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1]) + "|totalAiMax=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", -1]) + "|wildcardAlways=" + str (missionNamespace getVariable ["WFBE_C_WILDCARD_ALWAYS", 1]) + "|statlog=" + str (missionNamespace getVariable ["WFBE_C_STATLOG", -1]) + "|arm=" + (missionNamespace getVariable ["WFBE_C_AB_ARM", "LEGACY"]) + "|simGating=" + str (missionNamespace getVariable ["WFBE_C_SIM_GATING", 0]));
 
 //--- MATCH|v1|START|: one-shot match-identity line; feeds Stats V2 match-report pipeline.
+//--- Resolve the pipe-free build token before emitting START. The later WASPSCALE
+//--- loop also derives this from missionName, but it starts after this one-shot
+//--- identity record; waiting for it made MATCH report the raw PBO name instead.
+if (isNil "wfbe_buildtag" || {(missionNamespace getVariable ["wfbe_buildtag", ""]) == ""}) then {
+	private ["_mtName","_mtNameArray","_mtNeedle","_mtNeedleLength","_mtStart","_mtIndex","_mtMatches","_mtTokenArray","_mtChar","_mtBuildToken"];
+	_mtName = missionName;
+	if (typeName _mtName != "STRING") then {_mtName = ""};
+	_mtNameArray = toArray _mtName;
+	_mtNeedle = toArray "cmdcon";
+	_mtNeedleLength = count _mtNeedle;
+	_mtIndex = -1;
+	for "_mtStart" from 0 to ((count _mtNameArray) - _mtNeedleLength) do {
+		_mtMatches = true;
+		{if ((_mtNameArray select (_mtStart + _forEachIndex)) != _x) exitWith {_mtMatches = false}} forEach _mtNeedle;
+		if (_mtMatches) exitWith {_mtIndex = _mtStart};
+	};
+	if (_mtIndex >= 0) then {
+		_mtTokenArray = [];
+		for "_mtStart" from _mtIndex to ((count _mtNameArray) - 1) do {
+			_mtChar = _mtNameArray select _mtStart;
+			if ((_mtChar == 95) || (_mtChar == 46)) exitWith {};
+			_mtTokenArray = _mtTokenArray + [_mtChar];
+		};
+		if ((count _mtTokenArray) > 0) then {_mtBuildToken = toString _mtTokenArray} else {_mtBuildToken = _mtName};
+	} else {_mtBuildToken = _mtName};
+	if (_mtBuildToken == "") then {_mtBuildToken = "unknown"};
+	missionNamespace setVariable ["wfbe_buildtag", _mtBuildToken];
+};
+
 //--- Emitted here (after params + constants are final, before side-init) so every key lobby value
 //--- is readable. Gated on WFBE_C_MATCH_TELEMETRY (default 1 = additive telemetry ON).
 if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
@@ -286,16 +334,20 @@ Call {
 		0 setRain 0;
 	};
 	if (_weat == 3) exitWith {};
-	if (!isDedicated) exitWith {};
+	if (!isServer) exitWith {};
 
 	_oc = 0.05;
+	_rain = 0;
 	switch (_weat) do {
 		case 0: {_oc = 0};
 		case 1: {_oc = 0.5};
-		case 2: {_oc = 1};
+		case 2: {_oc = 1; _rain = 0.5};
 	};
 	60 setOvercast _oc;
-	if (_weat == 2) then {60 setRain 0.5}; //--- lane199(e): Rainy lobby option now actually sets rain.
+	60 setRain _rain;
+	//--- OA weather commands are local. Publish the authoritative transition so remote clients and JIP replay the remaining duration only.
+	WFBE_ENVIRONMENT_WEATHER_STATE = [time, 60, _oc, _rain];
+	publicVariable "WFBE_ENVIRONMENT_WEATHER_STATE";
 };
 
 ["INITIALIZATION", "Init_Server.sqf: Weather module is loaded."] Call WFBE_CO_FNC_LogContent;
@@ -756,9 +808,7 @@ emptyQueu = [];
 		_hq addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 
         if (_side == west && !(IS_chernarus_map_dependent))then{
-	        _hq setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]";
-	        _hq setVehicleInit "this setObjectTexture [1,""Textures\lavbody2_coD.paa""]";
-	        _hq setVehicleInit "this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
+	        _hq setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]; this setObjectTexture [1,""Textures\lavbody2_coD.paa""]; this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
 			processinitcommands;
 		};
 
@@ -905,8 +955,7 @@ if (isNull _vehicle) then {
 		if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {_vehicle setVariable ["wfbe_balance_side", _side]; (_vehicle) Call BalanceInit};
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}];};
-if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle addeventhandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
-_vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];}; //--- fix(code-as-string r33): lazy &&
+if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle setVariable ["wfbe_engine_stealth_action", true, true];}; //--- client Init_Unit owns local handler + scroll action
 		};
 		};
 		case east:{
@@ -928,8 +977,7 @@ if (isNull _vehicle) then {
 
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}];};
-if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle addeventhandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
-_vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];}; //--- fix(code-as-string r33): lazy &&
+if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle setVariable ["wfbe_engine_stealth_action", true, true];}; //--- client Init_Unit owns local handler + scroll action
 		};
 		};
 		};
@@ -1676,3 +1724,8 @@ if ((missionNamespace getVariable ["WFBE_C_HC_CIV_RESLOT", 0]) > 0) then {
 		};
 	};
 };
+
+//--- spectator v8 (owner mandate 2026-08-01): server-side Fired/Killed event feed for the
+//--- caster auto-director. Self-gates on WFBE_C_SPECTATOR / WFBE_C_SPECTATOR_EVENTFEED after
+//--- commonInitComplete; inert when either flag is 0.
+[] ExecVM "Common\Functions\Common_SpectatorEventFeed.sqf";

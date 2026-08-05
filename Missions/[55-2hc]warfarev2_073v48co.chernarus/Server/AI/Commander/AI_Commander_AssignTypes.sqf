@@ -70,6 +70,15 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 				for "_k" from 0 to 3 do {
 					if ((_u select _k) > (_upgrades select _k)) exitWith {_ok = false};
 				};
+				//--- Keep no-HC template assignment aligned with Produce: a stale coarse template mask can
+				//--- admit a roster whose individual class still needs a higher factory tier. Without this
+				//--- check Produce rejects every member and leaves the founded reservation empty until timeout.
+				if (_ok) then {
+					{
+						_cn = _x;
+						if (!(([_cn, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0)) exitWith {_ok = false};
+					} forEach (_templates select _i);
+				};
 				//--- B66 CAPTURE-UNLOCK eligibility: a template containing a CAPTURE_UNLOCKS premium
 				//--- class (T72M4CZ/RM70_ACR) is only eligible while this side HOLDS the trigger town.
 				//--- Mirror the client gate (Client_UIFillListBuyUnits): match class -> require town

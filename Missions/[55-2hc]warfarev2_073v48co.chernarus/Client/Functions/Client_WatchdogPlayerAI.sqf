@@ -146,7 +146,7 @@ _destination_can_be_used = {
 
 sleep 20;
 
-while {true} do {
+while {!gameOver} do {
 	sleep _check_interval;
 
 	Call {
@@ -339,3 +339,5 @@ while {true} do {
 		};
 	};
 };
+
+missionNamespace setVariable ["Player_AI_Watchdog_Running", false];

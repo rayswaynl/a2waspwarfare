@@ -74,7 +74,7 @@ if (count _attacked > 0) then {
 if (isNull _target) exitWith {};
 
 //--- Shared air-budget reservation. Stage A adds one Air hull (the cargo plane); vehicles are ground payloads.
-//--- Match AI_Commander_Teams.sqf: count alive side-resolved Air hulls, including crewless wfbe_side-tagged hulls.
+//--- Match AI_Commander_Teams.sqf: count alive side-resolved Air hulls, including crewless wfbe_side_id-stamped hulls (r101: wfbe_side is never stamped on vehicle hulls).
 _airMax = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3];
 if ((time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45])) then {
 	_airMax = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_LATE", _airMax];
@@ -86,7 +86,7 @@ _airAlive = 0;
 		if ((count crew _x) > 0) then {
 			if (side ((crew _x) select 0) == _side) then {_airSideOK = true};
 		} else {
-			if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_airSideOK = true};
+			if ((_x getVariable ["wfbe_side_id", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) then {_airSideOK = true};
 		};
 		if (_airSideOK) then {_airAlive = _airAlive + 1};
 	};
@@ -149,5 +149,7 @@ if (isNull _grp) then {
 		["INFORMATION", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop called to [%2] (para level %3, cost %4, escort %5, air %6/%7).", _sideText, _objName, _paraLvl, _cost, _spawnEscort, _airAlive + 2, _airMax]] Call WFBE_CO_FNC_AICOMLog;
 		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (_now / 60)) + "|CARGO_AIRDROP|" + _objName + "|para=" + str _paraLvl + "|cost=" + str _cost + "|escort=" + str _spawnEscort + "|air=" + str (_airAlive + 2) + "/" + str _airMax);
 	};
-	["CargoAirdrop", _side, getPos _target, _grp, _spawnEscort] Spawn KAT_CargoAirdrop;
+	//--- r127: pass the exact debit (6th arg) so the worker refunds it and releases the cooldown
+	//--- if the drop aborts during setup before any delivery (mirrors the group-null refund above).
+	["CargoAirdrop", _side, getPos _target, _grp, _spawnEscort, _cost] Spawn KAT_CargoAirdrop;
 };

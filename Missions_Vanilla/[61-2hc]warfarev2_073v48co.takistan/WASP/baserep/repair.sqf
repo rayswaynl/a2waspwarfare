@@ -1,3 +1,9 @@
+//--- r90 reentrancy: this script is execVM'd once per action click and the action stays
+//--- visible for the whole repair, so extra clicks used to start independent instances -
+//--- each draining -15 supply and adding its own repair increment per tick on the same
+//--- structure (N clicks = Nx supply drain / Nx repair speed). Single-instance latch.
+if (!isNil "repairrunning") exitWith {hint "Base repair already in progress."};
+repairrunning = true;
 _color = "#00ff00";
 _dam = (1 - getDammage obj)*100;
 _dr = 100 - _dam;
@@ -34,3 +40,4 @@ for "_j" from 0 to 1 do
  
  
 repairprocess = "no";
+repairrunning = nil;

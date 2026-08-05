@@ -131,7 +131,7 @@ if (!isNil "WFBE_ZGKOTH_ANCHOR" && {!isNull WFBE_ZGKOTH_ANCHOR}) then {
 
 			switch (_state) do {
 				case "cooldown": {
-					_color = "ColorGray";
+					_color = "ColorBlack";
 					_text  = "KotH - cooldown";
 				};
 				case "holding": {
@@ -139,7 +139,7 @@ if (!isNil "WFBE_ZGKOTH_ANCHOR" && {!isNull WFBE_ZGKOTH_ANCHOR}) then {
 					_ss = _progress - (_mm * 60);
 					_ssStr = if (_ss < 10) then {Format ["0%1", _ss]} else {Format ["%1", _ss]};
 					_sideStr = if (_holderSide == _westId) then {"WEST"} else {"EAST"};
-					_color   = if (_holderSide == _westId) then {"ColorWest"} else {"ColorEast"};
+					_color   = if (_holderSide == _westId) then {"ColorBlue"} else {"ColorRed"};
 					_text    = Format ["KotH - %1 %2:%3/%4:%5", _sideStr, _mm, _ssStr, _holdMM, _holdSSStr];
 				};
 				case "contested": {
@@ -288,8 +288,8 @@ WFBE_FNC_ZgKoth_OnComplete = {
 	};
 
 	//--- Marker recolor to the winning side (public core UI, not a hidden-intel leak).
-	if (_winningSide == west) then {"zg_koth_marker" setMarkerColor "ColorWest"};
-	if (_winningSide == east) then {"zg_koth_marker" setMarkerColor "ColorEast"};
+	if (_winningSide == west) then {"zg_koth_marker" setMarkerColor "ColorBlue"};
+	if (_winningSide == east) then {"zg_koth_marker" setMarkerColor "ColorRed"};
 
 	//--- Broadcast tag other subsystems can branch on without a new registry.
 	missionNamespace setVariable ["wfbe_zg_koth_owner", _winningSide];

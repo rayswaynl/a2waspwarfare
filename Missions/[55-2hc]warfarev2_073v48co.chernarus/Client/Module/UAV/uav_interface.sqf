@@ -1,5 +1,5 @@
 disableSerialization;
-Private ['_IGUI_update','_alt','_defaultTeamswitch','_defaultvalue','_displayEH_keydown','_displayEH_mousebuttondown','_displayEH_mousezchanged','_locked','_logic','_mapEH_mousebttondown','_newalt','_newspeed','_ppBlur','_ppColor','_ppGrain','_ppInversion','_speed','_uav'];
+Private ['_IGUI_update','_alt','_defaultTeamswitch','_defaultvalue','_displayEH_keydown','_displayEH_mousebuttondown','_displayEH_mousezchanged','_driver','_locked','_logic','_mapEH_mousebttondown','_newalt','_newspeed','_ppBlur','_ppColor','_ppGrain','_ppInversion','_speed','_uav'];
 _defaultTeamswitch = teamswitchenabled;
 
 startLoadingScreen ["UAV","RscDisplayLoadMission"];
@@ -8,14 +8,20 @@ _uav = playerUAV;
 
 //--- UAV destroyed
 if (isnull _uav) exitwith {endLoadingScreen;hintc format [localize "strwfbasestructuredestroyed",localize "str_uav_action"]};
+_driver = driver _uav;
 
 //--- Switch view
-gunner _uav removeweapon "nvgoggles";
+//--- r78 handover: pick live control unit (gunner preferred; OPFOR has no gunner slot).
+Private ["_rcUnit","_weps"];
+_rcUnit = gunner _uav;
+if (isNull _rcUnit) then {_rcUnit = driver _uav};
+if (!isNull _rcUnit) then {_rcUnit removeweapon "nvgoggles"};
 _uav switchcamera "internal";
-player remoteControl gunner _uav;
+if (!isNull _rcUnit) then {player remoteControl _rcUnit};
 _locked = locked _uav;
 _uav lock true;
-_uav selectweapon (weapons _uav select 0);
+_weps = weapons _uav;
+if (count _weps > 0) then {_uav selectweapon (_weps select 0)};
 enableteamswitch false;
 titletext ["","black in"];
 BIS_UAV_TIME = 0;
@@ -25,6 +31,8 @@ _ppInversion = 0;
 //--- Disable HC
 hcshowbar false;
 
+//--- Save prior group-icon visibility (classic path never did; restore was BIS_UAV_visible=nil).
+if (isnil "BIS_UAV_visible") then {BIS_UAV_visible = groupiconsvisible};
 setGroupIconsVisible [true,true];
 
 //--- Postprocess effects
@@ -106,9 +114,9 @@ _IGUI_update = [] spawn {scriptName "UAV\data\scripts\uav_interface.sqf: IGUI Up
 	Private ['_uav'];
 	_uav = BIS_UAV_PLANE;
 	while {cameraon == BIS_UAV_PLANE} do {
-		if (isnull (uinamespace getvariable "BIS_UAV_DISPLAY")) then {bis_uav_terminate = true;
-			ExecVM "ca\modules\uav\data\scripts\uav_interface.sqf";
-		};
+		//--- r78: display lost -> terminate only. Re-ExecVM of the BI module path stacked a second
+		//--- interface (duplicate display EHs / remoteControl) on top of the still-running teardown.
+		if (isnull (uinamespace getvariable "BIS_UAV_DISPLAY")) then {bis_uav_terminate = true};
 		if (visiblemap) then {
 			if (ctrlshown ((uinamespace getvariable "BIS_UAV_DISPLAY") displayctrl 112411)) then {
 				{
@@ -271,28 +279,48 @@ endLoadingScreen;
 
 //--- TERMINATE
 waituntil {!isnil "bis_uav_terminate" || !alive _uav || !alive player};
+Private ["_playerDied","_mkId","_mkName","_ppNvg"];
+_playerDied = !alive player;
 if (!alive _uav) then {
 	hintc format [localize "strwfbasestructuredestroyed",localize "str_uav_action"];
-} else {
-	//--- Reenable targetting.
-	{(driver playerUAV) enableAI _x} forEach ["TARGET","AUTOTARGET"];
 };
+//--- Restore the originally disabled pilot even if the UAV hull was destroyed first.
+if (!isNull _driver && {alive _driver}) then {{_driver enableAI _x} forEach ["TARGET","AUTOTARGET"]};
 if (!isNull _uav) then {_uav lock _locked};
 titletext ["","black in"];
 bis_uav_terminate = nil;
 BIS_UAV_TIME = nil;
 BIS_UAV_PLANE = nil;
-objnull remoteControl gunner _uav;
+if (!isNull _rcUnit) then {objnull remoteControl _rcUnit};
 player switchcamera "internal";
 enableteamswitch _defaultTeamswitch;
 
-setGroupIconsVisible BIS_UAV_visible;
-BIS_UAV_visible = nil;
+//--- Clear operator-placed UAV map markers.
+_mkId = 1;
+_mkName = format ['_user_defined_UAV_MARKER_%1',_mkId];
+while {markerType _mkName != ''} do {
+	deleteMarker _mkName;
+	_mkId = _mkId + 1;
+	_mkName = format ['_user_defined_UAV_MARKER_%1',_mkId];
+};
+
+//--- Death / destroyed hull: drop operator binding so respawn does not inherit control.
+if (_playerDied || {!alive _uav} || {isNull _uav}) then {
+	if (!isNil "playerUAV" && {playerUAV == _uav}) then {playerUAV = objNull};
+};
+
+if (!isNil "BIS_UAV_visible") then {
+	setGroupIconsVisible BIS_UAV_visible;
+	BIS_UAV_visible = nil;
+};
 
 setaperture -1;
 ppEffectDestroy _ppColor;
 ppEffectDestroy _ppBlur;
-ppEffectDestroy (_uav getvariable 'BIS_UAV_pp_NVG'); //--- Color Invert Fix.
+if (!isNull _uav) then {
+	_ppNvg = _uav getvariable 'BIS_UAV_pp_NVG';
+	if (!isNil "_ppNvg") then {ppEffectDestroy _ppNvg};
+};
 ppEffectDestroy _ppGrain;
 
 1124 cuttext ["","plain"];

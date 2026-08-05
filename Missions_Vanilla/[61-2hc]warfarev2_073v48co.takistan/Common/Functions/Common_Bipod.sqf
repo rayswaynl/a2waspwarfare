@@ -1,10 +1,11 @@
 // -WASP-
 // 3JIbIDEHb aka Smirnoff_ICE
-private ["_unit","_weapon","_affected","_behind","_size"];
+private ["_unit"];
 
 waituntil {!isnull (finddisplay 46)}; (findDisplay 46) displayAddEventHandler ["KeyDown","_this select 1 call Bipod_ON; false"];
 	
 Bipod_ON = {
+		private ["_weapon","_affected","_behind","_size"];
 		switch (_this) do {
 
             //For using bipod hit TAB

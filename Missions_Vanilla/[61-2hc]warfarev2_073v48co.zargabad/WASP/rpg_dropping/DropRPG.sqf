@@ -6,6 +6,14 @@
 ///////////////////////////////////////////////
 private ["_this","_addMag"];
 
+//--- r90 dedupe (mirrors the HandleAT/HandleRocketTraccer remove-before-add in
+//--- Client_PreRespawnHandler.sqf): this file runs on every respawn, and on a REUSED body
+//--- (group respawn / redeploy-truck spawn) its Fired EH and hidden addAction stacked once
+//--- per death - one launcher shot then spawned N WeaponHolders and one mine placement
+//--- fired N register-mine PVs. Stamp the unit; a fresh body is unstamped and arms normally.
+if (_this getVariable ["wfbe_droprpg_armed", false]) exitWith {};
+_this setVariable ["wfbe_droprpg_armed", true, false];
+
 _this setVariable ["OldWeapon","some weapon", false];
 
 _addMag =	{

@@ -14,8 +14,8 @@ _msl = ["M_AT10_AT","M_AT11_AT"];
 if (!(_am in _msl)) exitWith{};
 
 Switch (true) do {
-	case (_am isKindOf "M_AT10_AT") : {_sltd = 860;_acc = 0.6;};
-	case (_am isKindOf "M_AT11_AT") : {_sltd = 900;_acc = 0.5;};
+	case (_am == "M_AT10_AT") : {_sltd = 860;_acc = 0.6;};
+	case (_am == "M_AT11_AT") : {_sltd = 900;_acc = 0.5;};
 };
 
 _fp = getPosASL _rkt;

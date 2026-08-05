@@ -10,6 +10,11 @@ if (_side == Resistance) then {_sideText = Localize "STR_WF_PARAMETER_Side_Guer"
 _sideName = Format[Localize "STR_WF_END_Victory",_sideText];
 
 _guerPanel = (missionNamespace getVariable ["WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL", 0]) > 0;
+//--- WFBE_C_ENDGAME_LEADERBOARD / WFBE_C_ENDGAME_AWARDS (owner ruling 2026-08-02,
+//--- SPEC-SCENARIO-POLISH-20260802.md lane 1): per-player round leaderboard + named
+//--- awards bolted onto this existing stats screen. Awards depends on leaderboard.
+_leaderboardFlag = (missionNamespace getVariable ["WFBE_C_ENDGAME_LEADERBOARD", 0]) > 0;
+_awardsFlag = _leaderboardFlag && {(missionNamespace getVariable ["WFBE_C_ENDGAME_AWARDS", 0]) > 0};
 _width = if (_guerPanel) then {0.27} else {0.4};
 TitleText["","PLAIN"];
 sleep 0.5;
@@ -48,37 +53,41 @@ if (_guerPanel) then {
 	_guerCasualtiesRate = _guerCasualties / 5 * .1;
 };
 
+//--- r76b: wait for cut display, then pin once; abort if still null before DisplayCtrl throws.
 waitUntil {!isNull (["currentCutDisplay"] call BIS_FNC_GUIget)};
-((["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90001) CtrlSetText _sideName;
+private ["_cutDisp"];
+_cutDisp = ["currentCutDisplay"] call BIS_FNC_GUIget;
+if (isNull _cutDisp) exitWith {};
+(_cutDisp DisplayCtrl 90001) CtrlSetText _sideName;
 
-_westRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90200;
-_westRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90201;
-_westCasualtyCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90202;
-_westCasualtyBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90203;
-_westCreatedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90204;
-_westCreatedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90205;
-_westLostCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90206;
-_westLostBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90207;
-_playerSummary = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90010;
+_westRecruitedCounter = _cutDisp DisplayCtrl 90200;
+_westRecruitedBar = _cutDisp DisplayCtrl 90201;
+_westCasualtyCounter = _cutDisp DisplayCtrl 90202;
+_westCasualtyBar = _cutDisp DisplayCtrl 90203;
+_westCreatedCounter = _cutDisp DisplayCtrl 90204;
+_westCreatedBar = _cutDisp DisplayCtrl 90205;
+_westLostCounter = _cutDisp DisplayCtrl 90206;
+_westLostBar = _cutDisp DisplayCtrl 90207;
+_playerSummary = _cutDisp DisplayCtrl 90010;
 
-_eastRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90101;
-_eastRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90102;
-_eastCasualtyCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90103;
-_eastCasualtyBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90104;
-_eastCreatedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90105;
-_eastCreatedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90106;
-_eastLostCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90107;
-_eastLostBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90108;
+_eastRecruitedCounter = _cutDisp DisplayCtrl 90101;
+_eastRecruitedBar = _cutDisp DisplayCtrl 90102;
+_eastCasualtyCounter = _cutDisp DisplayCtrl 90103;
+_eastCasualtyBar = _cutDisp DisplayCtrl 90104;
+_eastCreatedCounter = _cutDisp DisplayCtrl 90105;
+_eastCreatedBar = _cutDisp DisplayCtrl 90106;
+_eastLostCounter = _cutDisp DisplayCtrl 90107;
+_eastLostBar = _cutDisp DisplayCtrl 90108;
 
 if (_guerPanel) then {
-	_guerRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90300;
-	_guerRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90301;
-	_guerCasualtyCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90302;
-	_guerCasualtyBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90303;
-	_guerCreatedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90304;
-	_guerCreatedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90305;
-	_guerLostCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90306;
-	_guerLostBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90307;
+	_guerRecruitedCounter = _cutDisp DisplayCtrl 90300;
+	_guerRecruitedBar = _cutDisp DisplayCtrl 90301;
+	_guerCasualtyCounter = _cutDisp DisplayCtrl 90302;
+	_guerCasualtyBar = _cutDisp DisplayCtrl 90303;
+	_guerCreatedCounter = _cutDisp DisplayCtrl 90304;
+	_guerCreatedBar = _cutDisp DisplayCtrl 90305;
+	_guerLostCounter = _cutDisp DisplayCtrl 90306;
+	_guerLostBar = _cutDisp DisplayCtrl 90307;
 
 	{
 		_position = CtrlPosition (_x select 0);
@@ -93,12 +102,17 @@ if (_guerPanel) then {
 	];
 };
 
-_playerScore = score player;
+//--- r76b: endgame can fire while player is null (disconnect race) or funds helpers not compiled / non-scalar.
+_playerScore = if (isNull player) then {0} else {score player};
 _playerFunds = 0;
 _playerIncome = 0;
-if (!isNil "GetPlayerFunds" && {!isNil "clientTeam"}) then {_playerFunds = Call GetPlayerFunds};
-if (!isNil "GetIncome") then {_playerIncome = (sideJoined) Call GetIncome};
-_playerSummary CtrlSetText Format ["Your round  |  Score %1  |  Funds $%2  |  Income $%3/min", _playerScore, round _playerFunds, round _playerIncome];
+if (!isNil "GetPlayerFunds" && {!isNil "clientTeam"} && {!isNull player}) then {_playerFunds = Call GetPlayerFunds};
+if (!isNil "GetIncome" && {!isNil "sideJoined"}) then {_playerIncome = (sideJoined) Call GetIncome};
+if (isNil "_playerFunds" || {typeName _playerFunds != "SCALAR"}) then {_playerFunds = 0};
+if (isNil "_playerIncome" || {typeName _playerIncome != "SCALAR"}) then {_playerIncome = 0};
+if (!isNull _playerSummary) then {
+	_playerSummary CtrlSetText Format ["Your round  |  Score %1  |  Funds $%2  |  Income $%3/min", _playerScore, round _playerFunds, round _playerIncome];
+};
 
 _position = CtrlPosition _westRecruitedBar;
 _recruited = _width * (_westUnitsCreated / 500);
@@ -220,6 +234,111 @@ if (_guerPanel) then {
 	_position Set[2,_lost];
 	_guerLostBar CtrlSetPosition _position;
 	_guerLostBar CtrlCommit 8;
+};
+
+if (_leaderboardFlag) then {
+	//--- Per-player round leaderboard, built entirely client-local from data the engine
+	//--- already tracks (score/side/name). `allPlayers` is an ARMA 3 command and does NOT
+	//--- exist on A2 OA 1.64 - use the allUnits + isPlayer idiom already established at
+	//--- server_victory_threeway.sqf:274-275, filtered against WFBE_C_HC_NAMES the same way
+	//--- Common_RealPlayers.sqf does (HCs occupy real player-controlled slots in this
+	//--- architecture and would otherwise rank/win an award). Deliberately NOT filtered by
+	//--- `alive` (unlike Common_RealPlayers.sqf) so a player who died late in the round
+	//--- still shows their final score.
+	_leaderboardCtrl = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90410;
+	_leaderboardBgCtrl = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90409;
+
+	_lbHcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]];
+	if ((typeName _lbHcNames) != "ARRAY") then {_lbHcNames = ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]};
+
+	_scoreRows = [];
+	{
+		if (isPlayer _x) then {
+			//--- 2026-08-04 (owner screenshot): HC client names carry LITERAL quote characters
+			//--- ("HC-AI-Control-1" including the quotes - same artifact the A2S bench gate hit), so
+			//--- they dodged the name filter and ranked on the board. Strip ASCII 34 before both the
+			//--- filter and the display row.
+			private ["_lbRawName","_lbNameChars","_lbCleanChars"];
+			_lbRawName = name _x;
+			_lbNameChars = toArray _lbRawName;
+			_lbCleanChars = [];
+			{ if (_x != 34) then {_lbCleanChars set [count _lbCleanChars, _x]} } forEach _lbNameChars;
+			_lbRawName = toString _lbCleanChars;
+			if (!(_lbRawName in _lbHcNames)) then {
+				_scoreRows set [count _scoreRows, [_lbRawName, score _x, side _x]];
+			};
+		};
+	} forEach allUnits;
+
+	//--- Descending insertion sort on score (index 1). Player counts are small (WF_MAXPLAYERS
+	//--- caps 31-33 across the three maps) so O(n^2) is fine; avoids any A3 sort-by-code command.
+	for "_i" from 1 to ((count _scoreRows) - 1) do {
+		_j = _i;
+		while {_j > 0 && {(_scoreRows select (_j - 1) select 1) < (_scoreRows select _j select 1)}} do {
+			_sortTmp = _scoreRows select (_j - 1);
+			_scoreRows set [_j - 1, _scoreRows select _j];
+			_scoreRows set [_j, _sortTmp];
+			_j = _j - 1;
+		};
+	};
+
+	_rankLimit = 5;
+	if (_rankLimit > (count _scoreRows)) then {_rankLimit = count _scoreRows};
+
+	_lbText = "<t size='1.2'>Top Players</t><br />";
+	for "_i" from 0 to (_rankLimit - 1) do {
+		_lbRow = _scoreRows select _i;
+		_lbText = _lbText + Format ["%1. %2 - %3<br />", _i + 1, _lbRow select 0, _lbRow select 1];
+	};
+
+	if (_awardsFlag && {(count _scoreRows) > 0}) then {
+		_lbText = _lbText + "<t size='1.2'>Awards</t><br />";
+
+		//--- "Top Killer" per side, derived from the same score rows above - a GUER top
+		//--- killer falls out of this for free without needing WFBE_GUER_PLAYER_KILLS (that
+		//--- counter is a side-wide cumulative total, not attributable to one player).
+		{
+			_awSide = _x;
+			_sideLabel = Localize "STR_WF_PARAMETER_Side_East";
+			if (_awSide == west) then {_sideLabel = Localize "STR_WF_PARAMETER_Side_West"};
+			if (_awSide == resistance) then {_sideLabel = Localize "STR_WF_PARAMETER_Side_Guer"};
+
+			_topName = "";
+			_topScore = -1;
+			{
+				if ((_x select 2) == _awSide && {(_x select 1) > _topScore}) then {
+					_topName = _x select 0;
+					_topScore = _x select 1;
+				};
+			} forEach _scoreRows;
+
+			if (_topScore > -1) then {
+				_lbText = _lbText + Format ["Top Killer (%1): %2 - %3<br />", _sideLabel, _topName, _topScore];
+			};
+		} forEach ([west, east] + (if (_guerPanel) then {[resistance]} else {[]}));
+
+		//--- "Most Vehicles Lost" - side-level comic-relief award. No per-player vehicle-loss
+		//--- counter exists (only the WF_Logic side aggregates already displayed above), so
+		//--- this stays a side label rather than naming an individual player.
+		_lostLabel = Localize "STR_WF_PARAMETER_Side_West";
+		_lostMax = _westVehiclesLost;
+		if (_eastVehiclesLost > _lostMax) then {_lostLabel = Localize "STR_WF_PARAMETER_Side_East"; _lostMax = _eastVehiclesLost};
+		if (_guerPanel && {_guerVehiclesLost > _lostMax}) then {_lostLabel = Localize "STR_WF_PARAMETER_Side_Guer"; _lostMax = _guerVehiclesLost};
+		_lbText = _lbText + Format ["Most Vehicles Lost: %1 (%2)<br />", _lostLabel, _lostMax];
+	};
+
+	//--- 2026-08-04 (owner screenshot): y-only reposition parked the block INSIDE the stats panel
+	//--- footprint at size 0.018 - unreadable overlap. Give both controls a full position in the
+	//--- clear area right of the panel, and let the bg actually back the text.
+	if (!isNull _leaderboardCtrl) then {
+		_leaderboardCtrl CtrlSetPosition [0.465, 0.17, 0.30, 0.55];
+		_leaderboardCtrl CtrlCommit 0;
+		_leaderboardCtrl CtrlSetStructuredText ParseText ("<t size='1.1'>" + _lbText + "</t>");
+	};
+	if (!isNull _leaderboardBgCtrl) then {
+		_leaderboardBgCtrl CtrlSetPosition [0.455, 0.155, 0.32, 0.58];
+		_leaderboardBgCtrl CtrlCommit 0;
+	};
 };
 
 _timePassed = 0;

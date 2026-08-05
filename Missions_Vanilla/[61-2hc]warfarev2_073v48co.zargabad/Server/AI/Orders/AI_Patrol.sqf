@@ -37,7 +37,12 @@ _wps = [];
 //--- ROADS between owned towns instead of to their target. Exclude Air here so air falls through to the legacy
 //--- direct-destination block below. Byte-identical for ground patrols (isKindOf "Air" is false for a man/ground
 //--- vehicle leader). A2-OA-1.64-safe: vehicle/leader/isKindOf.
-_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")};
+//--- GARRISON-SORTIE LOCAL PATROL (wave reconcile of #1955): garrison-sortie groups are
+//--- tagged wfbe_garrison_sortie (Server_GarrisonSortie.sqf) and intend a LOCAL ring around
+//--- their town; without this guard the global road-bias scan above can hijack them onto an
+//--- inter-owned-town corridor. Bypass road-bias for that tag only; ordinary patrols unaffected.
+//--- A2-OA-1.64-safe: WFBE_CO_FNC_GroupGetBool (GROUPGETVAR-safe helper), no A3 commands.
+_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")} && {!([_team, "wfbe_garrison_sortie", false] Call WFBE_CO_FNC_GroupGetBool)};
 if (_rbEnabled) then {
 	_rbSideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 	_rbOwned = [];

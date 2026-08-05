@@ -1,6 +1,17 @@
 //--- ArmA 2 countermeasures, by Maddmatt.
 Private ["_dirpos","_div","_emmiters","_flare","_flarecount","_flares","_flarevel","_i","_launchercount","_li","_muzzzlevel","_relpos","_sm","_sp","_vehicle","_vvel"];
-_vehicle = _this select 0;
+//--- r80b CM residual: CM_Countermeasures (r73b) now nil-guards FlareActive/Count before spawn, but THIS
+//--- file still bare-selected _this select 0 and bare-getVariable "FlareCount" — nil vehicle / never-armed
+//--- hulls (HC-local rearm race, CM_Set still sleeping) made `nil - 1` throw mid-burst and leak particle
+//--- emitters with no cleanup. Fail-closed on bad vehicle; clamp budget to >=0 after each launcher.
+if (isNil "_this") exitWith {};
+if (typeName _this == "OBJECT") then {
+	_vehicle = _this;
+} else {
+	if (typeName _this == "ARRAY" && {count _this > 0}) then {_vehicle = _this select 0} else {_vehicle = objNull};
+};
+if (isNil "_vehicle" || {typeName _vehicle != "OBJECT"} || {isNull _vehicle}) exitWith {};
+if !(alive _vehicle) exitWith {};
 _flares = [];
 _emmiters = [];
 _muzzzlevel = 25;
@@ -9,7 +20,9 @@ _launchercount = 0;
 while {([0,0,0] distance (_vehicle selectionPosition (format ["flare_launcher%1",_launchercount+1]))) != 0} do {_launchercount = _launchercount+1};
 
 for "_i" from 1 to (_launchercount) do {
-	_flarecount = (_vehicle getVariable "FlareCount") - 1;
+	_flarecount = _vehicle getVariable ["FlareCount", 0];
+	if (isNil "_flarecount" || {typeName _flarecount != "SCALAR"}) then {_flarecount = 0};
+	_flarecount = (_flarecount - 1) max 0;
 	_vehicle setVariable ["FlareCount", _flarecount];
 	_relpos = _vehicle modelToWorld (_vehicle selectionPosition format["flare_launcher%1",_i]);
 	_dirpos = _vehicle modelToWorld (_vehicle selectionPosition format["flare_launcher%1_dir",_i]);

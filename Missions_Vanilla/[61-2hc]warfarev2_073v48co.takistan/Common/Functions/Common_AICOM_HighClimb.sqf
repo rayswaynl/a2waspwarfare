@@ -101,7 +101,7 @@ WFBE_CO_FNC_AICOM_HighClimb_Eligible = {
 //--- _this = tank object.
 //--- ============================================================================
 WFBE_CO_FNC_AICOM_HighClimb_Boost = {
-	private ["_vehicle","_direction","_min","_minBoostSpeed","_baseBoostCoef","_maxBoostCoef",
+	private ["_vehicle","_direction","_min","_minBoostSpeed","_boostFloor","_baseBoostCoef","_maxBoostCoef",
 	         "_sleepDelay","_driver","_speed","_vel","_currentCommand","_canAssist","_isMovingForward","_boostCoef",
 	         "_lastLog","_pulseOrd","_pulseGoal","_pulseGoalValid","_pulseTrackedGoal","_pulseDist","_pulseLastDist",
 	         "_pulseDwell","_pulseMax","_pulseCd","_pulseLast","_pulseStrikes","_pulseHead","_pulseSpd","_pulseVel",
@@ -140,7 +140,14 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 
 	//--- Target assist speed: help only while below this. Mirror the player assist values.
 	_min = 30;
-	//--- Minimum speed before boosting: never push a stopped/parked tank.
+	//--- Minimum speed before boosting: never push a stopped/parked tank (floor 3, unchanged for ordinary
+	//--- driving - k-turns, convoy slowdowns, careful maneuvering stay outside the assist, and the ZEROPULSE
+	//--- eligibility below (_speed <= _minBoostSpeed) keeps its original <=3 window). CORRECTNESS FIX
+	//--- (2026-08-02, review round 2): the from-zero pulse tops out at 2.5-3 m/s and decays under gravity
+	//--- every 0.1s tick, so a floor of 3 meant a successfully-pulsed hull could NEVER enter the forward
+	//--- assist - an unconditional dead zone between the two assists. The handoff is now closed ONLY for a
+	//--- hull that pulsed within the last 10s (see the boost branch below): its effective floor drops to 1.5
+	//--- so the assist can catch the decaying pulse; every other hull keeps the original floor untouched.
 	_minBoostSpeed = 3;
 	//--- Progressive multiplier: gentle at low speed, stronger on steep climbs.
 	_baseBoostCoef = 1.05;
@@ -175,7 +182,12 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 				if (_canAssist && {_isMovingForward}) then {
 					//--- Climbing assist only: boost when already moving forward but too slow.
 					//--- No braking above the target speed.
-					if (_speed > _minBoostSpeed && {_speed < _min}) then {
+					//--- Post-pulse handoff (review round 2): a hull that ZEROPULSEd within the last 10s uses a 1.5
+					//--- floor so the assist can catch the decaying pulse; 10s sits under the 15s pulse cooldown, so
+					//--- this can never blanket ordinary low-speed driving.
+					_boostFloor = _minBoostSpeed;
+					if ((diag_tickTime - (_vehicle getVariable ["AICOM_HighClimb_PulseLast", -9999])) < 10) then {_boostFloor = 1.5};
+					if (_speed > _boostFloor && {_speed < _min}) then {
 						_boostCoef = _baseBoostCoef + (((_min - _speed) / _min) * (_maxBoostCoef - _baseBoostCoef));
 						if (_boostCoef > _maxBoostCoef) then {_boostCoef = _maxBoostCoef};
 
@@ -254,7 +266,13 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 								if ((diag_tickTime - _pulseLast) >= _pulseCd && {_pulseStrikes < _pulseMax}) then {
 									_pulseHead = getDir _vehicle;
 									_pulseSpd = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED", 2.5];
-									if (_pulseSpd > 2.5) then {_pulseSpd = 2.5};
+									//--- CORRECTNESS FIX (2026-08-02): this ceiling was hardcoded to 2.5, silently overriding
+									//--- the constant's OWN documented range - Init_CommonConstants.sqf's
+									//--- WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED comment reads "deliberation spec: ~2-3 m/s" - so no
+									//--- owner arming of that constant above 2.5 could ever take effect. Ceiling raised to 3 to
+									//--- match the documented spec exactly. Default stays 2.5, under both the old and new
+									//--- ceiling, so this is byte-identical behaviour at the current default.
+									if (_pulseSpd > 3) then {_pulseSpd = 3};
 									if (_pulseSpd < 0) then {_pulseSpd = 0};
 									_pulseVel = [(sin _pulseHead) * _pulseSpd, (cos _pulseHead) * _pulseSpd, (_vel select 2)];
 									_vehicle setVelocity _pulseVel;

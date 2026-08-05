@@ -49,8 +49,10 @@ if (_builtByRepairTruck) then {
 
 //--- If it's a minefield, we exit the script while spawning it.
 if (_type == 'Sign_Danger') exitWith {
-	Private ["_c","_h","_mine","_mineType","_toWorld"];
+	Private ["_c","_fieldID","_h","_mine","_mineType","_toWorld"];
 	_mineType = if (_side == west) then {'MineMine'} else {'MineMineE'};
+	//--- The Sign_Danger anchor is deleted below, so retain a shared identity for this purchased field.
+	_fieldID = str _defense;
 	_h = -4;
 	_c = 0;
 	for [{_z=0}, {_z<9}, {_z=_z+1}] do{
@@ -58,7 +60,7 @@ if (_type == 'Sign_Danger') exitWith {
 		_toWorld = _defense modelToWorld _array;
 		_toWorld set[2,0];
 		_mine = createMine [_mineType, _toWorld,[], 0];
-		mines set [count mines, [_mine, time]];
+		mines set [count mines, [_mine, time, _side, _fieldID]];
 
 		_c = _c + 4;
 	};
@@ -70,7 +72,7 @@ if (_type == 'Sign_Danger') exitWith {
 		_toWorld = _defense modelToWorld _array;
 		_toWorld set[2,0];
 		_mine = createMine [_mineType, _toWorld,[], 0];
-		mines set [count mines, [_mine, time]];
+		mines set [count mines, [_mine, time, _side, _fieldID]];
 		_c = _c + 4;
 	};
 
@@ -81,7 +83,7 @@ if (_type == 'Sign_Danger') exitWith {
 		_toWorld = _defense modelToWorld _array;
 		_toWorld set[2,0];
 		_mine = createMine [_mineType, _toWorld,[], 0];
-		mines set [count mines, [_mine, time]];
+		mines set [count mines, [_mine, time, _side, _fieldID]];
 		_c = _c + 4;
 	};
 	deleteVehicle _defense;
@@ -109,25 +111,37 @@ if (!isNull _area) then {
 		if (isNil "_availweapons") then {_availweapons = missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI"};
 		Private ["_alives","_check","_closest","_team"];
 		_team = _area getVariable "DefenseTeam";
+		if (isNil "_team") then {_team = grpNull};
 
-		if (isNil '_team') then {
-			_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
-			//--- Per-area DefenseTeam is re-manned over time; flag persistent so the empty-group
-			//--- GC (server_groupsGC.sqf) never deletes it in a window between mannings.
-			_team setVariable ["wfbe_persistent", true];
-			_area setVariable ["DefenseTeam", _team];
-		}else{
-			if(side _team != _side) then{
-				// Group-cap fix: delete the orphaned group before creating the new one.
-				if !(isNull _team) then {
-					{deleteVehicle _x} forEach (units _team);
-					deleteGroup _team;
-				};
-				_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
-				//--- Re-flag persistent on the replacement group (see above).
-				_team setVariable ["wfbe_persistent", true];
+		//--- A full side group cap makes Common_CreateGroup return grpNull.  The old
+		//--- base-static path immediately dereferenced that null group, aborting before
+		//--- HandleDefense could create a gunner.  Town statics already use the shared
+		//--- per-side DefenseTeam in this case; use the same fallback here.
+		if (isNull _team || {side _team != _side}) then {
+			// Group-cap fix: delete a wrong-side orphan before replacing it.
+			if !(isNull _team) then {
+				{deleteVehicle _x} forEach (units _team);
+				deleteGroup _team;
 			};
-			_area setVariable ["DefenseTeam", _team];
+			_team = [_side, "defense"] Call WFBE_CO_FNC_CreateGroup;
+			if !(isNull _team) then {
+				//--- Per-area DefenseTeam is re-manned over time; preserve it between mannings.
+				_team setVariable ["wfbe_persistent", true];
+				_area setVariable ["DefenseTeam", _team];
+			};
+		};
+
+		if (isNull _team) then {
+			_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side];
+			if (isNil "_team") then {_team = grpNull};
+			if !(isNull _team) then {
+				_team setVariable ["wfbe_persistent", true];
+				_area setVariable ["DefenseTeam", _team];
+			};
+		};
+
+		if (isNull _team) exitWith {
+			["WARNING", Format ["Construction_StationaryDefense.sqf: [%1] cannot man [%2] because no DefenseTeam group is available.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
 		};
 
 		//--- AI16 (lane118): stamp the base-area logic on the defense so Server_HandleDefense can

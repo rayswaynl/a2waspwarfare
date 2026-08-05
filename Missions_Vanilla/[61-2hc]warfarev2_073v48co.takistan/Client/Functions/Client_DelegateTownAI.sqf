@@ -32,6 +32,12 @@ _epoch = if (count _this > 5) then {_this select 5} else {-1};
 //--- heavy body; released at end-of-file. Counter is per-HC (missionNamespace is machine-local).
 private "_qWait"; _qWait = 0;
 while {((missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) >= 3) && {_qWait < 100}} do {sleep 0.1; _qWait = _qWait + 1};
+//--- round-end guard: a delegation queued behind other batches (or received just before gameOver) must
+//--- not land a full town-AI batch after the round ended - no cleanup-townai follows a post-flag spawn.
+if (missionNamespace getVariable ["WFBE_GameOver", false]) exitWith {
+	["INFORMATION", "Client_DelegateTownAI.sqf: dropped a town delegation request - the round is over."] Call WFBE_CO_FNC_LogContent;
+};
+
 missionNamespace setVariable ["WFBE_HC_DELEG_INFLIGHT", ((missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) + 1)];
 
 for "_i" from 0 to ((count _teams) - 1) do {

@@ -1943,6 +1943,26 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2002";
 			tooltip = "AI crew dismounts and restores mobility (wheels/tracks/engine), then remounts";
 		};
+		/* Load Squad button (WFBE_C_SQUAD_BULK_MOUNT; ctrlShow-managed by GUI_Menu_TeamV2.sqf) */
+		class CA_SQ_LoadAll : RscButton_WFBE_Action {
+			idc = 13075;
+			x = 0.192941;
+			y = 0.535;
+			w = 0.135;
+			text = "Load Squad";
+			action = "MenuAction = 2003";
+			tooltip = "Mount squad AI already near the vehicle under your cursor";
+		};
+		/* Unload Squad button (WFBE_C_SQUAD_BULK_MOUNT; ctrlShow-managed by GUI_Menu_TeamV2.sqf) */
+		class CA_SQ_UnloadAll : RscButton_WFBE_Action {
+			idc = 13076;
+			x = 0.337941;
+			y = 0.535;
+			w = 0.135;
+			text = "Unload Squad";
+			action = "MenuAction = 2004";
+			tooltip = "Staggered dismount of all AI crew from the selected unit's vehicle";
+		};
 		/* Separator: squad / preferences */
 		class Line_V2_Sep2 : RscText {
 			x = 0.192941;
@@ -3198,6 +3218,33 @@ class RscMenu_Command {
 			tooltip = "Apply the selected order to the highlighted team. Position orders (Move/Defend/Patrol/Arty) then ask for a map click.";
 			show = 0;
 		};
+		/* fable/cmd-troopmon-freelook: two independent commander-tooling entry points in the top header
+		   band (y 0.001-0.053, clear of the situation map which starts at y=0.056 and the title which ends
+		   at x=0.3) - avoids any layout collision with the packed left-column war-room controls below.
+		   show=0 STRUCTURAL GUARD -> STATE-B (commander) only; each is admitted to _warCtrls in
+		   GUI_Menu_Command.sqf ONLY when its own default-0 flag is on, so with both flags at 0 neither
+		   button is ever admitted and this dialog is pixel-identical to HEAD. Independent of the
+		   Spectator v8 lane - opens RscMenu_TroopMon / spawns Client_CommanderFreelook.sqf, never touches
+		   Client_Spectator*.sqf. */
+		class CA_Cmd_TroopMon : RscButton_Main {
+			idc = 14710;
+			x = 0.620000; y = 0.008000; w = 0.170000; h = 0.036000;
+			show = 0;
+			text = "TROOP MONITOR";
+			action = "MenuAction = 790";
+			tooltip = "Browse a filterable list of every own-side group (AI-led and player-led).";
+			colorBackground[] = {0.15, 0.3, 0.45, 0.85};
+			colorBackgroundActive[] = {0.2, 0.42, 0.6, 1};
+		};
+		class CA_Cmd_ReconCam : CA_Cmd_TroopMon {
+			idc = 14711;
+			x = 0.800000; y = 0.008000; w = 0.170000;
+			text = "RECON CAM";
+			action = "MenuAction = 791";
+			tooltip = "Fly a free camera around the map (ESC returns to your body).";
+			colorBackground[] = {0.45, 0.3, 0.1, 0.85};
+			colorBackgroundActive[] = {0.6, 0.42, 0.15, 1};
+		};
 		class Back_Button : RscButton_Back {
 			x = 0.892507;
 			y = 0.953825;
@@ -3210,6 +3257,92 @@ class RscMenu_Command {
 			y = 0.953825;
 			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
+		};
+	};
+};
+
+//--- fable/cmd-troopmon-freelook: filterable own-side troop/group monitor, opened from the
+//--- RscMenu_Command war-room TROOP MONITOR button (idc 14710, MenuAction 790). Own module - never
+//--- touches WFBE_SpectatorMapDialog or any Spectator v8 class. Modeled on WFBE_TownsGarrisonMenu
+//--- (same background/header/footer idiom) with one added TYPE filter combo.
+class RscMenu_TroopMon {
+	movingEnable = 1;
+	idd = 33000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_TroopMon.sqf'";
+
+	class controlsBackground {
+		class BG : RscText {
+			x = 0.170; y = 0.170; w = 0.660; h = 0.660;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class Header : RscText {
+			x = 0.170; y = 0.170; w = 0.660; h = 0.055;
+			colorBackground[] = WFBE_Background_Color_Header;
+			moving = 1;
+		};
+		class Footer : RscText {
+			x = 0.170; y = 0.775; w = 0.660; h = 0.055;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+	};
+
+	class controls {
+		class Title : RscText_Title {
+			x = 0.185; y = 0.178; w = 0.560; h = 0.040;
+			text = "TROOP MONITOR";
+		};
+		class Btn_X : RscButton_Main {
+			x = 0.785; y = 0.178; w = 0.032; h = 0.040;
+			text = "X";
+			shadow = 2;
+			action = "closeDialog 0;";
+		};
+		class Lbl_Info : RscText {
+			x = 0.190; y = 0.225; w = 0.610; h = 0.035;
+			text = "OWN-SIDE INTEL | every own-side group, AI-led and player-led | read-only";
+			sizeEx = 0.020;
+			colorText[] = {0.2588, 0.7137, 1, 0.85};
+			shadow = 2;
+		};
+		class Lbl_FilterCaption : RscText {
+			x = 0.190; y = 0.268; w = 0.090; h = 0.033;
+			text = "TYPE:";
+			sizeEx = 0.020;
+			colorText[] = {1, 1, 1, 0.85};
+			shadow = 2;
+		};
+		class Combo_Type : RscCombo {
+			idc = 33010;
+			x = 0.280; y = 0.266; w = 0.200; h = 0.035;
+		};
+		class LB_Troops : RscListBox {
+			idc = 33011;
+			x = 0.190; y = 0.315; w = 0.610; h = 0.330;
+			rowHeight = 0.040;
+		};
+		class Status : RscText {
+			idc = 33012;
+			x = 0.190; y = 0.655; w = 0.610; h = 0.035;
+			text = "0 groups shown";
+			sizeEx = 0.019;
+			colorText[] = {0.8, 0.9, 1, 0.8};
+			shadow = 2;
+		};
+		class Btn_Refresh : RscButton_Main {
+			x = 0.190; y = 0.785; w = 0.196; h = 0.035;
+			text = "REFRESH";
+			action = "MenuAction = 11;";
+		};
+		class Btn_View : RscButton_Main {
+			x = 0.397; y = 0.785; w = 0.196; h = 0.035;
+			text = "VIEW";
+			action = "MenuAction = 12;";
+		};
+		class Btn_Back : RscButton_Main {
+			x = 0.604; y = 0.785; w = 0.196; h = 0.035;
+			text = "< BACK";
+			action = "MenuAction = 10;";
 		};
 	};
 };
@@ -5451,6 +5584,108 @@ class WFBE_SpectatorMapDialog {
 			h = 0.050;
 			size = 0.028;
 			text = "<t align='center' color='#D8F3FF' shadow='2'>CLICK TO TELEPORT CAMERA  |  M CLOSE  |  CAMERA KEYS PAUSE WHILE MAP IS OPEN</t>";
+		};
+	};
+};
+
+/* Streamer menu (spectator v5 P5). Caster-only settings hub for the broadcast toggles -
+   WF-menu idiom: Rsc class here, poll-loop controller in Client\GUI\GUI_Menu_Streamer.sqf,
+   dedicated WFBE_StreamerMenuAction namespace (same separation as MenuAction vs
+   WFBE_MenuAction: `dialog` is true while ANY dialog is open, so a sibling loop surviving
+   a close-then-open handoff must never see these action numbers). J (DIK 36) toggles the
+   dialog through the spectator KeyDown EH while the camera has focus; the EH below lets
+   the same key close it while the DIALOG has focus. Flag WFBE_C_SPECTATOR_STREAMER_MENU
+   (default 0) gates every open path; this class alone is inert data. */
+class WFBE_StreamerMenu {
+	movingEnable = 1;
+	idd = 10264;
+	onLoad = "ExecVM ""Client\GUI\GUI_Menu_Streamer.sqf""; (_this select 0) displayAddEventHandler ['KeyDown', 'if ((_this select 1) == 36) then {closeDialog 0; true} else {false}'];";
+
+	class controlsBackground {
+		class CA_Background : RscText {
+			x = 0.275; y = 0.135; w = 0.45; h = 0.575;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class CA_Background_Header : CA_Background {
+			h = 0.06;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class CA_Background_Footer : CA_Background {
+			y = 0.135 + 0.535;
+			h = 0.04;
+			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+		class CA_Border : RscText {
+			x = 0.275; y = 0.135 + 0.06; w = 0.45; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+
+	class controls {
+		class CA_Title : RscText_Title {
+			idc = 102641;
+			x = 0.29; y = 0.135 + 0.012; w = 0.40; h = 0.04;
+			text = "STREAMER MENU";
+		};
+		class CA_Quit_Button : RscButton_Main {
+			idc = 102642;
+			x = 0.275 + 0.405; y = 0.135 + 0.0075; w = 0.045; h = 0.045;
+			text = "X";
+			shadow = 2; sizeEx = 0.03;
+			onButtonClick = "WFBE_StreamerMenuAction = 9;";
+		};
+
+		//--- ===== DIRECTOR =====
+		class CA_DirectorHead : RscText_SubTitle {
+			idc = 102643;
+			x = 0.29; y = 0.135 + 0.075; w = 0.40; h = 0.035;
+			text = "DIRECTOR";
+		};
+		//--- Toggle rows, two columns. Text set live by the controller; click flips the value.
+		class CA_DirAuto : RscButton_Main {
+			idc = 102644;
+			x = 0.29; y = 0.135 + 0.115; w = 0.205; h = 0.042;
+			sizeEx = 0.022;
+			text = "Director Auto: OFF";
+			action = "WFBE_StreamerMenuAction = 1";
+		};
+		class CA_Orbit     : CA_DirAuto { idc = 102645; x = 0.505; y = 0.135 + 0.115; text = "Orbit Reveals: ON";   action = "WFBE_StreamerMenuAction = 2"; };
+		class CA_GuerTgt   : CA_DirAuto { idc = 102646; x = 0.29;  y = 0.135 + 0.162; text = "GUER Targets: ON";    action = "WFBE_StreamerMenuAction = 3"; };
+		class CA_ArtyRings : CA_DirAuto { idc = 102647; x = 0.505; y = 0.135 + 0.162; text = "Arty Rings: OFF";     action = "WFBE_StreamerMenuAction = 8"; };
+		class CA_IdleDwell : CA_DirAuto { idc = 102648; x = 0.29;  y = 0.135 + 0.209; w = 0.42; text = "Idle Dwell: 3s"; action = "WFBE_StreamerMenuAction = 6"; };
+
+		//--- ===== CAMERA + HUD =====
+		class CA_CameraHead : RscText_SubTitle {
+			idc = 102649;
+			x = 0.29; y = 0.135 + 0.268; w = 0.40; h = 0.035;
+			text = "CAMERA + HUD";
+		};
+		class CA_CamSpeed : CA_DirAuto { idc = 102650; x = 0.29;  y = 0.135 + 0.308; text = "Cam Speed: 15 m/s"; action = "WFBE_StreamerMenuAction = 7"; };
+		class CA_HudFade  : CA_DirAuto { idc = 102651; x = 0.505; y = 0.135 + 0.308; text = "HUD Fade: 6s";      action = "WFBE_StreamerMenuAction = 5"; };
+		//--- Read-only sensitivity readout (PgUp/PgDn adjust live in the camera; value set live).
+		class CA_SensLabel : RscText {
+			idc = 102652;
+			x = 0.29; y = 0.135 + 0.360; w = 0.42; h = 0.03;
+			sizeEx = 0.022;
+			text = "Sensitivity: 25 (PgUp/PgDn in camera)";
+			colorText[] = WFBE_Menu_Text_Color;
+			shadow = 2;
+		};
+		class CA_HintLabel : CA_SensLabel {
+			idc = 102654;
+			y = 0.135 + 0.395;
+			sizeEx = 0.02;
+			text = "Settings apply live. J or Esc closes.";
+		};
+
+		//--- ===== Footer Close =====
+		class CA_Done : RscButton_Main {
+			idc = 102653;
+			x = 0.29; y = 0.135 + 0.475; w = 0.42; h = 0.045;
+			sizeEx = 0.026;
+			text = "Close";
+			action = "WFBE_StreamerMenuAction = 9";
 		};
 	};
 };

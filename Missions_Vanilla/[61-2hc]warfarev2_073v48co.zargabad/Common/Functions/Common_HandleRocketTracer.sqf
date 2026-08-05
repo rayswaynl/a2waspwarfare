@@ -42,6 +42,7 @@ if !(isNull _fp) then {
 };
 
 sleep 0.7;
+if (isNull _rocket) exitWith {};
 
 _fp1 = "#particlesource" createVehicleLocal getPos _rocket;
 if !(isNull _fp1) then {

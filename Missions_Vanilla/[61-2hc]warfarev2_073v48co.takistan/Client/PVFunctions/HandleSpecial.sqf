@@ -199,7 +199,7 @@ switch (_request) do {
 						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
 					};
 				} forEach _wUnits;
-				{if (!isNull _x) then {deleteVehicle _x}} forEach _wVehicles;
+				{if (!isNull _x && {({isPlayer _x} count (crew _x)) == 0}) then {deleteVehicle _x}} forEach _wVehicles; //--- r128: player-crew guard (parity with the server half in server_side_patrols.sqf)
 				{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;
 				if (!isNull _wGrp) then {deleteGroup _wGrp};
 			} else {
@@ -243,7 +243,7 @@ switch (_request) do {
 		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
 		if (count _args < 1) exitWith {};
 		_emptyVehicle = _args select 0;
-		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {deleteVehicle _emptyVehicle};
+		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {!(_emptyVehicle getVariable ["wfbe_is_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {deleteVehicle _emptyVehicle};
 	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
@@ -319,7 +319,14 @@ switch (_request) do {
 	};
 	/*--- wiki-wins: removed dead "delegate-ai" case (no server sender repo-wide; superseded by delegate-townai / delegate-ai-static-defence) ---*/
 	case "delegate-ai-static-defence": {_args spawn WFBE_CL_FNC_DelegateAIStaticDefence};
-	case "endgame": {if !(isNil "WFBE_CL_FNC_EndGame") then {_args spawn WFBE_CL_FNC_EndGame}};
+	case "endgame": {
+		if !(isNil "WFBE_CL_FNC_EndGame") then {_args spawn WFBE_CL_FNC_EndGame} else {
+			//--- HC path (no EndGame outro is compiled on headless clients): flip the round-over flags so
+			//--- every HC-local loop gated on WFBE_GameOver observes round end on its next tick.
+			gameOver = true;
+			WFBE_GameOver = true;
+		};
+	};
 	case "hq-setstatus": {_args spawn WFBE_CL_FNC_HQ_SetStatus};
 	case "icbm-display": {_args spawn WFBE_CL_FNC_Display_ICBM};
 	case "irsmoke-createfx": {{_x spawn WFBE_CO_MOD_IRS_CreateSmoke} forEach (_args select 0)};
@@ -405,6 +412,16 @@ switch (_request) do {
 		if (typeName _fpvExpires != "SCALAR" || {_fpvExpires <= time}) exitWith {};
 		if (typeName _fpvAuthChallenge != "STRING" || {_fpvAuthChallenge != (missionNamespace getVariable [_fpvChallengeKey, ""])}) exitWith {};
 		missionNamespace setVariable [Format ["wfbe_fpv_cap_client_%1", getPlayerUID player], [_fpvToken, _fpvExpires]];
+	};
+	//--- Private rearm stamp after FPV flight ends (server no longer publicVariable's per-UID nextKey).
+	//--- Forge-safe: only mutates THIS client's local cooldown display; server enforces rearm on purchase.
+	case "fpv-rearm-cooldown": {
+		Private ["_fpvNext","_fpvNextKey"];
+		if (count _args < 1) exitWith {};
+		_fpvNext = _args select 0;
+		if (typeName _fpvNext != "SCALAR") exitWith {};
+		_fpvNextKey = Format ["wfbe_fpv_next_%1", getPlayerUID player];
+		missionNamespace setVariable [_fpvNextKey, _fpvNext];
 	};
 	//--- Purchase results carry the private capability and exact objects. Fake/stale client-bus
 	//--- packets cannot change stats, cooldown, or tear down a newer flight.
@@ -753,6 +770,19 @@ switch (_request) do {
 			hintSilent parseText ("<t color='#85B5FA'>" + _msg + "</t>");
 		};
 	};
+	case "repair-camp-result": {
+		Private ["_ok","_price","_text"];
+		_ok = if ((count _args) > 0) then {_args select 0} else {false};
+		_text = if ((count _args) > 1) then {_args select 1} else {"Camp repair failed."};
+		if (typeName _ok != "BOOL") then {_ok = false};
+		if (typeName _text != "STRING") then {_text = "Camp repair failed."};
+		if (!_ok && {missionNamespace getVariable ["WFBE_CampRepairPending", false]}) then {
+			_price = missionNamespace getVariable ["WFBE_C_CAMPS_REPAIR_PRICE", 0];
+			if (typeName _price == "SCALAR" && {_price > 0}) then {_price Call WFBE_CL_FNC_ChangeClientFunds};
+			hint _text;
+		};
+		missionNamespace setVariable ["WFBE_CampRepairPending", false];
+	};
 	case "support-callin-result": {
 	//--- failure-signalling r38: server notified a tactical support deny/refund.
 	Private ["_ok","_msg"];
@@ -762,6 +792,15 @@ switch (_request) do {
 	hintSilent parseText Format ["<t color='#F8D664'>%1</t>", _msg];
 	systemChat _msg;
 };
+	case "cancel-queue-result": {
+		Private ["_ok","_refund","_factory","_cpt"];
+		_ok = _args select 0; _refund = _args select 1; _factory = _args select 2; _cpt = _args select 3;
+		if (_ok) then {
+			unitQueu = (unitQueu - _cpt) max 0;
+			missionNamespace setVariable [Format ["WFBE_C_QUEUE_%1", _factory], ((missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1", _factory], 0]) - 1) max 0];
+			hint parseText Format ["<t color='#00e83e'>Queue cancelled.</t><br/>Refunded: <t color='#ffe066'>$%1</t>", _refund];
+		} else {hint parseText "<t color='#ff9900'>You have no unit in this factory's queue.</t>"};
+	};
 
 case "guer-helibomb-result": {
 		Private ["_ok","_msg"];
