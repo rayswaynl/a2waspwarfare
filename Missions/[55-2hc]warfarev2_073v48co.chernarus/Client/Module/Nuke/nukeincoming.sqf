@@ -72,11 +72,11 @@ sleep 7;
 //--- escape, so NukeDammage still lands. Same detonate-by-delete idiom as the TEL path
 //--- (Init_IcbmTel.sqf), which deliberately avoids this wait.
 _deadline = time + 180;
-waitUntil {!alive _cruise || {isNull _cruise} || {time > _deadline}};
+waitUntil {sleep 0.05; !alive _cruise || {isNull _cruise} || {time > _deadline}};
 
 sleep 5;
 if (WF_A2_Vanilla || WF_A2_CombinedOps) then {if !(isNull _misFlare) then {deleteVehicle _misFlare}};
 if !(isNull _cruise) then {deleteVehicle _cruise};
 
 //sleep 50;
-//deleteMarkerLocal _nukeMarker; 
+//deleteMarkerLocal _nukeMarker;
