@@ -234,6 +234,17 @@ switch (_request) do {
 		_whObj = _args select 0;
 		if (!isNull _whObj && {local _whObj} && {_whObj isKindOf "WeaponHolder"} && {(_whObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _whObj};
 	};
+	//--- Owner-side half of mines_cleaner.sqf's locality gate. Player-fired mines are
+	//--- registered on the server but can remain local to the shooter. The server stamps
+	//--- the object before dispatching; re-check the stamp, locality, and mine class here.
+	//--- A rejected or disconnected owner leaves the registry entry for a later retry.
+	case "cleanup-mine": {
+		Private ["_mineObj"];
+		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
+		if (count _args < 1) exitWith {};
+		_mineObj = _args select 0;
+		if (!isNull _mineObj && {local _mineObj} && {(_mineObj getVariable ["wfbe_mine_reap", false])} && {(typeOf _mineObj) in ["Mine","MineE","MineMine","MineMineE"]}) then {deleteVehicle _mineObj};
+	};
 	//--- Owner-side half of Server_HandleEmptyVehicle.sqf's locality gate. The server has already held this
 	//--- hull past the empty timeout, but it cannot delete a HC-local alive object directly. Re-check local
 	//--- ownership, no alive crew, and the existing airlift/FOB exemptions here so a delayed or forged dispatch
