@@ -7,6 +7,6 @@ if (alive (driver _vehicle)) then {
 	{(driver _vehicle) enableAI _x} forEach ["MOVE","TARGET","AUTOTARGET"];
 };
 
-waitUntil {speed _vehicle < 1};
+waitUntil {sleep 0.05; speed _vehicle < 1};
 
 sleep 3;
