@@ -550,7 +550,11 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 			//--- _tcnt plainly after assignment (if-nesting, not lazy && {_tcnt > 0}) - kills the live
 			//--- "Error Undefined variable in expression: _tcnt" RPT spam that pinned shownTallies at 0.
 			{
+				//--- tags-fix-20260805: a candidate deleted mid-frame makes getVariable return nil,
+				//--- and assigning nil UN-defines the local - the 07-24 outer-private fix did not
+				//--- cover that, so "Undefined variable _tcnt" still fired and pinned shownTallies=0.
 				_tcnt = _x getVariable ["wfbe_kill_tally", 0];
+				if (isNil "_tcnt") then {_tcnt = 0};
 				if (_shown < _max && _tcnt > 0 && alive _x && _x != vehicle player) then {
 					if ((count crew _x == 0) || {side _x == sideJoined}) then {
 						_tpp = visiblePosition _x;
