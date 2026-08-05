@@ -201,3 +201,23 @@ while {!WFBE_GameOver} do {
 		["garrison_sortie_cycle", diag_tickTime - _perfStart, Format["towns:%1;active:%2;cap:%3", count towns, count _sorties, _maxActive], "SERVER"] Call PerformanceAudit_Record;
 	};
 };
+
+//--- GameOver stops the polling loop before the next prune pass. Reclaim its registry here so
+//--- the 45s endgame hold cannot leave sortie units/groups alive after their worker has exited.
+if (WFBE_GameOver) then {
+	if (isNil "WFBE_CO_FNC_LogVehDelete") then { WFBE_CO_FNC_LogVehDelete = {}; };
+	{
+		Private ["_goEntry","_goTown","_goGrp","_goPlayers"];
+		_goEntry = _x;
+		_goTown = _goEntry select 0;
+		_goGrp = _goEntry select 1;
+		_goPlayers = 0;
+		if (!isNull _goGrp) then {
+			{ if (!isNull _x && {!(isPlayer _x)}) then { ["garrisonsortie-gameover", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; }; } forEach (units _goGrp);
+			_goPlayers = {!isNull _x && {isPlayer _x}} count (units _goGrp);
+			if (_goPlayers == 0) then { deleteGroup _goGrp; };
+		};
+		diag_log format ["GARSORTIE|DESPAWN|town=%1|reason=game_over|remainingPlayers=%2", (if (isNull _goTown) then {"?"} else {_goTown getVariable ["name","?"]}), _goPlayers];
+	} forEach _sorties;
+	_sorties = [];
+};
