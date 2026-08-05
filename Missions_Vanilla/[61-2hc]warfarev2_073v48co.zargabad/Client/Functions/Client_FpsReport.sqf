@@ -30,6 +30,7 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 		sleep 1;
 	};
 	_avg = _sum / _n;
+	if (missionNamespace getVariable ["WFBE_GameOver", false]) exitWith {};
 
 	//--- Bounded local environment snapshot for client-FPS A/Bs. `nearAI*` counts only
 	//--- AI persons and vehicles with an AI crew; human players and player-only vehicles are excluded.
