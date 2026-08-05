@@ -75,10 +75,20 @@ if (isNil 'WFBE_RespawnTime') then {
 		};
 	};
 
-	[] Spawn {
-		while {WFBE_RespawnTime > 0} do {
+	//--- The countdown is an independent scheduled worker. Guard its reads because every menu exit
+	//--- clears WFBE_RespawnTime while this worker may be asleep. The token also prevents an old worker
+	//--- from decrementing a newly opened menu after a rapid death/respawn cycle.
+	private ["_respawnTimerToken"];
+	_respawnTimerToken = diag_tickTime;
+	WFBE_RespawnTimerToken = _respawnTimerToken;
+	[_respawnTimerToken] Spawn {
+		private ["_timerToken"];
+		_timerToken = _this select 0;
+		while {!isNil "WFBE_RespawnTime" && {WFBE_RespawnTime > 0} && {!isNil "WFBE_RespawnTimerToken"} && {WFBE_RespawnTimerToken == _timerToken}} do {
 			sleep 1;
-			WFBE_RespawnTime = WFBE_RespawnTime - 1;
+			if (!isNil "WFBE_RespawnTime" && {!isNil "WFBE_RespawnTimerToken"} && {WFBE_RespawnTimerToken == _timerToken}) then {
+				WFBE_RespawnTime = WFBE_RespawnTime - 1;
+			};
 		};
 	};
 };
