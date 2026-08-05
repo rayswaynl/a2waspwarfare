@@ -1,5 +1,5 @@
 
-private ["_mode2TotalCamps","_mode2WestCamps","_mode2EastCamps","_mode2GuerCamps","_gateCampBunker","_gateCampSide","_rateCampsOnSide","_captureCleanupEpoch"];
+private ["_mode2TotalCamps","_mode2WestCamps","_mode2EastCamps","_mode2GuerCamps","_gateCampBunker","_gateCampSide","_rateCampsOnSide","_captureCleanupEpoch","_captureEpoch"];
 
 //--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate, mirrors
 //--- AI_Commander.sqf's _passedOwner idiom (see Init_Server.sqf B69 watchdog block). _this =
@@ -464,6 +464,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			//--- still perfectly valid for the current town owner. Scoping the bump to real ownership change
 			//--- avoids that over-reject by construction.
 			_location setVariable ["wfbe_town_ai_epoch", (_location getVariable ["wfbe_town_ai_epoch", 0]) + 1];
+			//--- Bind delayed capture workers to this ownership generation. A later flip can return to the
+			//--- same sideID, so side-only fire-time guards are insufficient across repeated captures.
+			_captureEpoch = _location getVariable ["wfbe_town_ai_epoch", 0];
 			//--- Commander Town Ledger (fable/ctl-impl-v1) capture seed (fix: capture-race). Publish
 			//--- wfbe_ctl_str immediately at the capture hook so a freshly captured W/E town reads its
 			//--- 0.25 seed on the very next materialization, instead of the getVariable default (1.0)
@@ -757,25 +760,26 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 			};
 
 			//--- Task 32: old defenders linger for WFBE_C_TOWNS_DEFENDER_LINGER seconds before cleanup.
-			//--- Fire-time guard: only clean up if the town has NOT flipped back to the old side.
-			[_location, _side, _newSID] spawn {
-				Private ["_loc","_oldSide","_newSIDAtCapture"];
+			//--- Fire-time guards: only clean up if the town still has this capture's sideID and epoch.
+			[_location, _side, _newSID, _captureEpoch] spawn {
+				Private ["_loc","_oldSide","_newSIDAtCapture","_captureEpoch"];
 				_loc              = _this select 0;
 				_oldSide          = _this select 1;
 				_newSIDAtCapture  = _this select 2;
+				_captureEpoch     = _this select 3;
 				sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENDER_LINGER", 180]);
-				//--- Abort cleanup if the town has flipped back to the old owner's side.
-				if ((_loc getVariable ["sideID", -1]) == _newSIDAtCapture) then {
-					//--- N3 fix (MORE-FIXES-AND-IDEAS): this used to also sweep-delete every alive unit in
-					//--- the GLOBAL per-side WFBE_<SIDE>_DefenseTeam pool (one shared group created once at
-					//--- server start, Init_Server.sqf:255-256) - killing gunners at UNRELATED still-owned
-					//--- towns 180s after any single town flipped elsewhere. The call below (unchanged) is
-					//--- already the correct, town-SCOPED cleanup: OperateTownDefensesUnits "remove" walks
-					//--- ONLY _loc's own wfbe_town_defenses and deletes each position's tracked gunner
-					//--- (gunner _defense / wfbe_defense_operator) - it never touched the global pool, so
-					//--- removing the redundant global sweep loses no legitimate cleanup.
-					[_loc, _oldSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
-				};
+				//--- Abort cleanup if the town has flipped or a newer capture superseded this worker.
+				if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) exitWith {};
+				if ((_loc getVariable ["wfbe_town_ai_epoch", -1]) != _captureEpoch) exitWith {};
+				//--- N3 fix (MORE-FIXES-AND-IDEAS): this used to also sweep-delete every alive unit in
+				//--- the GLOBAL per-side WFBE_<SIDE>_DefenseTeam pool (one shared group created once at
+				//--- server start, Init_Server.sqf:255-256) - killing gunners at UNRELATED still-owned
+				//--- towns 180s after any single town flipped elsewhere. The call below (unchanged) is
+				//--- already the correct, town-SCOPED cleanup: OperateTownDefensesUnits "remove" walks
+				//--- ONLY _loc's own wfbe_town_defenses and deletes each position's tracked gunner
+				//--- (gunner _defense / wfbe_defense_operator) - it never touched the global pool, so
+				//--- removing the redundant global sweep loses no legitimate cleanup.
+				[_loc, _oldSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
 			};
 
 			//--- FINAL spec (2026-06-12): lazy garrison on capture.
@@ -839,19 +843,21 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 				//--- Step 3: Squad auto-despawns when no GUER/resistance detected for 2 consecutive 30s scans.
 				//--- Step 4: Full defenses spawn only when ENEMY enters radius (handled in server_town_ai.sqf).
 				if (_town_occupation_enabled) then {
-					[_location, _newSide, _newSID] spawn {
-						Private ["_loc","_side","_newSIDAtCapture","_squadGrp","_squadUnits","_squadVehicles",
+					[_location, _newSide, _newSID, _captureEpoch] spawn {
+						Private ["_loc","_side","_newSIDAtCapture","_captureEpoch","_squadGrp","_squadUnits","_squadVehicles",
 						         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
 						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd","_squadRoster","_tplRosters","_squadFormed"];
 						_loc             = _this select 0;
 						_side            = _this select 1;
 						_newSIDAtCapture = _this select 2;
+						_captureEpoch    = _this select 3;
 
-						//--- Wait 60 s; abort if the town flipped again before the timer fires.
+						//--- Wait 60 s; abort if the town flipped or a newer capture superseded this worker.
 						sleep 60;
 						if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) exitWith {
 							["INFORMATION", Format ["server_town.sqf: mop-up squad cancelled (town %1 flipped before T+60).", _loc getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
 						};
+						if ((_loc getVariable ["wfbe_town_ai_epoch", -1]) != _captureEpoch) exitWith {};
 
 						//--- Pick the smallest infantry template for the owning side (Squad at current barracks level).
 						_upgLvl  = ((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
@@ -923,6 +929,7 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 								_scanActive = false;
 							};
 							if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) then {_scanActive = false};
+							if ((_loc getVariable ["wfbe_town_ai_epoch", -1]) != _captureEpoch) then {_scanActive = false};
 
 							if (_scanActive) then {
 								_detected = (_loc nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], _townRange]) unitsBelowHeight 20;
@@ -958,8 +965,10 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 							{if (!isNull _x && {alive _x} && {({isPlayer _x} count (crew _x)) == 0}) then {["town-mopup-vehicle", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _squadVehicles;
 							if !(isNull _squadGrp) then {deleteGroup _squadGrp};
 						};
-						_loc setVariable ["wfbe_mopup_group", grpNull, false];
-						_loc setVariable ["wfbe_mopup_units", [], false];
+						if ((_loc getVariable ["wfbe_mopup_group", grpNull]) == _squadGrp) then {
+							_loc setVariable ["wfbe_mopup_group", grpNull, false];
+							_loc setVariable ["wfbe_mopup_units", [], false];
+						};
 						["INFORMATION", Format ["server_town.sqf: mop-up squad stood down for %1.", _loc getVariable ["name","unknown"]]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
