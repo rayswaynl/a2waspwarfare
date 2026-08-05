@@ -244,7 +244,7 @@ while {!gameOver} do {
 		         "_w22Eligible","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22Gunner","_w22TargetPos","_wW22",
 		         "_w23Eligible","_w23Template","_w23Tier","_w23Tmpls","_w23TmplUps","_w23Cand","_w23Lead","_w23CandTier","_w23Idx","_w23UpArr","_wW23",
 		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24",
-		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore"];
+		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore","_mkExpiry"];
 
 				_side     = _this select 0;
 				_humanCmd = _this select 1;
@@ -1366,15 +1366,27 @@ while {!gameOver} do {
 					if (count _mkPos > 0 && {_mkLife > 0}) then {
 						_mkColor = if (_side == west) then {"ColorBlue"} else {"ColorRed"};
 						_mkName  = Format ["wc_%1_%2_%3", _sideText, _draw, round time];
+						_mkExpiry = time + _mkLife;
+						//--- JIP ledger: WildcardMarker creates a LOCAL marker, so a connect-time event cannot replay
+						//--- this artifact. Keep the complete side-scoped payload plus its absolute expiry server-local;
+						//--- CLIENT_INIT_READY replays only records that are still live after the receiver is installed.
+						_active = missionNamespace getVariable ["WFBE_AICOM_WILDCARD_ACTIVE", []];
+						_active = _active + [[_side, _mkName, _mkPos, _mkColor, _mkType, _wName, _wDesc, _mkExpiry]];
+						missionNamespace setVariable ["WFBE_AICOM_WILDCARD_ACTIVE", _active];
 						//--- CREATE on the owning side only (SIDE destination -> sideJoined match in Client_HandlePVF).
 						[_side, "WildcardMarker", ["create", _mkName, _mkPos, _mkColor, _mkType, _wName, _wDesc]] Call WFBE_CO_FNC_SendToClients;
 						//--- Self-expiring watcher: delete the marker on the SAME side after the event lifetime.
-						//--- One marker per event; this is the only deletion path (no leak, no spam).
+						//--- One marker per event; this is the only deletion path (no leak, no spam). Remove the
+						//--- JIP record in the same worker so a delayed ready replay cannot resurrect the marker.
 						[_side, _mkName, _mkLife] spawn {
-							private ["_s","_n","_lf"];
+							private ["_s","_n","_lf","_active","_kept"];
 							_s = _this select 0; _n = _this select 1; _lf = _this select 2;
 							sleep _lf;
 							[_s, "WildcardMarker", ["delete", _n]] Call WFBE_CO_FNC_SendToClients;
+							_active = missionNamespace getVariable ["WFBE_AICOM_WILDCARD_ACTIVE", []];
+							_kept = [];
+							{ if ((_x select 0) != _s || {(_x select 1) != _n}) then {_kept = _kept + [_x]}; } forEach _active;
+							missionNamespace setVariable ["WFBE_AICOM_WILDCARD_ACTIVE", _kept];
 						};
 					};
 				};

@@ -8,7 +8,7 @@
 	respective team. No global marker leak to the enemy.
 
 	Two ops, one marker per active event (the server cleans up by name on expiry):
-	  ["create", _mkName, _pos, _color, _type, _label, optional detail]
+	  ["create", _mkName, _pos, _color, _type, _label, optional detail, optional notify]
 	  ["delete", _mkName]
 
 	A2 OA 1.64: createMarkerLocal / setMarkerType(Local) / setMarkerColor(Local) /
@@ -17,7 +17,7 @@
 		- _this : ARRAY, [_op, _mkName, ...] as above.
 */
 
-Private ["_op","_mkName","_pos","_color","_type","_label","_detail","_markerText"];
+Private ["_op","_mkName","_pos","_color","_type","_label","_detail","_markerText","_notify"];
 
 if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
 if (isDedicated) exitWith {};
@@ -42,6 +42,9 @@ switch (_op) do {
 		_detail = "";
 		if (count _this > 6) then {_detail = _this select 6};
 		if !((typeName _detail) in ["STRING"]) then {_detail = str _detail};
+		_notify = true;
+		if (count _this > 7) then {_notify = _this select 7};
+		if ((typeName _notify) != "BOOL") then {_notify = true};
 		if (_detail in [""]) then {
 			_detail = switch (_label) do {
 				case "Airborne Assault": {"elite paratroopers are dropping near the front"};
@@ -69,7 +72,7 @@ switch (_op) do {
 		//--- map marker above + the LocalizeMessage "Wildcard" command-chat line dispatched alongside
 		//--- this marker (AI_Commander_Wildcard.sqf). The old center-screen titleText [...,"PLAIN"] was
 		//--- a redundant middle-of-screen duplicate; route the SAME text to command chat instead.
-		if (!isNil "CommandChatMessage") then {
+		if (_notify && {!isNil "CommandChatMessage"}) then {
 			(Format ["Wildcard: %1 - %2.", _label, _detail]) Call CommandChatMessage;
 		};
 	};
