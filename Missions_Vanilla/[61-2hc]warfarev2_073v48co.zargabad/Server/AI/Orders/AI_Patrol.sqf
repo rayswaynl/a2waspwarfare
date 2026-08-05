@@ -1,5 +1,5 @@
 Private ["_destination","_maxWaypoints","_pos","_radius","_rand1","_rand2","_team","_type","_update","_wps","_z",
-	"_rbEnabled","_rbSideID","_rbOwned","_rbOrigin","_rbDest","_rbHQ","_rbA","_rbB","_rbLane","_rbHops","_rbRoute","_rbNodeCount","_rbI","_rbNode","_rbType","_rbSkipNaval"];  //--- cmdcon41-w3m: +_rbSkipNaval (naval-HVT corridor-endpoint exclusion).
+	"_rbEnabled","_rbSideID","_rbOwned","_rbOrigin","_rbDest","_rbHQ","_rbA","_rbB","_rbLane","_rbHops","_rbRoute","_rbNodeCount","_rbI","_rbNode","_rbType","_rbSkipNaval","_rbTownAI"];  //--- cmdcon41-w3m: +_rbSkipNaval (naval-HVT corridor-endpoint exclusion); #1684 restore: +_rbTownAI (town-garrison ring fidelity).
 _team = _this select 0;
 _destination = _this select 1;
 _radius = if (count _this > 2) then {_this select 2} else {30};
@@ -42,7 +42,17 @@ _wps = [];
 //--- their town; without this guard the global road-bias scan above can hijack them onto an
 //--- inter-owned-town corridor. Bypass road-bias for that tag only; ordinary patrols unaffected.
 //--- A2-OA-1.64-safe: WFBE_CO_FNC_GroupGetBool (GROUPGETVAR-safe helper), no A3 commands.
-_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")} && {!([_team, "wfbe_garrison_sortie", false] Call WFBE_CO_FNC_GroupGetBool)};
+//--- TOWN-GARRISON RING FIDELITY (#1684 restore): the wfbe_garrison_sortie guard above only covers
+//--- groups spawned fresh by Server_GarrisonSortie.sqf. It does NOT cover the persistent
+//--- WFBE_TownAI_Group-tagged garrison groups stamped by Common_CreateTownUnits.sqf, which
+//--- server_town_ai.sqf's own native sortie system (wfbe_town_teams/_localTeams) also dispatches
+//--- straight into this AIPatrol call for a 300-800m ring (server_town_ai.sqf ~L984). Without this
+//--- guard those groups get hijacked onto an inter-owned-town road corridor too whenever the side
+//--- owns >=2 towns (or HQ + 1 owned town). Bypass road-bias for that tag as well; ordinary patrols
+//--- (and garrison-sortie groups, already excluded above) unaffected.
+//--- A2-OA-1.64-safe: WFBE_CO_FNC_GroupGetBool (GROUPGETVAR-safe helper), no A3 commands.
+_rbTownAI = [_team, "WFBE_TownAI_Group", false] Call WFBE_CO_FNC_GroupGetBool;
+_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")} && {!([_team, "wfbe_garrison_sortie", false] Call WFBE_CO_FNC_GroupGetBool)} && {!_rbTownAI};
 if (_rbEnabled) then {
 	_rbSideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 	_rbOwned = [];

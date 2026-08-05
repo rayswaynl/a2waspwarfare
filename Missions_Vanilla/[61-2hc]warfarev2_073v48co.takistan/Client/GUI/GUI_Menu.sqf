@@ -207,6 +207,10 @@ while {alive player && dialog} do {
 	if (MenuAction == 10) then { //added-MrNiceGuy
 		MenuAction = -1;
 		_vehicle = vehicle player;
+		//--- r72: under canopy vehicle player is ParachuteBase - PlaceSafe would slam the chute to ground mid-descent.
+		if (_vehicle isKindOf "ParachuteBase") exitWith {};
+		//--- r72: freefall infantry - do not invent a ground snap via unflip.
+		if (player == _vehicle && {((getPos player) select 2) > 3}) exitWith {};
 		if (player != _vehicle) then {
 			if (getPos _vehicle select 2 > 3 && !surfaceIsWater (getPos _vehicle)) then {
 				[_vehicle, getPos _vehicle, 15] Call PlaceSafe;
@@ -233,13 +237,22 @@ while {alive player && dialog} do {
 	//--- Headbug Fix.
 	if (MenuAction == 11) then { //added-MrNiceGuy
 		MenuAction = -1;
+		//--- r72: headbug Lada cargo swap mid-HALO/canopy ejects freefall and leaks a vehicle.
+		if ((vehicle player) isKindOf "ParachuteBase") exitWith {};
+		if (((getPos player) select 2) > 5) exitWith {};
 		closeDialog 0;
 		titleCut["","BLACK FADED",0];
 		_pos = position player;
 		_vehi = "Lada1" createVehicle [0,0,0];
-		player moveInCargo _vehi;
-		deleteVehicle _vehi;
-		player setPos _pos;
+		//--- r44: missing Lada1 (class/mod strip) -> moveInCargo/delete on null is a no-op leave black-fade stuck path. (dup-fixed by #1699 + #1700)
+		if (isNull _vehi) then {
+			["WARNING", "GUI_Menu.sqf: headbug fix Lada1 createVehicle failed; restoring player pose only."] Call WFBE_CO_FNC_LogContent;
+			player setPos _pos;
+		} else {
+			player moveInCargo _vehi;
+			deleteVehicle _vehi;
+			player setPos _pos;
+		};
 		titleCut["","BLACK IN",5];
 	};
 

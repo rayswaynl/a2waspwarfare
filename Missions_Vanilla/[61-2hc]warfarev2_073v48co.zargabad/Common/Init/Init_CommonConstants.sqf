@@ -801,7 +801,7 @@ if (worldName == "Zargabad") then {
 	//--- into OFFENSE: doubles the Produce batch cap (heavier/fuller existing teams = a heavy push at the spearhead) +
 	//--- arms a cooldown-respected veteran/premium founding, and debits a discounted one-off chunk so money converts to
 	//--- pressure. Ships DEFAULT-OFF (dark) so Ray can enable + tune in soak. Rationale: convert hoard -> meaningful pressure.
-	if (isNil "WFBE_C_AICOM_FUNDS_SINK_ENABLE")     then {WFBE_C_AICOM_FUNDS_SINK_ENABLE     = 1};       //--- 1 = arm the funds-sink worker; 0 = inert (worker early-exits). Ray 2026-07-27: 0 -> 1 (owner). Was dark since 2026-06-29 and, with the old 1M threshold, had never fired in ANY match - see THRESHOLD below.
+	if (isNil "WFBE_C_AICOM_FUNDS_SINK_ENABLE")     then {WFBE_C_AICOM_FUNDS_SINK_ENABLE     = 1};       //--- 1 = arm the funds-sink worker (owner 2026-07-27). Must match Rsc/Parameters.hpp lobby default — MP Init_Parameters runs first so this isNil only covers SP / missing lobby slot.
 	if (isNil "WFBE_C_AICOM_FUNDS_SINK_THRESHOLD")  then {WFBE_C_AICOM_FUNDS_SINK_THRESHOLD  = 1000000}; //--- funds: only drain a commander's hoard ABOVE this (well under the 1.5M WEALTH_CAP, so the drip bites before the cap pins it). Ray 2026-07-27: reverted a proposed 150000 after live data - on the soak box both sides plateau at 180k-330k and EAST was FALLING (299k -> 184k) once the 16-team cap was reached, so 150000 would have drained funds the commander was actively spending. 1M remains correct for the long AI-vs-AI soak this worker targets.
 	if (isNil "WFBE_C_AICOM_FUNDS_SINK_DRAIN_PCT")  then {WFBE_C_AICOM_FUNDS_SINK_DRAIN_PCT  = 0.25};    //--- per-tick discounted drain = this fraction of the OVER-THRESHOLD surplus (0.25 = bleed a quarter of the excess each ~60s income tick).
 	//--- GUER GUIDED-AT TECHNICAL (fable 2026-07-27, owner request). The SPG-9 technical fires a DUMB
@@ -1625,6 +1625,10 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_BASE_TOWN_CLEAR_MARGIN") then {WFBE_C_BASE_TOWN_CLEAR_MARGIN = 120}; //--- BUILD88 (cmdcon43-f): metres ADDED to each town's range (600m) to form the start-clearance radius. A LocationLogicStart within (townRange+margin) of a town centre is dropped from the random pool (Init_Server town-clearance filter) so the match-start HQ never deploys inside a town. Default 120 = WFBE_C_BASE_HQ_BUILD_RANGE so the HQ's close build ring clears the town zone (threshold 720m). 0 disables the extra margin (HQ centre must merely clear the raw 600m town range).
 	if (isNil "WFBE_C_CLEANER_MAP_AWARE_ORIGINS") then {WFBE_C_CLEANER_MAP_AWARE_ORIGINS = 0}; //--- Default OFF: keep legacy Chernarus scan anchors. 1 = cleaners/restorers use Init_Boundaries map size for scan centre/radius.
 	if (isNil "WFBE_C_DROPPEDITEMS_CLEANER_DEFER_FIRST") then {WFBE_C_DROPPEDITEMS_CLEANER_DEFER_FIRST = 1}; //--- Default OFF: keep the early ~90s first droppeditems sweep (HEAD). 1 = defer the first whole-island weaponholder sweep to the steady cadence so it runs on a settled server instead of inside the boot storm (fixes the ~6.5s first-sweep wall-time spike; the early sweep finds zero drops anyway). [Ray-dir 2026-07-24 FPS: 0->1 - defer 1st sweep out of the boot storm; kills the ~6.5-7.5s cold-start hitch (profiler MAX_MS 6915 with scanned:0); deferred sweep finds 0 drops = inert; rollback 0.]
+	if (isNil "WFBE_C_DROPPEDITEMS_MIN_AGE") then {WFBE_C_DROPPEDITEMS_MIN_AGE = 120}; //--- s: weaponholder must be at least this old (first-seen by droppeditems_cleaner) before reaping. 0 = legacy immediate. Gives a guaranteed loot window independent of cleaner phase.
+	if (isNil "WFBE_C_DROPPEDITEMS_PROX") then {WFBE_C_DROPPEDITEMS_PROX = 20}; //--- m: hold weaponholder deletion while a real player is this close (mirrors WFBE_C_UNITS_BODIES_PROX). 0 = off.
+	if (isNil "WFBE_C_DROPPEDITEMS_PROX_HOLD") then {WFBE_C_DROPPEDITEMS_PROX_HOLD = 300}; //--- s: max extra hold past MIN_AGE while a player camps a pile (anti-pin). Total max life under prox = MIN_AGE + PROX_HOLD.
+	if (isNil "WFBE_C_DROPPEDITEMS_HOLD_ENABLE") then {WFBE_C_DROPPEDITEMS_HOLD_ENABLE = 0}; //--- PR #1718 fix (owner ruling 2026-08-05): MIN_AGE/PROX/PROX_HOLD shipped ARMED by default with no opt-in, violating flag policy. Default OFF = pre-#1718 immediate-reap (byte-identical to HEAD before that PR). 1 = arm the age+proximity hold using the tuning values above. Gated in droppeditems_cleaner.sqf.
 	WFBE_C_BASE_AREA_RANGE = 250; //--- A base area has a range of x meters.
 	WFBE_C_BASE_HQ_BUILD_RANGE = 120; //--- HQ Build range.
 	WFBE_C_BASE_AV_STRUCTURES = 260; //--- Base available structures.
@@ -2041,7 +2045,7 @@ if (isNil "WFBE_C_AICOM_WATER_LEG_GATE") then {WFBE_C_AICOM_WATER_LEG_GATE = 1};
 	if (isNil "WFBE_C_TOWNS_PATROLS") then {WFBE_C_TOWNS_PATROLS = 6}; //--- Town-to-town patrols ON by default (up to 6 towns); set 0 in the lobby to disable. DR-57 fix makes them work.
 	if (isNil "WFBE_C_TOWNS_PATROL_CONTESTED_ONLY") then {WFBE_C_TOWNS_PATROL_CONTESTED_ONLY = 0}; //--- Lane 190: 0 keeps legacy supply-drop defense flips; 1 only pulls town patrols into defense while the town is stamped contested.
 	if (isNil "WFBE_C_TOWNS_PATROL_ALERT_HOLD") then {WFBE_C_TOWNS_PATROL_ALERT_HOLD = 180}; //--- r35 alert-state: seconds of defense hold after a supply-drop escalate before decay back to patrol (min 30). Replaces permanent SV-below-start latch.
-	if (isNil "WFBE_C_WAYPOINT_WATER_RETRY_CAP") then {WFBE_C_WAYPOINT_WATER_RETRY_CAP = 0}; //--- Max random waypoint water rerolls before falling back to the patrol center; 0 keeps legacy uncapped retries.
+	if (isNil "WFBE_C_WAYPOINT_WATER_RETRY_CAP") then {WFBE_C_WAYPOINT_WATER_RETRY_CAP = 20}; //--- Max random waypoint water rerolls before falling back to the patrol center. Default 20 (was 0 = uncapped) so coastal patrols cannot hang a scheduled thread forever when every redraw lands on water (sqf-randomness bughunt 2026-07-30).
 	if (isNil "WFBE_C_TOWNS_STARTING_MODE") then {WFBE_C_TOWNS_STARTING_MODE = 0}; //--- Town starting mode (0: Resistance, 1: 50% blu, 50% red, 2: Nearby Towns, 3: Random).
 	if (isNil "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") then {WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = 1}; //--- Lock the vehicles of the defender side.
 	if (isNil "WFBE_C_TOWNS_CAPTURE_BAR_DETAIL") then {WFBE_C_TOWNS_CAPTURE_BAR_DETAIL = 0}; //--- Lane 52: 1 adds SV trend, mode-2 Camps X/Y, and camp SV text to the client capture bar; 0 keeps the legacy label.
@@ -3885,6 +3889,35 @@ if (isNil "WFBE_C_GUER_VBIED_CREDIT_KILLS") then {WFBE_C_GUER_VBIED_CREDIT_KILLS
 if (isNil "WFBE_C_DISCONNECT_ZOMBIE_TIMEOUT") then {WFBE_C_DISCONNECT_ZOMBIE_TIMEOUT = 600}; //--- read Server/FSM/server_groupsGC.sqf:373 (fallback 600): orphaned-team zombie reaper timeout (s). The read-site comment "set the param to 0 to disable" now works.
 if (isNil "WFBE_C_MARKER_REBUILD_FPS") then {WFBE_C_MARKER_REBUILD_FPS = 15}; //--- read Common/Common_MarkerLoop.sqf:49 (fallback 15): auto map-marker rebuild while client fps stays below this. 0 disables; previously unarmable.
 if (isNil "WFBE_C_MARKER_BUDGET_PER_TICK") then {WFBE_C_MARKER_BUDGET_PER_TICK = 30}; //--- read Common/Common_MarkerLoop.sqf:83 (fallback 30): fixed per-tick marker-refresh ceiling; the BUDGET_ADAPT block above references it as "above" but it was never declared.
+
+//--- STAR FORTRESS Phase 1 MVP. Default 0 keeps the action, PV endpoint, registries, construction
+//--- watcher, respawn candidate, and status watcher inert.
+if (isNil "WFBE_C_STARFORT_ENABLE") then {WFBE_C_STARFORT_ENABLE = 0};
+if (isNil "WFBE_C_STARFORT_UNLOCK_BARRACKS_LVL") then {WFBE_C_STARFORT_UNLOCK_BARRACKS_LVL = 3};
+if (isNil "WFBE_C_STARFORT_MIN_ENEMY_TOWN_DIST") then {WFBE_C_STARFORT_MIN_ENEMY_TOWN_DIST = 800};
+if (isNil "WFBE_C_STARFORT_MAX_FRONTLINE_DIST") then {WFBE_C_STARFORT_MAX_FRONTLINE_DIST = 1500};
+if (isNil "WFBE_C_STARFORT_MIN_ENEMY_HQ_DIST") then {WFBE_C_STARFORT_MIN_ENEMY_HQ_DIST = 1000};
+if (isNil "WFBE_C_STARFORT_OBJ_CAP") then {WFBE_C_STARFORT_OBJ_CAP = 55};
+if (isNil "WFBE_C_STARFORT_OBJ_CAP_HARD") then {WFBE_C_STARFORT_OBJ_CAP_HARD = 60};
+if (isNil "WFBE_C_STARFORT_BASTIONS") then {WFBE_C_STARFORT_BASTIONS = 4};
+if (isNil "WFBE_C_STARFORT_BREACH_BASTIONS_LOST") then {WFBE_C_STARFORT_BREACH_BASTIONS_LOST = 2};
+if (isNil "WFBE_C_STARFORT_COST_FOUNDATION") then {WFBE_C_STARFORT_COST_FOUNDATION = 6000};
+if (isNil "WFBE_C_STARFORT_COST_WALLS") then {WFBE_C_STARFORT_COST_WALLS = 15000};
+if (isNil "WFBE_C_STARFORT_COST_BASTIONS") then {WFBE_C_STARFORT_COST_BASTIONS = 28000};
+if (isNil "WFBE_C_STARFORT_BUILD_TIME") then {WFBE_C_STARFORT_BUILD_TIME = 300};
+if (isNil "WFBE_C_STARFORT_RADIUS") then {WFBE_C_STARFORT_RADIUS = 25};
+if (isNil "WFBE_C_STARFORT_SLOPE_MAX") then {WFBE_C_STARFORT_SLOPE_MAX = 0.97};
+if (isNil "WFBE_C_STARFORT_PENDING_WINDOW") then {WFBE_C_STARFORT_PENDING_WINDOW = 180};
+
+//--- PR #1464 reconcile: late-game teleport for fully-AI, base-idle WEST/EAST teams.
+//--- Decision runs after relief/withdrawal and before HQ hunt; execution stays on the
+//--- existing team driver so HC and server-local teams move only where they are local.
+//--- All defaults are 0: the feature is inert until the owner arms and tunes the complete set.
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE") then {WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN") then {WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST = 0};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

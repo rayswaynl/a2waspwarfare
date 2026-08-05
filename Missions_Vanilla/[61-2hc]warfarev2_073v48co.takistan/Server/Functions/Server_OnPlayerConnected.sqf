@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_dcKey','_dcSeq','_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_sideJoined','_sideOrigin','_team','_uid','_units'];
+Private ['_dcKey','_dcSeq','_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_scudJipKey','_sideJoined','_sideOrigin','_team','_telJipKey','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -291,6 +291,18 @@ if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_V
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
 if (!isNil "AICOMV2_GDIR_JIP_SNAP") then {_id publicVariableClient "AICOMV2_GDIR_JIP_SNAP"}; //--- J10: GUER Director snapshot is not JIP-durable in A2-OA; target the current value to this joiner.
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+//--- Star Fortress registry and state flags are primitive publicVariables, so replay them to JIP clients.
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0) then {
+	{
+		if (!isNil {missionNamespace getVariable _x}) then {_id publicVariableClient _x};
+	} forEach ["WFBE_STARFORT_WEST","WFBE_STARFORT_EAST","wfbe_starfort_keepalive_west","wfbe_starfort_keepalive_east","wfbe_starfort_breached_west","wfbe_starfort_breached_east"];
+};
+//--- Runtime TEL/SCUD object handles need an explicit JIP replay; publicVariable only reaches current clients.
+_telJipKey = Format ["WFBE_ICBM_TEL_%1", str _sideJoined];
+_scudJipKey = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _sideJoined];
+if !(isNil {missionNamespace getVariable _telJipKey}) then {_id publicVariableClient _telJipKey};
+if !(isNil {missionNamespace getVariable _scudJipKey}) then {_id publicVariableClient _scudJipKey};
+if (!isNil "WFBE_HQ_REPAIR_AVG_SEC") then {_id publicVariableClient "WFBE_HQ_REPAIR_AVG_SEC"}; //--- 185: HQ-repair cost-scaling avg is a one-shot init publicVariable (Init_Server.sqf:739), not JIP-durable; target current value to this joiner so MHQ repair charge (Action_RepairMHQ.sqf) + Team-menu cost (GUI_Menu_Team.sqf) match since-start players instead of the 21600 seed.
 //--- r68 (marker JIP + public-state fidelity): the MHQ/HQ wreck-marker feed is a set of missionNamespace
 //--- PRIMITIVES broadcast with plain publicVariable in Server_OnHQKilled.sqf (false + wreck payload) and
 //--- Server_MHQRepair.sqf (true + []). Per the B63 note above, a plain publicVariable is NOT replayed to a
@@ -350,6 +362,16 @@ if !(isNull _jipLogik) then {
 		_jipLogik setVariable ["wfbe_basearea", (_jipLogik getVariable "wfbe_basearea"), true];
 	};
 	diag_log format ["[WFBE][JIP-HQSNAP] re-broadcast HQ/base snapshot (hq_deployed=%1) for side %2 to joiner %3", (_jipLogik getVariable ["wfbe_hq_deployed", false]), _sideJoined, _name];
+};
+
+//--- Commander state is an object variable and the assignment/disconnect notifications are event-only.
+//--- Re-dirty the current value so a late joiner receives an existing human commander OR the objNull
+//--- vacancy left by a disconnect, instead of waiting for a later election/assignment transition.
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_commander"}) then {
+		_jipLogik setVariable ["wfbe_commander", (_jipLogik getVariable "wfbe_commander"), true];
+		diag_log format ["[WFBE][JIP-COMMANDER] re-broadcast commander state for side %1 to joiner %2", _sideJoined, _name];
+	};
 };
 
 //--- JIP-replay hardening, Finding #2 (wfbe_votetime): Init_Client.sqf:1581 waits unbounded on this var;
@@ -517,6 +539,33 @@ if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_JIP_PRESERVE") == 0) then {
 	_units = units _team;
 	_units = _units + ([_team,false] Call GetTeamVehicles);
 	{if (!isPlayer _x && !(_x in playableUnits)) then {deleteVehicle _x}} forEach _units;
+};
+
+//--- TEAMBAR-FIRST SERVER-SIDE MIRROR (fable/player-teambar-slot, server heal 2026-07-22): the
+//--- CLIENT-side slot1-rejoin (Init_Client.sqf ~1249 / Client_OnKilled.sqf ~154) only re-joins
+//--- CLIENT-LOCAL AI (join needs locality). A mission-start AI Teams squadmate created at server init
+//--- is SERVER-local, so on a fresh connect the client-side reorder finds zero local others and
+//--- collapses into its "rejoin-no-local-others" no-op, leaving the AI at array index 0 - the player
+//--- renders as #2 in their own command bar (owner live report). Run the SAME rejoin here, server-side,
+//--- where every unit of _team is guaranteed local, and only after the AI-preserve-or-remove block
+//--- above has settled the team's final membership for this connect. Gated on the SAME
+//--- WFBE_C_PLAYER_TEAMBAR_FIRST flag so it respects the existing toggle.
+//--- IDENTITY (round-2 review): a getPlayerUID scan alone silently misses THIS FILE'S OWN primary
+//--- connect path - _clientBody (set above at ~line 48 from WFBE_JIP_BODY_<uid>) is the exact reason
+//--- that path exists: getPlayerUID is known-flaky this early after connect. _clientBody is still in
+//--- scope here (SQF script-level scoping; the while loop above does not open a nested scope), so
+//--- prefer it - guarded by membership in _team's own units so a stale value from an earlier loop
+//--- iteration/fallback tier is never trusted blindly - and only fall back to the UID scan if it is
+//--- null or not actually in this team. A2-OA-1.64-safe: array-form Private, no inline private,
+//--- no pushBack/findIf/params, no array-form select/sort/reveal.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	private ["_tbHuman"];
+	_tbHuman = objNull;
+	if (!isNull _clientBody && {_clientBody in (units _team)}) then {_tbHuman = _clientBody};
+	if (isNull _tbHuman) then {
+		{if ((getPlayerUID _x) == _uid) exitWith {_tbHuman = _x}} forEach (units _team);
+	};
+	[_team, _tbHuman, _uid, _name, "connect"] Call WFBE_SE_FNC_TeambarSlot1Rejoin;
 };
 
 //--- We 'Sanitize' the player, we remove the waypoints and we heal him.

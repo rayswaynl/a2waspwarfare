@@ -41,9 +41,23 @@ if (isNull _uav) exitWith {};
 playerUAV = _uav;
 
 
+//--- Client crew fail-clean: the server has authorised the hull, but local group/unit creation
+//--- and seating can still fail. Never move in a null soldier or count phantom crew.
 _group = [sideJoined, "misc"] Call WFBE_CO_FNC_CreateGroup;
+if (isNull _group) exitWith {
+	["WARNING", "uav.sqf: client crew group create failed - UAV hull retained without local crew."] Call WFBE_CO_FNC_LogContent;
+};
 _driver = [missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText],_group,getPos _uav,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
+if (isNull _driver) exitWith {
+	deleteGroup _group;
+	["WARNING", "uav.sqf: driver CreateUnit failed - abort local UAV crew."] Call WFBE_CO_FNC_LogContent;
+};
 _driver moveInDriver _uav;
+if (driver _uav != _driver) exitWith {
+	deleteVehicle _driver;
+	deleteGroup _group;
+	["WARNING", "uav.sqf: driver moveInDriver failed - abort local UAV crew."] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- Disable targetting.
 Private ["_drvTmp"]; _drvTmp = driver playerUAV; if (!isNull _drvTmp) then {{_drvTmp disableAI _x} forEach ["TARGET","AUTOTARGET"]};
@@ -52,9 +66,19 @@ _built = 1;
 //--- OPFOR Uav has no gunner slot.
 if (sideJoined == west) then {
 	_gunner = [missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText],_group,getPos _uav,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
-	_gunner MoveInGunner _uav;
-	_built = _built + 1;
+	if (isNull _gunner) then {
+		["WARNING", "uav.sqf: gunner CreateUnit failed - UAV flies driver-only."] Call WFBE_CO_FNC_LogContent;
+	} else {
+		_gunner MoveInGunner _uav;
+		if (gunner _uav == _gunner) then {
+			_built = _built + 1;
+		} else {
+			deleteVehicle _gunner;
+			["WARNING", "uav.sqf: gunner moveInGunner failed - UAV flies driver-only."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
 };
+//--- Stats only after a seated driver exists.
 [sideJoinedText,'UnitsCreated',_built] Call UpdateStatistics;
 [sideJoinedText,'VehiclesCreated',1] Call UpdateStatistics;
 

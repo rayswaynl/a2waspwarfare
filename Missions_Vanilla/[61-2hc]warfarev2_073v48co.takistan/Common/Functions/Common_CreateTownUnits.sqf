@@ -298,10 +298,14 @@ if (count _town_teams > 0) then {
 		{
 			_ent = _x;
 			_reveal = [_ent];
-			if (_ent != vehicle _ent) then {_reveal = _reveal + (crew _ent)};
+			if !(_ent isKindOf "Man") then {
+				_reveal = _reveal + (crew _ent);
+			} else {
+				if (_ent != vehicle _ent) then {_reveal = _reveal + (crew _ent)};
+			};
 			{
 				_grp = _x;
-				{_grp reveal _ent} forEach _reveal;
+				{_grp reveal _x} forEach _reveal;
 			} forEach _teams;
 		} forEach _near;
 	};

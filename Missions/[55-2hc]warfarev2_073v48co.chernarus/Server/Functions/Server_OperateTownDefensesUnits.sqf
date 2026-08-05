@@ -196,14 +196,14 @@ if (isNull _team) then {
 				//--- cannot board/steal the gun until the next "spawn" pass re-mans it.
 				_defense lock true;
 			};
-			if !(isNil {_x getVariable "wfbe_defense_operator"}) then { //--- Delete the original gunner if he's still around.
-				//--- r62: operator delete locality parity with gunner remove-case (HC-local deleteVehicle no-ops).
-				private "_opUnit"; _opUnit = _x getVariable "wfbe_defense_operator";
-				if (!isNull _opUnit && {alive _opUnit}) then {
-					if (local _opUnit) then {deleteVehicle _opUnit} else {[_opUnit, "HandleSpecial", ["cleanup-town-defense-gunner", _opUnit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
-				};
-				_x setVariable ["wfbe_defense_operator", nil];
+			//--- r55 fail-clean: bind once and require a real object before isNull/alive; malformed
+			//--- wfbe_defense_operator values must not reach object-only engine commands.
+			private "_opUnit";
+			_opUnit = _x getVariable "wfbe_defense_operator";
+			if (!isNil "_opUnit" && {typeName _opUnit == "OBJECT"} && {!isNull _opUnit} && {alive _opUnit}) then {
+				if (local _opUnit) then {deleteVehicle _opUnit} else {[_opUnit, "HandleSpecial", ["cleanup-town-defense-gunner", _opUnit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
 			};
+			_x setVariable ["wfbe_defense_operator", nil];
 			//--- r128 alife-crew-bailout: the HC-delegated manning path tracks its gunner in
 			//--- WFBE_StaticDefenseAssignedUnit (Common_CreateUnitForStaticDefence.sqf), NOT in
 			//--- wfbe_defense_operator. A live assigned gunner who is OUT of the seat at de-man

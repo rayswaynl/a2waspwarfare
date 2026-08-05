@@ -51,8 +51,8 @@ if (!_deployed) then {
 	};
 	_site setDir _direction;
 	_site setPos _position;
-	_site setVariable ["wfbe_side", _side];
-	_site setVariable ["wfbe_structure_type", "Headquarters"];
+	_site setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+	_site setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 
 	_logik setVariable ['wfbe_hq_deployed', true, true];
 	_logik setVariable ["wfbe_hq", _site, true];
@@ -123,9 +123,9 @@ if (!_deployed) then {
 	{if (!isNull _x) then {deleteVehicle _x}} forEach _defenses;
 	_MHQ setVelocity [0,0,-1];
 	_MHQ setVariable ["WFBE_Taxi_Prohib", true];
-	_MHQ setVariable ["wfbe_side", _side];
+	_MHQ setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
 	_MHQ setVariable ["wfbe_trashable", false];
-	_MHQ setVariable ["wfbe_structure_type", "Headquarters"];
+	_MHQ setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 	_MHQ addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 	_logik setVariable ["wfbe_hq", _MHQ, true];
 	_logik setVariable ['wfbe_hq_deployed', false, true];

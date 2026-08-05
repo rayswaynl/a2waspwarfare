@@ -25,7 +25,15 @@ if (_artillery getVariable ["restricted", false]) exitWith {
 };
 //--- WFBE_C_ARTILLERY_DISABLED_GUARD
 _artillery setVariable ["restricted",true];
-{if(isPlayer _x) then {_x action  ["getOut", _artillery]};} forEach (crew _artillery);
+{
+	if (isPlayer _x) then {
+		if (local _x) then {
+			_x action ["getOut", _artillery];
+		} else {
+			[_x, "HandleSpecial", ["action-perform", _x, "getOut", _artillery]] Call WFBE_CO_FNC_SendToClient;
+		};
+	};
+} forEach (crew _artillery);
 
 _minRange 	= (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",_side]) select _index;
 _maxRange 	= round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",_side]) select _index) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1));

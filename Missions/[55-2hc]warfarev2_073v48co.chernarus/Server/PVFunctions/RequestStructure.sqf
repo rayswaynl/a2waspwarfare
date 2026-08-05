@@ -1,10 +1,31 @@
 Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType','_reject','_reqPlayer','_rejectMsg']; //--- B66: added _reject; refund-sweep: added _reqPlayer,_rejectMsg
 
+//--- PR #1630: envelope guard (RequestUpgrade pattern) - short/wrong-type PV payloads must not reach construction.
+if (typeName _this != "ARRAY") exitWith {
+	["WARNING", Format ["RequestStructure.sqf: rejected malformed payload type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
+};
+if (count _this < 4) exitWith {
+	["WARNING", Format ["RequestStructure.sqf: rejected short payload [%1].", _this]] Call WFBE_CO_FNC_LogContent;
+};
+
 _side = _this select 0;
 _structureType = _this select 1;
 _pos = _this select 2;
 _dir = _this select 3;
 _reqPlayer = if (count _this > 4) then {_this select 4} else {objNull}; //--- refund-sweep: placing player for targeted server-reject refund (mirrors RequestDefense.sqf)
+
+if (typeName _side != "SIDE") exitWith {
+	["WARNING", Format ["RequestStructure.sqf: rejected non-side payload side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _structureType != "STRING") exitWith {
+	["WARNING", Format ["RequestStructure.sqf: rejected non-string structure type [%1].", typeName _structureType]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _pos != "ARRAY" || {count _pos < 2}) exitWith {
+	["WARNING", Format ["RequestStructure.sqf: rejected invalid position [%1].", _pos]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _dir != "SCALAR") exitWith {
+	["WARNING", Format ["RequestStructure.sqf: rejected non-scalar dir [%1].", _dir]] Call WFBE_CO_FNC_LogContent;
+};
 
 _structures = missionNamespace getVariable Format ['WFBE_%1STRUCTURES',str _side];
 _structuresNames = missionNamespace getVariable Format ['WFBE_%1STRUCTURENAMES',str _side];
@@ -221,5 +242,5 @@ if (_rlType in ["Barracks", "Light", "CommandCenter", "Heavy", "Aircraft", "Serv
 _index = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",str _side]) find _structureType;
 if (_index != -1) then { //--- refund-sweep: reject already exited above; build the accepted structure.
 	_script = (missionNamespace getVariable Format ["WFBE_%1STRUCTURESCRIPTS",str _side]) select _index;
-	[_structureType,_side,_pos,_dir,_index] ExecVM (Format["Server\Construction\Construction_%1.sqf",_script]);
+	[_structureType,_side,_pos,_dir,_index,"","",_reqPlayer] ExecVM (Format["Server\Construction\Construction_%1.sqf",_script]); //--- r31: pass the verified placer through to the construction worker for post-accept rollback.
 };

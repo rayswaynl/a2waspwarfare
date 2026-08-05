@@ -138,6 +138,17 @@ if (_side != resistance) then {
 	} forEach towns;
 };
 
+//--- Star Fortress Phase 1: the keep is a forward hard-spawn for WEST/EAST while it stands.
+//--- The existing final pass below removes a dead keep immediately after the broadcast drops.
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0 && {_side != resistance}) then {
+	private ["_sfKeep","_sfAliveKey"];
+	_sfKeep = missionNamespace getVariable [if (_side == west) then {"WFBE_STARFORT_WEST"} else {"WFBE_STARFORT_EAST"}, objNull];
+	_sfAliveKey = if (_side == west) then {"wfbe_starfort_keepalive_west"} else {"wfbe_starfort_keepalive_east"};
+	if (!isNull _sfKeep && {alive _sfKeep} && {missionNamespace getVariable [_sfAliveKey, false]}) then {
+		_availableSpawn = _availableSpawn + [_sfKeep];
+	};
+};
+
 //--- r67: final pass — drop null/dead entries (menu clean only filtered isNull).
 private "_aliveSpawn"; _aliveSpawn = [];
 { if (!isNil "_x" && {typeName _x == "OBJECT"} && {!isNull _x} && {alive _x}) then {_aliveSpawn = _aliveSpawn + [_x]} } forEach _availableSpawn;

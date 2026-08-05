@@ -305,9 +305,9 @@ _base = switch (true) do {
 	//--- switch, not alternatives - #952's own body admits it left PC_HIGH/PC_FULL stale ("follow-up,
 	//--- needs owner decision"), and #963's body says it's syncing those two fields "in the two files
 	//--- that already had PC_LOW/PC_MID... synced". Values below match live Init_CommonConstants.sqf
-	//--- (:358-361) exactly: LOW=10, MID=7, HIGH=4, FULL=3.
-	case (_sidePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  10]};
-	case (_sidePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  7]};
+	//--- (:358-361) exactly: LOW=17, MID=17, HIGH=4, FULL=3.
+	case (_sidePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  17]};
+	case (_sidePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  17]};
 	case (_sidePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 4]};
 	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 3]};
 };
@@ -358,7 +358,7 @@ if (_base != _tgtLogPrev || {_sidePcN != _tgtPcPrev}) then {
 
 //--- B747.1 HARD CAP (Ray 2026-06-24): clamp the founding target to a ceiling regardless of the PC curve +
 //--- banking valve. AICOM was fielding ~15 teams at low pop (base 12 + valve 3); Ray wants max 8 going forward.
-private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10];
+private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 12];
 if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
 
 //--- ECON SINK team-cap surge (cmdcon41-w2, Ray-approved): when the commander is pinned rich (AI_Commander.sqf set
@@ -1409,10 +1409,12 @@ if (count _live > 0) then {
 			_nearFrontD = 1e18; //--- squared-distance accumulator (kept in m^2 to avoid the per-town sqrt).
 			{
 				if ((_x getVariable ["sideID", -1]) != _sideID) then {
-					_tx = (getPos _x) select 0; _ty = (getPos _x) select 1;
-					_dx = _tx - _hx; _dy = _ty - _hy;
-					_d2 = (_dx * _dx) + (_dy * _dy);
-					if (_d2 < _nearFrontD) then {_nearFrontD = _d2};
+					if (!((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0 && {(_x getVariable ["wfbe_is_naval_hvt", false])})) then {
+						_tx = (getPos _x) select 0; _ty = (getPos _x) select 1;
+						_dx = _tx - _hx; _dy = _ty - _hy;
+						_d2 = (_dx * _dx) + (_dy * _dy);
+						if (_d2 < _nearFrontD) then {_nearFrontD = _d2};
+					};
 				};
 			} forEach towns;
 			if (_nearFrontD < 1e18 && {_nearFrontD > _reachFoot2}) then {_frontFar = true};
@@ -1765,6 +1767,11 @@ if (count _live > 0) then {
 		// Note: WFBE_CO_FNC_CreateGroup already logs the grpNull warning; this exitWith handles the no-op gracefully.
 	};
 	_g setVariable ["wfbe_aicom_founded", true];
+	//--- r72: mirror HC founding posture/flee (RunCommanderTeam L91/L107). Empty server-local slot previously kept engine-default courage -> groups fled off objective.
+	_g allowFleeing 0;
+	_g setCombatMode "RED";
+	_g setBehaviour "AWARE";
+	_g setSpeedMode "FULL";
 	_g setVariable ["wfbe_funds", 0, true];
 	_g setVariable ["wfbe_side", _side];
 	_g setVariable ["wfbe_persistent", true];

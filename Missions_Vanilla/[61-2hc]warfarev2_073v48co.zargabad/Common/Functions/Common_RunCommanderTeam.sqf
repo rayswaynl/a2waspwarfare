@@ -26,6 +26,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev",
          "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass","_hasIdleTransport","_idleRtbEnabled","_hullVeh","_hullV","_corpse","_lastDest","_ordDrift","_gaBlocked","_gaDangerR","_gaAX","_gaAY","_gaBX","_gaBY","_gaDX","_gaDY","_gaL2","_gaTX","_gaTY","_gaProj","_gaCX","_gaCY","_gaD","_gaKicked","_pendingId"];
+Private ["_egtLastTp","_egtSig","_egtPos","_egtStamp","_egtLdr","_egtGuardR","_egtPlayerNear","_egtNearResult","_egtHulls","_egtH","_egtScat","_egtFlushOrder","_egtFlushSeq","_egtFlushMode","_egtFlushDest","_egtFlushTail","_egtFromDist"];
 _sideID = _this select 0;
 _template = _this select 1;
 _pos = _this select 2;
@@ -131,6 +132,7 @@ _team setVariable ["wfbe_aicom_lossretreat_prevcount", nil];
 _team setVariable ["wfbe_aicom_lossretreat_prevtime", nil];
 _team setVariable ["wfbe_aicom_lossretreat_cooldown_until", nil];
 _team setVariable ["wfbe_aicom_overrun_mopup", false, true];   //--- overrunrazer: same group-slot-recycle hazard - a re-founded team must never inherit a stale mop-up stamp from its slot's previous occupant
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE", 0]) > 0) then {_team setVariable ["wfbe_aicom_endgame_tp", [], true]}; //--- clear a recycled group slot's old teleport signal only when the feature is armed.
 
 if (_pendingId >= 0) then {_team setVariable ["wfbe_aicom_pending_id", _pendingId, true]};
 if (isServer) then {
@@ -440,6 +442,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 
 //--- Order-execution loop: apply each new order seq from the server brain.
 _lastSeq = -1;
+_egtLastTp = -1;
 _lastDest = [];   //--- r108 order-clobber guard: dest accepted on the last fresh-order pass (drift re-accept below).
 _arrived = false;
 _captureDone = false;     //--- guard: run dismount-capture phase only once per order
@@ -1208,6 +1211,69 @@ while {!WFBE_GameOver && _alive} do {
 		//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
 		_order = _team getVariable "wfbe_aicom_order";
 		if (isNil "_order") then {_order = []};
+
+		//--- END-GAME TELEPORT EXECUTOR (PR #1464 reconcile, flag default 0 on the decision side).
+		//--- Consume the signal on the machine that owns the group; no PVF/HandleSpecial hop is used.
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE", 0]) > 0) then {
+		_egtSig = _team getVariable "wfbe_aicom_endgame_tp";
+		if (!isNil "_egtSig" && {typeName _egtSig == "ARRAY"} && {count _egtSig >= 2}) then {
+			_egtPos = _egtSig select 0;
+			_egtStamp = _egtSig select 1;
+			if (typeName _egtStamp == "SCALAR" && {_egtStamp != _egtLastTp} && {typeName _egtPos == "ARRAY"} && {count _egtPos >= 2} && {typeName (_egtPos select 0) == "SCALAR"} && {typeName (_egtPos select 1) == "SCALAR"}) then {
+				_egtLdr = leader _team;
+				if (!isNull _egtLdr && {alive _egtLdr}) then {
+					_egtGuardR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R", 300];
+					if (typeName _egtGuardR != "SCALAR" || {_egtGuardR <= 0}) then {_egtGuardR = 300};
+					_egtPlayerNear = false;
+					_egtNearResult = [getPos _egtLdr, _egtGuardR] Call WFBE_CO_FNC_RealPlayersNear;
+					if (typeName _egtNearResult == "SCALAR" && {_egtNearResult > 0}) then {_egtPlayerNear = true};
+					if (!_egtPlayerNear) then {
+						_egtNearResult = [_egtPos, _egtGuardR] Call WFBE_CO_FNC_RealPlayersNear;
+						if (typeName _egtNearResult == "SCALAR" && {_egtNearResult > 0}) then {_egtPlayerNear = true};
+					};
+					if (!_egtPlayerNear && {!surfaceIsWater _egtPos}) then {
+						_egtHulls = [];
+						{if (!isNil "_x" && {!isNull _x} && {alive _x} && {local _x}) then {_egtHulls set [count _egtHulls, _x]}} forEach _vehicles;
+						{if (!isNil "_x" && {alive _x} && {vehicle _x == _x} && {local _x}) then {_egtHulls set [count _egtHulls, _x]}} forEach (units _team);
+						if (count _egtHulls > 0) then {
+							_egtFromDist = round (_egtLdr distance _egtPos);
+							{
+								_egtH = _x;
+								_egtScat = [_egtPos, 30, 120] Call WFBE_CO_FNC_GetRandomPosition;
+								_egtScat = [_egtScat, 40] Call WFBE_CO_FNC_GetEmptyPosition;
+								if (!surfaceIsWater _egtScat) then {
+									_egtH setVelocity [0,0,0];
+									_egtH setPos _egtScat;
+								};
+							} forEach _egtHulls;
+							_egtLastTp = _egtStamp;
+							//--- Invalidate stale road geometry and bump the order after the physical move. Preserve
+							//--- the optional unstuck tier if a future order shape adds one.
+							_egtFlushOrder = _team getVariable "wfbe_aicom_order";
+							if (!isNil "_egtFlushOrder" && {typeName _egtFlushOrder == "ARRAY"} && {count _egtFlushOrder >= 3} && {typeName (_egtFlushOrder select 0) == "SCALAR"}) then {
+								_egtFlushSeq = _egtFlushOrder select 0;
+								_egtFlushMode = _egtFlushOrder select 1;
+								_egtFlushDest = _egtFlushOrder select 2;
+								_team setVariable ["wfbe_aicom_route", [], true];
+								_team setVariable ["wfbe_aicom_route_seq", _egtFlushSeq + 1, true];
+								if (count _egtFlushOrder > 3) then {
+									_egtFlushTail = _egtFlushOrder select 3;
+									_order = [_egtFlushSeq + 1, _egtFlushMode, _egtFlushDest, _egtFlushTail];
+								} else {
+									_order = [_egtFlushSeq + 1, _egtFlushMode, _egtFlushDest];
+								};
+								_team setVariable ["wfbe_aicom_order", _order, true];
+								_lastSeq = _egtFlushSeq;
+								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _team) + "|seq=" + str (_egtFlushSeq + 1));
+							};
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] ENDGAME_TELEPORT executed from %3m (map=%4).", _sideID, _team, _egtFromDist, worldName]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|ENDGAME_TELEPORT_EXEC|team=" + (str _team) + "|fromDist=" + str _egtFromDist);
+						};
+					};
+				};
+			};
+		};
+		};
 		if (count _order >= 3) then {
 			_seq = _order select 0;
 			_mode = _order select 1;
@@ -1276,6 +1342,7 @@ while {!WFBE_GameOver && _alive} do {
 				_lastDest = _dest;
 				_arrived = false;
 				_captureDone = false;
+				_team setVariable ["wfbe_aicom_gearslow", false]; //--- r72: reset careful-gear latch on every order accept so steep LIMITED can re-arm (stale true + re-order FULL left governor inert).
 				_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
 				if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_ACCEPT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round ((leader _team) distance _dest)));
@@ -1385,6 +1452,17 @@ while {!WFBE_GameOver && _alive} do {
 							_srThreat2 = {!isNull _x && {alive _x} && {((side _uTeam) getFriend (side _x)) < 0.6}} count (_uVeh nearEntities [["Man","LandVehicle"], _srSafe2]);
 							if (_srThreat2 == 0) then {
 								_uVeh setDamage 0;
+								//--- setDamage only resets the overall scalar.  Clear every configured part too so a
+								//--- wheel, track, or engine hitpoint cannot leave this recovered hull !canMove.
+								private ["_srHp2","_srHpCfg2","_srHpName2"];
+								_srHp2 = configFile >> "CfgVehicles" >> (typeOf _uVeh) >> "HitPoints";
+								if (isClass _srHp2 && {(count _srHp2) > 0}) then {
+									for "_srI2" from 0 to ((count _srHp2) - 1) do {
+										_srHpCfg2 = _srHp2 select _srI2;
+										_srHpName2 = getText (_srHpCfg2 >> "name");
+										if (!(_srHpName2 in [""])) then {_uVeh setHit [_srHpName2, 0]};
+									};
+								};
 								_uVeh setVehicleAmmo 1;
 								diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_REPAIR|team=" + (str _uTeam) + "|tier=" + str _uTier + "|veh=" + (typeOf _uVeh));
 								//--- STUCK_REPAIR_RESETS_TIER (2026-07-06, flag WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER default 0):
@@ -1947,6 +2025,7 @@ while {!WFBE_GameOver && _alive} do {
 					_team setCombatMode _marchCM;      //--- cmdcon41-w2 F1: YELLOW transit when flagged (was hard RED); RED-on-objective re-asserted at arrival.
 					_team setFormation "COLUMN";
 					_team setSpeedMode "FULL";         //--- STANCE (task #1): full road-march speed (was NORMAL).
+					_team setVariable ["wfbe_aicom_gearslow", false]; //--- r72: clear careful-gear latch so steep re-LIMITED can re-engage after re-order (stale true + FULL left LIMITED dead).
 
 					//--- Pull the road-node chain the server snapped for this seq (may be empty).
 					//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
@@ -2333,11 +2412,9 @@ while {!WFBE_GameOver && _alive} do {
 										//--- Idiom matches L475 and L1120 (driver _x for vehicle objects).
 										if (!isNull (driver _x) && {alive (driver _x)}) then {
 											(driver _x) doMove _ascrP;
-											//--- Hull-down watch posture: COMBAT/RED so it returns fire; LIMITED
-											//--- so it settles and watches rather than advancing. A2-safe setters.
-											_x setCombatMode "RED";
-											_x setBehaviour "COMBAT";
-											_x setSpeedMode "LIMITED";
+											//--- r72: vehicle object is not a group/unit for posture. Driver unit for combat/behaviour; no group LIMITED (would slow infantry SAD).
+											(driver _x) setCombatMode "RED";
+											(driver _x) setBehaviour "COMBAT";
 											_ascrIdx = _ascrIdx + 1;
 										}; //--- else: no live driver -> tank is driverless or crew is dead; skip entirely.
 									};
@@ -2707,7 +2784,7 @@ while {!WFBE_GameOver && _alive} do {
 									//--- Reveal the camp's live enemy so the squad prosecutes them.
 									{
 										if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
-									} forEach ((getPos _campObj) nearEntities [["Man"], 60]);
+									} forEach ((getPos _campObj) nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 									sleep 3;
 								};
 								//--- Dwell so the 10m camp scan ticks (presence-based capture).
@@ -2790,7 +2867,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Reveal the camp's live enemy so the squad prosecutes them (sweep pattern).
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {_team reveal _x}; //--- A2: 2-operand reveal only (array form is A3-only).
-							} forEach (_campTgtPos nearEntities [["Man"], 60]);
+							} forEach (_campTgtPos nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 							//--- FIX A: in the mode-2 gated path the depot can't flip until the garrison is
 							//--- cleared, so prosecute the camp HARDER: lay a live SAD ring over the camp and
 							//--- doTarget/doFire every live garrison unit so the squad ATTACKS instead of just
@@ -2803,10 +2880,19 @@ while {!WFBE_GameOver && _alive} do {
 										_team reveal _x; //--- A2: 2-operand reveal only.
 										_campEnemy = _campEnemy + [_x];
 									};
-								} forEach (_campTgtPos nearEntities [["Man"], 60]);
+								} forEach (_campTgtPos nearEntities [["Man","Car","Motorcycle","Tank","Air"], 60]);
 								if (count _campEnemy > 0) then {
-									_campFoe = _campEnemy select 0;
-									{if (alive _x) then {_x doTarget _campFoe; _x doFire _campFoe}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+									{
+										if (alive _x) then {
+											private ["_campFoe"];
+											_campFoe = [_x, _campEnemy] Call WFBE_CO_FNC_GetClosestEntity;
+											if (!isNull _campFoe) then {
+												_x reveal _campFoe;
+												_x doTarget _campFoe;
+												_x doFire _campFoe;
+											};
+										};
+									} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 								};
 							};
 							//--- Settle: up to ~20s or leader inside the 10m camp range (mirrors the
@@ -2920,7 +3006,7 @@ while {!WFBE_GameOver && _alive} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
 							if (_capAbort) exitWith {}; //--- B69: re-tasked mid depot-hold -> bail; outer loop re-reads the new order
-							_enemyNear = (_townCenter nearEntities [["Man"], _capRange]) unitsBelowHeight 10;
+							_enemyNear = (_townCenter nearEntities [["Man","Car","Motorcycle","Tank","Air"], _capRange]) unitsBelowHeight 10;
 							_resNear = 0;
 							{
 								if (alive _x && {side _x != _side} && {side _x != civilian}) then {

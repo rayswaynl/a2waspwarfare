@@ -1142,7 +1142,8 @@ _waterBlocks = {
 						_allocTtl  = missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TICK_TTL", 180];
 						if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TTL_HARDEN", 0]) > 0) then {if (_allocTtl < 300) then {_allocTtl = 300}};
 						if (!isNil "_allocTick") then {_allocAge = time - _allocTick} else {_allocAge = 1e9};
-						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}} && {!([_ldrPos, getPos _allocT] Call _waterBlocks)}) then { //--- review fix FOOT_STAGE + r37 water-leg gate
+						//--- r26 B756: the allocator path must keep naval-HVT targets air-only, while r37 keeps land teams off water legs.
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_allocT getVariable ["wfbe_is_naval_hvt", false])} || _teamAir} && {!([_ldrPos, getPos _allocT] Call _waterBlocks)}) then { //--- review fix FOOT_STAGE + B756 naval-HVT + r37 water-leg gate
 							_target = _allocT;
 						} else {
 							if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge >= _allocTtl}) then {

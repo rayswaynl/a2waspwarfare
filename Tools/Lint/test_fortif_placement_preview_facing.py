@@ -310,7 +310,17 @@ def test_rotation_forces_a_live_tooltip_refresh_and_readout_is_flag_and_state_ga
 def test_no_preview_failure_hints_the_player_before_the_silent_reset():
     code = _masked(CH, COIN_INTERFACE)
 
-    isnull_block = re.search(r"if\s*\(isnull _preview\)\s*then\s*\{(.*?)\n\t\t\t\t\};", code, re.DOTALL)
+    # `isNull`/`isnull` is case-insensitive in SQF - don't anchor on one casing.
+    # The block may close as a bare `if (...) then {...};` OR as
+    # `if (...) then {...} else {...}` (a later restructuring guarded the
+    # "assume success" code - setDir/camSetTarget/Preview Helper/etc. - behind
+    # an else instead of running it unconditionally before the isNull check).
+    # Either shape is fine; what matters is the ordering *inside* the failure body.
+    isnull_block = re.search(
+        r"if\s*\(\s*isnull\s+_preview\s*\)\s*then\s*\{(.*?)\n\t\t\t\t\}\s*(?:;|else\b)",
+        code,
+        re.DOTALL | re.IGNORECASE,
+    )
     assert isnull_block is not None, "could not locate the isnull-preview exception block"
     body = isnull_block.group(1)
 

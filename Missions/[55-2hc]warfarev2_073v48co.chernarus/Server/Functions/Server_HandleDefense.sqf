@@ -44,7 +44,11 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 				["INFORMATION", Format ["Server_HandleDefense.sqf: [%1] base area changed hands — stopping re-manning for [%2].", str _side, typeOf _defense]] Call WFBE_CO_FNC_LogContent;
 			};
 		};
-		if (!_sideStillValid) exitWith {};
+		if (!_sideStillValid) exitWith {
+			//--- The base-area handoff terminates this loop while the defense remains alive; release its
+			//--- duplicate-manning latch so the new owner can start its own manning loop.
+			_defense setVariable ["WFBE_DefenseManningLoopActive", false, true];
+		};
 
 		//--- crash 014EFCF4: the defense can be deleted after the 7s sleep and area checks.
 		if (isNull _defense || {!alive _defense}) exitWith {};
@@ -112,6 +116,7 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 							};
 						}];
 						[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
+						[str _side,'UnitsCreated',1] Call UpdateStatistics;
 						["WARNING", Format ["Server_HandleDefense.sqf: [%1] HC delegation did not seat a gunner for [%2] within grace window - filled server-side.", str _side, typeOf _defense]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
@@ -120,27 +125,37 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 			_position = getPosATL _defense;
 			_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 			_type = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];
+			//--- FAIL-CLEAN (r40): CreateUnit null must not stamp assigned unit / orderGetIn / moveInGunner or inflate UnitsCreated.
 			_soldier = [_type,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
-			_defense setVariable ["WFBE_StaticDefenseAssignedUnit", _soldier, true];
-			[_soldier] allowGetIn true;
-			_soldier assignAsGunner _defense;
-			[_soldier] orderGetIn true;
-			_soldier moveInGunner _defense;
-			//--- build/defense audit 2026-07-28: wake the re-man poll early on gunner death (see the
-			//--- HC-delegation-fallback branch above for the full rationale).
-			_soldier setVariable ["WFBE_DefenseGunRef", _defense];
-			_soldier addEventHandler ["Killed", {
-				Private ["_gunRef"];
-				_gunRef = (_this select 0) getVariable ["WFBE_DefenseGunRef", objNull];
-				if (!isNull _gunRef) then {
-					_gunRef setVariable ["WFBE_DefenseRecheckDue", true];
-				};
-			}];
-			[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
+			if (isNull _soldier) then {
+				["WARNING", Format ["Server_HandleDefense.sqf: [%1] CreateUnit FAILED for defense [%2] class=%3 - gun left unmanned this tick.", str _side, typeOf _defense, _type]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				_defense setVariable ["WFBE_StaticDefenseAssignedUnit", _soldier, true];
+				[_soldier] allowGetIn true;
+				_soldier assignAsGunner _defense;
+				[_soldier] orderGetIn true;
+				_soldier moveInGunner _defense;
+				//--- build/defense audit 2026-07-28: wake the re-man poll early on gunner death (see the
+				//--- HC-delegation-fallback branch above for the full rationale).
+				_soldier setVariable ["WFBE_DefenseGunRef", _defense];
+				_soldier addEventHandler ["Killed", {
+					Private ["_gunRef"];
+					_gunRef = (_this select 0) getVariable ["WFBE_DefenseGunRef", objNull];
+					if (!isNull _gunRef) then {
+						_gunRef setVariable ["WFBE_DefenseRecheckDue", true];
+					};
+				}];
+				[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
+				[str _side,'UnitsCreated',1] Call UpdateStatistics;
+				["INFORMATION", Format ["Server_HandleDefense.sqf: [%1] Unit has been dispatched to a [%2] defense (instant=%3).", str _side,typeOf _defense,_moveInGunner]] Call WFBE_CO_FNC_LogContent;
+			};
 		};
 
-		[str _side,'UnitsCreated',1] Call UpdateStatistics;
-		["INFORMATION", Format ["Server_HandleDefense.sqf: [%1] Unit has been dispatched to a [%2] defense (instant=%3).", str _side,typeOf _defense,_moveInGunner]] Call WFBE_CO_FNC_LogContent;
+		//--- FAIL-CLEAN (#1680 r32): dropped the old unconditional per-dispatch UnitsCreated credit here.
+		//--- It double-counted: the HC path is credited by Common_CreateUnitForStaticDefence.sqf (_built,
+		//--- line ~255) when the HC actually creates units, and the non-HC/fallback path is credited only
+		//--- on confirmed creation (see the fallback-watchdog spawn block above and the isNull-guarded
+		//--- else branch below). A credit here fired every tick regardless of success - phantom stats.
 	};
 
 	//--- build/defense audit 2026-07-28: bounded short-poll replaces the single sleep 420 so a gunner

@@ -1338,8 +1338,11 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 		//--- forever -> clientInitComplete never set -> no team/vote/money/own-marker. After 120s, proceed
 		//--- (treat as can-join) so the client always finishes init rather than stalling permanently.
 		if ((time - _gateT0) > 120) exitWith {
-			_get = true;
-			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no join ACK after 120s - proceeding to avoid a permanent client stall.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
+			//--- r70 teamswap: fail-CLOSED. Prior failover set _get=true so a lost join-answer
+			//--- (or crafted non-ACK) let a teamswapper into the match without server canJoin.
+			//--- 30s re-request already retried; after 120s with no ACK, kick rather than bypass.
+			_get = false;
+			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no join ACK after 120s - DENY (teamswap fail-closed).",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
 		};
 		//--- Secondary backstop: if mission `time` ever stalls (paused sim / stuck load) the deadline above
 		//--- can never fire, so count our own sleeps as well and bail on the same budget either way.

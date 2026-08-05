@@ -39,6 +39,7 @@ WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Comma
 WFBE_SE_FNC_AI_Com_FundsSink = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_FundsSink.sqf";
 HandleBuildingDamage = Compile preprocessFile "Server\Functions\Server_HandleBuildingDamage.sqf";
 HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sqf";
+WFBE_SE_FNC_StarFortSite = Compile preprocessFileLineNumbers "Server\Construction\Construction_StarFortSite.sqf";
 //--- HS-TRACE (picklist 4 phase 1, 2026-07-22): LineNumbers so a parse failure in the
 //--- 55-case switch names file:line in the RPT instead of an anonymous error.
 HandleSpecial = Compile preprocessFileLineNumbers "Server\Functions\Server_HandleSpecial.sqf";
@@ -95,6 +96,7 @@ WFBE_SE_FNC_AI_Com_Beacon = Compile preprocessFileLineNumbers "Server\AI\Command
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
 WFBE_SE_FNC_AI_Com_HCTopUp = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_HCTopUp.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
+WFBE_SE_FNC_AI_Com_EndgameTeleport = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_EndgameTeleport.sqf"; //--- END-GAME TELEPORT closer; flag WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE default 0 = inert.
 WFBE_SE_FNC_AICOM2_Snapshot = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Snapshot.sqf"; //--- AICOM v2 rebuild (M0): world-model snapshot builder.
 WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Allocate.sqf"; //--- AICOM v2 rebuild (M1): single offensive authority (flag WFBE_C_AICOM2_ALLOCATE_ENABLE).
 WFBE_SE_FNC_AICOM2_Decapitate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Decapitate.sqf"; //--- AICOM v2 rebuild (M5): DECAPITATE closer (flag WFBE_C_AICOM2_DECAP_ENABLE, default 0).
@@ -126,6 +128,7 @@ WFBE_SE_FNC_SetCampsToSide = Compile preprocessFileLineNumbers "Server\Functions
 WFBE_SE_FNC_NavalHVT_BubbleComplete = Compile preprocessFileLineNumbers "Server\Functions\Server_NavalHVT_BubbleComplete.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): onComplete callback for a RadiusHold-registered carrier bubble (Init_NavalHVT.sqf, flag WFBE_C_NAVALHVT_BUBBLE_ENABLE).
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
 WFBE_SE_FNC_ValidatePlayerStructurePlacement = Compile preprocessFileLineNumbers "Server\Functions\Server_ValidatePlayerStructurePlacement.sqf";
+WFBE_SE_FNC_TeambarSlot1Rejoin = Compile preprocessFileLineNumbers "Server\Functions\Server_TeambarSlot1Rejoin.sqf"; //--- fable/player-teambar-slot server heal (2026-07-22): shared reorder used by Server_OnPlayerConnected.sqf (connect) + Server_HandleSpecial.sqf's update-teamleader case (respawn).
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
 WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
@@ -170,6 +173,17 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_BANK_WEST", objNull];
 	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
+};
+//--- Star Fortress: per-side single-instance registries plus public state flags. Default 0 is inert.
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_STARFORT_WEST", objNull];
+	publicVariable "WFBE_STARFORT_WEST";
+	missionNamespace setVariable ["WFBE_STARFORT_EAST", objNull];
+	publicVariable "WFBE_STARFORT_EAST";
+	wfbe_starfort_keepalive_west = false; publicVariable "wfbe_starfort_keepalive_west";
+	wfbe_starfort_keepalive_east = false; publicVariable "wfbe_starfort_keepalive_east";
+	wfbe_starfort_breached_west = false; publicVariable "wfbe_starfort_breached_west";
+	wfbe_starfort_breached_east = false; publicVariable "wfbe_starfort_breached_east";
 };
 //--- Least-loaded HC picker (single source of truth for delegation balance). Compiled
 //--- unconditionally - the commander/patrol/wildcard delegation sites are not gated by the
@@ -801,9 +815,9 @@ emptyQueu = [];
 		//--- HQ init.
 		_hq = [missionNamespace getVariable Format["WFBE_%1MHQNAME", _side], _pos, _sideID, getDir _pos, true, false, true] Call WFBE_CO_FNC_CreateVehicle;
 		_hq setVariable ["WFBE_Taxi_Prohib", true];
-		_hq setVariable ["wfbe_side", _side];
+		_hq setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
 		_hq setVariable ["wfbe_trashable", false];
-		_hq setVariable ["wfbe_structure_type", "Headquarters"];
+		_hq setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 		_hq addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}];
 		_hq addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 

@@ -34,6 +34,7 @@ for '_i' from 0 to count(_template)-1 do {
 		//--- setDir/setPos never run on a failed create (bad class / engine fail mid-ring).
 		if (isNull _toplace) then {
 			["WARNING", Format ["Server_CreateDefenseTemplate.sqf: createVehicle FAILED for class [%1] on origin [%2] (template index %3).", _object, typeOf _origin, _i]] Call WFBE_CO_FNC_LogContent;
+			diag_log format ["DEFWALL|CREATEFAIL|class=%1|origin=%2", _object, typeOf _origin];
 		} else {
 			_toplace setVariable ["wfbe_defense", true]; //--- This is one of our defenses.
 

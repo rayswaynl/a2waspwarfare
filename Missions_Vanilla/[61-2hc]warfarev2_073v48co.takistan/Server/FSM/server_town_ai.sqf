@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince","_sortieDefR","_sortiePatR"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
@@ -240,6 +240,21 @@ while {!WFBE_GameOver} do {
 		_enemies = 0; //--- perf-dice fix (livetest 2026-07-06): must exist in TOWN-LOOP scope - assigned inside the _doScan block, and SQF inner-block assignments do not escape unless the var pre-exists in an outer scope (RPT: 'Undefined variable _enemies' at the deactivation check).
 
 		_town = towns select _i;
+		//--- Late-registration seed: towns that self-register into `towns` after this script's one-shot seed loop
+		//--- can reach the sweep without any wfbe_* defaults. Seed the same defaults as the init loop
+		//--- once, the first time the sweep sees such a town; the isNil guard never clobbers live state.
+		if (isNil {_town getVariable "wfbe_active"}) then {
+			_town setVariable ["wfbe_active", false];
+			_town setVariable ["wfbe_active_air", false];
+			_town setVariable ["wfbe_inactivity", 0];
+			_town setVariable ["wfbe_active_override", false];
+			_town setVariable ['wfbe_active_vehicles', []];
+			_town setVariable ['wfbe_town_teams', []];
+			_town setVariable ["wfbe_episode_spawned", false];
+			_town setVariable ["wfbe_sortie_grp", grpNull, true];
+			_town setVariable ["wfbe_sortie_started", 0];
+			_town setVariable ["wfbe_sortie_rtb", false];
+		};
 		_town_teams = _town getVariable ["wfbe_town_teams", []];
 		if (typeName _town_teams != "ARRAY") then {_town_teams = []};
 		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
@@ -274,7 +289,7 @@ while {!WFBE_GameOver} do {
 						WFBE_TownScanDiceAnnounced = true;
 						["INFORMATION", "server_town_ai.sqf: dormant-town scan dice enabled (WFBE_C_TOWN_SCAN_DICE=1)."] Call WFBE_CO_FNC_AICOMLog;
 					};
-					if (!(_town getVariable "wfbe_active") && {!(_town getVariable "wfbe_active_air")} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_GRACE", 30])}) then {
+					if (!(_town getVariable ["wfbe_active", false]) && {!(_town getVariable ["wfbe_active_air", false])} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_GRACE", 30])}) then {
 						if ((random 1) >= (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_P", 0.5])) then {_doScan = false};
 					};
 				};
@@ -617,14 +632,17 @@ while {!WFBE_GameOver} do {
 						_camps = +(_town getVariable "camps");
 						_positions = [];
 						_teams = [];
+						private ["_plannedGroups"];
+						_plannedGroups = +_groups;
+						_groups = [];
 						//--- fable/garrison-tonight (owner 2026-07-07): PERIMETER spread - ring the defenders around the
 						//--- town EDGE by bearing instead of clustering at camps/center. WFBE_C_TOWNS_PERIMETER 0 = legacy.
 						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP","_ctlNewGrp","_wtryP"];
 						_perimeterOn = (missionNamespace getVariable ["WFBE_C_TOWNS_PERIMETER", 0]) > 0;
-						_grpTotalP   = count _groups; if (_grpTotalP < 1) then {_grpTotalP = 1};
+						_grpTotalP   = count _plannedGroups; if (_grpTotalP < 1) then {_grpTotalP = 1};
 						_townRangeP  = _town getVariable ["range", 300]; if (_townRangeP < 120) then {_townRangeP = 120};
 						_townCenP    = getPos _town;
-						for "_groupIndex" from 0 to count(_groups)-1 do {
+						for "_groupIndex" from 0 to count(_plannedGroups)-1 do {
 							_position = [];
 							if (_perimeterOn) then {
 								_bearingP = (360 / _grpTotalP) * _groupIndex + (random 40) - 20;
@@ -657,13 +675,14 @@ while {!WFBE_GameOver} do {
 							//--- empty-position probe bounded too; a crowded activation can otherwise
 							//--- spend 1000 isFlatEmpty checks before accepting the widened fallback.
 							_position = [_position, 50, 256] call WFBE_CO_FNC_GetEmptyPosition;
-							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
 							_ctlNewGrp = ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup);
-							//--- r50 fail-clean: CreateGroup returns grpNull at side group-cap; setVariable on null
-							//--- and pushing grpNull into _teams poisons the later CreateTownUnits batch for the wave.
+							//--- r50 fail-clean: preserve only successful template/position/group tuples. A failed
+							//--- CreateGroup must never shift later work or reach client delegation as an untracked grpNull.
 							if (isNull _ctlNewGrp) then {
-								["WARNING", Format ["server_town_ai.sqf: town-ai CreateGroup failed for side [%1] town [%2] - slot dropped.", _side, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+								["WARNING", Format ["server_town_ai.sqf: town-ai CreateGroup failed for side [%1] town [%2] - slot dropped before creation/delegation.", _side, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 							} else {
+								[_groups, _plannedGroups select _groupIndex] call WFBE_CO_FNC_ArrayPush;
+								[_positions, _position] call WFBE_CO_FNC_ArrayPush;
 							//--- New-Bug-A fix (fable/ctl-survivor-bugs): stamp each freshly created group with the SAME
 							//--- per-town wfbe_ctl_ground_wave state just set above for this wave (line ~287/~309), so
 							//--- the survivor-tally numerator below (deactivation block) can tell ground-wave groups
@@ -889,7 +908,12 @@ while {!WFBE_GameOver} do {
 						//--- CONTESTED: recall the sortie for defense immediately (tight move back onto the town),
 						//--- then clear the slot so no new sortie launches while the town is under attack.
 						if (_sortieValid) then {
-							[_sortieGrp, _townPos, "MOVE", 40] Call AIMoveTo;
+							//--- Wakeup fidelity: contested recall restores a town defense order and posture.
+							//--- Bare MOVE arrived and then idled; AIPatrol can also select an inter-town road corridor.
+							_sortieDefR = missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_RANGE", 30];
+							[_sortieGrp, _townPos, "SAD", _sortieDefR] Call WFBE_CO_FNC_WaypointSimple;
+							_sortieGrp setBehaviour "AWARE";
+							_sortieGrp setCombatMode "RED";
 							["INFORMATION", Format ["server_town_ai.sqf: sortie RECALLED (contested) for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 						};
 						_town setVariable ["wfbe_sortie_grp", grpNull, true];
@@ -914,6 +938,11 @@ while {!WFBE_GameOver} do {
 								_sortieRtbCap = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIE_RTB_TIMEOUT", 180];
 								if (_sortieRtbCap < 15) then {_sortieRtbCap = 15};
 								if (((leader _sortieGrp) distance _townPos) <= 60 || {(time - _sortieStarted) >= _sortieRtbCap}) then {
+									//--- Wakeup fidelity: the completed return leg resumes the town-ring patrol.
+									if (count units _sortieGrp > 0 && {local (leader _sortieGrp)}) then {
+										_sortiePatR = missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_RANGE", 500];
+										[_sortieGrp, _town, _sortiePatR] Call WFBE_CO_FNC_WaypointPatrolTown;
+									};
 									_town setVariable ["wfbe_sortie_grp", grpNull, true];
 									_town setVariable ["wfbe_sortie_started", 0];
 									_town setVariable ["wfbe_sortie_rtb", false];
@@ -923,8 +952,8 @@ while {!WFBE_GameOver} do {
 								//--- Rotation: after WFBE_C_TOWNS_SORTIE_MINS, bring this group home and free the slot
 								//--- so a different group takes the next turn on the following eligible sweep.
 								if ((time - _sortieStarted) >= (_sortieMins * 60)) then {
-									[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
 									if (_sortieRtbOn) then {
+										[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
 										//--- Return leg armed: keep the group tracked (so no new sortie launches while
 										//--- it walks home, and so the RTB poll above picks it up next sweep). Reuse
 										//--- wfbe_sortie_started as the return-leg clock (its rotation-timer job for
@@ -933,6 +962,9 @@ while {!WFBE_GameOver} do {
 										_town setVariable ["wfbe_sortie_rtb", true];
 										["INFORMATION", Format ["server_town_ai.sqf: sortie RTB started for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 									} else {
+										//--- Wakeup fidelity: flag-off rotation ends directly on a town-ring patrol.
+										_sortiePatR = missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_RANGE", 500];
+										[_sortieGrp, _town, _sortiePatR] Call WFBE_CO_FNC_WaypointPatrolTown;
 										_town setVariable ["wfbe_sortie_grp", grpNull, true];
 										_town setVariable ["wfbe_sortie_started", 0];
 										["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;

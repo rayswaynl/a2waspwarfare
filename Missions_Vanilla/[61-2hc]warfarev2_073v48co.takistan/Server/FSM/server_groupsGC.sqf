@@ -52,8 +52,11 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 		};
 	} forEach allGroups;
 	{
-		deleteGroup _x;
-		_gcReaped = _gcReaped + 1;
+		//--- r56 fail-clean: re-check isNull + still-empty after collect-then-delete gap.
+		if (!isNull _x && {(count (units _x)) == 0}) then {
+			deleteGroup _x;
+			_gcReaped = _gcReaped + 1;
+		};
 	} forEach _gcCands;
 
 	// --- B61 (Ray 2026-06-21) BASE-GC / RE-ADOPT pass ---
@@ -143,9 +146,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 				_baseCap = switch (true) do {
 					//--- release-merge note: #952 (LOW/MID) and #963 (HIGH/FULL) are sequential patches to this
 					//--- same switch, not alternatives - see AI_Commander_Teams.sqf for the full explanation.
-					//--- Values match live Init_CommonConstants.sqf (:358-361): LOW=10, MID=7, HIGH=4, FULL=3.
-					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  10]};
-					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  7]};
+					//--- Values match live Init_CommonConstants.sqf (:358-361): LOW=17, MID=17, HIGH=4, FULL=3.
+					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  17]};
+					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  17]};
 					case (_basePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 4]};
 					default              {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 3]};
 				};
@@ -336,13 +339,13 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 											//--- DELETE: crew first, then hull (mirror Common_RunCommanderTeam.sqf:318-320).
 											//--- crash 014EFCF4: yield between seated-crew deletes so A2 can settle each seat-array move.
 											{
-												if (!isPlayer _x) then {
+												if (!isNull _x && {!isPlayer _x}) then {
 													["gc-baseair-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete;
 													deleteVehicle _x;
 													sleep 0;
 												};
 											} forEach _baseVcrew;
-											["gc-baseair-hull", _baseVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _baseVeh;
+											if (!isNull _baseVeh) then {["gc-baseair-hull", _baseVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _baseVeh};
 											_baseDeletedAir = _baseDeletedAir + 1;
 											["INFORMATION", Format ["server_groupsGC.sqf: B61 BASE-GC deleted idle crewed %1 hull at base (%2).", str _baseSide, _baseVeh]] Call WFBE_CO_FNC_AICOMLog;
 										};
@@ -405,8 +408,11 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 							//--- fefacf451b, but the actual merge (dfb9cd98e0) pulled in an earlier iteration
 							//--- (71ef2feec1) that still had both calls. Restoring the reviewed fix here: one
 							//--- VEHDEL emission per zombie delete, not two.
-							["gc-L318", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x;
-							_reaped = _reaped + 1;
+							//--- r56 fail-clean: skip null zombie units; only count real deletes.
+							if (!isNull _x) then {
+								["gc-L318", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x;
+								_reaped = _reaped + 1;
+							};
 						};
 					} forEach _zombieUnits;
 					_grp setVariable ["wfbe_orphaned_at", nil];
