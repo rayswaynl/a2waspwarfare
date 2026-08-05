@@ -106,7 +106,7 @@ if (isNull _building || {!alive _building}) then {["INFORMATION", Format ["Serve
 if (!isNull _building && {alive _building} && {!(_building in _sideStructs)}) then {["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH factory not owned by side [%1] for [%2] - refunded %3.", _sideText, _unitType, _price]] Call WFBE_CO_FNC_LogContent};
 };
 
-if (isPlayer (leader _team)) exitWith {
+if (isPlayer (leader _team) || {[_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC_GroupGetBool} || {count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0}) exitWith {
 if (!isNull _team) then {
 _team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 };
@@ -267,7 +267,7 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 	//--- aborts the script for real before anything spawns, and (b) the wfbe_queue release is an ARRAY
 	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
 	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
-	if (!(alive _building)||(isNull _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
+	if (!(alive _building)||(isNull _building)||{isNull _team}||{[_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC_GroupGetBool}||{count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0}||{isPlayer (leader _team)}) exitWith {
 		if (!isNull _team) then {
 			_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 		};
@@ -311,7 +311,7 @@ _building setVariable ["queu",_queu,true];
 //--- double-value; for a vehicle that then hits the objNull guard below, a second full refund on top of
 //--- that). Once ANY earlier abort has paid a refund, this exitWith is now TERMINAL regardless of whether
 //--- the original abort condition still holds - the build must never happen after a refund fired.
-if (_refunded || {!(alive _building)} || {isNull _team} || {isPlayer (leader _team)}) exitWith {
+if (_refunded || {!(alive _building)} || {isNull _team} || {[_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC_GroupGetBool} || {count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0} || {isPlayer (leader _team)}) exitWith {
 	if (!isNull _team) then {
 		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 	};
