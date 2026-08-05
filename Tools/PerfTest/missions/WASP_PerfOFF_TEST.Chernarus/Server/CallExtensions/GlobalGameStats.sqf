@@ -2,7 +2,7 @@ Private ["_cSharpClassName","_scoreSideWest","_scoreSideEast","_currentMap","_up
 _cSharpClassName = "GLOBALGAMESTATS";
 _currentMap = worldName;
 
-while {true} do {
+while {!gameOver} do {
     _scoreSideWest = scoreSide west;
     _scoreSideEast = scoreSide east;
     _uptime = round(time);
