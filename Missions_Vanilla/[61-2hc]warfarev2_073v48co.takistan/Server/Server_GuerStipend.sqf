@@ -14,16 +14,30 @@
 if !(isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) < 1) exitWith {};
 
-private ["_interval","_baseRate","_townBonus","_startTownCount","_curTowns","_deficit","_rate","_tier","_kills","_fallbackTier","_paidGroups","_g","_sampleFunds"];
+private ["_interval","_baseRate","_townBonus","_startTownCount","_curTowns","_deficit","_rate","_tier","_kills","_fallbackTier","_paidGroups","_g","_sampleFunds","_startupStarted","_startupDeadline"];
 
 _interval  = 60;
 _baseRate  = 150;
 _townBonus = 10;
 
 //--- Wait for towns to be built + the GUER side logic to exist, then let town ownership settle.
+_startupStarted = diag_tickTime;
+_startupDeadline = _startupStarted + 300;
 waitUntil {
-	(!isNil "towns") && {(count towns) > 0}
-	&& {!isNil "WFBE_L_GUE"} && {!(isNull (missionNamespace getVariable ["WFBE_L_GUE", objNull]))}
+	sleep 0.25;
+	(
+		(!isNil "towns") && {(count towns) > 0}
+		&& {!isNil "WFBE_L_GUE"} && {!(isNull (missionNamespace getVariable ["WFBE_L_GUE", objNull]))}
+	)
+	|| {diag_tickTime >= _startupDeadline}
+};
+if (
+	isNil "towns"
+	|| {count towns == 0}
+	|| {isNil "WFBE_L_GUE"}
+	|| {isNull (missionNamespace getVariable ["WFBE_L_GUE", objNull])}
+) exitWith {
+	diag_log format ["GUERSTIPEND|ABORT|STARTUP_TIMEOUT|waited=%1|townsReady=%2|logicReady=%3", round (diag_tickTime - _startupStarted), !isNil "towns" && {count towns > 0}, !isNil "WFBE_L_GUE" && {!(isNull (missionNamespace getVariable ["WFBE_L_GUE", objNull]))}];
 };
 sleep 30;
 
