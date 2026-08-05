@@ -27,6 +27,9 @@ _lastLvl = -1;
 _range = 0;
 
 while {true} do {
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		{deleteMarkerLocal (_x select 1)} forEach (+_rings);
+	};
 	//--- B748: per-player Settings opt-out. OFF = tear down live rings + idle until re-enabled.
 	if !(missionNamespace getVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", true]) then {
 		{deleteMarkerLocal (_x select 1)} forEach (+_rings);
