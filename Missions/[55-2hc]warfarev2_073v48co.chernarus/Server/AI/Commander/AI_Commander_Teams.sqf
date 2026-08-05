@@ -1409,10 +1409,12 @@ if (count _live > 0) then {
 			_nearFrontD = 1e18; //--- squared-distance accumulator (kept in m^2 to avoid the per-town sqrt).
 			{
 				if ((_x getVariable ["sideID", -1]) != _sideID) then {
-					_tx = (getPos _x) select 0; _ty = (getPos _x) select 1;
-					_dx = _tx - _hx; _dy = _ty - _hy;
-					_d2 = (_dx * _dx) + (_dy * _dy);
-					if (_d2 < _nearFrontD) then {_nearFrontD = _d2};
+					if (!((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0 && {(_x getVariable ["wfbe_is_naval_hvt", false])})) then {
+						_tx = (getPos _x) select 0; _ty = (getPos _x) select 1;
+						_dx = _tx - _hx; _dy = _ty - _hy;
+						_d2 = (_dx * _dx) + (_dy * _dy);
+						if (_d2 < _nearFrontD) then {_nearFrontD = _d2};
+					};
 				};
 			} forEach towns;
 			if (_nearFrontD < 1e18 && {_nearFrontD > _reachFoot2}) then {_frontFar = true};

@@ -104,6 +104,14 @@ if (_snapOk) then {
 		if (_townSide == _enemyID) then {_enemyTowns = _enemyTowns + 1};
 	} forEach towns;
 };
+//--- r26 topology: offshore naval-HVT decks are capturable, but they are not ground-front-adjacent.
+//--- Keep the full candidate list only when naval objectives are the last objectives available.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0) then {
+	private ["_candLand"];
+	_candLand = [];
+	{ if (!isNull _x && {!(_x getVariable ["wfbe_is_naval_hvt", false])}) then {_candLand set [count _candLand, _x]} } forEach _candTowns;
+	if (count _candLand > 0) then {_candTowns = _candLand};
+};
 //--- B68 (Ray 2026-06-21) ATTACK-BIAS: _myStr is the MANEUVER strength that gates LAST-STAND (and the HQ-strike).
 //--- Exclude stranded lone-survivor remnants (alive < N AND far from HQ) and in-refit teams so a few far-flung
 //--- survivors do not deflate strength below the enemy and falsely trip the defensive gates (the b67 "EAST amasses
