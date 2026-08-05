@@ -97,7 +97,17 @@ if (count _attacked > 0) then {
 } else {
 	_targets = _logik getVariable "wfbe_aicom_targets";
 	if (!isNil "_targets" && {typeName _targets == "ARRAY"} && {count _targets > 0}) then {
-		if (!isNull (_targets select 0)) then {_target = _targets select 0};
+		//--- NAVAL-HVT GUARD (adversarial review 2026-08-05, extends 5ee41de464): the allocator/strategy
+		//--- never-idle fallbacks may publish naval-HVT towns when they are the LAST capturable objectives -
+		//--- a para stick dropped at an offshore deck lands in the sea. Walk to the first non-naval published
+		//--- target instead of blind-reading slot 0; WFBE_C_AICOM_NAVAL_AIR_ONLY 0 restores the old slot-0 read.
+		private "_paraTgtStop"; _paraTgtStop = false;
+		{
+			if (!_paraTgtStop && {!((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0 && {!isNull _x} && {_x getVariable ["wfbe_is_naval_hvt", false]})}) then {
+				if (!isNull _x) then {_target = _x};
+				_paraTgtStop = true;
+			};
+		} forEach _targets;
 	};
 };
 if (isNull _target) exitWith {}; //--- nothing worth reinforcing this tick; try again next cooldown window.

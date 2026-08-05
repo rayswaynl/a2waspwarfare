@@ -1,5 +1,43 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-05 — naval-HVT fallback guard (fable/naval-hvt-fallback-guard-20260805)
+
+Task: adversarial-review follow-up to wave0805 fold `5ee41de464` (naval-HVT exclusion in the
+V2 allocator scorer). Review finding: the "no ground force sent at the Khe Sanh carrier"
+invariant is held by redundancy, not construction — the never-idle/last-resort fallbacks
+(`AI_Commander_Allocate.sqf:312-321`, `AI_Commander_Strategy.sqf:107-114`) publish naval-HVT
+towns into `wfbe_aicom_targets` when nothing else is capturable, and
+Paratroops/CargoAirdrop/Wildcard W4/W6/W22 blind-read `wfbe_aicom_targets` slot 0.
+
+Decision — do NOT filter the fallbacks: verified both only ever publish naval towns when ALL
+capturable towns are naval (Allocate's main loop scores every non-naval town unconditionally,
+so `_scored == 0` ⟺ all-naval; Strategy applies `_candLand` only when non-empty). Filtering
+them would delete the designed endgame capture path. Implemented the review's second option:
+gate the consumers with a uniform latched "first non-naval published target" pick, gated on
+the existing armed flag `WFBE_C_AICOM_NAVAL_AIR_ONLY` (default 1, Init_CommonConstants.sqf:621;
+no Parameters.hpp override). Flag 0 reproduces the old slot-0 read exactly.
+
+Edits (Chernarus only, targeted python CRLF edits):
+1. `Server/AI/Commander/AI_Commander_Paratroops.sqf` — offensive-primary pick
+2. `Server/AI/Commander/AI_Commander_CargoAirdrop.sqf` — offensive-primary pick
+3. `Server/Functions/AI_Commander_Wildcard.sqf` — W4, W6, W22 spearhead/anchor picks
+
+Deliberately unchanged (documented in PR):
+- W4/W22 `_cands` fallbacks keep naval eligibility — an air-delivered assault/loiter at the
+  carrier is the NAVAL_AIR_ONLY doctrine's legal path and the endgame pressure.
+- `AI_Commander_MHQReloc.sqf` — reviewed: slot 0 is only a front REFERENCE; the destination
+  is a standoff behind the nearest OWN-held town (ring-validated), never the naval town.
+- AssignTowns per-team air gates (`_teamAir`/`_bootAir`) remain the per-team authority.
+
+Gates (actuals):
+- Lint gate (CLAUDE.md verbatim incl. BAREEXIT/DBLBOM/TRAILCOMMA): 168 findings tree-wide
+  = pre-existing baseline; 0 in the three edited files.
+- Bracket delta vs origin/master: curly 0 / square 0 for all three files.
+- pytest Tools/Lint: 806 passed, 2 skipped (the 2 pre-mirror three-terrain equality
+  failures cleared after the LoadoutManager run).
+- Mirror: `--check` zero drift for TK and ZG; version.sqf.template restored to
+  origin/master; Test-WaspVersionTemplates.ps1 all PASS.
+
 ## 2026-08-04 — reconcile PR #2092 onto wave0805
 
 - PR #2092 was stacked on #2060. The wave tip already contains the immobile-hull

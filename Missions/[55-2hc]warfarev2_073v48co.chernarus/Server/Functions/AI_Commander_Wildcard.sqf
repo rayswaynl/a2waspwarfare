@@ -708,7 +708,15 @@ while {!gameOver} do {
 						_bestScore = -1e9;
 						_targets   = _logik getVariable "wfbe_aicom_targets";
 						if (!isNil "_targets" && {count _targets > 0}) then {
-							_bestTown = _targets select 0;
+							//--- NAVAL-HVT GUARD (review 2026-08-05, extends 5ee41de464): skip published naval-HVT entries -
+							//--- the _cands rescore below keeps the doctrine-legal air assault on the carrier as endgame pressure.
+							private "_w4TgtStop"; _w4TgtStop = false;
+							{
+								if (!_w4TgtStop && {!((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0 && {!isNull _x} && {_x getVariable ["wfbe_is_naval_hvt", false]})}) then {
+									if (!isNull _x) then {_bestTown = _x};
+									_w4TgtStop = true;
+								};
+							} forEach _targets;
 						};
 						if (!isNull _bestTown && {(_bestTown getVariable ["sideID", -1]) == _sideID}) then {_bestTown = objNull};
 						if (isNull _bestTown) then {
@@ -812,7 +820,15 @@ while {!gameOver} do {
 							_w6BestScore = -1e9;
 							_w6Targets   = _logik getVariable "wfbe_aicom_targets";
 							if (!isNil "_w6Targets" && {count _w6Targets > 0}) then {
-								_w6BestTown = _w6Targets select 0;
+								//--- NAVAL-HVT GUARD (review 2026-08-05, extends 5ee41de464): aim/telemetry pick only (AssignTowns
+								//--- owns the real orders + naval gates) - guarded so no consumer blind-reads a naval slot 0.
+								private "_w6TgtStop"; _w6TgtStop = false;
+								{
+									if (!_w6TgtStop && {!((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0 && {!isNull _x} && {_x getVariable ["wfbe_is_naval_hvt", false]})}) then {
+										if (!isNull _x) then {_w6BestTown = _x};
+										_w6TgtStop = true;
+									};
+								} forEach _w6Targets;
 							};
 							if (!isNull _w6BestTown && {(_w6BestTown getVariable ["sideID", -1]) == _sideID}) then {_w6BestTown = objNull};
 							if (isNull _w6BestTown) then {
@@ -1133,7 +1149,17 @@ while {!gameOver} do {
 						{ if (_w22PlaneClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Plane"}) then {_w22PlaneClass = _x} } forEach _w22AirList;
 						_w22Target  = objNull;
 						_w22Targets = _logik getVariable "wfbe_aicom_targets";
-						if (!isNil "_w22Targets" && {count _w22Targets > 0}) then {_w22Target = _w22Targets select 0};
+						//--- NAVAL-HVT GUARD (review 2026-08-05, extends 5ee41de464): skip published naval-HVT entries -
+						//--- the random _cands fallback below keeps the fighter free to loiter the carrier front (air = legal).
+						if (!isNil "_w22Targets" && {count _w22Targets > 0}) then {
+							private "_w22TgtStop"; _w22TgtStop = false;
+							{
+								if (!_w22TgtStop && {!((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0 && {!isNull _x} && {_x getVariable ["wfbe_is_naval_hvt", false]})}) then {
+									if (!isNull _x) then {_w22Target = _x};
+									_w22TgtStop = true;
+								};
+							} forEach _w22Targets;
+						};
 						if (!isNull _w22Target && {(_w22Target getVariable ["sideID", -1]) == _sideID}) then {_w22Target = objNull};
 						if (isNull _w22Target && {count _cands > 0}) then {_w22Target = _cands select floor(random count _cands)};
 						if (_w22PlaneClass != "" && {!isNull _hq}) then {
