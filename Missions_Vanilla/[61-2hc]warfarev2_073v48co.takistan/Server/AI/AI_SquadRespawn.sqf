@@ -104,7 +104,16 @@ while {!gameOver} do {
 	};
 	
 	sleep _rd;
-	if (gameOver) exitWith {}; //--- round ended during the respawn hold - do not equip/teleport the leader post-teardown
+//--- Terminal round end: clear an applied guard, but do not equip or move the leader during teardown.
+if (gameOver) exitWith {
+	if (_deadspawnGuardApplied && {alive _leader}) then {
+		_leader setVariable ["wfbe_penWeapons", []];
+		_leader setVariable ["wfbe_penMagazines", []];
+		_leader setCaptive false;
+		_leader allowDamage true;
+		["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|handoff=gameOver", _sideText, _leader]] Call WFBE_CO_FNC_LogContent;
+	};
+};
 
 	//--- A player/death transition can land during the respawn sleep.
 	if (isPlayer _leader || !(alive _leader)) then {
