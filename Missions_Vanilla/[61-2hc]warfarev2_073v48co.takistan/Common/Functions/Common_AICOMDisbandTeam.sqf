@@ -10,7 +10,7 @@
 	(base "GrenadeHand" is impact-fused with fuseDistance=5 and can fail to arm at rest).
 */
 
-Private ["_team","_leader","_units","_vehicles","_vehicle","_sideID","_cmd","_uCount","_vCount"];
+Private ["_team","_leader","_units","_vehicles","_vehicle","_sideID","_cmd","_uCount","_vCount","_hasPlayerCrew","_pendingId"];
 
 if (count _this < 1) exitWith {false};
 _team = _this select 0;
@@ -21,6 +21,8 @@ if (isNull _leader || {!local _leader}) exitWith {false};
 _sideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 _cmd = _team getVariable "wfbe_aicom_disband_cmd";
 if (isNil "_cmd") then {_cmd = false};
+_pendingId = _team getVariable "wfbe_aicom_pending_id";
+if (isNil "_pendingId" || {typeName _pendingId != "SCALAR"}) then {_pendingId = -1};
 _units = +(units _team);
 _vehicles = [];
 {
@@ -30,7 +32,15 @@ _vehicles = [];
 	};
 } forEach _units;
 
-//--- Vehicles first: cook the hull (mounted crew dies with it); never touch a player-crewed hull.
+//--- Vehicles first: a player-crewed hull is a hard stand-down for the whole destructive retire.
+//--- Otherwise the later driver-tail cleanup deletes its AI crew while the player remains seated.
+_hasPlayerCrew = false;
+{
+	if (!isNull _x) then {
+		if ({isPlayer _x} count (crew _x) > 0) then {_hasPlayerCrew = true};
+	};
+} forEach _vehicles;
+if (_hasPlayerCrew) exitWith {false};
 _vCount = 0;
 {
 	if (!isNull _x && {local _x} && {alive _x} && {({isPlayer _x} count (crew _x)) == 0}) then {
@@ -53,9 +63,17 @@ diag_log ("DISBAND|v1|exec|mode=destructive|side=" + str _sideID + "|team=" + st
 diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_LOCAL|destructive");
 _team setVariable ["wfbe_aicom_ended_fired", true];   //--- night-fold review fix: driver-loop tail checks this stamp so team-ended never double-fires
 if (isServer) then {
-	["aicom-team-ended", _sideID, _team] Call HandleSpecial;
+	if (_pendingId >= 0) then {
+		["aicom-team-ended", _sideID, _team, _pendingId] Call HandleSpecial;
+	} else {
+		["aicom-team-ended", _sideID, _team] Call HandleSpecial;
+	};
 } else {
-	["RequestSpecial", ["aicom-team-ended", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+	if (_pendingId >= 0) then {
+		["RequestSpecial", ["aicom-team-ended", _sideID, _team, _pendingId]] Call WFBE_CO_FNC_SendToServer;
+	} else {
+		["RequestSpecial", ["aicom-team-ended", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+	};
 };
 //--- No immediate deleteGroup: grenade fuses land the deaths ~4s out; the group empties as its
 //--- members die and the standard empty-group GC reaps it (aicom-team-ended has already
