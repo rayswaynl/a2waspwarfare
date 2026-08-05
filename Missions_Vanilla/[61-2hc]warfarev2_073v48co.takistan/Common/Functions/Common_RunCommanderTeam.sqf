@@ -31,9 +31,19 @@ _sideID = _this select 0;
 _template = _this select 1;
 _pos = _this select 2;
 _side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
+_pendingId = -1;
+if (count _this > 9) then { private ["_ipid"]; _ipid = _this select 9; if (typeName _ipid == "SCALAR") then {_pendingId = _ipid} };
 
 //--- Drop an HC-delegated creation request that arrived after the endgame signal.
-if (gameOver || {WFBE_GameOver}) exitWith {};
+if (gameOver || {WFBE_GameOver}) exitWith {
+	if (_pendingId >= 0) then {
+		if (isServer) then {
+			["aicom-team-ended", _sideID, grpNull, _pendingId] Call HandleSpecial;
+		} else {
+			["RequestSpecial", ["aicom-team-ended", _sideID, grpNull, _pendingId]] Call WFBE_CO_FNC_SendToServer;
+		};
+	};
+};
 
 //--- LAB QUIESCENCE PIN (perf proving-ground): when the lab sets WFBE_C_TEST_TEAM_CAP=0 the synthetic
 //--- benchmark wants ZERO AICOM-founded teams. AI_Commander_Teams.sqf gates its OWN founding path on
@@ -42,6 +52,13 @@ if (gameOver || {WFBE_GameOver}) exitWith {};
 //--- live play (WFBE_C_TEST_TEAM_CAP default -1, never 0). Correctness/lab fix; no feature flag.
 if ((missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1]) == 0) exitWith {
 	["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] founding skipped - lab quiescence pin (WFBE_C_TEST_TEAM_CAP=0).", _side]] Call WFBE_CO_FNC_AICOMLog;
+	if (_pendingId >= 0) then {
+		if (isServer) then {
+			["aicom-team-ended", _sideID, grpNull, _pendingId] Call HandleSpecial;
+		} else {
+			["RequestSpecial", ["aicom-team-ended", _sideID, grpNull, _pendingId]] Call WFBE_CO_FNC_SendToServer;
+		};
+	};
 };
 
 //--- PLANE AIRFIELD-SPAWN (Ray 2026-07-01, PLANE-ONLY "free air at captured airfields", gate WFBE_C_AICOM_PLANE_AIRSTART default-ON):
@@ -52,8 +69,6 @@ _isPlaneTeam = false;
 if (count _this > 7) then { private ["_ipt"]; _ipt = _this select 7; if (typeName _ipt == "BOOL") then {_isPlaneTeam = _ipt} };
 _planeDir = -1;
 if (count _this > 8) then { private ["_ipd"]; _ipd = _this select 8; if (typeName _ipd == "SCALAR") then {_planeDir = _ipd} };
-_pendingId = -1;
-if (count _this > 9) then { private ["_ipid"]; _ipid = _this select 9; if (typeName _ipid == "SCALAR") then {_pendingId = _ipid} };
 //--- Belt-and-braces: if the flag is set but no valid heading arrived, self-resolve the runway heading HERE from the nearest
 //--- airfield logic (getDir of the LocationLogicAirport), else fall back to 0 so a plane never air-starts on a nil heading.
 //--- Only runs for a flagged plane team; ground/heli founding never touches this.
@@ -86,10 +101,18 @@ _team = _retVal select 2;
 
 if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
 	["WARNING", Format ["Common_RunCommanderTeam.sqf: [%1] team creation failed - releasing the slot.", _side]] Call WFBE_CO_FNC_AICOMLog;
-	if (isServer) then {
-		["aicom-team-ended", _sideID, grpNull] Call HandleSpecial;
+	if (_pendingId >= 0) then {
+		if (isServer) then {
+			["aicom-team-ended", _sideID, grpNull, _pendingId] Call HandleSpecial;
+		} else {
+			["RequestSpecial", ["aicom-team-ended", _sideID, grpNull, _pendingId]] Call WFBE_CO_FNC_SendToServer;
+		};
 	} else {
-		["RequestSpecial", ["aicom-team-ended", _sideID, grpNull]] Call WFBE_CO_FNC_SendToServer;
+		if (isServer) then {
+			["aicom-team-ended", _sideID, grpNull] Call HandleSpecial;
+		} else {
+			["RequestSpecial", ["aicom-team-ended", _sideID, grpNull]] Call WFBE_CO_FNC_SendToServer;
+		};
 	};
 };
 
@@ -3397,9 +3420,17 @@ while {!WFBE_GameOver && _alive} do {
 //--- refire so pending-slot accounting is never double-decremented. Every other exit fires as before.)
 if (isNull _team || {!([_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 	if (isServer) then {
-		["aicom-team-ended", _sideID, _team] Call HandleSpecial;
+		if (_pendingId >= 0) then {
+			["aicom-team-ended", _sideID, _team, _pendingId] Call HandleSpecial;
+		} else {
+			["aicom-team-ended", _sideID, _team] Call HandleSpecial;
+		};
 	} else {
-		["RequestSpecial", ["aicom-team-ended", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+		if (_pendingId >= 0) then {
+			["RequestSpecial", ["aicom-team-ended", _sideID, _team, _pendingId]] Call WFBE_CO_FNC_SendToServer;
+		} else {
+			["RequestSpecial", ["aicom-team-ended", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+		};
 	};
 };
 

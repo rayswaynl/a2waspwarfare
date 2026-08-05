@@ -1791,9 +1791,15 @@ if (isNull _base) exitWith {
 	//--- the Transfer menu (GUI_TransferMenu.sqf) - it shares the same "aicom-donate-confirm" client confirm. Donating
 	//--- to the AI treasury only makes sense while the AI runs the side, which that path already enforces.
 	case "aicom-team-ended": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew","_cteams","_cregistered"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew","_cteams","_cregistered","_ependingId","_ependingIds","_ependingKeep","_ependingKnown"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
+		_ependingId = -1;
+		if (count _args > 3) then {
+			private ["_eID"];
+			_eID = _args select 3;
+			if (typeName _eID == "SCALAR") then {_ependingId = _eID};
+		};
 		//--- Drop this team's arrow-marker entry (match slot 3 == team) and any null leftovers,
 		//--- then re-broadcast so every client deletes the marker. Mirrors sidepatrol-ended.
 		_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
@@ -1805,10 +1811,29 @@ if (isNull _base) exitWith {
 		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
+			if (_ependingId >= 0) then {
+				_ependingIds = _clogik getVariable ["wfbe_aicom_pending_ids", []];
+				_ependingKeep = [];
+				_ependingKnown = false;
+				{
+					if (typeName _x == "ARRAY" && {count _x > 0} && {(_x select 0) == _ependingId}) then {
+						_ependingKnown = true;
+					} else {
+						_ependingKeep set [count _ependingKeep, _x];
+					};
+				} forEach _ependingIds;
+				if (_ependingKnown) then {
+					_clogik setVariable ["wfbe_aicom_pending_ids", _ependingKeep];
+					_clogik setVariable ["wfbe_aicom_pending", count _ependingKeep];
+					if ((count _ependingKeep) == 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+				};
+			};
 			if (isNull _cteam) then {
 				//--- Creation failed before registration: just release the pending slot.
-				_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
-				if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+				if (_ependingId < 0) then {
+					_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
+					if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+				};
 			} else {
 				_cteams = _clogik getVariable ["wfbe_teams", []];
 				_cregistered = false;
