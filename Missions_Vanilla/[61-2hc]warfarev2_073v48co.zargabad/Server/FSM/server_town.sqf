@@ -448,6 +448,23 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 			if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide, "Captured", _location] Spawn SideMessage};
 
+			//--- WO-6 SOFT-LANE EVENT LATCH: the allocator's count-based loss poll runs only on the
+			//--- ~60s strategy cadence, so a human-led capture followed by a recapture inside that
+			//--- window can leave the sampled town count unchanged and erase the intended post-loss
+			//--- soft-lane push. Stamp the old W/E owner's window at the authoritative ownership
+			//--- transition; default-off remains byte-behaviour inert and no state is written unless
+			// the opt-in bonus is enabled.
+			if ((_sideID == WFBE_C_WEST_ID || {_sideID == WFBE_C_EAST_ID}) && {_newSID != _sideID} && {(missionNamespace getVariable ["AICOMV2_SOFTLANE_BONUS", 0]) > 0}) then {
+				private ["_slLogik","_slTicks","_slUntil"];
+				_slLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNil "_slLogik" && {!isNull _slLogik}) then {
+					_slTicks = missionNamespace getVariable ["AICOMV2_SOFTLANE_TICKS", 3];
+					_slUntil = time + (_slTicks * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60]));
+					_slLogik setVariable ["wfbe_aicom_softlane_until", _slUntil];
+					diag_log ("AICOM2|v1|SOFTLANE|" + str _side + "|event_loss=" + (_location getVariable ["name","?"]) + "|until=" + str _slUntil);
+				};
+			};
+
 			_location setVariable ["sideID",_newSID,true];
 			//--- fix-1342-1343 (reconciles #1342+#1343): advance the town AI lifecycle epoch exactly here,
 			//--- at ownership change, and nowhere else. A delegated HC/client batch queued before this flip
