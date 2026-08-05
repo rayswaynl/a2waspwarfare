@@ -43,6 +43,7 @@ while {!(missionNamespace getVariable ["WFBE_GameOver", false])} do {
 	if (dialog) then {_dialogSamples = _dialogSamples + 1};
 	_lastSample = diag_tickTime;
 	sleep _sampleInterval;
+	if (gameOver || {WFBE_GameOver}) exitWith {};
 
 	if (_lastSample >= _nextReport) then {
 		_reportNow = diag_tickTime;
