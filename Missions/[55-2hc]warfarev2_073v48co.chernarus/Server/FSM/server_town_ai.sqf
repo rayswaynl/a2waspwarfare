@@ -1047,6 +1047,10 @@ while {!WFBE_GameOver} do {
 							[nil, "HandleSpecial", ["cleanup-airfield-garrison", _town]] Call WFBE_CO_FNC_SendToClients;
 						};
 					};
+					//--- The current episode is fully torn down below; do not retain one object reference batch per airfield activation.
+					if !(isNil {_town getVariable "wfbe_airfield_garrison_units"}) then {
+						_town setVariable ["wfbe_airfield_garrison_units", [], false];
+					};
 
 					//--- Commander Town Ledger (fable/ctl-impl-v1) survivor tally (B3, fix ORDER+DIM): the
 					//--- alive UNIT count is captured HERE, inside the deletion forEach below, BEFORE
