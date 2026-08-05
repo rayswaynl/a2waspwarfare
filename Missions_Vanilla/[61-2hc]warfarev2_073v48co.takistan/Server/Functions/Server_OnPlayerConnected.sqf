@@ -16,7 +16,7 @@ waitUntil {commonInitComplete && serverInitFull};
 ["INFORMATION", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] has joined the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 
 //--- Skip this script if the server is trying to run this.
-if (_name == '__SERVER__' || _uid == '' || _uid == '0' || local player) exitWith {};
+if (_name == '__SERVER__' || _uid == '' || _uid == '0') exitWith {};
 
 //--- b761 (Ray 2026-06-26): a headless client is NOT a warfare player and must never run the human enrollment
 //--- resolver - it reseats itself to a civilian group (Init_HC) so it always bails the 3-retry self-heal and
@@ -464,13 +464,10 @@ if (_sideJoined in [west, east]) then {
 //--- We attempt to get the player informations in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];
 
-//--- Scope (orchestrator ruling 2026-07-21, round-3 review): this whole handler - including the
-//--- block below - is dedicated-server-scoped by the `local player` exitWith at the top of this
-//--- file (line 19); it never runs on a hosted/listen server, same as every other pre-existing path
-//--- here. WASP only deploys on dedicated servers (live + test are both dedicated NSSM services;
-//--- hosted mode is unsupported), so this is accepted scope, documented rather than compensated for.
-//--- On an unsupported hosted/listen server the commander-lease stand-down would rely on the
-//--- disconnect-grace path (Server_OnPlayerDisconnected.sqf) only.
+//--- Scope: this handler executes on the server for dedicated and hosted/listen sessions. The event
+//--- payload is authoritative; do not gate it on `local player`, because a hosted server also owns
+//--- the host's local player object. Live/test WASP services are dedicated, but the hosted
+//--- registration in initJIPCompatible remains reachable and must preserve JIP handling.
 //--- C1 stable commander lease (WFBE_C_CMD_LEASE). Owner ruling 2026-07-21: PR #1154's stand-down
 //--- enqueue was relocated OFF RequestJoin.sqf (JIP-flow file, never touched by agents) to this
 //--- existing connect handler instead. Round-2 adversarial review (2026-07-21, HIGH finding): this
