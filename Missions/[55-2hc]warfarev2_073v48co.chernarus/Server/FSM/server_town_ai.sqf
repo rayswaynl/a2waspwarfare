@@ -240,6 +240,21 @@ while {!WFBE_GameOver} do {
 		_enemies = 0; //--- perf-dice fix (livetest 2026-07-06): must exist in TOWN-LOOP scope - assigned inside the _doScan block, and SQF inner-block assignments do not escape unless the var pre-exists in an outer scope (RPT: 'Undefined variable _enemies' at the deactivation check).
 
 		_town = towns select _i;
+		//--- Late-registration seed: towns that self-register into `towns` after this script's one-shot seed loop
+		//--- can reach the sweep without any wfbe_* defaults. Seed the same defaults as the init loop
+		//--- once, the first time the sweep sees such a town; the isNil guard never clobbers live state.
+		if (isNil {_town getVariable "wfbe_active"}) then {
+			_town setVariable ["wfbe_active", false];
+			_town setVariable ["wfbe_active_air", false];
+			_town setVariable ["wfbe_inactivity", 0];
+			_town setVariable ["wfbe_active_override", false];
+			_town setVariable ['wfbe_active_vehicles', []];
+			_town setVariable ['wfbe_town_teams', []];
+			_town setVariable ["wfbe_episode_spawned", false];
+			_town setVariable ["wfbe_sortie_grp", grpNull, true];
+			_town setVariable ["wfbe_sortie_started", 0];
+			_town setVariable ["wfbe_sortie_rtb", false];
+		};
 		_town_teams = _town getVariable ["wfbe_town_teams", []];
 		if (typeName _town_teams != "ARRAY") then {_town_teams = []};
 		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
@@ -274,7 +289,7 @@ while {!WFBE_GameOver} do {
 						WFBE_TownScanDiceAnnounced = true;
 						["INFORMATION", "server_town_ai.sqf: dormant-town scan dice enabled (WFBE_C_TOWN_SCAN_DICE=1)."] Call WFBE_CO_FNC_AICOMLog;
 					};
-					if (!(_town getVariable "wfbe_active") && {!(_town getVariable "wfbe_active_air")} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_GRACE", 30])}) then {
+					if (!(_town getVariable ["wfbe_active", false]) && {!(_town getVariable ["wfbe_active_air", false])} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_GRACE", 30])}) then {
 						if ((random 1) >= (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_P", 0.5])) then {_doScan = false};
 					};
 				};
