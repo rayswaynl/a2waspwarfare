@@ -755,6 +755,7 @@ artyPos = [0,0,0];
 playerUAV = objNull;
 playerFPV = objNull;
 comTask = objNull;
+comTaskGeneration = 0;
 voted = false;
 votePopUp = true;
 manningDefense = true;

@@ -13,7 +13,7 @@ TERRAINS = (
 
 
 def test_task_destination_x_is_selected_before_comparison() -> None:
-    expected = "while {((taskDestination _task) select 0) == (_pos select 0) && !_succeed} do {"
+    expected = "((taskDestination _task) select 0) == (_pos select 0)"
     for terrain in TERRAINS:
         source = (ROOT / terrain / "Client/PVFunctions/SetTask.sqf").read_text(encoding="utf-8")
         assert expected in source, (
