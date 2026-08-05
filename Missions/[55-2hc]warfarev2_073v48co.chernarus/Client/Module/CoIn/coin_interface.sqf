@@ -611,7 +611,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 					[] Spawn {
 						_start = time;
-						waitUntil {!((sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus) || time - _start > 15};
+						waitUntil {sleep 0.05; !((sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus) || time - _start > 15};
 						if (time - _start < 15) then {
 							sleep 2;
 							_mhq = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
