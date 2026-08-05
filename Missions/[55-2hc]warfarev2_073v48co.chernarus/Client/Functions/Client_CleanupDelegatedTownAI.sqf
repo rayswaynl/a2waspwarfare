@@ -12,7 +12,7 @@
 		  town+side entry is torn down as before.
 */
 
-Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryEpoch","_entryGroup","_entrySide","_entryTown","_epochGate","_group","_groups","_keptGroups","_keptRegistryGroups","_logGroupCount","_registry","_registryCurrent","_registryNew","_side","_town","_townName","_units"];
+Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryDrop","_entryEpoch","_entryGroup","_entrySide","_entryTown","_epochGate","_group","_groups","_keptGroups","_keptRegistryGroups","_logGroupCount","_registry","_registryCurrent","_registryNew","_side","_town","_townName","_units"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -124,12 +124,18 @@ _registryNew = [];
 		_entryGroup = _entry select 2;
 		_entryEpoch = if (count _entry >= 4) then {_entry select 3} else {-1};
 		if (isNull _entryGroup) exitWith {};
+		//--- fix(exitWith-control-flow g1606 follow-up): the drop exitWith was nested two then{}
+		//--- levels deep, so it only left the innermost then-block and fell through into the
+		//--- unconditional set below - the registry never actually pruned. Compute the drop
+		//--- decision as a top-scope boolean and guard the re-add with it so a genuine drop
+		//--- really skips the set.
+		_entryDrop = false;
 		if (_entryGroup in _groups) then {
 			if (_entryTown == _town && _entrySide == _side && {(_epochGate == -1) || {_entryEpoch != _epochGate}}) then {
-				if !(_entryGroup in _keptRegistryGroups) exitWith {};
+				if !(_entryGroup in _keptRegistryGroups) then {_entryDrop = true};
 			};
 		};
-		_registryNew set [count _registryNew, _entry];
+		if !(_entryDrop) then {_registryNew set [count _registryNew, _entry];};
 	};
 } forEach _registryCurrent;
 missionNamespace setVariable ["WFBE_CL_TownAI_Groups", _registryNew];
