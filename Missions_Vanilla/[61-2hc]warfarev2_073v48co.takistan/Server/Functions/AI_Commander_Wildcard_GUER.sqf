@@ -104,8 +104,8 @@ while {!gameOver} do {
 		//--- G5: SCAVENGER TEAM eligibility: flag on, >=2 abandoned wrecks, GUER owns at least one town (spawn anchor).
 		if ((missionNamespace getVariable ["WFBE_C_GUER_SCAV", 0]) > 0 && {_soldierClass != ""} && {count _owned > 0}) then {
 			_abandVehs = [];
+			//--- allDead entries are necessarily !alive; the live candidate gate makes a second scan unreachable.
 			{ if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {_abandVehs = _abandVehs + [_x]} } forEach allMissionObjects "LandVehicle";
-			{ if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {_abandVehs = _abandVehs + [_x]} } forEach allDead;
 			if (count _abandVehs >= 2) then {_gG5 = 5};
 		};
 
@@ -698,7 +698,6 @@ while {!gameOver} do {
 					//--- Re-scan abandoned vehicles (state may have changed since eligibility check).
 					_abandVehs = [];
 					{ if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {_abandVehs = _abandVehs + [_x]} } forEach allMissionObjects "LandVehicle";
-					{ if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_abandoned", false]}) then {if (!(_x in _abandVehs)) then {_abandVehs = _abandVehs + [_x]}} } forEach allDead;
 
 					if (count _abandVehs >= 2) then {
 						_scavReward = missionNamespace getVariable ["WFBE_C_GUER_SCAV_REWARD", 300];
