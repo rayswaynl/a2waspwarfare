@@ -79,7 +79,12 @@ waitUntil
 	//--- Awaits for the altitude.
 	if (_pz < 275 and _pz > 75) then {
 		//--- Retrieve an potential target list.
-		_targets = _barrel nearEntities [["Car","Motorcycle","Tank","Ship","StaticCannon"] + _airTypes, missionNamespace getVariable "WFBE_C_ARTILLERY_AMMO_RANGE_SADARM"];
+		_targets = [];
+		{
+			if (!isNull _x && {alive _x} && {(side _x) != civilian} && {(_side getFriend (side _x)) < 0.6}) then {
+				_targets set [count _targets, _x];
+			};
+		} forEach (_barrel nearEntities [["Car","Motorcycle","Tank","Ship","StaticCannon"] + _airTypes, missionNamespace getVariable "WFBE_C_ARTILLERY_AMMO_RANGE_SADARM"]);
 
 		if (count _targets > 0) then {
 			_targetToHit = _targets select floor(random count _targets);
