@@ -168,8 +168,8 @@
   "probed": 0
  },
  "Server/AI/Commander/AI_Commander_Produce.sqf": {
-  "total": 3,
-  "probed": 1
+  "total": 4,
+  "probed": 2
  },
  "Server/AI/Commander/AI_Commander_Teams.sqf": {
   "total": 1,
@@ -189,6 +189,10 @@
  },
  "Server/Construction/Construction_SmallSite.sqf": {
   "total": 2,
+  "probed": 0
+ },
+ "Server/Construction/Construction_StarFortSite.sqf": {
+  "total": 5,
   "probed": 0
  },
  "Server/Construction/Construction_StationaryDefense.sqf": {
@@ -288,7 +292,7 @@
   "probed": 0
  },
  "Server/Functions/Server_OperateTownDefensesUnits.sqf": {
-  "total": 6,
+  "total": 5,
   "probed": 0
  },
  "Server/Functions/Server_PatrolAirPass.sqf": {
@@ -308,7 +312,7 @@
   "probed": 0
  },
  "Server/Init/Init_NavalHVT.sqf": {
-  "total": 34,
+  "total": 40,
   "probed": 0
  },
  "Server/Init/Init_Server.sqf": {
@@ -336,8 +340,8 @@
   "probed": 0
  },
  "Server/Server_AicomSupplySquad.sqf": {
-  "total": 4,
-  "probed": 4
+  "total": 6,
+  "probed": 6
  },
  "Server/Server_AmbientSkirmish.sqf": {
   "total": 2,
