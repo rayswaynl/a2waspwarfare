@@ -32,10 +32,16 @@ class GroupsGcBaseCrewSeatSafeTests(unittest.TestCase):
                 self.assertIn(END, text)
                 cleanup = text[text.index(START):text.index(END)]
 
+                # NOTE: the guard condition is matched loosely (`.*?!isPlayer _x.*?`) rather than
+                # the literal `if (!isPlayer _x) then {` so that additional lazy-AND guards (e.g.
+                # a `!isNull _x &&` null-check) don't break this contract -- the property being
+                # protected is "non-player crew get deleted+yielded here", not the exact guard
+                # text. The `!isPlayer _x` substring must still appear (players are never deleted)
+                # and deleteVehicle/sleep 0 must still be adjacent (the actual yield contract).
                 self.assertRegex(
                     cleanup,
                     re.compile(
-                        r'\{\s*if \(!isPlayer _x\) then \{'
+                        r'\{\s*if \(.*?!isPlayer _x.*?\) then \{'
                         r'.*?"gc-baseair-unit".*?'
                         r'deleteVehicle _x;\s*sleep 0;\s*\};'
                         r'\s*\} forEach _baseVcrew;',
