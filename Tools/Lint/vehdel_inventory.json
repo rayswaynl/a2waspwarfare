@@ -401,7 +401,7 @@
  },
  "WASP/actions/SkinSelector/SkinSelector_Apply.sqf": {
   "probed": 0,
-  "total": 4
+  "total": 5
  },
  "WASP/actions/SkinSelector/SkinSelector_CopyGear.sqf": {
   "probed": 0,

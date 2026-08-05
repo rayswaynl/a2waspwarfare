@@ -31,7 +31,7 @@
 Private ["_chosenClass","_oldUnit","_oldGrp","_swapGrp","_pos","_dir",
          "_unitName","_unitRank","_unitFace","_unitSpeaker",
          "_gear","_newUnit","_wasLeader","_uid","_waitStart","_verifyStart",
-         "_carryFunds","_carrySide","_curGrp","_curFunds","_usedSwapGrp","_createGrp","_oldGrpLeaderLocal"];
+         "_carryFunds","_carrySide","_curGrp","_curFunds","_usedSwapGrp","_createGrp","_oldGrpLeaderLocal","_swapAbort"];
 
 _chosenClass = _this select 0;
 
@@ -219,6 +219,30 @@ if (isNull _newUnit || !(local _newUnit)) exitWith {
 	if (!isNull _swapGrp) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
 	WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on failure
 	hint "Skin swap failed (unit not ready). Please try again.";
+};
+
+//--- r134 PLAYER-STATE RACE GUARD: the locality wait above suspends this swap while the
+//--- independent Killed/respawn handler can replace or kill the captured body. Without a
+//--- post-wait check, the swap could still join/select its prepared body after death and then
+//--- race Client_OnKilled over position, gear, handlers, group identity, and wallet re-homing.
+//--- Keep the respawn path authoritative: cancel before any group rejoin or selectPlayer, clean
+//--- only the unselected replacement, and release the re-entry lock. A2-OA-safe nested guards;
+//--- no client funds or server state is touched on this path.
+_swapAbort = false;
+if (isNull _oldUnit) then {_swapAbort = true};
+if (!_swapAbort) then {if (!(alive _oldUnit)) then {_swapAbort = true}};
+if (!_swapAbort) then {if (player != _oldUnit) then {_swapAbort = true}};
+if (!_swapAbort) then {
+	if (!isNil "WFBE_Client_IsRespawning") then {
+		if (WFBE_Client_IsRespawning) then {_swapAbort = true};
+	};
+};
+if (_swapAbort) exitWith {
+	diag_log format ["[WFBE (SKIN)] B3_ABORT respawn/death started during locality wait; discarding prepared body %1 and leaving respawn authoritative.", _newUnit];
+	if (!isNull _newUnit) then {deleteVehicle _newUnit};
+	if (!isNull _swapGrp) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
+	WFBE_SkinSelector_InProgress = false;
+	hint "Skin swap cancelled because respawn started.";
 };
 
 //--- SLOT-GROUP-PRESERVE (Fable 2026-07-03): in the PRIMARY path the new unit was already created INSIDE
