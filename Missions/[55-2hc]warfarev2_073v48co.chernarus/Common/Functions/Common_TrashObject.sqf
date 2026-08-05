@@ -4,7 +4,7 @@
 		- Object.
 */
 
-Private ["_delay","_group","_isMan","_object","_remoteAttempt","_remoteBackoff","_remoteOwner"];
+Private ["_delay","_group","_isMan","_object","_remoteAttempt","_remoteBackoff","_remoteOwner","_crewDead"];
 
 _object = _this;
 //--- r56 fail-clean: isNull BEFORE any work. Prior code called GetClosestLocation on a
@@ -39,6 +39,7 @@ if (true) then {
 	//--- A slung wreck is intentionally crewless; release the queued deletion so it can be reconsidered after unhook.
 	if (_object getVariable ["wfbe_airlifted", false]) exitWith {
 		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
+		_object setVariable ["wfbe_trashed", nil]; //--- r66: allow the collector to re-queue the wreck after airlift release.
 		["INFORMATION", Format["Common_TrashObject.sqf: retaining airlifted wreck [%1].", _object]] Call WFBE_CO_FNC_LogContent;
 	};
 
@@ -140,7 +141,13 @@ if (true) then {
 	} else {
 		_object setVariable ["wfbe_trash_remote_attempts", nil];
 		_object setVariable ["wfbe_trash_remote_retry_after", nil];
-		deleteVehicle _object;
+		//--- r66: A2 refuses a crewed hull delete; remove dead non-player crew first.
+		if (!_isMan && {!isNull _object}) then {
+			_crewDead = [];
+			{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { _crewDead set [count _crewDead, _x] } } forEach (crew _object);
+			{ deleteVehicle _x } forEach _crewDead;
+		};
+		if (!isNull _object) then { deleteVehicle _object };
 	};
 
 	if (_isMan) then {
