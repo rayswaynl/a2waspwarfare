@@ -1276,6 +1276,7 @@ while {!WFBE_GameOver && _alive} do {
 				_lastDest = _dest;
 				_arrived = false;
 				_captureDone = false;
+				_team setVariable ["wfbe_aicom_gearslow", false]; //--- r72: reset careful-gear latch on every order accept so steep LIMITED can re-arm (stale true + re-order FULL left governor inert).
 				_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
 				if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_ACCEPT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round ((leader _team) distance _dest)));
@@ -1958,6 +1959,7 @@ while {!WFBE_GameOver && _alive} do {
 					_team setCombatMode _marchCM;      //--- cmdcon41-w2 F1: YELLOW transit when flagged (was hard RED); RED-on-objective re-asserted at arrival.
 					_team setFormation "COLUMN";
 					_team setSpeedMode "FULL";         //--- STANCE (task #1): full road-march speed (was NORMAL).
+					_team setVariable ["wfbe_aicom_gearslow", false]; //--- r72: clear careful-gear latch so steep re-LIMITED can re-engage after re-order (stale true + FULL left LIMITED dead).
 
 					//--- Pull the road-node chain the server snapped for this seq (may be empty).
 					//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
@@ -2344,11 +2346,9 @@ while {!WFBE_GameOver && _alive} do {
 										//--- Idiom matches L475 and L1120 (driver _x for vehicle objects).
 										if (!isNull (driver _x) && {alive (driver _x)}) then {
 											(driver _x) doMove _ascrP;
-											//--- Hull-down watch posture: COMBAT/RED so it returns fire; LIMITED
-											//--- so it settles and watches rather than advancing. A2-safe setters.
-											_x setCombatMode "RED";
-											_x setBehaviour "COMBAT";
-											_x setSpeedMode "LIMITED";
+											//--- r72: vehicle object is not a group/unit for posture. Driver unit for combat/behaviour; no group LIMITED (would slow infantry SAD).
+											(driver _x) setCombatMode "RED";
+											(driver _x) setBehaviour "COMBAT";
 											_ascrIdx = _ascrIdx + 1;
 										}; //--- else: no live driver -> tank is driverless or crew is dead; skip entirely.
 									};

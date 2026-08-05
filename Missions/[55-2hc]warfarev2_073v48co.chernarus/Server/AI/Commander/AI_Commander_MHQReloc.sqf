@@ -400,7 +400,9 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 					_lastImprove = _lastImprove + _routeGrace;
 					_t0          = _t0 + _routeGrace;
 					_drvGrp setBehaviour "AWARE";
-					_drvGrp setCombatMode "NORMAL";
+					//--- r72: NORMAL is speed-mode not combat-mode (valid: BLUE/GREEN/WHITE/YELLOW/RED). Invalid combat left BLUE while AUTOTARGET on.
+					_drvGrp setCombatMode "YELLOW";
+					_drvGrp setSpeedMode "NORMAL";
 					if (!isNull (driver _mhq)) then {{(driver _mhq) enableAI _x} forEach ["AUTOTARGET","TARGET"]};
 					diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ROUTE_CONTACT|d=" + str (round _curD));
 				};

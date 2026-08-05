@@ -1767,6 +1767,11 @@ if (count _live > 0) then {
 		// Note: WFBE_CO_FNC_CreateGroup already logs the grpNull warning; this exitWith handles the no-op gracefully.
 	};
 	_g setVariable ["wfbe_aicom_founded", true];
+	//--- r72: mirror HC founding posture/flee (RunCommanderTeam L91/L107). Empty server-local slot previously kept engine-default courage -> groups fled off objective.
+	_g allowFleeing 0;
+	_g setCombatMode "RED";
+	_g setBehaviour "AWARE";
+	_g setSpeedMode "FULL";
 	_g setVariable ["wfbe_funds", 0, true];
 	_g setVariable ["wfbe_side", _side];
 	_g setVariable ["wfbe_persistent", true];
