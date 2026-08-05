@@ -8,7 +8,7 @@
 	A2-OA-1.64 safe: no isEqualType/findIf/pushBack/params; find/+/- on arrays; getVariable[name,default] on the
 	side-logic OBJECT only; typeOf/distance/deleteVehicle core commands.
 */
-private ["_side","_sideText","_logik","_names","_costs","_structures","_counts","_i","_st","_stype","_idx","_cost","_victim","_victimCost","_victimIdx","_victimType","_refund","_protected","_protectedPass1","_artyNear","_artyFar","_artyPiece","_artyMax","_artyDist","_artyBestDist","_artyUd","_artyPrice","_artyReg","_artyRegLive","_artyCluster","_artyStrandedDist"];
+private ["_side","_sideText","_logik","_types","_costs","_structures","_counts","_i","_st","_stype","_idx","_cost","_victim","_victimCost","_victimIdx","_victimType","_refund","_protected","_protectedPass1","_artyNear","_artyFar","_artyPiece","_artyMax","_artyDist","_artyBestDist","_artyUd","_artyPrice","_artyReg","_artyRegLive","_artyCluster","_artyStrandedDist"];
 if ((missionNamespace getVariable ["WFBE_C_AICOM_BASE_SELL_ENABLE", 0]) <= 0) exitWith {};
 _side = _this;
 if (_side == resistance) exitWith {};            //--- GUER has no commander economy.
@@ -17,9 +17,10 @@ _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNull _logik) exitWith {};
 //--- only sell while the side actually has a deployed HQ (don't dismantle mid-relocation).
 if (_logik getVariable ["wfbe_mhqreloc_active", false]) exitWith {};
-_names = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
+//--- _stype is the logical type tag; index it against the parallel type roster, not class names.
+_types = missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText];
 _costs = missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS", _sideText];
-if (isNil "_names" || isNil "_costs") exitWith {};
+if (isNil "_types" || isNil "_costs") exitWith {};
 _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 if (isNil "_structures" || {typeName _structures != "ARRAY"}) exitWith {};
 //--- Pass 2 protects both base-spine types from the crude duplicate-trigger sell.
@@ -28,11 +29,11 @@ _protected = ["Headquarters", "CommandCenter"];
 _protectedPass1 = ["Headquarters"];
 //--- 1) tally how many ALIVE structures of each TYPE we hold (by wfbe_structure_type tag).
 _counts = [];
-{ _counts set [_forEachIndex, 0]; } forEach _names;   //--- one slot per name (parallel to _names/_costs).
+{ _counts set [_forEachIndex, 0]; } forEach _types;   //--- one slot per type (parallel to _types/_costs).
 {
 	if (!isNull _x && {alive _x}) then {
 		_stype = _x getVariable ["wfbe_structure_type", ""];
-		_idx = _names find _stype;
+		_idx = _types find _stype;
 		if (_idx >= 0) then { _counts set [_idx, (_counts select _idx) + 1] };
 	};
 } forEach _structures;
@@ -55,7 +56,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_SELL_STRANDED", 1]) > 0 && {!is
 			if (!(_stype in _protectedPass1) && {(_struc distance _hqPos) > _baseRad}) then {
 				_nearSame = {alive _x && {(_x getVariable ["wfbe_structure_type", ""]) == _stype} && {(_x distance _hqPos) <= _baseRad}} count _structures;
 				if (_nearSame > 0) then {
-					_idx = _names find _stype;
+					_idx = _types find _stype;
 					_cost = if (_idx >= 0) then {_costs select _idx} else {0};
 					if (_cost < _victimCost) then {_victimCost = _cost; _victim = _struc; _victimIdx = _idx; _victimType = _stype};
 				};
@@ -69,7 +70,7 @@ if (isNull _victim) then {
 	if (!isNull _x && {alive _x}) then {
 		_stype = _x getVariable ["wfbe_structure_type", ""];
 		if (!(_stype in _protected)) then {
-			_idx = _names find _stype;
+			_idx = _types find _stype;
 			if (_idx >= 0 && {(_counts select _idx) > (missionNamespace getVariable ["WFBE_C_AICOM_SELL_REDUNDANT_MAX", 2])}) then {
 				_cost = _costs select _idx;
 				if (_cost < _victimCost) then { _victimCost = _cost; _victim = _x; _victimIdx = _idx; _victimType = _stype };
