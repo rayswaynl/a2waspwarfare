@@ -20,11 +20,11 @@
         transportSoldier capacity.
       - spawnEscort (5th call arg, decided + costed atomically by
         AI_Commander_CargoAirdrop.sqf before dispatch): one fixed-wing jet in
-        the SAME group as the transport pilot (no new group cost), autotarget
-        left on, sharing the group's waypoints/return leg/cleanup.
+        its own group, so its COMBAT/RED posture cannot overwrite the cargo
+        transport's CARELESS/BLUE flight posture.
 */
 
-private ["_args","_bd","_cargoClass","_cargoVehicle","_cargoVehicles","_chuteClass","_currentLevel","_currentUpgrades","_destination","_dropReady","_i","_isAI","_offset","_origin","_paratroopers","_pilot","_pilotClass","_planeClass","_playerTeam","_ran","_ranDir","_ranPos","_releasedCargo","_returnStart","_side","_sideID","_starttime","_units","_unit","_vehicle","_vehicleCargo","_vehicleCount","_vehicleIndex","_vehicleCoord","_positionCoord","_builtInf","_transportGroup","_pendingCargo","_delay","_spawnEscort","_crewVehicles","_paratroopExtra","_extraCount","_escortJet","_escortPilot","_escortGunner","_escortClasses","_escortAirList","_escortCandidates","_escortClass","_escortOrigin"];
+private ["_args","_bd","_cargoClass","_cargoVehicle","_cargoVehicles","_chuteClass","_currentLevel","_currentUpgrades","_destination","_dropReady","_i","_isAI","_offset","_origin","_paratroopers","_pilot","_pilotClass","_planeClass","_playerTeam","_ran","_ranDir","_ranPos","_releasedCargo","_returnStart","_side","_sideID","_starttime","_units","_unit","_vehicle","_vehicleCargo","_vehicleCount","_vehicleIndex","_vehicleCoord","_positionCoord","_builtInf","_transportGroup","_pendingCargo","_delay","_spawnEscort","_crewVehicles","_paratroopExtra","_extraCount","_escortGroup","_escortJet","_escortPilot","_escortGunner","_escortClasses","_escortAirList","_escortCandidates","_escortClass","_escortOrigin"];
 
 _args = _this;
 _side = _args select 1;
@@ -107,7 +107,7 @@ if (isNull _pilot) exitWith {
 _pilot moveInDriver _vehicle;
 _vehicle flyInHeight (300 + random(75));
 _transportGroup setBehaviour "CARELESS";
-_transportGroup setCombatMode "STEALTH";
+_transportGroup setCombatMode "BLUE";
 _pilot disableAI "AUTOTARGET";
 _pilot disableAI "TARGET";
 _pilot doMove _destination;
@@ -134,9 +134,9 @@ if (_builtInf <= 0) exitWith {
 	if (!isNull _transportGroup) then {deleteGroup _transportGroup};
 };
 
-//--- Stage B fighter escort: single fixed-wing jet, SAME group as the transport pilot (no new group
-//--- cost). Autotarget is left ON (the transport pilot two blocks above explicitly disables it; the
-//--- escort never gets that call) so it actually fights. Side-safe: only
+//--- Stage B fighter escort: single fixed-wing jet in a SEPARATE group. Autotarget is left ON (the
+//--- transport pilot two blocks above explicitly disables it; the escort never gets that call) so it
+//--- actually fights without changing the transport's CARELESS/BLUE posture. Side-safe: only
 //--- WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES entries that are ALSO in this side's own registered
 //--- WFBE_<SIDE>AIRCRAFTUNITS roster are eligible (same idiom AI_Commander_AirResp.sqf uses), so the
 //--- pick is never hardcoded to one faction. _spawnEscort was already decided (and its cost already
@@ -146,6 +146,7 @@ if (_builtInf <= 0) exitWith {
 _escortJet = objNull;
 _escortPilot = objNull;
 _escortGunner = objNull;
+_escortGroup = grpNull;
 if (_spawnEscort) then {
 	_escortAirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", str _side], []];
 	_escortClasses = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES", []];
@@ -157,14 +158,17 @@ if (_spawnEscort) then {
 		_escortOrigin = [(_origin select 0) + 100, (_origin select 1) + 100, _origin select 2];
 		_escortJet = createVehicle [_escortClass, _escortOrigin, [], (_ranDir select _ran), "FLY"];
 		if (!isNull _escortJet) then {
-			_escortPilot = [_pilotClass, _transportGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+			_escortGroup = [_side, "aicom_cargo_escort"] Call WFBE_CO_FNC_CreateGroup;
+			if (!isNull _escortGroup) then {
+				_escortPilot = [_pilotClass, _escortGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+			};
 			if (!isNull _escortPilot) then {
 				_escortPilot moveInDriver _escortJet;
-				_escortPilot setBehaviour "COMBAT";
-				_escortPilot setCombatMode "RED";
+				_escortGroup setBehaviour "COMBAT";
+				_escortGroup setCombatMode "RED";
 				_escortPilot doMove _destination;
 				if ((missionNamespace getVariable ["WFBE_C_AIR_ATTACK_GUNNER", 0]) > 0 && {(_escortJet emptyPositions "gunner") > 0}) then {
-					_escortGunner = [_pilotClass, _transportGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+					_escortGunner = [_pilotClass, _escortGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
 					if (!isNull _escortGunner) then {_escortGunner moveInGunner _escortJet};
 				};
 				_escortJet flyInHeight (300 + random(75));
@@ -175,6 +179,7 @@ if (_spawnEscort) then {
 			} else {
 				deleteVehicle _escortJet;
 				_escortJet = objNull;
+				if (!isNull _escortGroup) then {deleteGroup _escortGroup};
 			};
 		};
 	} else {
@@ -327,4 +332,5 @@ if (!isNull _escortJet) then {
 };
 if (!isNull _escortPilot) then {deleteVehicle _escortPilot};
 if (!isNull _escortGunner) then {deleteVehicle _escortGunner};
+if (!isNull _escortGroup) then {deleteGroup _escortGroup};
 if (!isNull _transportGroup) then {deleteGroup _transportGroup};

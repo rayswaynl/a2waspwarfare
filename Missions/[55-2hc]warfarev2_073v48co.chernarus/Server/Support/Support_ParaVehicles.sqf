@@ -35,7 +35,7 @@ _pilot = [missionNamespace getVariable Format ["WFBE_%1PILOT",str _side],_grp,[1
 _pilot moveInDriver _vehicle;
 _pilot doMove (_args select 2);
 _grp setBehaviour 'CARELESS';
-_grp setCombatMode 'STEALTH';
+_grp setCombatMode 'BLUE';
 _pilot disableAI 'AUTOTARGET';
 _pilot disableAI 'TARGET';
 [_grp,(_args select 2),"MOVE",10] Call AIMoveTo;

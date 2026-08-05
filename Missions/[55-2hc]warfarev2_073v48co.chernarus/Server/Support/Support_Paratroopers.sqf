@@ -70,7 +70,7 @@ for '_i' from 1 to _vehicle_count do {
 	_pilot moveInDriver _vehicle;
 	_pilot doMove _destination;
 	_grp setBehaviour 'CARELESS';
-	_grp setCombatMode 'STEALTH';
+	_grp setCombatMode 'BLUE';
 	{_pilot disableAI _x} forEach ["AUTOTARGET","TARGET"];
 	_built = _built + 1;
 	

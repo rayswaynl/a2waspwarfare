@@ -444,8 +444,8 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI crew [%1] for [%2] was objNull at driver seat; driver remains empty.", _crew, _unitType]] Call WFBE_CO_FNC_LogContent;
 	} else {
 		[_soldier] allowGetIn true;
-		[_soldier] orderGetIn true;
 		_soldier assignAsDriver _vehicle;
+		[_soldier] orderGetIn true;
 		_soldier moveInDriver _vehicle;
 		_built = _built + 1;
 	};
@@ -484,8 +484,8 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 			["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI crew [%1] for [%2] was objNull at gunner seat; gunner remains empty.", _crew, _unitType]] Call WFBE_CO_FNC_LogContent;
 		} else {
 			[_soldier] allowGetIn true;
-			[_soldier] orderGetIn true;
 			_soldier assignAsGunner _vehicle;
+			[_soldier] orderGetIn true;
 			_soldier moveInGunner _vehicle;
 			_built = _built + 1;
 		};
@@ -493,8 +493,8 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	if (_isVehicle select 2) then {
 		if (vehicle leader _team == leader _team && leader _team distance _vehicle < 200 && alive leader _team) then {
 			[leader _team] allowGetIn true;
-			[leader _team] orderGetIn true;
 			(leader _team) assignAsCommander _vehicle;
+			[leader _team] orderGetIn true;
 			(leader _team) moveInCommander _vehicle;
 			_built = _built + 1;
 		} else {
@@ -504,8 +504,8 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 				["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI crew [%1] for [%2] was objNull at commander seat; commander remains empty.", _crew, _unitType]] Call WFBE_CO_FNC_LogContent;
 			} else {
 				[_soldier] allowGetIn true;
-				[_soldier] orderGetIn true;
 				_soldier assignAsCommander _vehicle;
+				[_soldier] orderGetIn true;
 				_soldier moveInCommander _vehicle;
 				_built = _built + 1;
 			};

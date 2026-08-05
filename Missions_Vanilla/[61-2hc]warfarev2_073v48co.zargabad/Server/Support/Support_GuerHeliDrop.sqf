@@ -125,7 +125,7 @@ _pilot moveInDriver _vehicle;
 if (driver _vehicle != _pilot) exitWith {deleteVehicle _pilot; deleteVehicle _vehicle; deleteGroup _grp; [_receiptKey, false, "pilot-seat-failed"] Call _settleReceipt; diag_log "GUERHELIBOMB|v1|reject|reason=pilot-seat-failed"};
 _pilot doMove _destination;
 _grp setBehaviour 'CARELESS';
-_grp setCombatMode 'STEALTH';
+_grp setCombatMode 'BLUE';
 {_pilot disableAI _x} forEach ["AUTOTARGET","TARGET"];
 _built = _built + 1;
 
