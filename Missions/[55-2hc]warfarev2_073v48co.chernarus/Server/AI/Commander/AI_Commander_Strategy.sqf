@@ -1067,6 +1067,9 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 							_gwFinalAlive = {!isNull _x && {alive _x}} count (units _gwTeam);
 							if (_gwFinalAlive > 0 && {!isNull _gwLdr} && {alive _gwLdr} && {typeName _gwRallyPos == "ARRAY"} && {count _gwRallyPos >= 2} && {typeName (_gwRallyPos select 0) == "SCALAR"} && {typeName (_gwRallyPos select 1) == "SCALAR"} && {(_gwRallyPos select 0) == (_gwRallyPos select 0)} && {(_gwRallyPos select 1) == (_gwRallyPos select 1)}) then {
 								//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
+								//--- r171 plan dependency: a failed assault no longer owns its offensive allocator stamp while regrouping.
+								_gwTeam setVariable ["wfbe_aicom_alloc_target", nil];
+								_gwTeam setVariable ["wfbe_aicom_alloc_tick", nil];
 								_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
 								_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
 								_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
