@@ -134,6 +134,7 @@ _team setVariable ["wfbe_aicom_lossretreat_prevtime", nil];
 _team setVariable ["wfbe_aicom_lossretreat_cooldown_until", nil];
 _team setVariable ["wfbe_aicom_overrun_mopup", false, true];   //--- overrunrazer: same group-slot-recycle hazard - a re-founded team must never inherit a stale mop-up stamp from its slot's previous occupant
 
+_team setVariable ["wfbe_aicom_pending_id", nil, true]; //--- clear a prior occupant's HC reservation before a server-local three-argument spawn
 if (_pendingId >= 0) then {_team setVariable ["wfbe_aicom_pending_id", _pendingId, true]};
 if (isServer) then {
 	["aicom-team-created", _sideID, _team] Call HandleSpecial;
