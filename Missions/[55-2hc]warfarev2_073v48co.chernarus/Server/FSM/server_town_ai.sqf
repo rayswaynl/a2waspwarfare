@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince","_sortieDefR","_sortiePatR"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince","_sortieDefR","_sortiePatR","_cleanupEpoch"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
@@ -1042,7 +1042,12 @@ while {!WFBE_GameOver} do {
 
 					// Marty: Ask delegated clients/HCs to delete their local town AI groups where deleteGroup can actually work.
 					if (isMultiplayer) then {
-						[nil, "HandleSpecial", ["cleanup-townai", _town, _side]] Call WFBE_CO_FNC_SendToClients;
+						//--- Retire this episode's epoch before the asynchronous cleanup broadcast. A
+						//--- reactivation can therefore use the new epoch without a late cleanup deleting
+						//--- its fresh HC/client groups.
+						_cleanupEpoch = _town getVariable ["wfbe_town_ai_epoch", 0];
+						_town setVariable ["wfbe_town_ai_epoch", _cleanupEpoch + 1];
+						[nil, "HandleSpecial", ["cleanup-townai", _town, _side, _cleanupEpoch, "exact"]] Call WFBE_CO_FNC_SendToClients;
 						if !(isNil {_town getVariable "wfbe_airfield_garrison_units"}) then {
 							[nil, "HandleSpecial", ["cleanup-airfield-garrison", _town]] Call WFBE_CO_FNC_SendToClients;
 						};
