@@ -589,12 +589,12 @@ WFBE_CL_FNC_ApplyEnvironmentWeather = {
 };
 
 "WFBE_ENVIRONMENT_WEATHER_STATE" addPublicVariableEventHandler {
-	[_this select 1] Call WFBE_CL_FNC_ApplyEnvironmentWeather;
+	(_this select 1) Call WFBE_CL_FNC_ApplyEnvironmentWeather;
 };
 
 _state = missionNamespace getVariable ["WFBE_ENVIRONMENT_WEATHER_STATE", []];
 if ((typeName _state) == "ARRAY" && {(count _state) >= 4}) then {
-	[_state] Call WFBE_CL_FNC_ApplyEnvironmentWeather;
+	_state Call WFBE_CL_FNC_ApplyEnvironmentWeather;
 } else {
 	//--- Fallback only while server initialization has not yet published its state.
 	_weat = missionNamespace getVariable "WFBE_C_ENVIRONMENT_WEATHER";
