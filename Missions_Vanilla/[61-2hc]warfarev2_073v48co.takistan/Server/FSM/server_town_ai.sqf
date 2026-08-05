@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince","_sortieDefR","_sortiePatR"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_garrisonCapDeferLast","_groupCapDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince","_sortieDefR","_sortiePatR"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
@@ -58,6 +58,8 @@ _town_occupation_enabled = if ((missionNamespace getVariable "WFBE_C_TOWNS_OCCUP
 _activeTownsBudgetMax = missionNamespace getVariable "WFBE_C_TOWNS_ACTIVE_MAX";
 if (isNil "_activeTownsBudgetMax") then { _activeTownsBudgetMax = 6 };
 _budgetDeferLast = -9999; //--- Debounce timestamp for the "deferred" log line (1 per 5 min).
+_garrisonCapDeferLast = -9999; //--- Population-cap refusal diagnostic debounce (1 per 5 min).
+_groupCapDeferLast = -9999; //--- Group-cap refusal diagnostic debounce (1 per 5 min).
 
 //--- GUER GROUP CAP: hard ceiling on total resistance groups (bounds runaway growth toward the ~144/side engine limit).
 //--- Tunable WFBE_C_GUER_GROUPS_MAX; default 80. Recounted once per sweep (cheap) and used to defer resistance garrisons.
@@ -503,14 +505,26 @@ while {!WFBE_GameOver} do {
 								_activationDeferred = true;
 								_enemies_ground = 0;
 								_enemies = 0;
-								diag_log Format ["GARRISON_CAP_DEFER|town=%1|side=%2|sideAI=%3|tierCap=%4", _town getVariable ["name", "?"], _side, _garrisonSideAIPre, _garrisonCapPre];
+								_now = time;
+								if ((_now - _garrisonCapDeferLast) >= 300) then {
+									_garrisonCapDeferLast = _now;
+									diag_log Format ["GARRISON_CAP_DEFER|town=%1|side=%2|sideAI=%3|tierCap=%4", _town getVariable ["name", "?"], _side, _garrisonSideAIPre, _garrisonCapPre];
+								};
 							};
 						};
-						if (!_activationDeferred && {_enemies_ground > 0} && {{side _x == _side} count allGroups >= 144}) then {
-							_activationDeferred = true;
-							_enemies_ground = 0;
-							_enemies = 0;
-							diag_log Format ["TOWN_AI_GROUP_CAP_DEFER|town=%1|side=%2|groups=%3|cap=144", _town getVariable ["name", "?"], _side, {side _x == _side} count allGroups];
+						if (!_activationDeferred && {_enemies_ground > 0}) then {
+							private ["_groupCapCount"];
+							_groupCapCount = {side _x == _side} count allGroups;
+							if (_groupCapCount >= 144) then {
+								_activationDeferred = true;
+								_enemies_ground = 0;
+								_enemies = 0;
+								_now = time;
+								if ((_now - _groupCapDeferLast) >= 300) then {
+									_groupCapDeferLast = _now;
+									diag_log Format ["TOWN_AI_GROUP_CAP_DEFER|town=%1|side=%2|groups=%3|cap=144", _town getVariable ["name", "?"], _side, _groupCapCount];
+								};
+							};
 						};
 
 						if(_enemies_ground > 0) then {
