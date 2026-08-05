@@ -36,6 +36,13 @@ if (_authBad == "" && {count _isVehicle == 4}) then {
 if (_authBad == "" && {typeName _price != "SCALAR" || {_price < 0}}) then {_authBad = "price is not a non-negative SCALAR"};
 };
 if (_authBad != "") exitWith {
+if (typeName _team == "GROUP" && {!isNull _team} && {typeName _id == "ARRAY"} && {count _id > 0}) then {
+private "_tq";
+_tq = _team getVariable "wfbe_queue";
+if (isNil "_tq") then {_tq = []};
+if (typeName _tq != "ARRAY") then {_tq = []};
+_team setVariable ["wfbe_queue", _tq - [_id]];
+};
 ["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH rejected payload: %1.", _authBad]] Call WFBE_CO_FNC_LogContent;
 if (typeName _side == "SIDE" && {_side in [west,east,resistance]} && {typeName _price == "SCALAR"} && {_price > 0}) then {
 [_side, _price] Call ChangeAICommanderFunds;
