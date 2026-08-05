@@ -3909,5 +3909,15 @@ if (isNil "WFBE_C_STARFORT_RADIUS") then {WFBE_C_STARFORT_RADIUS = 25};
 if (isNil "WFBE_C_STARFORT_SLOPE_MAX") then {WFBE_C_STARFORT_SLOPE_MAX = 0.97};
 if (isNil "WFBE_C_STARFORT_PENDING_WINDOW") then {WFBE_C_STARFORT_PENDING_WINDOW = 180};
 
+//--- PR #1464 reconcile: late-game teleport for fully-AI, base-idle WEST/EAST teams.
+//--- Decision runs after relief/withdrawal and before HQ hunt; execution stays on the
+//--- existing team driver so HC and server-local teams move only where they are local.
+//--- All defaults are 0: the feature is inert until the owner arms and tunes the complete set.
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE") then {WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN") then {WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
