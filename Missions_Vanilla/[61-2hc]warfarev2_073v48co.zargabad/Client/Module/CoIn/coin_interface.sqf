@@ -255,7 +255,7 @@ BIS_CONTROL_CAM_Handler = {
 				_preview = _logic getVariable "BIS_COIN_preview";
 				if (isNil "_preview") then {//--- Proceed when there is no preview.
 					_targeting = screenToWorld [0.5,0.5];
-					_near = nearestObjects [_targeting,missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",sideJoinedText],12];
+					_near = nearestObjects [_targeting,missionNamespace getVariable [Format["WFBE_%1DEFENSENAMES",sideJoinedText], []],12];
 					if (count _near > 0) then {
 
 						_closest = _near select 0;
@@ -278,7 +278,7 @@ BIS_CONTROL_CAM_Handler = {
 							_refund = 0;
 							if (!isNil '_anchorGet') then {_refund = round((_anchorGet select QUERYUNITPRICE)/2.5)};
 							//--- Collect every sibling of this composition (same placement id) within the footprint, mark sold, delete.
-							_sibNames = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",sideJoinedText];
+							_sibNames = missionNamespace getVariable [Format["WFBE_%1DEFENSENAMES",sideJoinedText], []];
 							_sibs = nearestObjects [getPos _closest, _sibNames, 40];
 							_removed = 0;
 							{
@@ -753,7 +753,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_logic = _this select 0;
 						_class = _this select 1;
 						_structures = missionNamespace getVariable Format["WFBE_%1STRUCTURENAMES",sideJoinedText];
-						_defenses = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",sideJoinedText];
+						_defenses = missionNamespace getVariable [Format["WFBE_%1DEFENSENAMES",sideJoinedText], []];
 						_costs = missionNamespace getVariable Format["WFBE_%1STRUCTURECOSTS",sideJoinedText];
 
 						//--- Structures.
@@ -812,7 +812,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_par = _this select 4;
 						_deployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 						_structures = missionNamespace getVariable Format["WFBE_%1STRUCTURENAMES",sideJoinedText];
-						_defenses = missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",sideJoinedText];
+						_defenses = missionNamespace getVariable [Format["WFBE_%1DEFENSENAMES",sideJoinedText], []];
 
 						_find = _structures find _class;
 						if (_find != -1) then {
