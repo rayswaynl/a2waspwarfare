@@ -94,7 +94,8 @@ class TeambarProbeTests(unittest.TestCase):
 
     def test_onkilled_resyncs_client_team_before_the_respawn_guards(self) -> None:
         """fable/onkilled-team-resync: Client_OnKilled.sqf must repoint WFBE_Client_Team at the
-        player's post-respawn group AFTER waitUntil{alive player} but BEFORE both the
+        player's post-respawn group AFTER the bounded waitUntil that observes a live player but
+        BEFORE both the
         selectLeader-reassert guard and the TEAMBAR slot-1 rejoin guard evaluate it - otherwise
         a GROUP respawn that reseats the player in a different group compares against the STALE
         pre-death WFBE_Client_Team and both guards silently skip (owner report: "units kept
@@ -102,7 +103,9 @@ class TeambarProbeTests(unittest.TestCase):
         killed = code("Client/Functions/Client_OnKilled.sqf")
         resync = 'if (!isNull (group player)) then {WFBE_Client_Team = group player};'
         self.assertIn(resync, killed)
-        self.assertLess(killed.index('waitUntil {alive player}'), killed.index(resync))
+        wait_until = killed.index('waitUntil {')
+        self.assertIn('alive player ||', killed[wait_until:])
+        self.assertLess(wait_until, killed.index(resync))
         self.assertLess(killed.index(resync), killed.index('if (group player == WFBE_Client_Team) then {'))
         self.assertLess(killed.index(resync), killed.index('"respawn", "rejoin-check"'))
 
