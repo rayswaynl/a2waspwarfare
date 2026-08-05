@@ -171,7 +171,12 @@ while {!gameOver} do {
 										"Bo_FAB_250" createVehicle _p; "Bo_FAB_250" createVehicle _p; "Bo_FAB_250" createVehicle _p;
 									};
 									sleep 3;
-									{deleteVehicle _x; sleep 0} forEach (crew _v); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+									//--- Group-first teardown (A-Life event bughunt 2026-07-30): crew-only delete + bare
+									//--- deleteGroup leaked the group when the driver was no longer in crew (eject/death edge)
+									//--- or when _v was already null (crew objNull is unsafe). Delete units of the group first.
+									if (!isNull _g) then {
+										{{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _g};
+									};
 									if (!isNull _v) then {deleteVehicle _v};
 									if (!isNull _g) then {deleteGroup _g};
 								};
