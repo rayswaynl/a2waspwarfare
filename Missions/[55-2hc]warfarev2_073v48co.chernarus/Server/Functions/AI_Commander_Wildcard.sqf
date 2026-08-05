@@ -934,8 +934,10 @@ while {!gameOver} do {
 												//--- the generic pipeline (killed EH -> RequestOnUnitKilled.sqf -> wfbe_trashed + TrashObject; hull is
 												//--- SERVER-LOCAL because W13 spawns directly here and is never delegate-aicom-team'd). deleteGroup is
 												//--- skipped on that branch too - the dead crew are still in the group; TrashObject reaps it once empty.
-												if (alive _heli) then {
-													{deleteVehicle _x; sleep 0} forEach (crew _heli); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+												//--- Group-first teardown: A2 deleteGroup no-ops while a dismounted event unit remains.
+												//--- Keep player units intact, yield between deletes for the engine seat-math race, then reap the group.
+												if (!isNull _heli && {alive _heli}) then {
+													if (!isNull _grp) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _grp};
 													if (!isNull _heli) then {deleteVehicle _heli};
 													if (!isNull _grp) then {deleteGroup _grp};
 												};
@@ -1178,8 +1180,10 @@ while {!gameOver} do {
 											//--- DESPAWN vs DESTROYED (same fix as the W13 block above): the 180s window deleted the plane
 											//--- unconditionally, reaping the WRECK of a top-gun plane that was shot down inside the window.
 											//--- Despawn only a still-live airframe; a destroyed one is left to the generic pipeline.
-											if (alive _pl) then {
-												{deleteVehicle _x; sleep 0} forEach (crew _pl); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+											//--- Group-first teardown: A2 deleteGroup no-ops while a dismounted event unit remains.
+											//--- Keep player units intact, yield between deletes for the engine seat-math race, then reap the group.
+											if (!isNull _pl && {alive _pl}) then {
+												if (!isNull _grp) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _grp};
 												if (!isNull _pl) then {deleteVehicle _pl};
 												if (!isNull _grp) then {deleteGroup _grp};
 											};
