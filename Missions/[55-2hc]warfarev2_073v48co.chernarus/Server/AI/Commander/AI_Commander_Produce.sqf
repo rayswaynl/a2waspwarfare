@@ -525,7 +525,7 @@ if (_airMaxTotalP > 0) then {
 						if (count _cullHulls > 0) then {
 							["INFORMATION", Format ["HULLGC|v1|cull side=%1 team=%2 hulls=%3", _sideText, _team, count _cullHulls]] Call WFBE_CO_FNC_AICOMLog;
 						};
-						{ if (!(isPlayer _x)) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
+						{ if (!isNull _x && {!(isPlayer _x)}) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
 						_team setVariable ["wfbe_persistent", false, true];
 						["aicom-team-ended", _myID, _team] Call HandleSpecial;
