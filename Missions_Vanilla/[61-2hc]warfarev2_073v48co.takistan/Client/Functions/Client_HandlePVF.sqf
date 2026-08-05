@@ -48,7 +48,7 @@ if (_isHeadless) then {
 		//---   endgame                    = server_victory_threeway.sqf (nil broadcast at round end; lets the HC flip
 		//---        gameOver/WFBE_GameOver so its local A-Life loops (side patrols, AICOM teams, town-AI
 		//---        delegates, GroupsGC) tear down on their next tick instead of running to mission unload)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder","cleanup-mine","endgame"]);
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder","cleanup-mine","action-perform","endgame"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };
