@@ -7,6 +7,8 @@ _ehq = ['BTR90_HQ','BMP2_HQ_TK_EP1','BMP2_HQ_INS'];
 _whq = ['LAV25_HQ','M1130_CV_EP1','BMP2_HQ_CDF'];
 
 if (_caller != driver _lifter) exitWith {};
+//--- Shared reservation: replacement pilots receive their own local Lift action, so reject a second hook while this lifter still carries cargo.
+if (_lifter getVariable ["Attached", false]) exitWith {};
 //--- fix(exitWith-control-flow g1606): exitWith inside then/else only left that block — speed/height
 //--- gates never aborted the hook and airlift still attached cargo. Use top-scope exitWith.
 if (((typeOf _lifter) in Zeta_Special) && {speed _lifter > 20}) exitWith {};
@@ -21,6 +23,8 @@ if ((missionNamespace getVariable ["WFBE_C_AIRLIFT_OWN_HQ", 1]) == 0) then {
 if (count _vehicles < 1) exitWith {};
 
 _vehicle = [_lifter,_vehicles] Call WFBE_CO_FNC_GetClosestEntity;
+//--- Cargo reservation is globally visible; do not steal a hull already in another lifter's transit lifecycle.
+if (_vehicle getVariable ["wfbe_airlifted", false]) exitWith {};
 
 if ((typeOf _vehicle in _ehq) && (!(alive _vehicle)) && (side _caller == WEST)) exitWith {hint "You can't airlift ennemy HQ wreck because someone thought it was a bit too much"};
 if ((typeOf _vehicle in _whq) && (!(alive _vehicle)) && (side _caller == EAST)) exitWith {hint "You can't airlift ennemy HQ wreck because someone thought it was a bit too much"};
@@ -33,7 +37,7 @@ if (count crew(_vehicle) > 0) exitWith {hint (localize 'STR_WF_INFO_Hook_Manned'
 
 _vehicle attachTo [_lifter,_position];
 _vehicle setVariable ["wfbe_airlifted", true, true]; //--- fable/airlift-gc-exempt: mark cargo so Server_HandleEmptyVehicle does not delete the (necessarily crewless) lifted hull mid-flight
-_lifter setVariable ["Attached",true,false];
+_lifter setVariable ["Attached",true,true];
 _lifter removeAction _actionID;
 
 //--- B66 pass the hooked vehicle as the addAction args array; Zeta_Unhook reads (_this select 3) select 0 and threw on the empty [] arg list.
@@ -63,6 +67,7 @@ while {!gameOver} do {
 			_vehicle setVariable ["wfbe_airlifted", false, true];
 		};
 		if (!isNull _lifter) then {
+			_lifter setVariable ["Attached",false,true];
 			_lifter removeAction _action;
 			if (alive _lifter) then {_lifter addAction [localize "STR_WF_Lift","Client\Module\ZetaCargo\Zeta_Hook.sqf"]};
 		};

@@ -13,7 +13,7 @@ _vehicle = if ((typeName _param) == "ARRAY" && {count _param > 0}) then {_param 
 //--- r50 fail-clean: cargo/lifter can be deleted mid-flight (empty-vehicle GC, combat) before Detach is used.
 if (isNull _vehicle) exitWith {
 	if (!isNull _lifter) then {
-		_lifter setVariable ["Attached",false];
+		_lifter setVariable ["Attached",false,true];
 		_lifter removeAction _actionID;
 	};
 };
@@ -22,7 +22,7 @@ if (isNull _lifter) exitWith {
 	_vehicle setVariable ["wfbe_airlifted", false, true];
 };
 
-_lifter setVariable ["Attached",false];
+_lifter setVariable ["Attached",false,true];
 detach _vehicle;
 _vehicle setVariable ["wfbe_airlifted", false, true]; //--- fable/airlift-gc-exempt
 
