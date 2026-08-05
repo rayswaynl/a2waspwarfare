@@ -96,6 +96,7 @@ WFBE_SE_FNC_AI_Com_Beacon = Compile preprocessFileLineNumbers "Server\AI\Command
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
 WFBE_SE_FNC_AI_Com_HCTopUp = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_HCTopUp.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
+WFBE_SE_FNC_AI_Com_EndgameTeleport = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_EndgameTeleport.sqf"; //--- END-GAME TELEPORT closer; flag WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE default 0 = inert.
 WFBE_SE_FNC_AICOM2_Snapshot = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Snapshot.sqf"; //--- AICOM v2 rebuild (M0): world-model snapshot builder.
 WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Allocate.sqf"; //--- AICOM v2 rebuild (M1): single offensive authority (flag WFBE_C_AICOM2_ALLOCATE_ENABLE).
 WFBE_SE_FNC_AICOM2_Decapitate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Decapitate.sqf"; //--- AICOM v2 rebuild (M5): DECAPITATE closer (flag WFBE_C_AICOM2_DECAP_ENABLE, default 0).
