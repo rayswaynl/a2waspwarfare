@@ -579,7 +579,10 @@ if (_use_random) then {
 	//--- ("HQ always spawns at the same place"). Advance the RNG by a per-match-varying amount (a counter persisted
 	//--- in profileNamespace across restarts) so the start actually varies match-to-match. A2-OA-safe.
 	private ["_matchN","_dump"];
-	_matchN = (profileNamespace getVariable ["WFBE_MATCH_COUNTER", 0]) + 1;
+	_matchN = profileNamespace getVariable ["WFBE_MATCH_COUNTER", 0];
+	//--- A malformed profile snapshot must not abort startup before the next save.
+	if (typeName _matchN != "SCALAR" || {_matchN < 0}) then {_matchN = 0};
+	_matchN = _matchN + 1;
 	profileNamespace setVariable ["WFBE_MATCH_COUNTER", _matchN];
 	saveProfileNamespace;
 	for "_b" from 1 to ((_matchN % 100) + 1) do { _dump = random 1 };
