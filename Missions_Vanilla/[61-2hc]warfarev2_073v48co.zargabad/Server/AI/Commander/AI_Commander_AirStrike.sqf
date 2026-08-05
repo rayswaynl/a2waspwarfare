@@ -100,7 +100,7 @@
 
 private ["_side","_logik","_sideID","_sideText","_enemySide","_enemyID","_enemySideText",
 	"_now","_cool","_last","_cooldownOK",
-	"_myHQ","_airAlive","_airSideOK","_late","_airMaxTotal","_hasAirFactory","_afStructNames","_afStructIdx","_afStructClass","_afStructs","_upgrades","_airOK",
+	"_myHQ","_airAlive","_airSideOK","_late","_airMaxTotal","_hasAirFactory","_afStructNames","_afStructIdx","_afStructClass","_afStructs","_upgrades","_airOK","_afTownNames","_hasAirfield","_freeAirWaive","_airHeliWaive",
 	"_minTowns","_myTowns","_townsOK",
 	"_maxAir","_flightsIn","_flights","_f","_fg","_fh",
 	"_eStructs","_eFactories","_kind","_flist","_tgt","_tgtPos",
@@ -152,7 +152,24 @@ if (_afStructIdx >= 0 && {_afStructIdx < count _afStructNames}) then {
 	{ if (typeOf _x == _afStructClass && {alive _x}) exitWith {_hasAirFactory = true} } forEach _afStructs;
 };
 _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
-_airOK = _hasAirFactory || {!isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0}};
+//--- B74 free-air capability: a held airfield enables air buys even without an Aircraft Factory or
+//--- researched AIR tier. AIRSTRIKE must use the same capability signal as the founding path below;
+//--- otherwise its earlier air-unavailable gate prevents the documented per-class airfield waiver.
+_hasAirfield = false;
+if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0) then {
+	_afTownNames = ["NWAF","NEAF","Balota","Rasman AF"];
+	{
+		if (!((_x select 1) in _afTownNames)) then {_afTownNames = _afTownNames + [_x select 1]};
+	} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []]);
+	{
+		if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {(_x getVariable ["name",""]) in _afTownNames} || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true};
+	} forEach towns;
+} else {
+	_hasAirfield = true;
+};
+_freeAirWaive = _hasAirfield && {(missionNamespace getVariable ["WFBE_C_AICOM_AIRFIELD_FREE_AIR", 1]) > 0};
+_airHeliWaive = _hasAirFactory && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI", 1]) > 0};
+_airOK = _freeAirWaive || {_hasAirFactory || {!isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0}}};
 
 _minTowns = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3]; //--- already registered (Init_CommonConstants.sqf:402), shared with W6/W13 + AIRRESP - reused as-is, no re-registration.
 _myTowns = 0;
@@ -238,21 +255,7 @@ if (_canDispatch) then {
 	//--- FAIL-OPEN for unmapped classnames and FAIL-CLOSED on nil _upgrades, so missing research
 	//--- data grounds planes (no airfield) while the factory waiver still fields helis - Build83
 	//--- intent preserved.
-	private ["_afTownNames","_hasAirfield","_freeAirWaive","_airHeliWaive","_gatedClasses","_cnUpgrades","_afWaive","_tierPass"];
-	_hasAirfield = false;
-	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0) then {
-		_afTownNames = ["NWAF","NEAF","Balota","Rasman AF"];
-		{
-			if (!((_x select 1) in _afTownNames)) then {_afTownNames = _afTownNames + [_x select 1]};
-		} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []]);
-		{
-			if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {(_x getVariable ["name",""]) in _afTownNames} || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true};
-		} forEach towns;
-	} else {
-		_hasAirfield = true;
-	};
-	_freeAirWaive = _hasAirfield && {(missionNamespace getVariable ["WFBE_C_AICOM_AIRFIELD_FREE_AIR", 1]) > 0};
-	_airHeliWaive = _hasAirFactory && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI", 1]) > 0};
+	private ["_gatedClasses","_cnUpgrades","_afWaive","_tierPass"];
 	_gatedClasses = [];
 	{
 		_afWaive = _freeAirWaive || {_airHeliWaive && {!(_x isKindOf "Plane")}};
