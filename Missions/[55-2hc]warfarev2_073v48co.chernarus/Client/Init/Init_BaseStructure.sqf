@@ -1,8 +1,21 @@
+private ["_baseStructureInitStarted","_baseStructureInitDeadline"];
+_baseStructureInitStarted = time;
+_baseStructureInitDeadline = _baseStructureInitStarted + 120;
+
 if(isNil 'commonInitComplete')then{
 	commonInitComplete = false;
 };
 
-waitUntil {commonInitComplete}; //--- Wait for the common part.
+//--- Startup-failure guard: setVehicleInit can fan this one-shot marker worker out once per
+//--- structure. A failed Common init must not leave every worker hard-spinning forever.
+waitUntil {
+	sleep 0.25;
+	commonInitComplete || {time >= _baseStructureInitDeadline}
+};
+if (!commonInitComplete) exitWith {
+	diag_log format ["[WFBE][BASE-STRUCTURE-INIT-TIMEOUT] commonInitComplete remained false after %1s.", round (time - _baseStructureInitStarted)];
+};
+_baseStructureInitDeadline = time + 90;
 
 if (local player) then {
 	Private["_color","_hq","_marker","_markercc","_structure","_text","_type","_side","_sideID","_voteTime","_radius",
@@ -20,14 +33,26 @@ if (local player) then {
 	//--- latest (time is paused on the loading screen, so this can't fire during a genuine load). The
 	//--- diag_log makes the next RPT conclusively show whether the gate was ever the cause for factories.
 	_bsT0 = time;
-	waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _bsT0) > 90)};
+	waitUntil {
+		sleep 0.25;
+		(!isNil "clientInitComplete" && {clientInitComplete}) || {time >= _baseStructureInitDeadline}
+	};
+	if (isNil "clientInitComplete" || {!clientInitComplete}) exitWith {
+		diag_log format ["[WFBE][BASE-STRUCTURE-CLIENT-TIMEOUT] clientInitComplete remained false after %1s.", round (time - _bsT0)];
+	};
 	diag_log format ["[WFBE][B64 STRUCT-MARK] Init_BaseStructure proceeding type=%1 hq=%2 sideID=%3 mySideID=%4 after %5s cic=%6", typeOf (_this select 0), (_this select 1), (_this select 2), (if (isNil "WFBE_Client_SideID") then {-99} else {WFBE_Client_SideID}), round (time - _bsT0), (!isNil "clientInitComplete" && {clientInitComplete})];
 	//--- B62 (Ray 2026-06-21): own-side gate uses the STABLE WFBE_Client_SideID (set once at client init,
 	//--- mirrors updateaicommarkers.sqf), NOT WFBE_Client_SideJoined. WFBE_Client_SideJoined / (side player)
 	//--- can drift on respawn/JIP-settle; because this script is a ONE-SHOT setVehicleInit, any drift at this
 	//--- instant PERMANENTLY skipped the own-side marker (Ray RPT: OPFOR/insurgent JIP could not see own FACTORY
 	//--- markers). _sideID is the server-fed structure side; compare it directly to the joined side id.
-	waitUntil {!isNil "WFBE_Client_SideID"};
+	waitUntil {
+		sleep 0.25;
+		!isNil "WFBE_Client_SideID" || {time >= _baseStructureInitDeadline}
+	};
+	if (isNil "WFBE_Client_SideID") exitWith {
+		diag_log format ["[WFBE][BASE-STRUCTURE-SIDEID-TIMEOUT] WFBE_Client_SideID remained nil after %1s.", round (time - _bsT0)];
+	};
 	if (_sideID != WFBE_Client_SideID) exitWith {};
 	//--- B62 (Ray 2026-06-21): compare-and-claim so the Init_Client reconciliation rescan and the original
 	//--- setVehicleInit spawn never BOTH draw a marker for the same structure (no duplicate BaseMarker). Whichever
