@@ -1,5 +1,5 @@
 
-private ["_mode2TotalCamps","_mode2WestCamps","_mode2EastCamps","_mode2GuerCamps","_gateCampBunker","_gateCampSide","_rateCampsOnSide"];
+private ["_mode2TotalCamps","_mode2WestCamps","_mode2EastCamps","_mode2GuerCamps","_gateCampBunker","_gateCampSide","_rateCampsOnSide","_captureCleanupEpoch"];
 
 //--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate, mirrors
 //--- AI_Commander.sqf's _passedOwner idiom (see Init_Server.sqf B69 watchdog block). _this =
@@ -451,6 +451,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide, "Captured", _location] Spawn SideMessage};
 
 			_location setVariable ["sideID",_newSID,true];
+			//--- Snapshot the retired owner's epoch before advancing the lifecycle. The
+			//--- capture cleanup is asynchronous, so it must target only the old batch.
+			_captureCleanupEpoch = _location getVariable ["wfbe_town_ai_epoch", 0];
 			//--- fix-1342-1343 (reconciles #1342+#1343): advance the town AI lifecycle epoch exactly here,
 			//--- at ownership change, and nowhere else. A delegated HC/client batch queued before this flip
 			//--- can finish creating units after it; the epoch it carries (snapshotted at send time) will
@@ -601,7 +604,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			_capOldTeams = _location getVariable ["wfbe_town_teams", []];
 			if (typeName _capOldTeams != "ARRAY") then {_capOldTeams = []};
 			if (isMultiplayer) then {
-				[nil, "HandleSpecial", ["cleanup-townai", _location, _side]] Call WFBE_CO_FNC_SendToClients;
+				[nil, "HandleSpecial", ["cleanup-townai", _location, _side, _captureCleanupEpoch, "exact"]] Call WFBE_CO_FNC_SendToClients;
 			};
 			{
 				_capOldTeam = _x;

@@ -12,16 +12,20 @@
 		  town+side entry is torn down as before.
 */
 
-Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryDrop","_entryEpoch","_entryGroup","_entrySide","_entryTown","_epochGate","_group","_groups","_keptGroups","_keptRegistryGroups","_logGroupCount","_registry","_registryCurrent","_registryNew","_side","_town","_townName","_units"];
+Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryDrop","_entryEpoch","_entryGroup","_entrySide","_entryTown","_epochExact","_epochGate","_epochMatch","_group","_groups","_keptGroups","_keptRegistryGroups","_logGroupCount","_registry","_registryCurrent","_registryNew","_side","_town","_townName","_units"];
 
 _town = _this select 0;
 _side = _this select 1;
 //--- r56 fail-clean: town can be nil/null on late HC cleanup races; never getVariable/delete against void.
 if (isNil "_town") exitWith {};
 if (isNull _town) exitWith {};
-//--- fix-1375 (codex hold a): -1 means "no epoch gate" (legacy/deactivation callers) - delete every
-//--- matching town+side entry as before.
+//--- fix-1375 (codex hold a): -1 means "no epoch gate" (legacy callers) - delete every matching
+//--- town+side entry as before. A normal epoch gate deletes entries whose recorded epoch DIFFERS
+//--- from the current live epoch (stale-ack cleanup). Lifecycle teardown callers add the optional
+//--- fourth "exact" token so only the retired epoch is deleted; this keeps a newer reactivation
+//--- batch safe when the older cleanup broadcast arrives late.
 _epochGate = if (count _this > 2) then {_this select 2} else {-1};
+_epochExact = (count _this > 3) && {(_this select 3) == "exact"};
 _registry = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []];
 _groups = [];
 _keptRegistryGroups = [];
@@ -33,7 +37,11 @@ _keptRegistryGroups = [];
 		_entrySide = _entry select 1;
 		_entryGroup = _entry select 2;
 		_entryEpoch = if (count _entry >= 4) then {_entry select 3} else {-1};
-		if (_entryTown == _town && _entrySide == _side && {(_epochGate == -1) || {_entryEpoch != _epochGate}}) then {
+		_epochMatch = true;
+		if (_epochGate != -1) then {
+			if (_epochExact) then {_epochMatch = (_entryEpoch == _epochGate)} else {_epochMatch = (_entryEpoch != _epochGate)};
+		};
+		if (_entryTown == _town && _entrySide == _side && {_epochMatch}) then {
 			if !(isNull _entryGroup) then {
 				if !(_entryGroup in _groups) then {_groups set [count _groups, _entryGroup]};
 			};
@@ -141,7 +149,11 @@ _registryNew = [];
 		//--- really skips the set.
 		_entryDrop = false;
 		if (_entryGroup in _groups) then {
-			if (_entryTown == _town && _entrySide == _side && {(_epochGate == -1) || {_entryEpoch != _epochGate}}) then {
+			_epochMatch = true;
+			if (_epochGate != -1) then {
+				if (_epochExact) then {_epochMatch = (_entryEpoch == _epochGate)} else {_epochMatch = (_entryEpoch != _epochGate)};
+			};
+			if (_entryTown == _town && _entrySide == _side && {_epochMatch}) then {
 				if !(_entryGroup in _keptRegistryGroups) then {_entryDrop = true};
 			};
 		};
