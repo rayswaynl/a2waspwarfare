@@ -34,6 +34,8 @@ if (_isHeadless) then {
 		//---        default 1; deletes a DEAD, reap-stamped body/hull that is local to this HC - the server cannot)
 		//---   cleanup-empty-vehicle      = Server_HandleEmptyVehicle.sqf (locality-aware empty-hull reaper; the server cannot
 		//---        delete a HC-local alive hull directly, so the owner re-checks the empty/idle state before deleting)
+		//---   cleanup-mine              = mines_cleaner.sqf (locality-aware timed Mine/MineE reaper; the server registry
+		//---        can hold a player-fired mine that remains local to its shooter)
 		//---   cleanup-town-defense-gunner = server_town.sqf (fix/alife proper #1370) + Server_OperateTownDefensesUnits.sqf
 		//---        "remove" case; deletes a town-defense static gunner (dead OR alive) that is local to this HC -
 		//---        the equivalent server-side deletion call on an HC-delegated gunner would silently no-op
@@ -46,7 +48,7 @@ if (_isHeadless) then {
 		//---   endgame                    = server_victory_threeway.sqf (nil broadcast at round end; lets the HC flip
 		//---        gameOver/WFBE_GameOver so its local A-Life loops (side patrols, AICOM teams, town-AI
 		//---        delegates, GroupsGC) tear down on their next tick instead of running to mission unload)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder","endgame"]);
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder","cleanup-mine","endgame"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };
@@ -56,13 +58,13 @@ if (_isHeadless) then {
 //--- (getPlayerUID of a VEHICLE, set in Common_SendToClient.sqf), which the UID match below can
 //--- never equal for a connected human. The dispatch was therefore PERMANENTLY dropped, and the
 //--- wfbe_trashed pre-stamp then blocks every later safety-net sweep - the exact "lingers forever".
-//--- Allow the two SELF-VALIDATING cleanup cases through on normal clients: their receivers
+//--- Allow the three SELF-VALIDATING cleanup cases through on normal clients: their receivers
 //--- (Client\PVFunctions\HandleSpecial.sqf) re-check local + dead/empty + reap-stamp + zero live
 //--- crew + airlift/GUER-FOB protections before deleting, so a stale or mis-routed dispatch cannot
 //--- touch a live or re-crewed vehicle. Correctness fix: this path executing was always the design
 //--- (WFBE_C_TRASH_REMOTE_DELETE default 1) - only the HC-era gate made it HC-exclusive.
 if (!_isHeadless && {_script == "CLTFNCHandleSpecial"} && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
-	if ((_parameters select 0) in ["cleanup-trash-object","cleanup-empty-vehicle","cleanup-weaponholder"]) then {_exit = false};
+	if ((_parameters select 0) in ["cleanup-trash-object","cleanup-empty-vehicle","cleanup-weaponholder","cleanup-mine"]) then {_exit = false};
 };
 //--- fix(hunt): the old `if !(_hcAllowed) exitWith {}` sat INSIDE the then{} above - it exited only that
 //--- block and FELL THROUGH, and the nil-destination / side-match re-opens below then re-armed _exit=false

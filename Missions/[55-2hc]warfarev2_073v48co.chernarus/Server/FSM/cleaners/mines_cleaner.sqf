@@ -1,4 +1,4 @@
-private["_clear", "_keptMines", "_mineObj", "_mine_timer", "_perfActive", "_perfDeleted", "_perfItemStart", "_perfScanned", "_perfStart", "_timer"];
+private["_clear", "_keptMines", "_mineObj", "_mine_timer", "_perfActive", "_perfDeleted", "_perfDispatched", "_perfItemStart", "_perfScanned", "_perfStart", "_timer"];
 
 mines = [];
 _timer = missionNamespace getVariable "WFBE_C_MINEFIELDS_CLEANER_TIME_PERIOD";
@@ -9,6 +9,7 @@ while {!WFBE_GameOver} do {
 	_perfActive = 0;
 	_perfScanned = 0;
 	_perfDeleted = 0;
+	_perfDispatched = 0;
 	//--- r52: never mutate `mines` inside forEach (A2 skips the next element after each removal).
 	//--- Rebuild a kept list, null-guard the mine object, and assign once after the scan.
 	_keptMines = [];
@@ -18,8 +19,25 @@ while {!WFBE_GameOver} do {
 			_mineObj = _x select 0;
 			_mine_timer = _x select 1;
 			if ((time - _mine_timer) >= _timer) then {
-				if (!isNull _mineObj) then {deleteVehicle _mineObj};
-				_perfDeleted = _perfDeleted + 1;
+				if (isNull _mineObj) then {
+					_perfDeleted = _perfDeleted + 1;
+				} else {
+					//--- A2 deleteVehicle is locality-bound. Player-fired Mine/MineE objects are
+					//--- local to the shooter, while this server-owned registry is populated through
+					//--- register-mine. Keep a non-local entry until its owner executes the guarded
+					//--- cleanup only when the OA owner route is enabled; the rollback flag and the
+					//--- A2-Vanilla build retain the legacy delete attempt instead of creating an
+					//--- undrainable registry entry (SendToClient is intentionally stubbed there).
+					if (local _mineObj || {(missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0} || {(missionNamespace getVariable ["WF_A2_Vanilla", false])}) then {
+						deleteVehicle _mineObj;
+						_perfDeleted = _perfDeleted + 1;
+					} else {
+						_mineObj setVariable ["wfbe_mine_reap", true, true];
+						[_mineObj, "HandleSpecial", ["cleanup-mine", _mineObj]] Call WFBE_CO_FNC_SendToClient;
+						_keptMines = _keptMines + [_x];
+						_perfDispatched = _perfDispatched + 1;
+					};
+				};
 			} else {
 				_keptMines = _keptMines + [_x];
 			};
@@ -31,7 +49,7 @@ while {!WFBE_GameOver} do {
 	mines = _keptMines;
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			["cleaner_mines", _perfActive, Format["tracked:%1;scanned:%2;deleted:%3;cycleMs:%4", count mines, _perfScanned, _perfDeleted, round ((diag_tickTime - _perfStart) * 1000)], "SERVER"] Call PerformanceAudit_Record;
+			["cleaner_mines", _perfActive, Format["tracked:%1;scanned:%2;deleted:%3;dispatched:%4;cycleMs:%5", count mines, _perfScanned, _perfDeleted, _perfDispatched, round ((diag_tickTime - _perfStart) * 1000)], "SERVER"] Call PerformanceAudit_Record;
 		};
 	};
 	if(!(isNil "_timer"))then{
