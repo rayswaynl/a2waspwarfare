@@ -15,8 +15,9 @@ if (!WFBE_C_STATS_ENABLED) exitWith {};
 // Initialise the shared sequence counter once (other emitters may start it first).
 if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 
-while {true} do {
+while {!WFBE_GameOver} do {
 	sleep WFBE_C_STATS_FLUSH_INTERVAL;
+	if (WFBE_GameOver) exitWith {};
 
 	// 1) Credit playtime + record current side for every connected human player.
 	[] call WFBE_SE_FNC_CreditPlaytimeConnected;
