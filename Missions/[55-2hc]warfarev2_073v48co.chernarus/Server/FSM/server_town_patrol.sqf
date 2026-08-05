@@ -67,7 +67,10 @@ while {!WFBE_GameOver && _aliveTeam} do {
 				[_team,_focus,_patrol_range/4] Spawn WFBE_CO_FNC_WaypointPatrol;
 			};
 		} else {
-			[_team,getPos _location,'SAD',_defense_range] Spawn WFBE_CO_FNC_WaypointSimple;
+			//--- Wakeup fidelity: defense mode must restore an aggressive posture after SAD is laid.
+			[_team,getPos _location,'SAD',_defense_range] Call WFBE_CO_FNC_WaypointSimple;
+			_team setBehaviour "AWARE";
+			_team setCombatMode "RED";
 		};
 	};
 	if !(isNil "PerformanceAudit_Record") then {
