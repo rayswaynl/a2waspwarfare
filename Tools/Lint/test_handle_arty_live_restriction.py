@@ -28,8 +28,11 @@ class HandleArtyLiveRestrictionTests(unittest.TestCase):
         # deleted vehicle the old 1-arg read returned Nothing and `Nothing && {...}` threw on every
         # re-check, forever. isNull must be tested FIRST and lazily so the getVariable never runs
         # against a null object (whose 2-arg default is ignored), and the waiter must terminate.
-        self.assertTrue(waiter.startswith('waituntil {isNull _vehicle || {!alive _vehicle} || {'), waiter)
-        self.assertLess(waiter.index("isNull _vehicle"), waiter.index("getVariable"))
+        waiter_body = waiter[len("waituntil {") :]
+        if waiter_body.startswith("sleep "):
+            waiter_body = waiter_body.split(";", 1)[1].lstrip()
+        self.assertTrue(waiter_body.startswith('isNull _vehicle || {!alive _vehicle} || {'), waiter)
+        self.assertLess(waiter_body.index("isNull _vehicle"), waiter_body.index("getVariable"))
         self.assertIn("if (isNull _vehicle || {!alive _vehicle}) exitWith {};", source)
 
 
