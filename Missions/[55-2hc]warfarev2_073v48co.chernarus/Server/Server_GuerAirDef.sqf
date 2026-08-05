@@ -950,11 +950,27 @@ while {!WFBE_GameOver} do {
 										if (!isNull _u) then {
 											//--- Per-unit parachute (same createVehicle idiom as Support_ParaAmmo.sqf L71-72),
 											//--- but a MAN goes in as DRIVER of the chute (engine-standard for a chuted soldier).
+											//--- r37 fail-clean: null chute must not setPos/moveInDriver; trooper free-falls.
 											_chute = _chuteModel createVehicle [0,0,20];
-											_chute setPos [_ux, _uy, _uz];
-											_u moveInDriver _chute;
-											_chutes = _chutes + [[_u, _chute]];
-											_built = _built + 1;
+											if (isNull _chute) then {
+												_u setPos [_ux, _uy, _uz];
+												diag_log format ["GUERAIRDEF|CHUTEFAIL|town=%1|class=%2|reason=chute_create", (_t getVariable ["name","?"]), _type];
+												["WARNING", Format ["Server_GuerAirDef.sqf: drop chute create failed model [%1]; trooper free-falls.", _chuteModel]] Call WFBE_CO_FNC_LogContent;
+												_chutes = _chutes + [[_u, objNull]];
+												_built = _built + 1;
+											} else {
+												_chute setPos [_ux, _uy, _uz];
+												_u moveInDriver _chute;
+												if (driver _chute != _u) then {
+													//--- seat fail: leave unit at altitude without broken chute attach
+													_u setPos [_ux, _uy, _uz];
+													deleteVehicle _chute;
+													_chute = objNull;
+													diag_log format ["GUERAIRDEF|CHUTEFAIL|town=%1|class=%2|reason=chute_seat", (_t getVariable ["name","?"]), _type];
+												};
+												_chutes = _chutes + [[_u, _chute]];
+												_built = _built + 1;
+											};
 										};
 										_ctr = _ctr + 1;
 										sleep 0.3;
