@@ -1383,7 +1383,7 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 
-						//--- SML-5 surgical unstuck: nudge only individually-wedged foot units before tier escalation. Flag-gated (WFBE_C_SML_SURGICAL_UNSTUCK default 0).
+						//--- SML-5 surgical unstuck: nudge only individually-wedged foot units before tier escalation. Flag-gated (WFBE_C_SML_SURGICAL_UNSTUCK default 1, owner-armed).
 						//--- NOTE: this is a synchronous Call inside an already-Spawned block. It returns and tier 1/2/3 escalation fires normally regardless.
 						//--- At flag 0 this block is never entered - tier logic is byte-identical to HEAD.
 						if ((missionNamespace getVariable ["WFBE_C_SML_SURGICAL_UNSTUCK", 0]) > 0) then {
@@ -2606,11 +2606,11 @@ while {!WFBE_GameOver && _alive} do {
 						//--- Mode 0/1, or the flag off, behave EXACTLY as before.
 						_capMode       = missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_MODE", 0];
 						_campGateMode2 = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_GATE_MODE2", 1];
-						//--- SML-1 camp-split: when 2+ camps are unheld, spawn per-unit doStop/doMove orders with a TTL watchdog. Flag-gated (WFBE_C_SML_CAMP_SPLIT, default 0).
+						//--- SML-1 camp-split: when 2+ camps are unheld, spawn per-unit doStop/doMove orders with a TTL watchdog. Flag-gated (WFBE_C_SML_CAMP_SPLIT, default 1, owner-armed).
 						if ((missionNamespace getVariable ["WFBE_C_SML_CAMP_SPLIT", 0]) > 0) then {
 							[_team, _footInf, _unheldCamps, _sideID, _side, _townCenter, _capSeq, _campFirstEnd] Spawn WFBE_CO_FNC_SMLCampSplit;
 						};
-						//--- SML-2 real dismounts: force cargo infantry off hulls; crew (driver/gunner) stay mounted for fire support. Flag-gated (WFBE_C_SML_DISMOUNTS, default 0).
+						//--- SML-2 real dismounts: force cargo infantry off hulls; crew (driver/gunner) stay mounted for fire support. Flag-gated (WFBE_C_SML_DISMOUNTS, default 1, owner-armed).
 						if ((missionNamespace getVariable ["WFBE_C_SML_DISMOUNTS", 0]) > 0) then {
 							[_team, _footInf, _sideID, _side, _capSeq, _campFirstEnd] Spawn WFBE_CO_FNC_SMLDismounts;
 						};
@@ -2728,7 +2728,7 @@ while {!WFBE_GameOver && _alive} do {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] mode-2 camps still un-held after the window - skipping the futile centre hold, re-tasking.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
 						};
 
-						//--- SML-4 overwatch: pre-position launcher soldier on armor approach vector before the depot assault. Flag-gated (WFBE_C_SML_AT_OVERWATCH default 0).
+						//--- SML-4 overwatch: pre-position launcher soldier on armor approach vector before the depot assault. Flag-gated (WFBE_C_SML_AT_OVERWATCH default 1, owner-armed).
 						if ((missionNamespace getVariable ["WFBE_C_SML_AT_OVERWATCH", 0]) > 0) then {
 							[_team, _footInf, _sideID, _side, _townCenter, _dest, _capSeq] Spawn WFBE_CO_FNC_SMLOverwatch;
 						};
@@ -2756,7 +2756,7 @@ while {!WFBE_GameOver && _alive} do {
 						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","LINE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						{if (alive _x) then {_x doMove _townCenter}} forEach _footInf;
 						if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _townCenter};
-						//--- SML-3 retreat: mauled individual soldiers pull back toward rear while healthy units keep fighting. Flag-gated (WFBE_C_SML_RETREAT default 0).
+						//--- SML-3 retreat: mauled individual soldiers pull back toward rear while healthy units keep fighting. Flag-gated (WFBE_C_SML_RETREAT default 1, owner-armed).
 						if ((missionNamespace getVariable ["WFBE_C_SML_RETREAT", 0]) > 0) then {
 							[_team, _footInf, _sideID, _side, _townCenter, _capSeq] Spawn WFBE_CO_FNC_SMLRetreat;
 						};

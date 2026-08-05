@@ -22,7 +22,7 @@ AI teams currently move as one blob. A2 OA's engine allows ordering **individual
 - SML-5 (surgical unstuck) should reconcile with the existing UNSTUCK ladder + the #732 press-guard + #731 in-place repair — likely reduces tier-2/3 escalations dramatically.
 - SML-2 (dismounts) supersedes/absorbs the parked "dismount-at-distance preference" from the team-menu scope and connects to the micro-layer spec's EXT-4 air-insertion work.
 - SML-4 pairs with the approved economy-of-force / fire-discipline extensions (AICOM-V2-UNIT-MICRO-LAYER-SPEC.md).
-- All features flag-gated default 0, HC-local logic, per repo policy.
+- All features remain flag-gated and HC-local; the current shipped defaults are 1 (owner-armed), and each feature can be disabled by setting its flag to 0.
 
 ## Build sequencing
 Post-consolidation, V2 lane: SML-1 → SML-2 → (SML-3/4/5 in any order, SML-5 coordinated with the unstuck stack).

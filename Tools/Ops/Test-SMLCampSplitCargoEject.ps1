@@ -66,12 +66,15 @@ foreach ($terrain in $terrains) {
 
     Assert-Match -Text $constantsText -Pattern 'WFBE_C_SML_CAMP_SPLIT\s*=\s*1' -Label ("{0}: SML-1 is default-on" -f $terrain.Name)
     Assert-Match -Text $constantsText -Pattern 'WFBE_C_SML_DISMOUNTS\s*=\s*1' -Label ("{0}: SML-2 is default-on" -f $terrain.Name)
+    Assert-Match -Text $constantsText -Pattern 'WFBE_C_SML_RETREAT\s*=\s*1' -Label ("{0}: SML-3 is default-on" -f $terrain.Name)
+    Assert-Match -Text $constantsText -Pattern 'WFBE_C_SML_AT_OVERWATCH\s*=\s*1' -Label ("{0}: SML-4 is default-on" -f $terrain.Name)
+    Assert-Match -Text $constantsText -Pattern 'WFBE_C_SML_SURGICAL_UNSTUCK\s*=\s*1' -Label ("{0}: SML-5 is default-on" -f $terrain.Name)
     Assert-Match -Text $dismountText -Pattern 'if \(!\(isNil \{_uX getVariable "wfbe_sml_detach_at"\}\)\) then' -Label ("{0}: SML-2 preserves another worker's stamp ownership" -f $terrain.Name)
 
     $ownerClaimMatch = [regex]::Match($campText, 'if \(isNil \{_x getVariable "wfbe_sml_detach_at"\}\) then \{\s*_x setVariable \["wfbe_sml_detach_at", _stamp\];\s*_detachedBySML1 set \[count _detachedBySML1, _x\];\s*\};')
     Assert-True -Condition $ownerClaimMatch.Success -Label ("{0}: SML-1 preserves a foreign stamp and tracks only its own claim" -f $terrain.Name)
     Assert-Match -Text $campText -Pattern 'Private \[[^\]]*"_detachedBySML1"' -Label ("{0}: SML-1 has an explicit owned-unit receipt" -f $terrain.Name)
-    Assert-Match -Text $campText -Pattern '_nFoot = count _detachedBySML1;\s*if \(_nFoot < 3\) exitWith' -Label ("{0}: SML-1 declines a split when its owned receipt is too small" -f $terrain.Name)
+    Assert-Match -Text $campText -Pattern '_nFoot = count _detachedBySML1;\s*if \(_nFoot < _minFoot\) exitWith' -Label ("{0}: SML-1 declines a split when its owned receipt is too small" -f $terrain.Name)
 
     $normalEjectStart = $campText.IndexOf('//--- Eject only SML-1-owned seated foot infantry.')
     $orderIndex = $campText.IndexOf('//--- Issue one-shot movement orders', $normalEjectStart)

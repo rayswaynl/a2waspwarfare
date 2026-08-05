@@ -2819,22 +2819,22 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- weapon-position pool, so walls/screens never eat the weapon-position slots. Only read when
 //--- WFBE_C_DEF_FORTIF_PACK > 0 (at 0 the legacy single-pool count runs verbatim).
 	if (isNil "WFBE_C_DEF_FORTIF_CAP") then {WFBE_C_DEF_FORTIF_CAP = 6};
-//--- SML-1 Squad Micro Layer: camp-split captures (GR-2026-07-03a). Flag-gated default 0.
+//--- SML-1 Squad Micro Layer: camp-split captures (GR-2026-07-03a). Flag-gated default 1 (owner-armed).
 	if (isNil "WFBE_C_SML_CAMP_SPLIT")    then {WFBE_C_SML_CAMP_SPLIT    = 1};   //--- 1=enable per-unit doStop/doMove camp-split; 0=byte-identical legacy behaviour.
 	if (isNil "WFBE_C_SML_CAMP_SPLIT_MIN_FOOT") then {WFBE_C_SML_CAMP_SPLIT_MIN_FOOT = 2};  //--- armed 2026-07-27 owner go (was hard-coded 3 in Common_SMLCampSplit.sqf). Minimum foot infantry before SML-1 will split across two unheld camps. At 3 a small or attrited team fell under the floor and silently deferred to the caller sequential nearest-camp loop, which has no stall protection while mode-2 stall-bail is deliberately disabled - the Dubrovka failure shape (51 min, camps=1/2, footMen=8). 2 permits a 1+1 split (_half = floor(2/2) = 1), which is the minimum that can contest both camps of a 2-camp town at once. Directly serves the smaller-better-groups directive, which otherwise pushes teams UNDER a 3-man floor. Rollback: 3.
 	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
 	if (isNil "WFBE_C_SML_CAPTURE_TTL") then {WFBE_C_SML_CAPTURE_TTL = 360};  //--- s: capture-phase TTL override for SML-1 camp-split + SML-2 dismounts ONLY. 0 = OFF, byte-identical to HEAD (both keep reading the shared WFBE_C_SML_WATCHDOG_TTL). >0 = use this value instead, so the watchdog can never remount infantry BEFORE the camp-first window it exists to cover has ended; owner arms it explicitly (same idiom as WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE). Suggested arming value: 360, matching WFBE_C_AICOM_ASSAULT_HOLD. Live evidence 2026-07-27 (4-HC soak, HC1+HC3 RPTs): 78 BEGIN_CAPTURE vs 23 SML DISMOUNT, with SML|v1|REMOUNT|reason=ttl elapsed=241 firing inside a 360s _campFirstEnd - the shared 240s TTL was ending dismounts 120s early, putting cargo infantry back in their hulls for the last third of every camp-first phase where the camp nearEntities["Man"] scan can no longer see them. SML-4 overwatch / SML-5 retreat deliberately KEEP the shorter shared WFBE_C_SML_WATCHDOG_TTL (combat-reactive, not capture-phase). Rollback: set to 240.
-//--- SML-2: real dismounts (cargo infantry advance on foot; driver/gunner stay mounted for fire support). Flag-gated default 0.
+//--- SML-2: real dismounts (cargo infantry advance on foot; driver/gunner stay mounted for fire support). Flag-gated default 1 (owner-armed).
 	if (isNil "WFBE_C_SML_DISMOUNTS")              then {WFBE_C_SML_DISMOUNTS              = 1};   //--- 1=enable real dismounts; 0=byte-identical legacy behaviour.
-//--- SML-3: graceful retreats (mauled individuals pull back while healthy units keep fighting). Flag default 0.
+//--- SML-3: graceful retreats (mauled individuals pull back while healthy units keep fighting). Flag default 1 (owner-armed).
 	if (isNil "WFBE_C_SML_RETREAT")                   then {WFBE_C_SML_RETREAT                   = 1};
 	if (isNil "WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD")  then {WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD  = 0.5};  //--- getDammage >= this -> unit is mauled and pulls back.
 	if (isNil "WFBE_C_SML_RETREAT_HEALTHY_MIN")       then {WFBE_C_SML_RETREAT_HEALTHY_MIN       = 4};    //--- if fewer healthy units remain, skip retreat (whole-team attrition; disband/refit handles it).
-//--- SML-4: AT overwatch (launcher pre-positions on armor approach vector before the depot assault). Flag default 0.
+//--- SML-4: AT overwatch (launcher pre-positions on armor approach vector before the depot assault). Flag default 1 (owner-armed).
 	if (isNil "WFBE_C_SML_AT_OVERWATCH")              then {WFBE_C_SML_AT_OVERWATCH              = 1};
 	if (isNil "WFBE_C_SML_AT_OVERWATCH_ARMOR_R")      then {WFBE_C_SML_AT_OVERWATCH_ARMOR_R      = 500};  //--- m: nearEntities Tank scan radius around _townCenter.
 	if (isNil "WFBE_C_SML_AT_OVERWATCH_OFFSET")       then {WFBE_C_SML_AT_OVERWATCH_OFFSET       = 80};   //--- m: overwatch offset from _dest on the armor approach bearing.
-//--- SML-5: surgical unstuck (nudge only individually-wedged units; pre-tier step in the unstuck ladder). Flag default 0.
+//--- SML-5: surgical unstuck (nudge only individually-wedged units; pre-tier step in the unstuck ladder). Flag default 1 (owner-armed).
 	if (isNil "WFBE_C_SML_SURGICAL_UNSTUCK")          then {WFBE_C_SML_SURGICAL_UNSTUCK          = 1};
 	if (isNil "WFBE_C_SML_UNSTUCK_MAX_UNITS")         then {WFBE_C_SML_UNSTUCK_MAX_UNITS         = 2};    //--- if more than this many units are wedged, fall through to tier escalation.
 	if (isNil "WFBE_C_SML_UNSTUCK_POS_DELTA")         then {WFBE_C_SML_UNSTUCK_POS_DELTA         = 8};    //--- m: unit moved less than this since last check -> considered wedged.
