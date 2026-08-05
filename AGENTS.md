@@ -37,8 +37,8 @@ git checkout origin/master -- \
 ```
 
 Verify the TK and ZG templates contain their correct per-map values (not CH values):
-- TK: `WF_MAXPLAYERS 31`, `STARTING_DISTANCE 7500`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
-- ZG: `WF_MAXPLAYERS 33`, `STARTING_DISTANCE 5000`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
+- TK: `WF_MAXPLAYERS 34`, `STARTING_DISTANCE 7500`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
+- ZG: `WF_MAXPLAYERS 34`, `STARTING_DISTANCE 5000`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
 
 (The bracketed number in the mission folder name, e.g. `[61-2hc]`, is a player-slot label,
 not the `WF_MAXPLAYERS` define — do not re-derive WF_MAXPLAYERS from the folder name. These
@@ -68,6 +68,11 @@ Never use — these are A3-only or wrong-spelling and will silently corrupt or c
 - `regexFind`, `remoteExecCall`
 - Array-form `reveal`, A3 `find` on strings, substring `select [a, b]`, sort-by-code
 - `#` array selector (`_arr # 0`) — use `(_arr select 0)` instead
+- Bare `exitWith` not directly preceded by `if (..)` — **parse-fails the ENTIRE file** on A2 OA, so
+  the script silently never runs (a dialog still opens from its `.hpp` controls but stays empty).
+  Lint code `BAREEXIT`. Burned live 2026-08-03: an empty Factory Upgrade Menu for every side.
+  ⚠️ Run the gate command from THIS file verbatim — never a selector remembered from an earlier
+  session; that is exactly how this shipped (the rule existed and was already wired here).
 - `inline private _x =` — use `private ["_x"]`
 - `==` / `!=` with Boolean operands — use `if (_flag)` / `if (!_flag)`
 - `missionNamespace setVariable` with a third (public) argument — NSSETVAR3 trap; A2/OA runtime error
@@ -226,7 +231,11 @@ and preflight checks defined elsewhere in this file win on any conflict.
 - Do not re-propose: TPWCAS, AI supply trucks, satchel AI, EMP/WP/DECOY SCUD munitions,
   doctrine personalities, antistack touch. (ACR content: shelf LIFTED by owner 2026-07-28 09:15 -
   full ACR data confirmed on the live box; ACR classnames are usable WITH config proof, clients
-  resolve them via the bundled ACR-lite.)
+  resolve them via the bundled ACR-lite.) (AI supply trucks: SUPERSEDED by owner order 2026-07-28
+  ~11:15 "Allow the ai commander to run a small supply squad by itself once it reaches its unlock
+  gates (Truck, or helicopter)" - built as `Server/Server_AicomSupplySquad.sqf`, flag
+  `WFBE_C_AICOM_SUPPLY_SQUAD`; the ban now covers only re-proposing the removed W17 Supply Convoy
+  wildcard/cash-payout shape.)
 - Shelved PRs (https://github.com/rayswaynl/a2waspwarfare/wiki/Shelved-PR-*) are closed
   proposals; do not re-open or duplicate. Check the shelved-PR register before proposing
   any audit-flagged fix.
