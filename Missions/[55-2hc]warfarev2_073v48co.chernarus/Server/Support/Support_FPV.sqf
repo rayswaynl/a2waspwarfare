@@ -435,7 +435,7 @@ missionNamespace setVariable [_fpvKey, _fpvArr];
 _drone setVariable ["wfbe_fpv_det_cap", _argToken];
 _drone setVariable ["wfbe_fpv_det_owner", _replyId];
 
-while {true} do {
+while {!WFBE_GameOver} do {
 	sleep 5;
 	if (!(isPlayer (leader _playerTeam)) || !alive _drone || ((time - _timeStart) > _timeout)) exitWith {};
 };

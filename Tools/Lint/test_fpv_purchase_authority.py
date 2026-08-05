@@ -139,7 +139,7 @@ class FpvPurchaseAuthorityTests(unittest.TestCase):
         reserve = code.find("missionNamespace setVariable [_activeKey, _drone]")
         debit = code.find("[_playerTeam, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds")
         register = code.find('_fpvKey = Format ["wfbe_fpv_det_arr_%1", str _side]')
-        watchdog = code.find("while {true} do")
+        watchdog = code.find("while {!WFBE_GameOver} do")
         rearm_calc = code.find("_next = time + _cooldown", watchdog)
         rearm_stamp = code.find(
             "missionNamespace setVariable [_nextKey, _next]", watchdog
