@@ -1887,7 +1887,7 @@ while {!WFBE_GameOver && _alive} do {
 						_seatVehicle = _seatState select 0;
 						_seatRole = _seatState select 1;
 						if (isNull _seatVehicle || {!alive _seatVehicle}) then {
-							_seatUnit setVariable ["wfbe_aicom_dismount_seat", nil, true];
+							_seatUnit setVariable ["wfbe_aicom_dismount_seat", nil, false];
 						} else {
 							_seatSuccess = false;
 							if (_seatRole == "driver") then {
@@ -1915,7 +1915,7 @@ while {!WFBE_GameOver && _alive} do {
 								};
 							};
 							if (_seatSuccess) then {
-								_seatUnit setVariable ["wfbe_aicom_dismount_seat", nil, true];
+								_seatUnit setVariable ["wfbe_aicom_dismount_seat", nil, false];
 							};
 						};
 					};
@@ -2727,7 +2727,7 @@ while {!WFBE_GameOver && _alive} do {
 									} else {
 										//--- Review fix #1193: preserve the primary seat and the live
 										//--- transport capability across the intentional capture dismount.
-										_u setVariable ["wfbe_aicom_dismount_seat", [_veh, _seatRole], true];
+										_u setVariable ["wfbe_aicom_dismount_seat", [_veh, _seatRole], false];
 										_transportCaps = _team getVariable "wfbe_aicom_transport_capable";
 										if (isNil "_transportCaps" || {typeName _transportCaps != "ARRAY"}) then {_transportCaps = []};
 										_stampFound = false;
