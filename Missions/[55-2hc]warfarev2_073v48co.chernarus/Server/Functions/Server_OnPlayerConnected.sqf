@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_dcKey','_dcSeq','_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_sideJoined','_sideOrigin','_team','_uid','_units'];
+Private ['_dcKey','_dcSeq','_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_scudJipKey','_sideJoined','_sideOrigin','_team','_telJipKey','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -297,6 +297,11 @@ if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0) then {
 		if (!isNil {missionNamespace getVariable _x}) then {_id publicVariableClient _x};
 	} forEach ["WFBE_STARFORT_WEST","WFBE_STARFORT_EAST","wfbe_starfort_keepalive_west","wfbe_starfort_keepalive_east","wfbe_starfort_breached_west","wfbe_starfort_breached_east"];
 };
+//--- Runtime TEL/SCUD object handles need an explicit JIP replay; publicVariable only reaches current clients.
+_telJipKey = Format ["WFBE_ICBM_TEL_%1", str _sideJoined];
+_scudJipKey = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _sideJoined];
+if !(isNil {missionNamespace getVariable _telJipKey}) then {_id publicVariableClient _telJipKey};
+if !(isNil {missionNamespace getVariable _scudJipKey}) then {_id publicVariableClient _scudJipKey};
 //--- r68 (marker JIP + public-state fidelity): the MHQ/HQ wreck-marker feed is a set of missionNamespace
 //--- PRIMITIVES broadcast with plain publicVariable in Server_OnHQKilled.sqf (false + wreck payload) and
 //--- Server_MHQRepair.sqf (true + []). Per the B63 note above, a plain publicVariable is NOT replayed to a
