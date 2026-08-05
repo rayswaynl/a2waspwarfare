@@ -1,1 +1,1 @@
-﻿[] execVM "WASP\actions\AddActions.sqf";
+[] execVM "WASP\actions\AddActions.sqf";

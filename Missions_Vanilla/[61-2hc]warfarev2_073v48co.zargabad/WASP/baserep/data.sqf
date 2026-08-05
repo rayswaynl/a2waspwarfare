@@ -1,4 +1,4 @@
-﻿baseb = [
+baseb = [
     //[			class					  ,			name					, dis , %] 
       ["Base_WarfareBBarracks"            , localize "RB_Barracks"      	, 10  , 3   ],
 	  ["Base_WarfareBLightFactory"        , localize "RB_Light_Factory"     , 10  , 2   ],
