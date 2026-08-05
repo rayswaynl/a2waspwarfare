@@ -125,7 +125,7 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 		//--- matching the task's single-registration scope.
 		_tickHold = {
 			private ["_anchor","_id","_radius","_holdSecs","_eligible","_contestMode","_cooldownSecs","_onComplete",
-			         "_cooldownUntil","_progress","_objects","_westN","_eastN","_guerN","_presentSides",
+			         "_cooldownUntil","_progress","_objects","_capObjects","_westN","_eastN","_guerN","_presentSides",
 			         "_holderSideNum","_soleSide","_decayRate","_tick","_winnerSideType","_winnerSideNum"];
 			_anchor = _this;
 			if (isNull _anchor) exitWith {};
@@ -146,6 +146,18 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 			//--- using the ANCHOR's own ASL Z (== deckZ for the carrier consumer, since the naval town
 			//--- logic is already raised to deckZ before registration) + the same 12 m tolerance.
 			_objects = (_anchor nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], _radius]) unitsBelowHeight ((getPosASL _anchor select 2) + 12);
+			//--- Population contract: mirror server_town.sqf's proven capture tally. A dead Man must not
+			//--- hold/contest an objective, and an empty or abandoned hull must not vote from its config side;
+			//--- only live dismounts and live vehicles with living crew represent presence.
+			_capObjects = [];
+			{
+				if (_x isKindOf "Man") then {
+					if (alive _x) then {_capObjects = _capObjects + [_x]};
+				} else {
+					if (alive _x && {count crew _x > 0}) then {_capObjects = _capObjects + [_x]};
+				};
+			} forEach _objects;
+			_objects = _capObjects;
 			//--- fable/carrier-capture-fix (owner 2026-07-28 "capping doesnt work"): DECK FLOOR. Over water
 			//--- (carrier consumer) a unit at SEA LEVEL - garrison spawned outside the camps path, swimmers,
 			//--- hull-interior strays - sits inside the radius and below the +12 ceiling, so it counted
