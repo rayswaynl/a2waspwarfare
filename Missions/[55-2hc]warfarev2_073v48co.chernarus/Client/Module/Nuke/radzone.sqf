@@ -72,6 +72,12 @@ _target = _this select 0;
         _RADZONE_markerRadius
     ] call WF_createMarker;
 
+    //--- fix/marker-style-jip-replay (GR-2026-07-08a): radzone.sqf runs SERVER-side (see file header), so its
+    //--- own "MARKER_CREATION" publish (inside WF_createMarker) never reaches the server's own capture PVEH
+    //--- (Server/PVFunctions/AttackWave.sqf) - append this marker's styling payload to the JIP replay ledger
+    //--- explicitly, mirroring the passive capture the PVEH does for the CLIENT-originated ARTY/ICBM families.
+    missionNamespace setVariable ["WFBE_MARKER_STYLE_LEDGER", (missionNamespace getVariable ["WFBE_MARKER_STYLE_LEDGER", []]) + [[_RADZONE_marker_name_west, [_RADZONE_marker_name_west, _RADZONE_markerPosition, _RADZONE_markerType, _RADZONE_markerText, _RADZONE_markerColor, west, _RADZONE_marker_elipse_name_west, _RADZONE_markerRadius], time]]];
+
     // Marker for EAST side
     [
         _RADZONE_marker_name_east,
@@ -83,6 +89,12 @@ _target = _this select 0;
         _RADZONE_marker_elipse_name_east,
         _RADZONE_markerRadius
     ] call WF_createMarker;
+
+    //--- fix/marker-style-jip-replay (GR-2026-07-08a): radzone.sqf runs SERVER-side (see file header), so its
+    //--- own "MARKER_CREATION" publish (inside WF_createMarker) never reaches the server's own capture PVEH
+    //--- (Server/PVFunctions/AttackWave.sqf) - append this marker's styling payload to the JIP replay ledger
+    //--- explicitly, mirroring the passive capture the PVEH does for the CLIENT-originated ARTY/ICBM families.
+    missionNamespace setVariable ["WFBE_MARKER_STYLE_LEDGER", (missionNamespace getVariable ["WFBE_MARKER_STYLE_LEDGER", []]) + [[_RADZONE_marker_name_east, [_RADZONE_marker_name_east, _RADZONE_markerPosition, _RADZONE_markerType, _RADZONE_markerText, _RADZONE_markerColor, east, _RADZONE_marker_elipse_name_east, _RADZONE_markerRadius], time]]];
  
     // Apply radiation effects during the defined duration
     while {time < _radiation_end_time} do {
@@ -137,4 +149,14 @@ _target = _this select 0;
 
     deleteMarker _RADZONE_marker_name_east;
     deleteMarker _RADZONE_marker_elipse_name_east;
+
+    //--- fix/marker-style-jip-replay (GR-2026-07-08a): prune both RADZONE ledger entries appended above
+    //--- (west/east) now that the markers themselves are gone, so a joiner arriving after this radzone
+    //--- has expired never gets a stale styling replay for it.
+    Private ["_RADZONE_styleKept"];
+    _RADZONE_styleKept = [];
+    {
+        if !((_x select 0) in [_RADZONE_marker_name_west, _RADZONE_marker_name_east]) then {_RADZONE_styleKept = _RADZONE_styleKept + [_x]};
+    } forEach (missionNamespace getVariable ["WFBE_MARKER_STYLE_LEDGER", []]);
+    missionNamespace setVariable ["WFBE_MARKER_STYLE_LEDGER", _RADZONE_styleKept];
 };
