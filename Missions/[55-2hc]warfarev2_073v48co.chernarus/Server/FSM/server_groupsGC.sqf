@@ -310,7 +310,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 							private ["_baseHasPlayer"];
 							_baseHasPlayer = false;
 							{ if (isPlayer _x) exitWith {_baseHasPlayer = true} } forEach _baseVcrew;
-							if (_baseVside == _baseSide && {!_baseHasPlayer} && {!_baseVowned} && {(_baseVeh distance _baseHQ) <= _baseRange} && {((abs (speed _baseVeh)) < _baseIdleSpeed) || {!canMove _baseVeh}}) then {
+							if (_baseVside == _baseSide && {!_baseHasPlayer} && {!_baseVowned} && {!(_baseVeh getVariable ["wfbe_server_player_uav", false])} && {(_baseVeh distance _baseHQ) <= _baseRange} && {((abs (speed _baseVeh)) < _baseIdleSpeed) || {!canMove _baseVeh}}) then {
 								//--- COMBAT GUARD (always): skip if the crew is fighting OR the hull took damage since
 								//--- last pass OR enemies are near.
 								_baseLdr = _baseVcrew select 0;

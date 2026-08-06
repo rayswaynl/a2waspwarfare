@@ -29,7 +29,7 @@ class UavSpawnAuthorityTests(unittest.TestCase):
     def test_client_requests_a_uav_without_creating_or_charging_one(self) -> None:
         code = mask_comments(read(MAINTAINED_ROOTS[0], UAV_CLIENT))
         self.assertIn(
-            '["RequestSpecial", ["uav",sideJoined,clientTeam]] Call WFBE_CO_FNC_SendToServer;',
+            '["RequestSpecial", ["uav",sideJoined,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;',
             code,
         )
         self.assertNotIn("_uav = createVehicle", code)

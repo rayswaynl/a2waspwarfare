@@ -52,6 +52,8 @@ if (isNull _uav) exitWith {
 	missionNamespace setVariable [_cooldownKey, _last];
 	["WARNING", "Support_UAV.sqf: UAV creation failed after authorization - funds refunded, cooldown restored."] Call WFBE_CO_FNC_LogContent;
 };
+//--- Keep BASE-GC from deleting the server-owned hull while its client-side AI crew is remotely controlled.
+_uav setVariable ["wfbe_server_player_uav", true];
 _sideID = _side Call GetSideID;
 Call Compile Format ["_uav addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]", _sideID];
 _uav setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _sideID];
