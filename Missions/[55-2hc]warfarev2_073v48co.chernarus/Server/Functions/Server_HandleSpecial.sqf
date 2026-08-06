@@ -2369,10 +2369,36 @@ if (isNull _base) exitWith {
 	//--- tree, so its only consumer (the WFBE_CLIENT_%1_OBJECTS disconnect cleanup in
 	//--- Server_OnPlayerDisconnected.sqf) could never run either; removed together.
 	case "repair-camp": {
-		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY","_repairRequester"];
+		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY","_repairHasRequester","_repairRequester"];
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
-		_repairRequester = if ((count _args) > 3 && {(typeName (_args select 3)) == "OBJECT"}) then {_args select 3} else {objNull};
+		_repairHasRequester = (count _args) > 3;
+		_repairRequester = if (_repairHasRequester && {(typeName (_args select 3)) == "OBJECT"}) then {_args select 3} else {objNull};
+
+		//--- r175 TOCTOU: RequestSpecial validates the paid player, then Spawn defers this case to
+		//--- another scheduled script. Re-read every mutable player precondition at the effect boundary;
+		//--- an enemy kill, disconnect, movement or side change can land after ingress validation but
+		//--- before this handler claims the latch. Server-internal presence repairs omit the requester
+		//--- argument and deliberately bypass these player-only checks; a supplied requester that has
+		//--- become objNull during the handoff must still fail closed.
+		if (_repairHasRequester && {isNull _repairRequester}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - supplied requester became null before repair commit."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_repairHasRequester && {!isPlayer _repairRequester}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - requester disconnected before repair commit."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_repairHasRequester && {!alive _repairRequester}) exitWith {
+			[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair was rejected because the requester is no longer alive."]] Call WFBE_CO_FNC_SendToClient;
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - requester died before repair commit."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_repairHasRequester && {(_repairRequester distance _logic) > (missionNamespace getVariable ["WFBE_C_CAMPS_REPAIR_SERVER_RADIUS", 50])}) exitWith {
+			[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair was rejected because the requester is out of range."]] Call WFBE_CO_FNC_SendToClient;
+			["WARNING", Format ["Server_HandleSpecial.sqf/repair-camp: rejected - requester moved out of range before repair commit (dist=%1).", _repairRequester distance _logic]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_repairHasRequester && {(side group _repairRequester) != (_repairSideID Call WFBE_CO_FNC_GetSideFromID)}) exitWith {
+			[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair was rejected because the requested side no longer matches."]] Call WFBE_CO_FNC_SendToClient;
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - requester side changed before repair commit."] Call WFBE_CO_FNC_LogContent;
+		};
 
 		//--- harden-repair-camp (2026-07-25): reentrancy guard, mirrors Server_MHQRepair.sqf's
 		//--- precedent (PR #1361) - check+set BEFORE the alive read so two near-simultaneous
