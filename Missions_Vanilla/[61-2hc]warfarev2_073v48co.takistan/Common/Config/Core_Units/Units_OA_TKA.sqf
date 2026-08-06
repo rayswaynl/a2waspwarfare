@@ -90,10 +90,10 @@ _u = _u		+ ['ZSU_TK_EP1'];
 _u = _u		+ ['T34_TK_EP1'];
 _u = _u		+ ['T55_TK_EP1'];
 _u = _u		+ ['T72_TK_EP1'];
-//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD at the HEAVY FACTORY on TAKISTAN ONLY. worldName-gated so the row
-//--- only registers on TK (this file is a TK faction file, but we gate explicitly per the TK-only mandate). The row's
-//--- price + HEAVY-factory tier live in Core_TKA.sqf metadata; it is a driveable owned purchase like any heavy vehicle.
-if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"}) then {
+//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD at the HEAVY FACTORY. Originally TK-only; the TK-only mandate
+//--- was superseded by WFBE_C_SCUD_DRIVABLE_ALLMAPS (owner 2026-07-08, ARMED) - this Units-list site was the one
+//--- the ALLMAPS rollout missed (fix 2026-08-06). Price + HEAVY tier live in Core_TKA.sqf metadata (ALLMAPS-aware).
+if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}}) then {
 	_u = _u	+ [missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]];
 };
 

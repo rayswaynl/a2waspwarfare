@@ -68,6 +68,14 @@ _u = _u		+ ['M1A1'];
 _u = _u		+ ['MLRS'];
 _u = _u		+ ['M1A2_TUSK_MG'];
 
+//--- fix(scud-hf-allmaps, owner report 2026-08-06 "they dont show up in heavy factory"): the ARMED
+//--- WFBE_C_SCUD_DRIVABLE_ALLMAPS rollout (owner 2026-07-08) wired five consumer sites but missed the
+//--- Units-list adds, so the buy row could never list outside the TKA faction. Metadata is already
+//--- global (Core_TKA.sqf ALLMAPS row); flag 0 restores the pre-fix no-row state for this faction.
+if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}) then {
+	_u = _u	+ [missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]];
+};
+
 missionNamespace setVariable [Format ["WFBE_%1HEAVYUNITS", _side], _u];
 if (local player) then {['HEAVY', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 
