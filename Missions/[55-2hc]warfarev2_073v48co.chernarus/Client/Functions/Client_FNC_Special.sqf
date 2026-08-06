@@ -37,14 +37,15 @@ WFBE_CL_FNC_Commander_VoteEnd = {
 };
 
 WFBE_CL_FNC_Commander_VoteStart = {
-	Private ["_name"];
+	Private ["_name", "_voteTime"];
 	_name = _this select 0;
 
 	if (votePopUp) then {
 	//--- SCHEDULER-LEAK: bound votetime readiness wait.
 	private ["_voteWaitT0"]; _voteWaitT0 = time;
 	waitUntil {sleep 0.2; !isNil {WFBE_Client_Logic getVariable "wfbe_votetime"} || {(time - _voteWaitT0) > 30}};
-		if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0 && !voted) then {
+		_voteTime = WFBE_Client_Logic getVariable "wfbe_votetime";
+		if ((typeName _voteTime) == "SCALAR" && {_voteTime > 0} && {!voted}) then {
 			createDialog "WFBE_VoteMenu"
 		};
 		if (voted) then {voted = false};
