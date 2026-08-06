@@ -319,13 +319,13 @@ if (_canDispatch) then {
 					//--- with the BASE-ASSAULT fire phase's reveal/doTarget/doFire retry loop (the ONLY
 					//--- evidence-backed idiom in this codebase for getting AI weapons fire to connect with
 					//--- a static structure) - see file header "ENGAGEMENT" section for the evidence caveat.
-					[_grp, _heli, _side, _enemySide] spawn {
-						private ["_g","_h","_sd","_esd","_elapsed","_hold","_sadR","_poll","_hot","_myHQw","_eStructsW","_eFactoriesW","_kindW","_flistW","_tgtW"];
-						_g = _this select 0; _h = _this select 1; _sd = _this select 2; _esd = _this select 3;
+					[_grp, _heli, _side, _enemySide, _now] spawn {
+						private ["_g","_h","_sd","_esd","_t0","_deadline","_hold","_sadR","_poll","_hot","_myHQw","_eStructsW","_eFactoriesW","_kindW","_flistW","_tgtW"];
+						_g = _this select 0; _h = _this select 1; _sd = _this select 2; _esd = _this select 3; _t0 = _this select 4;
 						_hold = missionNamespace getVariable ["WFBE_C_AICOM2_AIRSTRIKE_HOLD", 360];
 						_sadR = missionNamespace getVariable ["WFBE_C_AICOM2_AIRSTRIKE_SAD", 150];
-						_poll = 10; _elapsed = 0; _hot = true;
-						while {_hot && {_elapsed < _hold} && {!isNull _g} && {({alive _x} count (units _g)) > 0} && {!isNull _h} && {alive _h}} do {
+						_poll = 10; _deadline = _t0 + _hold; _hot = true;
+						while {_hot && {time < _deadline} && {!isNull _g} && {({alive _x} count (units _g)) > 0} && {!isNull _h} && {alive _h}} do {
 							//--- Own-HQ-alive re-check (AI_Commander.sqf:297-300): if this side's own AI
 							//--- Commander would itself be stopped, retire the flight - no commander is left
 							//--- to own an orphaned strike loop.
@@ -356,7 +356,6 @@ if (_canDispatch) then {
 							} forEach (crew _h);
 
 							sleep _poll;
-							_elapsed = _elapsed + _poll;
 						};
 						//--- r70 empty-group lifecycle: purge ALL group members (not only current crew). Dead/dismounted
 						//--- stay in units _g after the alive-count while-exit; crew-only delete left corpse husks.
