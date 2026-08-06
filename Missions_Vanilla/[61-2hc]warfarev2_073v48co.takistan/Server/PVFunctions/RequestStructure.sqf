@@ -1,4 +1,4 @@
-Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType','_reject','_reqPlayer','_rejectMsg']; //--- B66: added _reject; refund-sweep: added _reqPlayer,_rejectMsg
+Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType','_reject','_reqPlayer','_rejectMsg','_capToken']; //--- B66: added _reject; refund-sweep: added _reqPlayer,_rejectMsg; r183: added _capToken
 
 //--- PR #1630: envelope guard (RequestUpgrade pattern) - short/wrong-type PV payloads must not reach construction.
 if (typeName _this != "ARRAY") exitWith {
@@ -42,6 +42,7 @@ if (WF_Debug) then {["DEBUG (RequestStructure.sqf)", Format ["Building: %1", _rl
 //--- escaped the then{} block, so the structure ExecVM-built anyway). Build is gated on !_reject.
 _reject = false;
 _rejectMsg = ""; //--- refund-sweep: LocalizeMessage case for a rejected build (sent once, post-gating)
+_capToken = -1; //--- r183: only accepted server-cap builds receive a release identity
 
 //--- HARDEN u2 (60-audit, RequestStructure side-spoof): re-derive authorization from the requester's
 //--- ACTUAL side, never trust the claimed _side alone - mirrors RequestMHQRepair.sqf / RequestSiteClearance.sqf
@@ -196,7 +197,7 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 //--- rejects what the declared caps already forbid the AI server-side; 0 = legacy client-only, byte-
 //--- identical to HEAD).
 if (!_reject && (_rlType in ["Barracks","Light","CommandCenter","Heavy","Aircraft","ServicePoint"]) && {(missionNamespace getVariable ["WFBE_C_STRUCTURES_CAP_SERVER", 1]) > 0}) then {
-	private ["_capTypeLimit","_capLiveHave","_capPendingKey","_capPendingWindow","_capPendingArr","_capFreshArr","_capI","_capPendingHave"];
+	private ["_capTypeLimit","_capLiveHave","_capPendingKey","_capPendingWindow","_capPendingArr","_capFreshArr","_capEntry","_capI","_capPendingHave","_capSeqKey","_capSeq"];
 	_capTypeLimit = missionNamespace getVariable [Format ["WFBE_C_STRUCTURES_MAX_%1", _rlType], 3]; //--- case-insensitive getVariable, same idiom as AI_Commander_Base.sqf / coin_interface.sqf:917.
 	if (typeName _capTypeLimit != "SCALAR") then {_capTypeLimit = 3};
 	_capLiveHave = {((_x getVariable ["wfbe_structure_type", ""]) == _rlType) && {alive _x}} count ((_side) Call WFBE_CO_FNC_GetSideStructures); //--- same trusted LIVE source AI_Commander_Base.sqf reads.
@@ -204,7 +205,12 @@ if (!_reject && (_rlType in ["Barracks","Light","CommandCenter","Heavy","Aircraf
 	_capPendingWindow = missionNamespace getVariable ["WFBE_C_STRUCTURES_PENDING_WINDOW", 180];
 	_capPendingArr = missionNamespace getVariable [_capPendingKey, []];
 	_capFreshArr = [];
-	for "_capI" from 0 to (count _capPendingArr - 1) do {if ((time - (_capPendingArr select _capI)) < _capPendingWindow) then {_capFreshArr set [count _capFreshArr, _capPendingArr select _capI]}};
+	for "_capI" from 0 to (count _capPendingArr - 1) do {
+		_capEntry = _capPendingArr select _capI;
+		if (typeName _capEntry == "ARRAY" && {count _capEntry > 1} && {typeName (_capEntry select 0) == "SCALAR"} && {typeName (_capEntry select 1) == "SCALAR"} && {(time - (_capEntry select 1)) < _capPendingWindow}) then {
+			_capFreshArr set [count _capFreshArr, _capEntry];
+		};
+	};
 	_capPendingHave = count _capFreshArr;
 	if ((_capLiveHave + _capPendingHave) >= _capTypeLimit) then {
 		_reject = true; //--- same idiom as the radar/bank guards above: was never exitWith (escaped only the then{}).
@@ -212,10 +218,15 @@ if (!_reject && (_rlType in ["Barracks","Light","CommandCenter","Heavy","Aircraf
 		["WARNING", Format ["RequestStructure.sqf: [%1] %2 build rejected - server cap reached (live=%3, pending=%4, max=%5).", str _side, _rlType, _capLiveHave, _capPendingHave, _capTypeLimit]] Call WFBE_CO_FNC_LogContent;
 	} else {
 		//--- Reserve the slot synchronously at accept time (pruned array write - see comment block above).
-		//--- Construction_SmallSite.sqf (Barracks/CommandCenter/Aircraft/ServicePoint) / Construction_MediumSite.sqf
-		//--- (Light/Heavy) release ONE reservation once the real structure registers, mirroring the CBRadar/
-		//--- AARadar/Bank _releasePending idiom in both files (file:line citations in the PR body).
-		missionNamespace setVariable [_capPendingKey, _capFreshArr + [time]];
+		//--- Each entry is [reservation token, accept time]. The construction worker receives the same
+		//--- token and releases only its own entry, so out-of-order completion cannot steal a sibling
+		//--- build's reservation.
+		_capSeqKey = Format ["WFBE_%1_%2_PENDING_SEQ", str _side, _rlType];
+		_capSeq = missionNamespace getVariable [_capSeqKey, 0];
+		if (typeName _capSeq != "SCALAR") then {_capSeq = 0};
+		_capToken = _capSeq + 1;
+		missionNamespace setVariable [_capSeqKey, _capToken];
+		missionNamespace setVariable [_capPendingKey, _capFreshArr + [[_capToken, time]]];
 	};
 };
 
@@ -242,5 +253,5 @@ if (_rlType in ["Barracks", "Light", "CommandCenter", "Heavy", "Aircraft", "Serv
 _index = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",str _side]) find _structureType;
 if (_index != -1) then { //--- refund-sweep: reject already exited above; build the accepted structure.
 	_script = (missionNamespace getVariable Format ["WFBE_%1STRUCTURESCRIPTS",str _side]) select _index;
-	[_structureType,_side,_pos,_dir,_index,"","",_reqPlayer] ExecVM (Format["Server\Construction\Construction_%1.sqf",_script]); //--- r31: pass the verified placer through to the construction worker for post-accept rollback.
+	[_structureType,_side,_pos,_dir,_index,"","",_reqPlayer,_capToken] ExecVM (Format["Server\Construction\Construction_%1.sqf",_script]); //--- r31: pass the verified placer through; r183: pass the cap reservation identity.
 };
