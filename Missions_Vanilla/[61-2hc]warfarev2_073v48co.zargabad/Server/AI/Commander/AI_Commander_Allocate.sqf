@@ -20,7 +20,7 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant","_tnOn","_tnTeamOn","_tnRing","_tnWeight","_syncAicomState"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_focusTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant","_tnOn","_tnTeamOn","_tnRing","_tnWeight","_syncAicomState"];
 //--- review-fix (codex reject 2026-07-19): _tnOn/_tnTeamOn/_tnRing/_tnWeight hoisted to top-level
 //--- (were declared private INSIDE the if(!_fromFocus) scorer block below but _tnTeamOn/_tnRing are
 //--- read in the top-level ASSIGN team loop - OA private scoping destroys them when that block
@@ -42,7 +42,8 @@ _snap = _logik getVariable ["wfbe_aicom2_snap", []];
 if (count _snap < 26) exitWith {};   //--- no / short snapshot yet (26 fields, indices 0..25)
 _sideID   = _snap select WFBE_SNAP_SIDEID;
 _enemyID  = _snap select WFBE_SNAP_ENID;
-_tgtTowns = _snap select WFBE_SNAP_TGTTOWNOBJS;   //--- capturable enemy/neutral towns
+_focusTowns = _snap select WFBE_SNAP_TGTTOWNOBJS; //--- full current identity set for deferred commander focus reads
+_tgtTowns = _focusTowns;                          //--- allocator pool may narrow below for expansion preference
 _ownTowns = _snap select WFBE_SNAP_OWNTOWNOBJS;
 _myHQ     = _snap select WFBE_SNAP_MYHQ;
 _teams    = _logik getVariable ["wfbe_teams", []];
@@ -177,6 +178,7 @@ _focusT0  = _logik getVariable "wfbe_aicom_focus_t0";
 //--- the Allocator is the single author - this is what makes the command center actually steer the AI).
 if (!isNil "_focusTgt" && {!isNull _focusTgt} && {!isNil "_focusT0"}
     && {(time - _focusT0) < (missionNamespace getVariable ["WFBE_C_AICOM2_FOCUS_TTL", 600])}
+    && {_focusTgt in _focusTowns}
     && {(_focusTgt getVariable ["sideID", _sideID]) != _sideID}) then {
 	_fist = [_focusTgt]; _fromFocus = true;
 };
