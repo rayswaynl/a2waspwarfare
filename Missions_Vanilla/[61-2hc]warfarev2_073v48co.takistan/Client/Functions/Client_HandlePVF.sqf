@@ -46,7 +46,10 @@ if (_isHeadless) then {
 		//---   endgame                    = server_victory_threeway.sqf (nil broadcast at round end; lets the HC flip
 		//---        gameOver/WFBE_GameOver so its local A-Life loops (side patrols, AICOM teams, town-AI
 		//---        delegates, GroupsGC) tear down on their next tick instead of running to mission unload)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder","endgame"]);
+		//---   action-perform             = Action_EjectCargo.sqf HC-local AI passenger eject/HALO fallback (r71b);
+		//---        receiver (HandleSpecial.sqf -> WFBE_CL_FNC_Perform_Action) re-checks null/alive and acts only on
+		//---        the named local unit. Without this key the fallback was dead on arrival (bughunt 2026-08-06).
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder","endgame","action-perform"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };
