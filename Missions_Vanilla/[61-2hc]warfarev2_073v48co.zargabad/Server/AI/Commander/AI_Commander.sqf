@@ -528,7 +528,9 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- supply is only granted when the dual-currency economy is active (system == 0).
 		_stipendMaxTime = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_MAXTIME", 3600];
 		_stipendTowns = 0;
-		{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
+		if (time < _stipendMaxTime) then {
+			{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
+		};
 		_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
 		if (_stipendActive && !_prevStipendActive) then {
 			private ["_stipendSupplyFlag","_stipendSupplyState"];
