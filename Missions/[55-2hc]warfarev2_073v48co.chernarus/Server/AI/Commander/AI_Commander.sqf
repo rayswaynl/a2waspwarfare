@@ -1275,7 +1275,14 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//---                cache it in wfbe_buildtag (falls back to the raw missionName if no cmdcon token is present).
 		//---   hc_fps=<n>   min diag_fps across REGISTERED live HCs that reported (via the existing 60s HCStat channel,
 		//---                cached in WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
-		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0];
+		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits;
+		//--- fix(waspscale-humancount, owner 2026-08-06 "players=2, only the HCs are on - very longstanding issue"):
+		//--- isPlayer counts SEATED HC BODIES, so players= could never read 0 while HCs were connected - which
+		//--- blinded every players==0 empty-window watcher (flip-when-empty polled 24h through an empty night).
+		//--- Count humans via the canonical HC-excluding helper (registry + name-net, Common_RealPlayers.sqf).
+		//--- HC bodies stay OUT of the AI buckets via the unchanged isPlayer skip in the allUnits pass above.
+		_humN = count ([] Call WFBE_CO_FNC_RealPlayers);
+		_tier = missionNamespace getVariable ["WFBE_PopTier",0];
 		_bt = missionNamespace getVariable ["wfbe_buildtag", ""];
 		if (_bt == "") then {
 			_mn = missionName; if (typeName _mn != "STRING") then {_mn = ""};
