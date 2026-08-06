@@ -20,6 +20,8 @@ waitUntil {commonInitComplete}; //--- Wait for the common part.
 
 _side = (_sideID) Call GetSideFromID;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+//--- A missing optional side logic is a valid map configuration; do not park a unit forever waiting on its upgrades.
+if (isNull _logik) exitWith {};
 
 waitUntil {!isNil {_logik getVariable "wfbe_upgrades"}};
 _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
