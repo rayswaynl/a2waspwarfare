@@ -1,4 +1,4 @@
-private ["_unit","_weapon","_limit","_ammo","_rocket","_speed","_at"];
+private ["_unit","_weapon","_limit","_ammo","_rocket","_speed","_at","_vec","_vecnorm"];
 
 _ammo = _this select 4;
 _at=["R_MEEWS_HEAT","R_MEEWS_HEDP","R_SMAW_HEDP","R_SMAW_HEAA"];
@@ -11,7 +11,10 @@ if (isNull _rocket) exitWith {};
 
      
         _vec = velocity _rocket;
-		_vecnorm = (velocity _rocket) distance [0,0,0];
+		_vecnorm = _vec distance [0,0,0];
+		//--- The Fired handler can race projectile initialization. Leave the engine trajectory
+		//--- untouched for a zero/near-zero vector instead of normalizing through a zero divisor.
+		if (_vecnorm <= 0.001) exitWith {};
 
        _speed = 480;
       _rocket setVelocity [
