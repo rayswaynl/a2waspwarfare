@@ -241,7 +241,7 @@ while {!gameOver} do {
 		         "_w20Eligible","_w20SupIDs","_w20Raisable","_w20ChosenID","_w20NewUpgrades","_w20TierName","_w20MaxLevels","_w20SupID",
 				         "_w21Eligible","_wW21","_w21VbiedClass","_w21Grp","_w21Truck","_w21Drv","_w21Target","_w21TargetPos","_w21SpawnPos","_w21Ang","_w21Try","_w21Roads",
 		         "_wNameMap","_wName","_wDesc",
-		         "_w22Eligible","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22Gunner","_w22TargetPos","_wW22",
+		         "_w22Eligible","_w22AttackClasses","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22Gunner","_w22TargetPos","_wW22",
 		         "_w23Eligible","_w23Template","_w23Tier","_w23Tmpls","_w23TmplUps","_w23Cand","_w23Lead","_w23CandTier","_w23Idx","_w23UpArr","_wW23",
 		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24",
 		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore","_mkExpiry"];
@@ -502,11 +502,15 @@ while {!gameOver} do {
 				//--- W22: TOP GUN (2026-06-27) - air-superiority fighter loiters the front for a window and hunts
 				//--- enemy aircraft. Eligible: HQ alive, AIR research >=1, established towns (mirror W6/W13 gate), and
 				//--- the side fields a fixed-wing PLANE in WFBE_<side>AIRCRAFTUNITS (helis don't count - this is a jet).
+				//--- Engagement-capability gate: the aircraft-factory roster also contains lift/paracargo planes
+				//--- (for example C130J_US_EP1 and An2_TK_EP1). W22 hunts enemy aircraft, so Plane-kind alone
+				//--- is not enough; keep the candidate pool to fixed-wing attack assets with combat loadouts.
+				_w22AttackClasses = ["A10","A10_US_EP1","AV8B","AV8B2","F35B","L159_ACR","L39_TK_EP1","Su25_CDF","Su25_Ins","Su25_TK_EP1","Su34","Su39","ibrPRACS_MiG21mol"];
 				_w22Eligible   = false;
 				_w22PlaneClass = "";
 				if (!isNull _hq && {alive _hq} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {(count _owned) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])}) then {
 					_w22AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
-					{ if (_w22PlaneClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Plane"}) then {_w22PlaneClass = _x} } forEach _w22AirList;
+					{ if (_w22PlaneClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Plane"} && {_x in _w22AttackClasses}) then {_w22PlaneClass = _x} } forEach _w22AirList;
 					if (_w22PlaneClass != "") then {_w22Eligible = true};
 				};
 
@@ -1130,7 +1134,7 @@ while {!gameOver} do {
 					case 22: {
 						_w22AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 						_w22PlaneClass = "";
-						{ if (_w22PlaneClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Plane"}) then {_w22PlaneClass = _x} } forEach _w22AirList;
+						{ if (_w22PlaneClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Plane"} && {_x in _w22AttackClasses}) then {_w22PlaneClass = _x} } forEach _w22AirList;
 						_w22Target  = objNull;
 						_w22Targets = _logik getVariable "wfbe_aicom_targets";
 						if (!isNil "_w22Targets" && {count _w22Targets > 0}) then {_w22Target = _w22Targets select 0};
