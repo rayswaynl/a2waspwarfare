@@ -72,7 +72,7 @@ _processVehicle = {
 	};
 };
 
-while {true} do {
+while {!gameOver} do {
 	sleep _scanDelay;
 
 	if (alive player && !gameOver) then {
