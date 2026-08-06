@@ -132,7 +132,6 @@ if (_targetFound && {!isNull _barrel} && {alive _barrel} && {!isNull _targetToHi
 		// when these two collide, it creates a mid-air explosion
 
 		// Create projectile
-		_projectile = "ARTY_SADARM_PROJO" createVehicleLocal [_px, _py, _pz];
 		_projectile = createVehicle ["ARTY_SADARM_PROJO", [_px, _py, _pz], [], 0, "CAN_COLLIDE"];
 		_impactAreaSimulation = createVehicle ["weaponHolder", [_px,_py,_pz], [], 0, "CAN_COLLIDE"];
 		_projectile setPosATL (getPosATL _impactAreaSimulation);
