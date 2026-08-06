@@ -244,13 +244,14 @@ while {!gameOver} do {
 		         "_w22Eligible","_w22AttackClasses","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22Gunner","_w22TargetPos","_wW22",
 		         "_w23Eligible","_w23Template","_w23Tier","_w23Tmpls","_w23TmplUps","_w23Cand","_w23Lead","_w23CandTier","_w23Idx","_w23UpArr","_wW23",
 		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24",
-		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore","_mkExpiry"];
+			         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore","_mkExpiry","_aicomMapBoundary"];
 
 				_side     = _this select 0;
 				_humanCmd = _this select 1;
 				_logik    = (_side) Call WFBE_CO_FNC_GetSideLogic;
 				_sideID   = (_side) Call WFBE_CO_FNC_GetSideID;
 				_sideText = str _side;
+				_aicomMapBoundary = missionNamespace getVariable ["WFBE_BOUNDARIESXY", -1];
 
 				if (isNil "_logik") exitWith {};
 
@@ -897,6 +898,12 @@ while {!gameOver} do {
 								_hqPos = getPos _hq;
 								_w13Ang = random 360;
 								_w13SpawnPos = [(_hqPos select 0) + 4000 * sin _w13Ang, (_hqPos select 1) + 4000 * cos _w13Ang, 1500];
+								//--- W13 starts from an HQ and a 4000m radial offset; keep the generated point inside the
+								//--- shared map square before createVehicle/CreateUnit consume it (A2 has no worldSize).
+								if (typeName _aicomMapBoundary == "SCALAR" && {_aicomMapBoundary > 0}) then {
+									_w13SpawnPos set [0, ((_w13SpawnPos select 0) max 0) min _aicomMapBoundary];
+									_w13SpawnPos set [1, ((_w13SpawnPos select 1) max 0) min _aicomMapBoundary];
+								};
 								_w13Class = _w13AttackClasses select floor(random count _w13AttackClasses);
 								//--- FIXED-WING FLY SPAWN: this pool is mixed heli/plane (same allowlist as AirResp) - a
 								//--- drawn Plane class needs the FLY special or it spawns near-stalled (setVelocity [0,0,-1]).
@@ -1144,6 +1151,11 @@ while {!gameOver} do {
 							_hqPos       = getPos _hq;
 							_w22Ang      = random 360;
 							_w22SpawnPos = [(_hqPos select 0) + 4000 * sin _w22Ang, (_hqPos select 1) + 4000 * cos _w22Ang, 1000];
+							//--- W22 shares W13's HQ-relative 4000m radial spawn and needs the same map-square guard.
+							if (typeName _aicomMapBoundary == "SCALAR" && {_aicomMapBoundary > 0}) then {
+								_w22SpawnPos set [0, ((_w22SpawnPos select 0) max 0) min _aicomMapBoundary];
+								_w22SpawnPos set [1, ((_w22SpawnPos select 1) max 0) min _aicomMapBoundary];
+							};
 							//--- FIXED-WING FLY SPAWN: _w22PlaneClass is always a Plane by construction (filtered above),
 							//--- so pass "FLY" directly - otherwise it spawns near-stalled (setVelocity [0,0,-1]).
 							_w22Plane    = [_w22PlaneClass, _w22SpawnPos, _side, random 360, true, true, true, "FLY"] Call WFBE_CO_FNC_CreateVehicle;
