@@ -2953,7 +2953,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- the HCs onto CIVILIAN slots (browser shows CIV, not WEST) only while zero real players are connected.
 //--- Mission-side hook only; the CIV mission.sqm slots + the reslot itself are the remaining, rig-test-gated
 //--- steps (box lane). Delegation is owner-routed (side-independent), so a CIV-slotted HC still hosts AI.
-//--- Default 0 = byte-identical to HEAD (the PV loop below never spawns).
+//--- LIVE DEFAULT IS 1, not 0. The flag is armed; the PV loop below DOES spawn. (The old comment here
+//--- claimed "Default 0 = byte-identical to HEAD" and was wrong.) It has no in-repo consumer today, so
+//--- its only live effect is Init_Server.sqf:1724 publicVariable-ing WFBE_HC_RESLOT_SAFE every 5s -
+//--- the box-side reslot controller that would READ it does not exist. Do NOT flip the default
+//--- without owner sign-off (repo policy).
 	if (isNil "WFBE_C_HC_CIV_RESLOT") then {WFBE_C_HC_CIV_RESLOT = 1};
 
 

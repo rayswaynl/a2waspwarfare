@@ -55,7 +55,7 @@ if (_override >= 0) then {
 	_tries = 0;
 	while {_expected <= 0 && {_tries < 20}} do {
 		_probe = 0;
-		{if (!isNull _x && {side _x == civilian}) then {_probe = _probe + 1}} forEach playableUnits;
+		{if (!isNull _x && {side _x == civilian} && {!(_x getVariable ["wfbe_caster_slot", false])}) then {_probe = _probe + 1}} forEach playableUnits;
 		_expected = _probe;
 		_tries = _tries + 1;
 		if (_expected <= 0) then {uiSleep 0.5};

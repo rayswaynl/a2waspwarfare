@@ -44,7 +44,7 @@ if (isNull player) exitWith {
 };
 
 //--- HC SIDE RESEAT (task #26): A2 OA can auto-seat this -client into a random free playable slot, and one
-//--- HC reliably lands on a SYNCHRONIZED WEST warfare slot (mission.sqm id=229, sync 255). That makes the
+//--- HC reliably lands on a SYNCHRONIZED WEST warfare slot. That makes the
 //--- HC a phantom-WEST PLAYER: it inflates BLUFOR team-balance + vote quorum AND permanently resets the
 //--- WEST no-players supply-stagnation timer (Common_StagnateSupplyIncomeNoPlayers) so WEST income never
 //--- stagnates on an empty server. forceHeadlessClient=1 exists in A2 OA 1.63+, but it has not been reliable
@@ -192,7 +192,7 @@ private "_reseatResult"; _reseatResult = if ((side group player == civilian) && 
 //--- the HC first reaches CIVILIAN. But an in-place MISSION RESTART (a 2nd MISSINIT on the same server
 //--- process - see the repeated "Player without identity HC" churn + a fresh PreInit in the server RPT)
 //--- re-seats every still-connected client into a random playable slot, and the HC reliably lands back on
-//--- the synchronized WEST slot (id=229) - the original task-26 bug returning AFTER boot, invisible to the
+//--- the synchronized WEST slot - the original task-26 bug returning AFTER boot, invisible to the
 //--- one-shot loop. So we keep a lightweight watcher running for the whole session: every 15s, if the HC
 //--- has been re-grabbed onto WEST/EAST (anything not civilian), re-reseat to civilian and re-park, then
 //--- emit an hc-reseat-result tagged `rewatch` so the slip is server-visible. Idempotent (the inner loop is

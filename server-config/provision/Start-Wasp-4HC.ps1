@@ -8,7 +8,7 @@
 # 2026-07-27 HC-SEATING ROOT-CAUSE FIX (owner-authorised):
 #   forceHeadlessClient=1 does NOT route a slot on A2 OA 1.64 -client connections. The engine
 #   assigns the LOWEST-NUMBERED free player="PLAY CDG" slot by id order, side-blind. The CIV
-#   headless slots are ids 9009-9012, far above the WEST slots (id 229), so they can never win
+#   headless slots are ids 9009-9012, far above the WEST slots, so they can never win
 #   a fair race. What DOES work is JIPing into an ALREADY-LIVE mission - which is exactly why the
 #   manual post-start bounce has been the only remedy for six weeks.
 #   The old gate here was a blind `Start-Sleep -Seconds 45` against SERVER PROCESS start, which on

@@ -295,7 +295,7 @@ while {!gameOver} do {
 					private ["_flushUid","_flushName","_flushScore","_flushOld","_flushDiff","_unit"];
 					{
 						_unit = _x;
-						if (isPlayer _unit) then {
+						if ((isPlayer _unit) && {!((name _unit) in WFBE_C_HC_NAMES)}) then {
 							_flushUid   = getPlayerUID _unit;
 							_flushName  = name _unit;
 							_flushScore = missionNamespace getVariable format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", _flushUid];
@@ -408,7 +408,7 @@ if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWit
 
 //--- Save the players' stats to database.
 {
-	if (isPlayer _x) then {
+	if ((isPlayer _x) && {!((name _x) in WFBE_C_HC_NAMES)}) then {
 		_uid = getPlayerUID _x;
 		_name = name _x;
 		_playerScore = missionNamespace getVariable format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", _uid];
