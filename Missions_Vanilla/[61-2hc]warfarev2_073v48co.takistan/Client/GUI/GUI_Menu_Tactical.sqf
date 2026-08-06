@@ -247,6 +247,47 @@ WFBE_CL_FNC_TelMuniEnable = {
 	if (_lvl >= 1 && _cmd && _platformAlive && _fnd >= _fee) then {true} else {false}
 };
 
+//--- teldeny-20260806: DENY-REASON companion to WFBE_CL_FNC_TelMuniEnable for the 17027 status strip. Same input,
+//--- same reads, same gate order as the enable predicate above; returns the FIRST failed gate as a short
+//--- player-facing string ("" when nothing failed). Keep in lockstep: a new enable gate needs a reason here.
+WFBE_CL_FNC_TelMuniDenyReason = {
+	private ["_upg","_fee","_fnd","_lvl","_cmd","_telObj","_telAlive","_platformAlive","_reason"];
+	_upg = _this select 0;
+	_fee = _this select 1;
+	_fnd = _this select 2;
+	_lvl = 0;
+	if (typeName _upg == "ARRAY" && {!isNil "WFBE_UP_ICBM"} && {WFBE_UP_ICBM < count _upg}) then {_lvl = _upg select WFBE_UP_ICBM};
+	_cmd = false;
+	if (!isNull commanderTeam) then { if (commanderTeam == group player) then {_cmd = true} };
+	_telObj = missionNamespace getVariable [format ["WFBE_ICBM_TEL_%1", str sideJoined], objNull];
+	_telAlive = (!isNull _telObj && {alive _telObj});
+	_platformAlive = _telAlive;
+	if (!_platformAlive && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}}) then {
+		private ["_scuds","_x"];
+		_scuds = missionNamespace getVariable [format ["WFBE_TK_SCUD_PLATFORMS_%1", str sideJoined], []];
+		if (typeName _scuds == "ARRAY") then {
+			{ if (!isNull _x && {alive _x}) exitWith {_platformAlive = true} } forEach _scuds;
+		};
+	};
+	_reason = "";
+	if (_lvl < 1) then {
+		_reason = "SCUD platform not yet unlocked (upgrade required).";
+	} else {
+		if (!_cmd) then {
+			_reason = "Only the elected side commander can order TEL munitions.";
+		} else {
+			if (!_platformAlive) then {
+				_reason = Format ["No live TEL/SCUD platform - a destroyed TEL respawns after %1 min.", ceil ((missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600]) / 60)];
+			} else {
+				if (_fnd < _fee) then {
+					_reason = Format ["Not enough funds - this munition costs $%1.", _fee];
+				};
+			};
+		};
+	};
+	_reason
+};
+
 _textAnimHandler = [] spawn {};
 
 MenuAction = -1;
@@ -444,36 +485,64 @@ while {alive player && dialog} do {
 		
 		ctrlEnable[17020, _controlEnable];
 		//--- QoL item2 (client-qol-batch2): show a one-line deny reason on IDC 17027 when
-		//--- Fast Travel is blocked, so the player knows WHY the button is greyed.
+		//--- a blocked special is selected, so the player knows WHY the button is greyed
+		//--- (Fast Travel; teldeny-20260806 added the six TEL/SCUD munition rows).
 		//--- Uses dedicated IDC 17027 (17022 is the shared animation text, written by every special).
 		if (!_controlEnable) then {
-			private "_ftDenyReason";
-			_ftDenyReason = "";
+			private "_denyReason";
+			_denyReason = "";
 			switch (_currentSpecial) do {
 				case "Fast_Travel": {
 					if (_ft <= 0) then {
-						_ftDenyReason = "Fast Travel disabled on this server.";
+						_denyReason = "Fast Travel disabled on this server.";
 					} else {
 						_currentLevel = _currentUpgrades select WFBE_UP_FASTTRAVEL;
 						if (_currentLevel <= 0) then {
-							_ftDenyReason = "Fast Travel not yet unlocked (upgrade required).";
+							_denyReason = "Fast Travel not yet unlocked (upgrade required).";
 						} else {
 							if (!canMove (vehicle player)) then {
-								_ftDenyReason = "Your vehicle cannot move.";
+								_denyReason = "Your vehicle cannot move.";
 							} else {
 								if (count _FTLocations <= 0) then {
 									if (_ft == 2) then {
-										_ftDenyReason = "No affordable FT destinations (all require more funds than you have).";
+										_denyReason = "No affordable FT destinations (all require more funds than you have).";
 									} else {
-										_ftDenyReason = "No eligible FT destinations in range from your position.";
+										_denyReason = "No eligible FT destinations in range from your position.";
 									};
 								};
 							};
 						};
 					};
 				};
+				//--- teldeny-20260806: the 5 land-TEL rows share the enable predicate, so they share the
+				//--- deny-reason companion (same reads as WFBE_CL_FNC_TelMuniEnable, first failed gate wins).
+				case "TEL_Saturation": { _denyReason = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniDenyReason };
+				case "TEL_Recon":      { _denyReason = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniDenyReason };
+				case "TEL_Fascam":     { _denyReason = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniDenyReason };
+				case "TEL_SteelRain":  { _denyReason = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniDenyReason };
+				case "TEL_Buster":     { _denyReason = [_currentUpgrades, _currentFee, _funds] Call WFBE_CL_FNC_TelMuniDenyReason };
+				//--- teldeny-20260806: carrier SCUD mirrors its own enable gates (commander / carrier ownership / funds).
+				case "SCUD_Carrier": {
+					_commander = false;
+					if (!isNull(commanderTeam)) then { if (commanderTeam == group player) then {_commander = true} };
+					if (!_commander) then {
+						_denyReason = "Only the elected side commander can order the carrier SCUD.";
+					} else {
+						_ownsCarrier = false;
+						if (!isNil "towns") then {
+							{ if (!isNull _x && {_x getVariable ["wfbe_is_naval_hvt", false]} && {(_x getVariable ["sideID", -1]) == sideID}) exitWith {_ownsCarrier = true} } forEach towns;
+						};
+						if (!_ownsCarrier) then {
+							_denyReason = "Your side does not hold the aircraft carrier (capture it first).";
+						} else {
+							if (_funds < _currentFee) then {
+								_denyReason = Format ["Not enough funds - this munition costs $%1.", _currentFee];
+							};
+						};
+					};
+				};
 			};
-			ctrlSetText [17027, _ftDenyReason];
+			ctrlSetText [17027, _denyReason];
 		} else {
 			//--- Clear the deny reason whenever the special is re-evaluated and enable.
 			ctrlSetText [17027, ""];
