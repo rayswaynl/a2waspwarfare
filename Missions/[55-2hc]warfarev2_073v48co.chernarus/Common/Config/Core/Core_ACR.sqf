@@ -92,7 +92,7 @@ _c = _c + ['T810Reammo_ACR']; //--- cmdcon44n: was 'T810_Ammo_CZ_EP1' (never exi
 _i = _i + [['','',1750,22,-2,1,1,0,'Czech',[]]];
 
 /* Heavy Vehicles — ACR premium (capture-unlock) */
-_c = _c + ['T72M4CZ'];
+_c = _c + ['T72_ACR']; //--- was 'T72M4CZ' - that is the CfgPatches addon/folder name, never a CfgVehicles class; real class verified in tracked_acr.pbo config + offline engine probe (isClass T72M4CZ=false, T72_ACR=true scope=2)
 _i = _i + [['','',7000,45,-2,4,2,0,'Czech',[]]];
 
 /* Light Vehicles — ACR premium (capture-unlock) */
