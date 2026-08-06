@@ -35,10 +35,47 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) != 1) exitWith {
 ["INITIALIZATION", "Init_NavalHVT.sqf : Naval HVT feature ENABLED — starting offshore asset spawn."] Call WFBE_CO_FNC_LogContent;
 
 //------------------------------------------------------------------------------------
-//--- WAIT: town init must be complete before we look up pre-placed naval logics.
+//--- WAIT: townInit means the depot census released startup, not that every authored town
+//--- logic has registered. Init_Towns.sqf deliberately allows townInit=true with towns=[]
+//--- while game-time-gated Init_Town.sqf workers register late, so wait for the three named
+//--- carrier logics explicitly before the one-shot HVT setup. Never wait forever on a bad sqm.
 //------------------------------------------------------------------------------------
-waitUntil { !isNil "townInit" && townInit };
-waitUntil { !isNil "towns" };
+private ["_navalHvtReady","_navalHvtDeadline","_navalHvtWait","_navalHvtTownReady","_navalHvtLogicReady","_navalHvtAlphaLogic","_navalHvtBravoLogic","_navalHvtCharlieLogic","_navalHvtName"];
+_navalHvtReady       = false;
+_navalHvtDeadline    = diag_tickTime + 90;
+_navalHvtWait        = 0;
+_navalHvtTownReady   = false;
+_navalHvtLogicReady  = false;
+_navalHvtAlphaLogic  = objNull;
+_navalHvtBravoLogic  = objNull;
+_navalHvtCharlieLogic = objNull;
+
+while {!_navalHvtReady && {diag_tickTime < _navalHvtDeadline} && {!(missionNamespace getVariable ["WFBE_GameOver", false])}} do {
+	_navalHvtTownReady = (missionNamespace getVariable ["townInit", false]) && {!isNil "towns" && {count towns > 0}};
+	if (_navalHvtTownReady) then {
+		_navalHvtAlphaLogic   = objNull;
+		_navalHvtBravoLogic   = objNull;
+		_navalHvtCharlieLogic = objNull;
+		{
+			_navalHvtName = _x getVariable ["name", ""];
+			switch (_navalHvtName) do {
+				case "Khe Sanh Alpha":   { _navalHvtAlphaLogic   = _x; };
+				case "Khe Sanh Bravo":   { _navalHvtBravoLogic   = _x; };
+				case "Khe Sanh Charlie": { _navalHvtCharlieLogic = _x; };
+			};
+		} forEach towns;
+		_navalHvtLogicReady = !(isNull _navalHvtAlphaLogic) && !(isNull _navalHvtBravoLogic) && !(isNull _navalHvtCharlieLogic);
+		if (_navalHvtLogicReady) then { _navalHvtReady = true; };
+	};
+	if (!_navalHvtReady) then {
+		sleep 0.25;
+		_navalHvtWait = _navalHvtWait + 1;
+	};
+};
+
+if (!_navalHvtReady) exitWith {
+	diag_log Format ["NAVALHVT|STARTUP_TIMEOUT|waitTicks=%1|townInit=%2|towns=%3|logics=%4|gameOver=%5", _navalHvtWait, missionNamespace getVariable ["townInit", false], if (isNil "towns") then {-1} else {count towns}, _navalHvtLogicReady, missionNamespace getVariable ["WFBE_GameOver", false]];
+};
 
 //------------------------------------------------------------------------------------
 //--- HELPER: spawn a static prop at ASL position; configure it.
