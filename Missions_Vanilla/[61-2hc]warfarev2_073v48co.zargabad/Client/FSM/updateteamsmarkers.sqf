@@ -1,9 +1,11 @@
 // Marty: Performance Audit locals and marker update cache.
-private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_teamMarkerWoundTinted","_leaderHealth","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff","_destDirMode","_destPos","_destBx","_destBy","_destDx","_destDy","_destData","_destMode","_destWpCount","_destWpIdx","_destStoredPos","_destStoredGrp"];
+private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_teamMarkerWoundTinted","_leaderHealth","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_teamMarkerSliceEvery","_teamMarkerSliceIndex","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff","_destDirMode","_destPos","_destBx","_destBy","_destDx","_destDy","_destData","_destMode","_destWpCount","_destWpIdx","_destStoredPos","_destStoredGrp"];
 
 _sideText = sideJoinedText;
 _label = "";
 _count = 1;
+_teamMarkerSliceEvery = 8;
+_teamMarkerSliceIndex = 0;
 _markerNames = [];
 _lastLeaders = [];
 _lastTexts = [];
@@ -550,6 +552,8 @@ while {!gameOver} do {
 			};
 
 			_count = _count + 1;
+			_teamMarkerSliceIndex = _teamMarkerSliceIndex + 1;
+			if ((_teamMarkerSliceIndex % _teamMarkerSliceEvery) == 0) then {sleep 0;};
 		} forEach clientTeams;
 
 		// Marty: Performance Audit record for the visible local team marker update loop.
