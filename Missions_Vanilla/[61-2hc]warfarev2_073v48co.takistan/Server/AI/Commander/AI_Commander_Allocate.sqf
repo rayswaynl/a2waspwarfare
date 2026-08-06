@@ -601,8 +601,27 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 			_hasVeh = [_grp] Call WFBE_CO_FNC_AICOMTeamMounted;
 			_reach = if (_hasVeh) then {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000]} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500]};
 			//--- r26 topology / B756: transport-heli teams may still take naval-HVTs.
-			private "_teamAir"; _teamAir = false;
+			private ["_teamAir","_teamAmphib","_waterBlocks","_waterBlocked"]; _teamAir = false;
 			{ if (!_teamAir && {alive _x} && {(vehicle _x) isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0}) then {_teamAir = true} } forEach (units _grp);
+			//--- r181 terrain contract: the consumer already rejects straight-line water legs, so do not publish
+			//--- one from the producer and force AssignTowns to discard it every worker pass.
+			_teamAmphib = false;
+			{ if (!_teamAmphib && {alive _x}) then { private "_wv"; _wv = vehicle _x; if (_wv != _x && {alive _wv} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _wv) >> "canFloat")) > 0}) then {_teamAmphib = true} } } forEach (units _grp);
+			_waterBlocks = {
+				private ["_from","_to","_air","_amphib","_hits","_i","_frac","_px","_py"];
+				_from = _this select 0; _to = _this select 1; _air = _this select 2; _amphib = _this select 3;
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_WATER_LEG_GATE", 1]) <= 0) exitWith {false};
+				if (_air || {_amphib}) exitWith {false};
+				if ((typeName _from) != "ARRAY" || {(typeName _to) != "ARRAY"} || {(count _from) < 2} || {(count _to) < 2}) exitWith {false};
+				_hits = 0;
+				for "_i" from 1 to 4 do {
+					_frac = _i / 5;
+					_px = (_from select 0) + (((_to select 0) - (_from select 0)) * _frac);
+					_py = (_from select 1) + (((_to select 1) - (_from select 1)) * _frac);
+					if (surfaceIsWater [_px, _py, 0]) then {_hits = _hits + 1};
+				};
+				(_hits >= 2)
+			};
 			private "_navalOk";
 			_navalOk = {
 				private "_tn";
@@ -684,10 +703,16 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 					diag_log ("AICOM2|v1|ORDER|TOWN_NUDGE|team|" + str _side + "|" + str (round (time / 60)) + "|town=" + (_tnBestT getVariable ["name", "?"]) + "|w=" + str _tnBestW);
 				};
 			};
-			if (!isNull _tgt && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_hasVeh} || {(_ldrPos distance _tgt) <= _reach}} && {_tgt Call _navalOk}) then {
+			_waterBlocked = if (!isNull _tgt) then {[_ldrPos, getPos _tgt, _teamAir, _teamAmphib] Call _waterBlocks} else {false};
+			if (!isNull _tgt && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_hasVeh} || {(_ldrPos distance _tgt) <= _reach}} && {_tgt Call _navalOk} && {!_waterBlocked}) then {
 				_grp setVariable ["wfbe_aicom_alloc_target", _tgt];
 				_grp setVariable ["wfbe_aicom_alloc_tick", time];
 				_assigned = _assigned + 1;
+			} else {
+				if (_waterBlocked) then {
+					_grp setVariable ["wfbe_aicom_alloc_target", nil];
+					_grp setVariable ["wfbe_aicom_alloc_tick", nil];
+				};
 			};
 		};
 	};
