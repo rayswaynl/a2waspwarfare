@@ -230,6 +230,8 @@ class FSM
        "};" \n
        "" \n
        "//--- Fast Travel." \n
+       "//--- Reset per update so leaving command range clears the availability icon." \n
+       "	_fastTravel = false;" \n
        "if ((_ft > 0) && commandInRange) then {" \n
        "	_fastTravel = false;" \n
        "	_isDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;" \n
