@@ -76,6 +76,31 @@ Also confirmed clean after the HC fix: `cannot find channel` occurrences **after
 (the 65 in-session hits all predate it), 0 anchored errors in the last 1500 lines, both `HCSTAT`
 identities heartbeating, fps 45 / hc_fps 46 / AI_TOT 341.
 
+**Scheduled-task cleanup (live box):**
+- **`WaspHC1` DELETED.** Nothing invoked it - the launch chain calls `hc_launch.cmd` directly via
+  `Start-Process`, and the only references are read-only status queries in diag/watch scripts. It was
+  also actively dangerous: `hc_launch.cmd` opens with `taskkill /f /im ArmA2OA.exe`, so if that task
+  had ever fired it would have killed **both** HCs and brought back only HC1. XML backed up first.
+- **`WaspHC1Bounce` KEPT, re-registered trigger-free.** Its `hc1_bounce.cmd` has **no** `taskkill` - it
+  is the safe HC1-only relaunch, and an interactive-token scheduled task is the only correct way to
+  start an HC (HCs register from an interactive session; sshd kills detached children). It is exactly
+  the recovery used earlier today, so it is worth keeping as a permanent on-demand tool. Now has zero
+  triggers (`Triggers is null: True`), so it can only be run deliberately, and the stale `-1` result is
+  gone (`267011` = never run).
+- **Audited all 20 `WaspCutover*` one-shots: `ARMED COUNT = 0`.** Worth checking, because a re-firing
+  cutover stops the stack, places OLD PBOs and rewrites the cfg - a silent live-build rollback, which
+  has happened on this box before. Every one has a blank Next Run, so none can fire. Left in place as
+  inert clutter rather than deleting 20 tasks unasked.
+
+**Two self-inflicted errors caught and corrected in the same pass** (recording the mechanisms, both are
+easy to repeat):
+- `Set-ScheduledTask -Trigger @()` **fails parameter validation and applies NOTHING** - not just the
+  triggers, the whole call is rejected, so `-Principal`/`-Settings` silently do not land either.
+  Mutating `.Triggers` on the CIM object and passing `-InputObject` does not remove them either. The
+  only reliable way is `Register-ScheduledTask` **without** `-Trigger`.
+- `@($x).Count` is **1 when `$x` is `$null`** in PowerShell, so a "triggerCount" measured that way
+  reports 1 for a genuinely trigger-free task. Verify with `$null -eq $t` or by listing class names.
+
 **Discovered issues (carded, not fixed here):**
 - HC client RPTs are unusable for diagnosis when both HCs run un-sandboxed - they share one RPT
   path, only one holds the write lock, and a **seated, healthy** HC shows the same "frozen at
