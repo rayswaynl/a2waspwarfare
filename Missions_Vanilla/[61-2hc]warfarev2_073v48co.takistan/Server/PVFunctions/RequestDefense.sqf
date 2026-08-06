@@ -1,4 +1,6 @@
-Private ["_builtByRepairTruck","_defenseType","_defenses","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure"];
+Private ["_builtByRepairTruck","_defenseType","_defenses","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure",
+         "_defenseRequestKey","_defenseRequestLedger","_defenseRequestKept","_defenseRequestNow","_defenseRequestUID",
+         "_defenseRequestWindow","_duplicateDefenseRequest"];
 
 //--- Client PV ingress: validate the complete envelope before selecting any field.
 //--- RequestDefense constructs server-local objects, so a malformed short or mistyped array
@@ -96,6 +98,47 @@ if (typeName _defenses != "ARRAY") exitWith {
 };
 _index = _defenses find _defenseType;
 if (_index != -1) then {
+	//--- r174: the client charges before this PVF arrives.  A lag retry or double-submit
+	//--- therefore needs a server-local recent-request ledger, otherwise the same valid
+	//--- placement reaches ConstructDefense twice.  Quantise the placement to decimetres
+	//--- so network-rounding does not turn the same click into a new key.  The ledger lives
+	//--- on the requesting player object and is never broadcast to clients.
+	_defenseRequestUID = getPlayerUID _reqPlayer;
+	if (_defenseRequestUID == "") then {_defenseRequestUID = str _reqPlayer};
+	_defenseRequestKey = Format ["%1|%2|%3|%4|%5|%6", str _side, _defenseType, _defenseRequestUID,
+		floor ((_pos select 0) * 10), floor ((_pos select 1) * 10), floor _dir];
+	_defenseRequestWindow = missionNamespace getVariable ["WFBE_C_DEFENSE_REQUEST_REPEAT_WINDOW", 3];
+	if (typeName _defenseRequestWindow != "SCALAR" || {_defenseRequestWindow <= 0}) then {_defenseRequestWindow = 3};
+	_defenseRequestNow = time;
+	_duplicateDefenseRequest = false;
+
+	//--- isNil's code scope is the existing A2-safe check-and-commit idiom used by
+	//--- RequestVehicleSell: the second PVF must see the first ledger write, even while
+	//--- separate scheduled PVF handlers are being dispatched.
+	isNil {
+		_defenseRequestLedger = _reqPlayer getVariable ["wfbe_defense_request_ledger", []];
+		if (typeName _defenseRequestLedger != "ARRAY") then {_defenseRequestLedger = []};
+		_defenseRequestKept = [];
+		{
+			if (typeName _x == "ARRAY" && {count _x >= 2} && {typeName (_x select 0) == "STRING"} && {typeName (_x select 1) == "SCALAR"}) then {
+				if ((_defenseRequestNow - (_x select 1)) < _defenseRequestWindow) then {
+					_defenseRequestKept = _defenseRequestKept + [_x];
+					if ((_x select 0) == _defenseRequestKey) then {_duplicateDefenseRequest = true};
+				};
+			};
+		} forEach _defenseRequestLedger;
+		if (!_duplicateDefenseRequest) then {
+			_defenseRequestKept = _defenseRequestKept + [[_defenseRequestKey, _defenseRequestNow]];
+		};
+		_reqPlayer setVariable ["wfbe_defense_request_ledger", _defenseRequestKept];
+	};
+
+	if (_duplicateDefenseRequest) exitWith {
+		["INFORMATION", Format ["RequestDefense.sqf: repeated request suppressed for [%1] at [%2].", _defenseType, _pos]] Call WFBE_CO_FNC_LogContent;
+		//--- coin_interface charged optimistically; use the existing client refund contract.
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
+
 	//--- Position anchors spawn a whole WDDM composition; everything else is a single defense.
 	//--- Release-merge (WDDM + engineer-EASA): the single-defense path keeps the EASA repair-truck tagging args
 	//--- (manning range + builtByRepairTruck); the composition path is commander-built and does not need them.
