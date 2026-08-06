@@ -35,7 +35,67 @@ def make_mission(root: Path, extra_files: dict[str, bytes] | None = None) -> Pat
     return mission
 
 
+def write_slot_layout(mission: Path, max_players: int) -> None:
+    (mission / "version.sqf").write_bytes(
+        f"#define WF_MAXPLAYERS {max_players}\n".encode("ascii")
+    )
+    (mission / "mission.sqm").write_bytes(
+        b'''class Mission\n{
+    class Groups\n    {\n        class Item0 { class Vehicles { class Item0 {\n            player="PLAY CDG";\n        }; }; };\n        class Item1 { class Vehicles { class Item0 {\n            player="PLAY CDG";\n            forceHeadlessClient=1;\n        }; }; };\n        class Item2 { class Vehicles { class Item0 {\n            player="PLAY CDG";\n            init="this setVariable [""wfbe_caster_slot"", true];";\n        }; }; };\n        class Item3 { class Vehicles { class Item0 {\n            player="PLAY CDG";\n        }; }; };\n    };\n};\n'''
+    )
+
+
 class PackPboTests(unittest.TestCase):
+    def test_slot_census_ignores_comments_and_quoted_fake_slots(self) -> None:
+        mission_sqm = b'''class Mission
+{
+    /*
+        player="COMMENTED";
+    */
+    class Item0 { class Vehicles { class Item0 {
+        player="REAL";
+        init="this setVariable [""wfbe_caster_slot"", true]; { player=""FAKE""; }";
+    }; }; };
+};
+'''
+        self.assertEqual(pack_pbo._slot_capacity(mission_sqm), (1, 0, 1))
+
+    def test_stale_maxplayers_rejected_after_reserved_slots_are_excluded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(root)
+            write_slot_layout(mission, 55)
+            out = root / "out.pbo"
+            with self.assertRaisesRegex(pack_pbo.PackError, r"WF_MAXPLAYERS=55"):
+                pack_pbo.pack(
+                    source=mission,
+                    output=out,
+                    prefix=None,
+                    build_tag=None,
+                    allow_debug=False,
+                    strict_version=True,
+                    force=False,
+                    quiet=True,
+                )
+
+    def test_reserved_hc_and_caster_slots_do_not_reduce_human_capacity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(root)
+            write_slot_layout(mission, 2)
+            out = root / "out.pbo"
+            pack_pbo.pack(
+                source=mission,
+                output=out,
+                prefix=None,
+                build_tag=None,
+                allow_debug=False,
+                strict_version=True,
+                force=False,
+                quiet=True,
+            )
+            self.assertTrue(out.exists())
+
     def test_round_trip_synthesizes_version_from_template(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -13,13 +13,19 @@ _town = _this select 1;
 _radius = if (count _this > 2) then {_this select 2} else {30};
 if (typeName _town != 'OBJECT') exitWith {};
 if (isNull _team) exitWith {};
+if (isNull _town) exitWith {};
 _townPos = getPos _town;
-_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 0];
+_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 20];
 
-_camps = _town getVariable 'camps';//wf2
+//--- r79: bare getVariable 'camps' is nil when the town logic has no camp array yet (boot race /
+//--- camps-create off). `[town] + nil` throws and aborts the entire town-patrol waypoint lay.
+_camps = _town getVariable "camps";
+if (isNil "_camps" || {typeName _camps != "ARRAY"}) then {_camps = []};
 
 _usable = [_town] + _camps;
-_maxWaypoints = (missionNamespace getVariable 'WFBE_C_TOWNS_UNITS_WAYPOINTS') + count(_usable);
+_maxWaypoints = (missionNamespace getVariable "WFBE_C_TOWNS_UNITS_WAYPOINTS");
+if (isNil "_maxWaypoints" || {typeName _maxWaypoints != "SCALAR"}) then {_maxWaypoints = 4};
+_maxWaypoints = _maxWaypoints + count _usable;
 _wps = [];
 
 //--- Randomize the behaviours.
@@ -38,7 +44,7 @@ _wpcompletionRadius = -1;
 for '_z' from 0 to _maxWaypoints do {
 	if (_z == _insert && count _usable > 0) then {
 		_insert = _insert + _insertStep;
-		_insertObject = _usable select (round(random((count _usable)-1)));
+		_insertObject = _usable select floor (random (count _usable)); //--- uniform pick (round bias on ends)
 		_usable = _usable - [_insertObject];
 	};
 

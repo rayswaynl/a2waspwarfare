@@ -94,6 +94,32 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0) then {
 	_dir = _dir	+ [90];
 };
 
+//--- TKA parity fix (2026-08-02): this file rebuilds the structure arrays AFTER Structures_CO_RU.sqf
+//--- in Root_TKA.sqf and clobbered its CBR/Bank additions - on Takistan the EAST build menu silently
+//--- lost both. Blocks mirror Structures_CO_RU.sqf; TK_WarfareBArtilleryRadar_EP1 is the same classname
+//--- Structures_CO_RU.sqf resolves for non-Chernarus maps.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	_v = _v		+ ["CBRadar"];
+	_n = _n		+ ["TK_WarfareBArtilleryRadar_EP1"];
+	_d = _d		+ [localize "STR_WF_UPGRADE_CBRadar"];
+	_c = _c		+ [2400];
+	_t = _t		+ [if (WF_Debug) then {1} else {60}];
+	_s = _s		+ ["SmallSite"];
+	_dis = _dis	+ [21];
+	_dir = _dir	+ [90];
+};
+
+if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
+	_v = _v		+ ["Bank"];
+	_n = _n		+ [if ((missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2_CLASS", "Land_A_Office01_EP1"]} else {"Land_fortified_nest_big_EP1"}];
+	_d = _d		+ ["Bank Melli"];
+	_c = _c		+ [9500];
+	_t = _t		+ [if (WF_Debug) then {1} else {300}];
+	_s = _s		+ ["MediumSite"];
+	_dis = _dis	+ [30];
+	_dir = _dir	+ [0];
+};
+
 for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 	missionNamespace setVariable [Format["WFBE_%1%2TYPE",_side,_v select _count],_count];
 };

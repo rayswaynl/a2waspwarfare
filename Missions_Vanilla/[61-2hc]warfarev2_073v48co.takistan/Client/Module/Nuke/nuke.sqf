@@ -1,8 +1,10 @@
 //--- Nuke blast.
-Private ['_Cone','_light','_smoke','_smoke2','_target','_top','_top2','_top3','_top4','_top5','_Wave','_xHandle'];
+Private ['_Cone','_light','_screenFx','_smoke','_smoke2','_target','_top','_top2','_top3','_top4','_top5','_Wave','_xHandle'];
 
 _target = _this select 0;
-if (player distance _target < 4000) then {
+//--- Capture blast-range eligibility once so the matching cleanup cannot be skipped after movement.
+_screenFx = player distance _target < 4000;
+if (_screenFx) then {
 	"dynamicBlur" ppEffectEnable true;
 	"dynamicBlur" ppEffectAdjust [1];
 	"dynamicBlur" ppEffectCommit 1;
@@ -90,7 +92,7 @@ if (isNull _light) then {
 	_light setLightBrightness 100000.0;
 };
 
-if (player distance _target < 4000) then {
+if (_screenFx) then {
 	"colorCorrections" ppEffectEnable true;
 	"colorCorrections" ppEffectAdjust [0.8, 15, 0, [0.5, 0.5, 0.5, 0], [0.0, 0.0, 0.6, 2],[0.3, 0.3, 0.3, 0.1]];"colorCorrections" ppEffectCommit 0.4;
 	 
@@ -136,7 +138,7 @@ if !(isNull _top3) then {deleteVehicle _top3};
 
 sleep 3;
 
-if (player distance _target < 4000) then {
+if (_screenFx) then {
 	"colorCorrections" ppEffectAdjust [1, 1, 0, [0.5, 0.5, 0.5, 0], [1.0, 1.0, 0.8, 0.4],[0.3, 0.3, 0.3, 0.1]];"colorCorrections" ppEffectCommit 1; "colorCorrections" ppEffectEnable TRUE;
 	"dynamicBlur" ppEffectAdjust [0];
 	"dynamicBlur" ppEffectCommit 1;
@@ -205,5 +207,5 @@ if !(isNull _Wave) then {deleteVehicle _Wave};
 if !(isNull _cone) then {deleteVehicle _cone};
 if !(isNull _smoke) then {deleteVehicle _smoke};
 sleep 20;
-if (player distance _target < 4000) then {"colorCorrections" ppEffectEnable false};
+if (_screenFx) then {"colorCorrections" ppEffectEnable false};
 [currentFX] Spawn FX;

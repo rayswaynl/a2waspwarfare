@@ -64,8 +64,9 @@ foreach ($source in $sources) {
 		Assert-Match $variant.Text '_price = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE";' "$prefix reads the price once"
 		Assert-Match $variant.Text 'if \(\(_price > 0\) && \{\(Call WFBE_CL_FNC_GetClientFunds\) < _price\}\) exitWith' "$prefix uses the same snapshot for the funds gate"
 		Assert-Match $variant.Text '\(-_price\) Call WFBE_CL_FNC_ChangeClientFunds;' "$prefix debits the snapshot"
-		Assert-Match $variant.Text 'if \(!\(alive _vehicle\) \|\| \(_vehicle distance _camp > _range\)\) exitWith \{\s*hint \(localize "STR_WF_Repair_[^"]+"\);\s*if \(_price > 0\) then \{_price Call WFBE_CL_FNC_ChangeClientFunds;\};\s*\};' "$prefix refunds inside the cancellation exit"
-		Assert-Match $variant.Text '(?s)if \(alive \(_camp getVariable ''wfbe_camp_bunker''\)\) exitWith \{\s*hint \(localize "STR_WF_Repair_Camp_IsAlive"\);.*?if \(_price > 0\) then \{_price Call WFBE_CL_FNC_ChangeClientFunds;\};\s*\};' "$prefix preserves the competing-repair refund"
+		Assert-Match $variant.Text 'if \(!\(alive _vehicle\)( \|\| \(vehicle _vehicle != _vehicle\))? \|\| \(_vehicle distance _camp > _range\)\) exitWith \{\s*hint \(localize "STR_WF_Repair_[^"]+"\);\s*if \(_price > 0\) then \{_price Call WFBE_CL_FNC_ChangeClientFunds;\};\s*\};' "$prefix refunds inside the cancellation exit"
+		Assert-Match $variant.Text 'if \(alive \(if \(isNil \{_camp getVariable ''wfbe_camp_bunker''\}\) then \{objNull\} else \{_camp getVariable ''wfbe_camp_bunker''\}\)\) exitWith \{' "$prefix keeps the nil-safe competing-repair guard"
+		Assert-Match $variant.Text '(?s)STR_WF_Repair_Camp_IsAlive"\);.*?if \(_price > 0\) then \{_price Call WFBE_CL_FNC_ChangeClientFunds;\};' "$prefix preserves the competing-repair refund"
 		Assert-Count $variant.Text 'if \(_price > 0\) then \{_price Call WFBE_CL_FNC_ChangeClientFunds;\};' 2 "$prefix has exactly two terminal refund sites"
 	}
 }

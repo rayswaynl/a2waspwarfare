@@ -10,10 +10,38 @@ WFBE_CL_FNC_HandlePVF = Compile preprocessFileLineNumbers "Client\Functions\Clie
 ["INITIALIZATION", "Init_HC.sqf: Running the headless client initialization."] Call WFBE_CO_FNC_LogContent;
 diag_log "Init_HC.sqf: Running the headless client initialization.";
 
+//--- HC WEATHER PARITY (r117): A2 OA weather is per-machine (BIKI setRain: pre-A3 each client
+//--- and the server hold their own values). The server (Init_Server.sqf) and every player client
+//--- (Init_Client.sqf: "Keep rainy lobby weather consistent with the server-local path") apply the
+//--- lobby weather locally, but this HC path never did - HCs sat at mission.sqm startWeather=0
+//--- (clear) all round. Town defence/AICOM AI are LOCAL to the HC they were delegated to, so in
+//--- Cloudy/Rainy rounds HC-local AI sensed under clear weather (rain feeds the AI hearing model)
+//--- while server-local AI and player visuals ran the lobby weather. Mirror the server block here.
+Call {
+	_weat = missionNamespace getVariable ["WFBE_C_ENVIRONMENT_WEATHER", 0];
+	if ((missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 0]) == 1) exitWith {
+		0 setOvercast 0;
+		0 setRain 0;
+	};
+
+	_oc = 0.05;
+	switch (_weat) do {
+		case 0: {_oc = 0};
+		case 1: {_oc = 0.5};
+		case 2: {_oc = 1};
+	};
+	60 setOvercast _oc;
+	if (_weat == 2) then {60 setRain 0.5}; //--- Same as Init_Server.sqf: rain only for the Rainy lobby option.
+};
+diag_log Format ["Init_HC.sqf: lobby weather applied locally (WFBE_C_ENVIRONMENT_WEATHER=%1).", missionNamespace getVariable ["WFBE_C_ENVIRONMENT_WEATHER", 0]];
+
 //--- wiki-wins: was a blind `sleep 20` that raced server init. Wait (bounded ~20s) for the player
 //--- object instead of always blocking the full interval; proceeds early once seated, never hangs.
 private "_hcInitDeadline"; _hcInitDeadline = diag_tickTime + 20;
 waitUntil { uiSleep 0.5; (!isNull player) || (diag_tickTime > _hcInitDeadline) };
+if (isNull player) exitWith {
+	diag_log "[WFBE][HC-PLAYER-INIT-TIMEOUT] Init_HC.sqf: player remained objNull after the 20s startup guard; aborting HC initialization instead of entering an unbounded readiness wait.";
+};
 
 //--- HC SIDE RESEAT (task #26): A2 OA can auto-seat this -client into a random free playable slot, and one
 //--- HC reliably lands on a SYNCHRONIZED WEST warfare slot (mission.sqm id=229, sync 255). That makes the
@@ -25,10 +53,8 @@ waitUntil { uiSleep 0.5; (!isNull player) || (diag_tickTime > _hcInitDeadline) }
 //--- NEVER a shared group - so owner(leader(group)) stays distinct per HC and delegation (owner-routed via
 //--- Common_SendToClient.sqf:11) never collapses onto a single HC. This runs HERE, before the connected-hc
 //--- notify below, so the server captures THIS civ group when it resolves `group _hc` (no server-side edit).
-//--- BOUNDED POLLING LOOP (task #29 follow-up): the single-shot fixed-sleep attempt missed whenever the
-//--- engine seated the HC late or locality hadn't transferred at the guard. We now wait for the player
-//--- object, then poll for up to ~60s, retrying the reseat until `side group player == civilian`. Idempotent.
-waitUntil {uiSleep 0.25; !isNull player}; //--- never run the guard before the player object exists.
+//--- BOUNDED POLLING LOOP (task #29 follow-up): after the bounded player-object guard above succeeds,
+//--- poll for up to ~60s, retrying the reseat until `side group player == civilian`. Idempotent.
 //--- HC-SENDTOSERVER-INIT-RACE (fable 2026-07-09): Common\Init\Init_Common.sqf:169 defines
 //--- WFBE_CO_FNC_SendToServer only after ~160 sequential Compile statements run. initJIPCompatible.sqf
 //--- fires that file (line 350, ExecVM) and this Init_HC.sqf (line 391, execVM) as two INDEPENDENT
@@ -206,6 +232,10 @@ private "_reseatResult"; _reseatResult = if ((side group player == civilian) && 
 
 //--- HC load telemetry: HCSTAT lines on the server RPT (fps + local unit/group counts).
 [] ExecVM "Headless\HC_StatLoop.sqf";
+
+//--- spectator v8: HC-local Fired/Killed event capture, forwarded to the server feed
+//--- (Common_SpectatorEventFeed.sqf; AI EHs fire on the hosting machine's locality).
+[] ExecVM "Common\Functions\Common_SpectatorEventFeed.sqf";
 
 //--- claude-gaming (2026-06-15): HC-LOCAL empty-group reaper. The HC owns ~12-16 delegated
 //--- commander-team/town groups that are local to it. Their self-reap in

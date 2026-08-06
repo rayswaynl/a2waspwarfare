@@ -46,15 +46,17 @@ _refundParaVehiSetup = {
 	};
 	["WARNING", Format ["Support_ParaVehicles.sqf: setup abort refund $%1 (%2).", _cost, _reason]] Call WFBE_CO_FNC_LogContent;
 };
-_ran = round(random((count _ranPos)-1));
+_ran = floor (random (count _ranPos)); //--- uniform
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 if (isNull _grp) exitWith {
 	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] paradrop group create failed.", str _side]] Call WFBE_CO_FNC_LogContent;
+	diag_log format ["PARAVEHI|SPAWNFAIL|side=%1|reason=group_create", _side];
 	if (!_isAI) then {[_playerTeam, 3500, "group create failed"] Call _refundParaVehiSetup};
 };
 _vehicle = createVehicle [missionNamespace getVariable Format ["WFBE_%1PARAVEHI",str _side],(_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
 if (isNull _vehicle) exitWith {
 	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] transport create failed.", str _side]] Call WFBE_CO_FNC_LogContent;
+	diag_log format ["PARAVEHI|SPAWNFAIL|side=%1|reason=transport_create", _side];
 	if (!isNull _grp) then {deleteGroup _grp};
 	if (!_isAI) then {[_playerTeam, 3500, "transport create failed"] Call _refundParaVehiSetup};
 };
@@ -63,6 +65,7 @@ if (isNull _vehicle) exitWith {
 _pilot = [missionNamespace getVariable Format ["WFBE_%1PILOT",str _side],_grp,[100,12000,0],_sideID] Call WFBE_CO_FNC_CreateUnit;
 if (isNull _pilot) exitWith {
 	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] pilot create failed; transport deleted.", str _side]] Call WFBE_CO_FNC_LogContent;
+	diag_log format ["PARAVEHI|SPAWNFAIL|side=%1|reason=pilot_create", _side];
 	deleteVehicle _vehicle;
 	if (!isNull _grp) then {deleteGroup _grp};
 	if (!_isAI) then {[_playerTeam, 3500, "pilot create failed"] Call _refundParaVehiSetup};
@@ -70,6 +73,7 @@ if (isNull _pilot) exitWith {
 _pilot moveInDriver _vehicle;
 if (driver _vehicle != _pilot) exitWith {
 	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] pilot seat failed; transport torn down.", str _side]] Call WFBE_CO_FNC_LogContent;
+	diag_log format ["PARAVEHI|SPAWNFAIL|side=%1|reason=pilot_seat", _side];
 	deleteVehicle _pilot;
 	deleteVehicle _vehicle;
 	if (!isNull _grp) then {deleteGroup _grp};
@@ -89,6 +93,7 @@ _cargo = (crew _vehicle) - [driver _vehicle, gunner _vehicle, commander _vehicle
 _cargoVehicle = [missionNamespace getVariable Format ["WFBE_%1PARAVEHICARGO", _side], [0,0,50] ,_sideID, 0, false] Call WFBE_CO_FNC_CreateVehicle;
 if (isNull _cargoVehicle) exitWith {
 	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] cargo vehicle create failed; transport torn down.", str _side]] Call WFBE_CO_FNC_LogContent;
+	diag_log format ["PARAVEHI|SPAWNFAIL|side=%1|reason=cargo_create", _side];
 	{if (!isNull _x) then {deleteVehicle _x}} forEach [_pilot, _vehicle];
 	if (!isNull _grp) then {deleteGroup _grp};
 	if (!_isAI) then {[_playerTeam, 3500, "cargo create failed"] Call _refundParaVehiSetup};
@@ -118,14 +123,19 @@ if (_dropReady) then {
 	sleep 2;
 	if (!alive _vehicle) exitWith {};
 	_chute = (missionNamespace getVariable Format['WFBE_%1PARACHUTE',str _side]) createVehicle [0,0,20];
-	_chute setPos [getPos _vehicle select 0, getPos _vehicle select 1, (getPos _vehicle select 2) - 11];
-	_chute setDir (getDir _vehicle);
-	_vehicle attachTo [_chute,[0,0,0]];
-	_dropStart = time;
-	while {!isNull _vehicle && alive _vehicle && ((getPos _vehicle select 2) >= 10) && ((time - _dropStart) < 120)} do {sleep 1};
-	if (!isNull _vehicle) then {detach _vehicle};
-	sleep 10;
+	if (isNull _chute) then {
+		["WARNING", Format ["Support_ParaVehicles.sqf: [%1] drop chute create failed; cargo free-falls.", str _side]] Call WFBE_CO_FNC_LogContent;
+		diag_log format ["PARAVEHI|CHUTEFAIL|side=%1|reason=chute_create", _side];
+	} else {
+		_chute setPos [getPos _vehicle select 0, getPos _vehicle select 1, (getPos _vehicle select 2) - 11];
+		_chute setDir (getDir _vehicle);
+		_vehicle attachTo [_chute,[0,0,0]];
+		_dropStart = time;
+		while {!isNull _vehicle && alive _vehicle && ((getPos _vehicle select 2) >= 10) && ((time - _dropStart) < 120)} do {sleep 1};
+		if (!isNull _vehicle) then {detach _vehicle};
+		sleep 10;
 		deleteVehicle _chute;
+	};
 	};
 
 	[_grp,(_ranPos select _ran),"MOVE",10] Call AIMoveTo;

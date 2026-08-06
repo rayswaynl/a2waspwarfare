@@ -116,7 +116,11 @@ class FpvPurchaseAuthorityTests(unittest.TestCase):
             '_playerTeam getVariable "wfbe_funds"',
             "[_playerTeam, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds",
             "missionNamespace setVariable [_nextKey, _next]",
-            "publicVariable _nextKey",
+            # object-var-namespace bughunt (g1606): the rearm stamp is no longer broadcast via
+            # `publicVariable _nextKey` (a permanent per-UID publicVariable channel that spammed
+            # every connected client). It is now delivered privately through the same
+            # _sendPrivate helper the rest of this authority flow already uses.
+            '["fpv-rearm-cooldown", _next], _replyId, _uid] Call _sendPrivate',
             '"fpv-purchase-result"',
         )
         for token in required:
@@ -140,7 +144,12 @@ class FpvPurchaseAuthorityTests(unittest.TestCase):
         rearm_stamp = code.find(
             "missionNamespace setVariable [_nextKey, _next]", watchdog
         )
-        publish = code.find("publicVariable _nextKey", rearm_stamp)
+        publish = code.find(
+            '["fpv-rearm-cooldown", _next], _replyId, _uid] Call _sendPrivate', rearm_stamp
+        )
+        # Regression guard: the per-UID rearm stamp must never go back to a broadcast
+        # publicVariable (that was the object-var-namespace pollution bug g1606 fixed).
+        self.assertNotIn("publicVariable _nextKey", code)
         self.assertGreaterEqual(debit, 0)
         self.assertGreaterEqual(denial, 0)
         self.assertGreaterEqual(cap_expiry, 0)

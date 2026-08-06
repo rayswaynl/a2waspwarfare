@@ -25,12 +25,12 @@ _armorR = missionNamespace getVariable ["WFBE_C_SML_AT_OVERWATCH_ARMOR_R", 500];
 _offset = missionNamespace getVariable ["WFBE_C_SML_AT_OVERWATCH_OFFSET", 80];
 _startTime = time;
 
-//--- Step 1: Find a launcher soldier (secondaryWeapon != "") not already stamped.
+//--- Step 1: Find a loaded anti-armour launcher soldier, never a MANPAD, not already stamped.
 _launcher = objNull;
 _found = false;
 {
     _uX = _x;
-    if (!_found && {alive _uX} && {secondaryWeapon _uX != ""} && {isNil {_uX getVariable "wfbe_sml_detach_at"}}) then {
+    if (!_found && {alive _uX} && {[_uX] Call WFBE_CO_FNC_HasLoadedSecondaryWeapon} && {!([_uX] Call WFBE_CO_FNC_SmallArmsEffAntiAir)} && {isNil {_uX getVariable "wfbe_sml_detach_at"}}) then {
         _launcher = _uX;
         _found = true;
     };
@@ -130,7 +130,13 @@ waitUntil {
 _launcher setVariable ["wfbe_sml_detach_at", nil];
 if (alive _launcher) then {
     _launcher setUnitPos "AUTO";
-    _launcher doFollow (leader _team);
+    //--- A launcher transferred to a different group before rejoin fires (group_change exit) must not be ordered to follow its former team leader.
+    if (_launcher in (units _team)) then {
+        //--- Match SML-2 W1: never doFollow a null/dead leader (leader_dead exit races here).
+        if (!isNull (leader _team) && {alive (leader _team)}) then {
+            _launcher doFollow (leader _team);
+        };
+    };
 };
 
 diag_log Format ["SML|v1|OVERWATCH_REJOIN|side=%1 team=%2 reason=%3 elapsed=%4", _side, _team, _reason, (time - _startTime)];

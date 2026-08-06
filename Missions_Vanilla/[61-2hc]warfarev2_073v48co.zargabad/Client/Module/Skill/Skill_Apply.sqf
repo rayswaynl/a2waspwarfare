@@ -6,6 +6,8 @@
 Private ["_unit"];
 
 _unit = _this;
+//--- r76b: addAction on null/dead body throws and leaves role abilities unregistered after a racey respawn apply.
+if (isNull _unit || {!alive _unit}) exitWith {};
 
 switch (WFBE_SK_V_Type) do {
 	
@@ -32,7 +34,7 @@ switch (WFBE_SK_V_Type) do {
 			false,
 			true,
 			"",
-			"(time - WFBE_SK_V_LastUse_Salvage > WFBE_SK_V_Reload_Salvage) && !(({ alive _x && (side _x == side player) } count (nearestObjects [getPos player, (missionNamespace getVariable [Format ['WFBE_%1SALVAGETRUCK', sideJoinedText], []]), (missionNamespace getVariable 'WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE')])) > 0)"
+			"(time - WFBE_SK_V_LastUse_Salvage > WFBE_SK_V_Reload_Salvage) && !(({ alive _x && (side _x == side player) } count (nearestObjects [getPos player, (missionNamespace getVariable [Format ['WFBE_%1SALVAGETRUCK', sideJoinedText], []]), (missionNamespace getVariable ['WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE', 30] max 1)])) > 0)"
 		];
 	
 	// Marty: Only show Repair Camp when the player is near a destroyed camp.
@@ -56,7 +58,7 @@ switch (WFBE_SK_V_Type) do {
 			false, 
 			true, 
 			"", 
-			"(vehicle player == player) && (player distance (call GetClosestFriendlyLocation) < 70) && ((cursorTarget getVariable ['SupplyAmount',0]) <= 0) && !(cursorTarget getVariable ['SupplyLoading',false]) && ((typeOf cursorTarget in WFBE_C_SUPPLY_TRUCK_TYPES) || ((typeOf cursorTarget in WFBE_C_SUPPLY_HELI_TYPES) && (((sideJoined call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_AIR) >= 3)))"
+			"(vehicle player == player) && {!isNull (call GetClosestFriendlyLocation)} && {(player distance (call GetClosestFriendlyLocation)) < 70} && {!isNull cursorTarget} && {alive cursorTarget} && {((cursorTarget getVariable ['SupplyAmount',0]) <= 0)} && {!(cursorTarget getVariable ['SupplyLoading',false])} && {((typeOf cursorTarget) in (missionNamespace getVariable ['WFBE_C_SUPPLY_TRUCK_TYPES', []])) || (((typeOf cursorTarget) in (missionNamespace getVariable ['WFBE_C_SUPPLY_HELI_TYPES', []])) && {(((sideJoined call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_AIR) >= 3)})}"
 		];
 
 		_unit addAction [
@@ -67,7 +69,7 @@ switch (WFBE_SK_V_Type) do {
 			false,
 			true,
 			"",
-			"(((typeOf (vehicle player)) in WFBE_C_SUPPLY_HELI_TYPES) && (((vehicle player) getVariable ['SupplyAmount',0]) > 0) && ((vehicle player) getVariable ['SupplyByHeli',false])) || (((typeOf cursorTarget) in WFBE_C_SUPPLY_HELI_TYPES) && ((cursorTarget getVariable ['SupplyAmount',0]) > 0) && (cursorTarget getVariable ['SupplyByHeli',false])) || (({((typeOf _x) in WFBE_C_SUPPLY_HELI_TYPES) && ((_x getVariable ['SupplyAmount',0]) > 0) && (_x getVariable ['SupplyByHeli',false])} count (nearestObjects [player, WFBE_C_SUPPLY_HELI_TYPES, 30])) > 0)"
+			"(((typeOf (vehicle player)) in (missionNamespace getVariable ['WFBE_C_SUPPLY_HELI_TYPES', []])) && {((vehicle player) getVariable ['SupplyAmount',0]) > 0} && {(vehicle player) getVariable ['SupplyByHeli',false]}) || {!isNull cursorTarget && {alive cursorTarget} && {((typeOf cursorTarget) in (missionNamespace getVariable ['WFBE_C_SUPPLY_HELI_TYPES', []]))} && {((cursorTarget getVariable ['SupplyAmount',0]) > 0)} && {(cursorTarget getVariable ['SupplyByHeli',false])}} || {({((typeOf _x) in (missionNamespace getVariable ['WFBE_C_SUPPLY_HELI_TYPES', []])) && {((_x getVariable ['SupplyAmount',0]) > 0)} && {(_x getVariable ['SupplyByHeli',false])}} count (nearestObjects [player, (missionNamespace getVariable ['WFBE_C_SUPPLY_HELI_TYPES', []]), 30])) > 0}"
 		];
 
 		_unit addAction [
@@ -78,7 +80,7 @@ switch (WFBE_SK_V_Type) do {
 			false, 
 			true, 
 			"", 
-			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR)&&((cursorTarget isKindOf 'Landvehicle' )|| (cursorTarget isKindOf 'Air'))&&(player distance cursorTarget<5)"
+			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR) && {!isNull cursorTarget} && {alive cursorTarget} && {((cursorTarget isKindOf 'LandVehicle') || (cursorTarget isKindOf 'Air'))} && {(player distance cursorTarget) < 5}"
 		];
 		
 	};
@@ -115,7 +117,7 @@ switch (WFBE_SK_V_Type) do {
 				false, 
 				true, 
 				"", 
-				"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR)&&((cursorTarget isKindOf 'Landvehicle' )|| (cursorTarget isKindOf 'Air'))&&(player distance cursorTarget<5)"
+				"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR) && {!isNull cursorTarget} && {alive cursorTarget} && {((cursorTarget isKindOf 'LandVehicle') || (cursorTarget isKindOf 'Air'))} && {(player distance cursorTarget) < 5}"
 			];
 	
 		// Marty: Only show Repair Camp when the player is near a destroyed camp.
@@ -133,7 +135,7 @@ switch (WFBE_SK_V_Type) do {
 			false, 
 			true, 
 			"", 
-			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR)&&((cursorTarget isKindOf 'Landvehicle' )|| (cursorTarget isKindOf 'Air'))&&(player distance cursorTarget<5)"
+			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR) && {!isNull cursorTarget} && {alive cursorTarget} && {((cursorTarget isKindOf 'LandVehicle') || (cursorTarget isKindOf 'Air'))} && {(player distance cursorTarget) < 5}"
 		];
 		
 		// Marty: Only show Repair Camp when the player is near a destroyed camp.
@@ -151,7 +153,7 @@ switch (WFBE_SK_V_Type) do {
 			false, 
 			true, 
 			"", 
-			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR)&&((cursorTarget isKindOf 'Landvehicle' )|| (cursorTarget isKindOf 'Air'))&&(player distance cursorTarget<5)"
+			"(time - WFBE_SK_V_LastUse_LR > WFBE_SK_V_Reload_LR) && {!isNull cursorTarget} && {alive cursorTarget} && {((cursorTarget isKindOf 'LandVehicle') || (cursorTarget isKindOf 'Air'))} && {(player distance cursorTarget) < 5}"
 		];
 		
 		// Marty: Only show Repair Camp when the player is near a destroyed camp.

@@ -118,7 +118,13 @@ while {alive player && dialog} do {
 			};
 			if (_canUseEASA) then {
 				if (_funds >= (_row select 0)) then { //--- B66 exact-funds buy now allowed (was >, refused buying at exactly the price)
-					[vehicle player, _index, true] Call EASA_Equip;
+					if ((missionNamespace getVariable ["WFBE_C_SEAD_EASA_ROW", 0]) > 0 && {_index == (missionNamespace getVariable [Format ["WFBE_EASA_SEAD_ROW_%1", typeOf (vehicle player)], -1])}) then {
+						//--- SEAD opt-in row (owner ruling 2026-08-02): guidance-only, skip EASA_Equip's remove-old/add-new
+						//--- weapon pass entirely so the current ordnance loadout is left untouched.
+						[vehicle player] Call WFBE_EASA_FNC_AttachSEADRow;
+					} else {
+						[vehicle player, _index, true] Call EASA_Equip;
+					};
 					-(_row select 0) Call ChangePlayerFunds;
 					if (_repairPointEASA) then {
 						WFBE_SK_V_LastUse_RepairPointEASA = time;

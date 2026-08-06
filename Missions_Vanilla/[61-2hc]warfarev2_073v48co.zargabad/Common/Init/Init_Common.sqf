@@ -63,6 +63,7 @@ GetTownsHeld = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTow
 GetTownsIncome = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTownsIncome.sqf";
 GetUnitVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitVehicle.sqf";
 HandleIncomingMissile = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleIncomingMissile.sqf";
+WFBE_CO_FNC_AutoCM_OA = Compile preprocessFileLineNumbers "Client\Module\CM\CM_AutoCM_OA.sqf"; //--- r120: compile in Common scope - the client-only lazy compile left the propagated incomingMissile EH spawning a nil symbol on server/HC per incoming missile.
 HandleShootBombs = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootBombs.sqf";
 HandleShootMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootMissiles.sqf";
 IsArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_IsArtillery.sqf";
@@ -128,15 +129,18 @@ WFBE_CO_FNC_AICOMAirLeg = Compile preprocessFileLineNumbers "Common\Functions\Co
 //--- flag WFBE_C_AICOM_AIR_TELEMETRY default 0.
 WFBE_CO_FNC_AICOMAirFoundTelemetry = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirFoundTelemetry.sqf";
 WFBE_CO_FNC_AICOMAirReturn = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirReturn.sqf"; //--- cmdcon42-f shared post-drop RETURN-TO-BASE-AND-HOLD (the founding WFBE_C_AICOM_AIR_RETAIN path + air-mobile legs call this SAME code - no duplication). Scheduled-context only (it sleeps).
+WFBE_CO_FNC_AICOMAirliftV2Deliver = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirliftV2Deliver.sqf"; //--- fable/airlift-v2 (PR #1579 follow-up, owner 2026-07-28): the LIFT half of the requisitioned-transport handshake, run AT the in-loop DELIVERY point (Common_RunCommanderTeam.sqf AIRMOBILE TRANSPORT GRANT CONSUMER) instead of the founding air-insert block that can never reach a hull created later. Mount + fly + unload + RTB reuse the founding air-insert / Common_AICOMAirLeg / Common_AICOMAirReturn idioms. Gate WFBE_C_AICOM_AIRLIFT_V2 default 0. Scheduled-context only (it sleeps) - Spawned, never Called directly.
 WFBE_CO_FNC_AICOMServiceTick = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMServiceTick.sqf"; //--- B48 AICOM self-service (default OFF: WFBE_C_AICOM_SERVICE_ENABLED)
 WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";
 WFBE_CO_FNC_SafeCrewDelete = Compile preprocessFileLineNumbers "Common\Functions\Common_SafeCrewDelete.sqf"; //--- crash 014EFCF4 sweep: shared crew+hull teardown, Spawn-only (see file header).
 WFBE_CO_FNC_SmallArmsEffAntiAir = Compile preprocessFileLineNumbers "Common\Functions\Common_SmallArmsEffAntiAir.sqf"; //--- fable/smallarms-air-envelope: WEAPON-capability AA classifier (MANPAD launcher/missile) for the WFBE_C_SMALLARMS_AIR_ENVELOPE steering manager. Returns BOOL; true = immune to air-lock steering.
+WFBE_CO_FNC_HasLoadedSecondaryWeapon = Compile preprocessFileLineNumbers "Common\Functions\Common_HasLoadedSecondaryWeapon.sqf"; //--- AICOM/SML capability: a secondary launcher counts only while the unit retains a compatible magazine.
 WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functions\Common_SpawnFactionSmoke.sqf"; //--- Cosmetic: server-only triggered faction smoke (gated WFBE_C_FSMOKE_ENABLED; capped+TTL+cooldown).
 // Marty: Central createGroup wrapper (LEVER 2) - registered immediately after AICOMLog so the wrapper can call it.
 WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";
 WFBE_CO_FNC_GroupGetBool = Compile preprocessFileLineNumbers "Common\Functions\Common_GroupGetBool.sqf"; //--- G1: safe bool getVariable for GROUP receivers (A2 OA unset->nil trap)
 WFBE_CO_FNC_TownNudgeWeight = Compile preprocessFileLineNumbers "Common\Functions\Common_TownNudgeWeight.sqf"; //--- COMMAND V2 (a): aggregated sqrt(n)+ceiling town-nudge weight. Only called while WFBE_C_CMD_TOWN_NUDGE > 0.
+WFBE_CO_FNC_TerrainClassifySector = Compile preprocessFileLineNumbers "Common\Functions\Common_TerrainClassifySector.sqf"; //--- owner-shortlist terrain sector classifier: 5-sample jittered selectBestPlaces average per axis. Only called while WFBE_C_TERRAIN_CLASSIFY_SECTORS > 0.
 WFBE_CO_FNC_CapLock = Compile preprocessFileLineNumbers "Common\Functions\Common_CapLock.sqf"; //--- capture-churn fix: is this AICOM team mid-capture-drain and thus IMMUNE to re-tasking (GR-2026-07-03a).
 WFBE_CO_FNC_AICOMTeamMounted = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMTeamMounted.sqf"; //--- T1.2 FIX (R3-SYNTHESIS 2026-07-20, codex review): shared mounted-classifier so AssignTowns and Allocate cannot diverge (leader-or-50pct embarked, not any-single-unit).
 WFBE_CO_FNC_SMLCampSplit = Compile preprocessFileLineNumbers "Common\Functions\Common_SMLCampSplit.sqf"; //--- SML-1 (GR-2026-07-03a): camp-split captures; per-unit doStop/doMove with TTL watchdog. Flag WFBE_C_SML_CAMP_SPLIT default 0.
@@ -175,7 +179,9 @@ Call Compile preprocessFileLineNumbers "Common\Functions\Common_LogVehDelete.sqf
 Call Compile preprocessFileLineNumbers "Common\Functions\Common_CommanderLease.sqf";
 WFBE_CO_FNC_GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideSupply.sqf";
 WFBE_CO_FNC_GetSideStructures = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideStructures.sqf";
+WFBE_CO_FNC_PickForwardFactory = Compile preprocessFileLineNumbers "Common\Functions\Common_PickForwardFactory.sqf"; //--- fable/founding-placement-20260802: forward-factory selection for HC-team founding (WFBE_C_AICOM_FOUND_FACTORY_FORWARD).
 WFBE_CO_FNC_GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
+WFBE_CO_FNC_RefreshAirCountermeasures = Compile preprocessFileLineNumbers "Common\Functions\Common_RefreshAirCountermeasures.sqf";
 WFBE_CO_FNC_IsUnitUnlocked = Compile preprocessFileLineNumbers "Common\Functions\Common_IsUnitUnlocked.sqf"; //--- feat/common-isunitunlocked: shared per-unit facMap/QUERYUNITUPGRADE tier-unlock check (was duplicated across AI_Commander_Teams.sqf/Produce.sqf/Base.sqf); returns [unlocked,found].
 WFBE_CO_FNC_GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 WFBE_CO_FNC_GetTotalCamps = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCamps.sqf";
@@ -185,7 +191,8 @@ WFBE_CO_FNC_GetTownsSupply = Compile preprocessFileLineNumbers "Common\Functions
 WFBE_CO_FNC_GetUnitConfigGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitConfigGear.sqf";
 //--- wiki-wins: removed dead compile WFBE_CO_FNC_GetUnitsPerSide (zero call sites repo-wide)
 WFBE_CO_FNC_GetVehicleTurretsGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetVehicleTurretsGear.sqf";
-//--- deadcode-sweep 2026-07-21 (DC-01): removed dead compile WFBE_CO_FNC_ValidateCampPos (zero call sites repo-wide; file deleted)
+WFBE_CO_FNC_ValidateCampPos = Compile preprocessFileLineNumbers "Common\Functions\Common_ValidateCampPos.sqf"; //--- StarFort placement gate dependency.
+WFBE_CO_FNC_StarFortStatus = Compile preprocessFileLineNumbers "Common\Functions\Common_StarFortStatus.sqf";
 WFBE_CO_FNC_HandleArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleArtillery.sqf";
 WFBE_CO_FNC_OnUnitHit = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitHit.sqf";
 WFBE_CO_FNC_OnUnitKilled = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitKilled.sqf";
@@ -223,6 +230,8 @@ WFBE_CO_FNC_RadiusHold_Register = Compile preprocessFileLineNumbers "Common\Func
 WFBE_CO_FNC_WeightedDraw = Compile preprocessFileLineNumbers "Common\Functions\Common_WeightedDraw.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): pure weighted-roll primitive extracted from AI_Commander_Wildcard.sqf proven algorithm.
 if (isNil "WFBE_RADIUSHOLD_REGISTRY") then { WFBE_RADIUSHOLD_REGISTRY = []; }; //--- fable/radius-hold-primitive: registry init (defense-in-depth; Common_RadiusHold.sqf also isNil-guards this on first register).
 WFBE_CO_FNC_DeadspawnPenPos = Compile preprocessFileLineNumbers "Common\Functions\Common_DeadspawnPenPos.sqf"; //--- fable/deadspawn-redesign: underwater join-pen position resolver, flag WFBE_C_DEADSPAWN_REDESIGN default 1.
+WFBE_CO_FNC_SquadLoadAll = Compile preprocessFileLineNumbers "Common\Functions\Common_SquadLoadAll.sqf"; //--- Team Menu V2 bulk mount, flag WFBE_C_SQUAD_BULK_MOUNT default 0.
+WFBE_CO_FNC_SquadUnloadAll = Compile preprocessFileLineNumbers "Common\Functions\Common_SquadUnloadAll.sqf"; //--- Team Menu V2 staggered bulk dismount, flag WFBE_C_SQUAD_BULK_MOUNT default 0.
 
 WFBE_CO_FNC_RequestIcbmTelFire = Compile preprocessFileLineNumbers "Common\Functions\Common_RequestIcbmTelFire.sqf"; //--- sender-bound, one-shot ICBM/TEL launch capability.
 WFBE_CO_FNC_RequestIcbmTelPurchase = Compile preprocessFileLineNumbers "Common\Functions\Common_RequestIcbmTelPurchase.sqf"; //--- server-issued proof for a legitimate player SCUD purchase.
@@ -525,6 +534,38 @@ WFBE_SPECIAL_UNIT_HINTS = [
 //--- "nearEntities [_shooter,_k]" RPT error (deleted-shooter race in the mod's sys_aiskill fired
 //--- handler). One-line no-op on machines without the mod. See Common_AsrFiredGuard.sqf.
 Call Compile preprocessFileLineNumbers "Common\Functions\Common_AsrFiredGuard.sqf";
+
+//--- fable/teamswitch-freeze-guard (preventive infra, no live bug - 2026-08-03 mining pass): drop-in
+//--- selectPlayer replacement for a genuine future cross-group control handoff. Flag
+//--- WFBE_C_FIX_TEAMSWITCH_CROSSGROUP_AIFREEZE default 0; flag-off or same-group is a plain selectPlayer.
+WFBE_CO_FNC_SelectPlayerCrossGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_SelectPlayerCrossGroup.sqf";
+
+//--- SQF utility library adoption (card #25, GR-2026-07-08a): CBA-inspired hash/dict store,
+//--- clean-room 3D vector math helpers, and a zero-scheduler-delay dispatch primitive. Pure
+//--- scaffolding - unconditionally registered like the existing Common_Handle* family, produces
+//--- zero behavior until a future PR calls into it. WFBE_C_UTIL_LIB_SELFTEST (default 0) arms an
+//--- optional boot smoke-test only (see Common_UtilLibSelfTest.sqf); it does not gate the
+//--- functions themselves.
+WFBE_CO_FNC_HashCreate = Compile preprocessFileLineNumbers "Common\Functions\Common_HashCreate.sqf";
+WFBE_CO_FNC_HashGet = Compile preprocessFileLineNumbers "Common\Functions\Common_HashGet.sqf";
+WFBE_CO_FNC_HashSet = Compile preprocessFileLineNumbers "Common\Functions\Common_HashSet.sqf";
+WFBE_CO_FNC_HashHasKey = Compile preprocessFileLineNumbers "Common\Functions\Common_HashHasKey.sqf";
+WFBE_CO_FNC_HashRem = Compile preprocessFileLineNumbers "Common\Functions\Common_HashRem.sqf";
+WFBE_CO_FNC_VectDot = Compile preprocessFileLineNumbers "Common\Functions\Common_VectDot.sqf";
+WFBE_CO_FNC_VectCross = Compile preprocessFileLineNumbers "Common\Functions\Common_VectCross.sqf";
+WFBE_CO_FNC_VectMagnitude = Compile preprocessFileLineNumbers "Common\Functions\Common_VectMagnitude.sqf";
+WFBE_CO_FNC_VectElevationSolve = Compile preprocessFileLineNumbers "Common\Functions\Common_VectElevationSolve.sqf";
+WFBE_CO_FNC_VectLeadAngle = Compile preprocessFileLineNumbers "Common\Functions\Common_VectLeadAngle.sqf";
+WFBE_CO_FNC_VectSurfaceNormal = Compile preprocessFileLineNumbers "Common\Functions\Common_VectSurfaceNormal.sqf";
+WFBE_CO_FNC_DelaylessCall = Compile preprocessFileLineNumbers "Common\Functions\Common_DelaylessCall.sqf";
+WFBE_CO_FNC_UtilLibSelfTest = Compile preprocessFileLineNumbers "Common\Functions\Common_UtilLibSelfTest.sqf";
+
+//--- Server-only, one-shot: run the library self-test only if explicitly armed.
+if (isServer) then {
+	if ((missionNamespace getVariable "WFBE_C_UTIL_LIB_SELFTEST") > 0) then {
+		[] call WFBE_CO_FNC_UtilLibSelfTest;
+	};
+};
 
 //--- Common initilization is complete at this point.
 ["INITIALIZATION", Format ["Init_Common.sqf: Common initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

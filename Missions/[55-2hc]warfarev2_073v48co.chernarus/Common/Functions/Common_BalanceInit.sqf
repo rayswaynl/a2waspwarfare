@@ -5,7 +5,7 @@ if (isServer) exitWith {};
 
 switch (typeOf _this) do
 {
-// Su-34 [AF5] - 10 pylons
+// Su-34 [AF5 = Aircraft Factory tier 5, not an airfield] - 10 pylons
 case "Su34": {
     _this removeMagazine "4Rnd_R73";
     _this removeWeapon "R73Launcher";
@@ -14,7 +14,7 @@ case "Su34": {
     _this addWeapon "R73Launcher_2";
 };
 
-// Su-25A [AF3] - 6 pylons
+// Su-25A [AF3 = Aircraft Factory tier 3, not an airfield] - 6 pylons
 case "Su25_Ins": {
     _this removeMagazine "2Rnd_R73";
     _this removeMagazine "80Rnd_S8T";
@@ -24,7 +24,7 @@ case "Su25_Ins": {
     _this addWeapon "57mmLauncher";
 };
 
-// Su-25T [AF4] - 8 pylons
+// Su-25T [AF4 = Aircraft Factory tier 4, not an airfield] - 8 pylons
 case "Su25_TK_EP1": {
     _this removeMagazine "4Rnd_FAB_250";
     _this removeMagazine "80Rnd_S8T";
@@ -37,7 +37,7 @@ case "Su25_TK_EP1": {
     _this addWeapon "S8Launcher";
 };
 
-// Su-39 [AF5] - 10 pylons
+// Su-39 [AF5 = Aircraft Factory tier 5, not an airfield] - 10 pylons
 case "Su39": {
     _this removeMagazine "4Rnd_FAB_250";
     _this removeMagazine "80Rnd_S8T";
@@ -52,7 +52,7 @@ case "Su39": {
     _this addWeapon "S8Launcher";
 };
 
-// L-39 [AF3] - 4 pylons
+// L-39 [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 case "L39_TK_EP1": {
     _this addMagazine "2Rnd_R73";
     _this addMagazine "60Rnd_CMFlareMagazine";
@@ -60,13 +60,13 @@ case "L39_TK_EP1": {
     _this addWeapon "CMFlareLauncher";
 };
 
-// F-35B [AF5] - 6 pylons
+// F-35B [AF5 = Aircraft Factory tier 5, not an airfield] - 6 pylons
 case "F35B": {
     _this addMagazine "2Rnd_Maverick_A10";
     _this addWeapon "MaverickLauncher";
 };
 
-// L-159 [AF3] - 6 pylons
+// L-159 [AF3 = Aircraft Factory tier 3, not an airfield] - 6 pylons
 case "L159_ACR": {
     _this removeMagazine "4Rnd_Maverick_L159";
     _this removeWeapon "MaverickLauncher_ACR";
@@ -76,7 +76,7 @@ case "L159_ACR": {
     _this addWeapon "FFARLauncher";
 };
 
-// A-10A [AF3] - 4 pylons
+// A-10A [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 case "A10": {
     _this removeMagazine "14Rnd_FFAR";
     _this removeMagazine "4Rnd_GBU12";
@@ -92,7 +92,7 @@ case "A10": {
     _this addWeapon "Mk82BombLauncher_6";
 };
 
-// A-10C [AF4] - 8 pylons
+// A-10C [AF4 = Aircraft Factory tier 4, not an airfield] - 8 pylons
 case "A10_US_EP1": {
     _this removeMagazine "14Rnd_FFAR";
     _this removeMagazine "4Rnd_GBU12";
@@ -104,7 +104,7 @@ case "A10_US_EP1": {
     _this addWeapon "Mk82BombLauncher_6";
 };
 
-// AV8B (LGB) [AF4] - 8 pylons
+// AV8B (LGB) [AF4 = Aircraft Factory tier 4, not an airfield] - 8 pylons
 case "AV8B": {
     _this removeMagazine "6Rnd_GBU12_AV8B";
     _this removeWeapon "BombLauncher";
@@ -114,7 +114,7 @@ case "AV8B": {
     _this addWeapon "BombLauncherF35";
 };
 
-// AV8B [AF5] - 8 pylons
+// AV8B [AF5 = Aircraft Factory tier 5, not an airfield] - 8 pylons
 case "AV8B2": {
     _this removeMagazine "14Rnd_FFAR";
     _this removeMagazine "6Rnd_Mk82";
@@ -126,11 +126,11 @@ case "AV8B2": {
     _this addWeapon "MaverickLauncher";
 };
 
-// Mi-24V (CZ) [AF3] - 4 pylons
+// Mi-24V (CZ) [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 case "Mi24_D_CZ_ACR": {
 };
 
-// AH-64D (TOW) [AF3] - 4 pylons
+// AH-64D (TOW) [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 case "AH64D": {
     _this removeMagazine "8Rnd_Hellfire";
     _this removeWeapon "HellfireLauncher";
@@ -138,15 +138,15 @@ case "AH64D": {
     _this addWeapon "TOWLauncherSingle";
 };
 
-// AH-64D (Hellfire) [AF4] - 4 pylons
+// AH-64D (Hellfire) [AF4 = Aircraft Factory tier 4, not an airfield] - 4 pylons
 case "AH64D_EP1": {
 };
 
-// Apache AH1 [AF4] - 4 pylons
+// Apache AH1 [AF4 = Aircraft Factory tier 4, not an airfield] - 4 pylons
 case "BAF_Apache_AH1_D": {
 };
 
-// AH-1Z [AF5] - 4 pylons
+// AH-1Z [AF5 = Aircraft Factory tier 5, not an airfield] - 4 pylons
 case "AH1Z": {
     _this removeMagazine "8Rnd_Hellfire";
     _this removeMagazine "2Rnd_Sidewinder_AH1Z";
@@ -155,7 +155,7 @@ case "AH1Z": {
     _this addMagazine "8Rnd_Hellfire";
 };
 
-// Wildcat AH11 [AF3] - 4 pylons
+// Wildcat AH11 [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 case "AW159_Lynx_BAF": {
     _this removeMagazineTurret ["12Rnd_CRV7", [-1]];
     _this removeMagazineTurret ["1200Rnd_20mm_M621", [-1]];
@@ -171,7 +171,7 @@ case "AW159_Lynx_BAF": {
     _this addWeaponTurret ["SpikeLauncher_ACR", [-1]];
 };
 
-// Mi-24V [AF3] - 4 pylons
+// Mi-24V [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 case "Mi24_V": {
     _this removeMagazine "4Rnd_AT6_Mi24V";
     _this removeWeapon "AT6Launcher";
@@ -179,7 +179,7 @@ case "Mi24_V": {
     _this addWeapon "AT9Launcher";
 };
 
-// Mi-24P [AF3] - 4 pylons
+// Mi-24P [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 case "Mi24_P": {
     _this removeMagazine "4Rnd_AT9_Mi24P";
     _this removeMagazine "4Rnd_AT9_Mi24P";
@@ -194,13 +194,13 @@ case "Mi24_P": {
     _this addWeaponTurret ["57mmLauncher", [-1]];
 };
 
-// Mi-24D [AF3] - 2 pylons
+// Mi-24D [AF3 = Aircraft Factory tier 3, not an airfield] - 2 pylons
 case "Mi24_D_TK_EP1": {
     _this removeMagazineTurret ["128Rnd_57mm", [-1]];
     _this addMagazineTurret ["64Rnd_57mm", [-1]];
 };
 
-// Ka-52 [AF4] - 8 pylons
+// Ka-52 [AF4 = Aircraft Factory tier 4, not an airfield] - 8 pylons
 case "Ka52": {
     _this removeMagazine "12Rnd_Vikhr_KA50";
     _this removeWeapon "VikhrLauncher";
@@ -210,7 +210,7 @@ case "Ka52": {
     _this addWeapon "AT9Launcher";
 };
 
-// Ka-52 (Black) [AF5] - 4 pylons
+// Ka-52 (Black) [AF5 = Aircraft Factory tier 5, not an airfield] - 4 pylons
 case "Ka52Black": {
 };
 
@@ -224,7 +224,7 @@ case "M6_EP1": {
     _this addWeapon "9M311Laucher";
 };
 
-// An-2 [AF1] - 10 pylons
+// An-2 [AF1 = Aircraft Factory tier 1, not an airfield] - 10 pylons
 case "An2_TK_EP1": {
     _this addMagazine "60Rnd_CMFlareMagazine";
     _this addMagazine "500Rnd_TwinVickers";
@@ -277,7 +277,7 @@ case "M2A2_EP1": {
     _this addWeapon "M242";
 };
 
-// UH1Y [AF2] - 0 pylons
+// UH1Y [AF2 = Aircraft Factory tier 2, not an airfield] - 0 pylons
 case "UH1Y": {
     _this removeMagazineTurret ["14Rnd_FFAR", [-1]];
     _this addMagazineTurret ["14Rnd_FFAR", [-1]];
@@ -298,7 +298,7 @@ case "MLRS_DES_EP1": {
     _this addMagazine "12Rnd_MLRS";
 };
 
-// AH-6J [AF2] - 0 pylons
+// AH-6J [AF2 = Aircraft Factory tier 2, not an airfield] - 0 pylons
 case "AH6J_EP1": {
     _this addMagazine "14Rnd_FFAR";
 };
@@ -307,8 +307,8 @@ case "AH6J_EP1": {
 case "BMP2_INS": {
 _currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_HEAVY; 
 if (_currentFactoryLevel < 2) then {
-    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
     _this removeMagazineTurret ["8Rnd_AT5_BMP2", [0]];
+    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
 };
 };
 
@@ -316,8 +316,8 @@ if (_currentFactoryLevel < 2) then {
 case "BMP2_TK_EP1": {
 _currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_HEAVY; 
 if (_currentFactoryLevel < 2) then {
-    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
     _this removeMagazineTurret ["8Rnd_AT5_BMP2", [0]];
+    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
 };
 };
 
@@ -339,8 +339,8 @@ case "BRDM2_ATGM_INS": {
 case "BTR90": {
 _currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_LIGHT; 
 if (_currentFactoryLevel < 4) then {
-    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
     _this removeMagazineTurret ["8Rnd_AT5_BMP2", [0]];
+    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
 };
 };
 
@@ -354,8 +354,8 @@ case "Pandur2_ACR": {
     _this addWeaponTurret ["M242", [0]];
 _currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_LIGHT; 
 if (_currentFactoryLevel < 4) then {
-    _this removeWeaponTurret ["SpikeLauncher_ACR", [0]];
     _this removeMagazineTurret ["2Rnd_Spike_ACR", [0]];
+    _this removeWeaponTurret ["SpikeLauncher_ACR", [0]];
 };
 };
 

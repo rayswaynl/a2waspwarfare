@@ -155,10 +155,10 @@ if (isNull _driver) exitWith {
 	missionNamespace setVariable [_pendingKey, false];
 };
 
-//--- Same-frame moveIn can fail under client lag. Retry the local move for one second and fail-clean
+//--- Same-frame moveIn can fail under client lag. Retry the local move for ten seconds and fail-clean
 //--- before asking the server, so a null/unseated pilot never strands playerFPV or an empty group.
 _driver moveInDriver _drone;
-_seatDeadline = time + 1;
+_seatDeadline = time + 10;
 waitUntil {
 	sleep 0.05;
 	if (vehicle _driver != _drone) then {_driver moveInDriver _drone};

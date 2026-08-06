@@ -12,16 +12,17 @@
 
 	_this = [facType("Barracks"/"Light"/"Heavy"), pos, dir, truck, player]
 */
-private ["_secHardening","_facType","_pos","_dir","_truck","_player","_idx","_avail","_reject","_structures","_index","_classname","_script","_structureNames","_structureScripts","_structureDistances","_flatRadius","_fobTrucks","_startResultKey","_completionResultKey","_startResult","_startMessage","_buildHandle","_currentAvail"];
-_secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
-
-if (_secHardening && {!((typeName _this) in ["ARRAY"])}) exitWith {
+private ["_facType","_pos","_dir","_truck","_player","_idx","_avail","_reject","_structures","_index","_classname","_script","_structureNames","_structureScripts","_structureDistances","_flatRadius","_fobTrucks","_startResultKey","_completionResultKey","_startResult","_startMessage","_buildHandle","_currentAvail"];
+//--- BUYUNIT-AUTH (g1606 2026-07-30): always-on RequestUpgrade-style envelope + live GUER player bind.
+//--- Previously type/count/player/side gates were behind WFBE_C_SEC_HARDENING (default 0), so short/wrong-type
+//--- forges and non-GUER callers could reach token/truck mutation on the factory-purchase PV.
+if (typeName _this != "ARRAY") exitWith {
 	diag_log Format ["GUERFOB|v1|reject|reason=malformed-payload|payloadType=%1", typeName _this];
 	["WARNING", Format ["RequestFOBStructure.sqf: malformed payload type [%1] - rejected.", typeName _this]] Call WFBE_CO_FNC_LogContent;
 };
-if (_secHardening && {!((count _this) > 4)}) exitWith {
+if ((count _this) < 5) exitWith {
 	diag_log Format ["GUERFOB|v1|reject|reason=short-payload|count=%1", count _this];
-	["WARNING", Format ["RequestFOBStructure.sqf: short payload [%1] - rejected.", _this]] Call WFBE_CO_FNC_LogContent;
+	["WARNING", Format ["RequestFOBStructure.sqf: short payload count=%1 - rejected.", count _this]] Call WFBE_CO_FNC_LogContent;
 };
 
 _facType = _this select 0;
@@ -29,6 +30,19 @@ _pos     = _this select 1;
 _dir     = _this select 2;
 _truck   = _this select 3;
 _player  = _this select 4;
+
+if (typeName _facType != "STRING" || {_facType == ""}) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=bad-facType|type=%1", typeName _facType];
+	["WARNING", "RequestFOBStructure.sqf: facType is not a non-empty STRING - rejected."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _pos != "ARRAY" || {(count _pos) < 2} || {typeName (_pos select 0) != "SCALAR"} || {typeName (_pos select 1) != "SCALAR"}) exitWith {
+	diag_log "GUERFOB|v1|reject|reason=bad-pos";
+	["WARNING", "RequestFOBStructure.sqf: pos is not a numeric ARRAY - rejected."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _dir != "SCALAR") exitWith {
+	diag_log "GUERFOB|v1|reject|reason=bad-dir";
+	["WARNING", "RequestFOBStructure.sqf: dir is not SCALAR - rejected."] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- Always-on round evidence: WFBE_CO_FNC_LogContent is compiled out on normal release servers, so it cannot
 //--- distinguish a missing PV request from an authoritative reject. Keep this concise and avoid player identity.
@@ -38,11 +52,11 @@ if (!((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0)) exitWit
 	diag_log Format ["GUERFOB|v1|reject|reason=guer-disabled|type=%1|pos=%2", _facType, _pos];
 };
 
-if (_secHardening && {!((typeName _player) in ["OBJECT"]) || {isNull _player} || {!isPlayer _player} || {!alive _player}}) exitWith {
+if (typeName _player != "OBJECT" || {isNull _player} || {!alive _player} || {!isPlayer _player}) exitWith {
 	diag_log Format ["GUERFOB|v1|reject|reason=invalid-player|type=%1|pos=%2", _facType, _pos];
 	["WARNING", Format ["RequestFOBStructure.sqf: caller [%1] is not a live player - rejected.", _player]] Call WFBE_CO_FNC_LogContent;
 };
-if (_secHardening && {!((side group _player) in [resistance])}) exitWith {
+if !((side group _player) in [resistance]) exitWith {
 	diag_log Format ["GUERFOB|v1|reject|reason=non-guer-player|type=%1|pos=%2", _facType, _pos];
 	["WARNING", Format ["RequestFOBStructure.sqf: caller [%1] is not GUER - rejected.", _player]] Call WFBE_CO_FNC_LogContent;
 };
@@ -202,7 +216,7 @@ if (!_reject) then {
 				diag_log Format ["GUERFOB|v1|accept|type=%1|pos=%2", _facType, _pos];
 			} else {
 				_completionMessage = "FOB construction failed; your token was restored.";
-				_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", []]);
+				_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]); //--- r30 getvar-fallback: match debit default
 				if (_idx < (count _currentAvail) && {(typeName (_currentAvail select _idx)) == "SCALAR"}) then {
 					_currentAvail set [_idx, (_currentAvail select _idx) + 1];
 					missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _currentAvail];
@@ -226,7 +240,7 @@ if (!_reject) then {
 	} else {
 		_startMessage = "construction start did not complete";
 		if ((count _startResult) > 1 && {(typeName (_startResult select 1)) == "STRING"} && {(_startResult select 1) != ""}) then {_startMessage = _startResult select 1};
-		_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", []]);
+		_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]); //--- r30 getvar-fallback: match debit default
 		if (_idx < (count _currentAvail) && {(typeName (_currentAvail select _idx)) == "SCALAR"}) then {
 			_currentAvail set [_idx, (_currentAvail select _idx) + 1];
 			missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _currentAvail];

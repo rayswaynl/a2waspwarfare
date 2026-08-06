@@ -212,7 +212,9 @@ WFBE_COMM_FNC_RefreshWallet = {
 	_selTownId = _this select 0;
 	_townFundKey = Format ["AICOMV2_GDIR_TOWN_FUND_%1", _selTownId];
 	_townFund = missionNamespace getVariable [_townFundKey, 0];
-	_walletTxt = Format ["Wallet: $%1 | Town Fund: $%2", round _wallet, round _townFund];
+	//--- floor, not round: gates below compare the RAW fractional wallet (assist bounties can credit x.5),
+	//--- so a rounded-up display ($800 shown vs 799.5 spendable) would contradict the disabled buttons/deny.
+	_walletTxt = Format ["Wallet: $%1 | Town Fund: $%2", floor _wallet, floor _townFund];
 	ctrlSetText [31070, _walletTxt];
 	[_wallet, _townFund]
 };
@@ -423,18 +425,19 @@ waitUntil {
 	};
 	//--- WFBE_C_GDIR_VIS: armed QRF contract indicator for selected town.
 	if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
-		private ["_contracts","_ctrSz","_ci","_qrfArmed"];
-		_contracts = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
+		private ["_gdirSnap","_snapContracts","_ctrSz","_ci","_qrfArmed"];
+		_gdirSnap = missionNamespace getVariable ["WFBE_COMM_GDIR_SNAP", []];
+		_snapContracts = [];
+		if (typeName _gdirSnap == "ARRAY" && {count _gdirSnap > 6}) then {_snapContracts = _gdirSnap select 6};
 		_qrfArmed = false;
-		_ctrSz = count _contracts;
+		_ctrSz = if (typeName _snapContracts == "ARRAY") then {count _snapContracts} else {0};
 		_ci = 0;
 		while {_ci < _ctrSz} do {
-			private ["_ctrR","_cKindR","_cTownR","_cStateR"];
-			_ctrR   = _contracts select _ci;
+			private ["_ctrR","_cKindR","_cTownR"];
+			_ctrR   = _snapContracts select _ci;
+			_cTownR = _ctrR select 0;
 			_cKindR = _ctrR select 1;
-			_cTownR = _ctrR select 2;
-			_cStateR = _ctrR select 7;
-			if (_cTownR == _selTownId && {_cStateR == "armed"} && {_cKindR != "counterAttack"}) then {_qrfArmed = true};
+			if (_cTownR == _selTownId && {_cKindR != "counterAttack"}) then {_qrfArmed = true};
 			_ci = _ci + 1;
 		};
 		if (_qrfArmed) then {
@@ -513,7 +516,11 @@ waitUntil {
 		["RequestGDirPanel", [player, "relief", _selTownId, "none"]] Call WFBE_CO_FNC_SendToServer;
 		ctrlSetText [31078, "Relief squad order sent. Awaiting result..."];
 	};
-	if (MenuAction == 90) then {
+	//--- exitWith (r90 loop leak): the waitUntil body re-runs while dialog is true, and
+	//--- WF_Menu opens in the same pass - without exitWith the stale loop persisted with its
+	//--- OLD _selTownId, and a purchase click after reopening the panel could be consumed by
+	//--- the stale loop, sending the PAID order to the previously selected town.
+	if (MenuAction == 90) exitWith {
 		MenuAction = -1;
 		deleteMarkerLocal _selMarker;
 		closeDialog 0;

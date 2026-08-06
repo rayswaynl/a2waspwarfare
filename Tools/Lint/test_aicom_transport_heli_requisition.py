@@ -44,7 +44,11 @@ def test_transport_requisition_reserves_existing_ai_and_air_budgets() -> None:
             encoding="utf-8-sig"
         )
 
-        assert '_alCapCost = 3 + count (_alData select QUERYUNITTURRETS);' in producer
+        # PR #1854 (staging wave 2026-08-02): airlift crew-cap cost now matches the seats actually
+        # spawned (base 1 + gunner + commander) instead of the flat 3 + turret count.
+        assert '_alCapCost = 1;' in producer
+        assert 'if (_alHasGunner) then {_alCapCost = _alCapCost + 1};' in producer
+        assert 'if (_alHasCommander) then {_alCapCost = _alCapCost + 1};' in producer
         assert 'if (_capRemaining >= _alCapCost)' in producer
         assert '_capRemaining = _capRemaining - _alCapCost;' in producer
         assert 'WFBE_C_AICOM_AIR_MAX_TOTAL' in producer

@@ -17,20 +17,21 @@
    the mission boundary for more than WFBE_C_PLAYERS_OFFMAP_TIMEOUT seconds
    (default 50) is force-killed via `setDamage 1`, which bypasses allowDamage -
    immunity means nothing if the pen itself is off-map. So the resolved XY is
-   verified in-bounds using the SAME formula Client_IsOnMap.sqf uses
-   (WFBE_BOUNDARIESXY square boundary, centred on the map) before being
-   returned. Any point with 0<=x<=15360 and 0<=y<=15360 trivially satisfies
-   this square-boundary test, so the seed below only needs to be real, deep
-   water - it does not need a separate in-bounds proof.
+   CLAMPED into the SAME square Client_IsOnMap.sqf tests (WFBE_BOUNDARIESXY,
+   the PER-MAP side length - 8192 on Zargabad, not always 15360) before being
+   returned. The seed below only needs to be real, deep water on the source
+   terrain; the clamp - not any property of the seed - is what guarantees the
+   returned point is in-bounds on every terrain.
 
    Landlocked maps (no water found within the ring search) also fall back to
-   the seed, so the pen still resolves to a real, in-bounds, on-map point
+   the seed, which the boundary clamp below then forces on-map, so the pen
+   still resolves to a real, in-bounds point
    instead of failing outright - the UNDERWATER property is a Chernarus
    (water-map) bonus, not a hard requirement; immunity comes entirely from the
    existing allowDamage window in Init_Client.sqf, not from this function.
    -------------------------------------------------------------------------- */
 
-private ["_boundary","_half","_seed","_seaPos","_ring","_step","_cand","_posXY","_difx","_dify","_dir","_adis","_bdis","_borderdis","_posdis","_z"];
+private ["_boundary","_half","_margin","_seed","_seaPos","_ring","_step","_cand","_posXY","_difx","_dify","_dir","_adis","_bdis","_borderdis","_posdis","_z"];
 
 //--- fable/deadspawn-chernarus-sea (owner 2026-07-09): the previous seed [1000,1000,0] (this file's
 //--- header above still described the SW-corner idiom it was copy-pasted from, per Init_HC.sqf's
@@ -73,13 +74,40 @@ while {count _seaPos == 0 && {_ring < 40}} do {
 if (count _seaPos == 0) then { _seaPos = _seed }; //--- no water found (or landlocked map): fall back to the verified seed.
 
 //--- BOUNDARY GUARD: same square AABB Client_IsOnMap.sqf uses (no atan/cos axis div0).
-//--- Falls back to the analytically-verified seed if the candidate is outside [0..B]^2.
-_boundary = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
+//--- fix(2026-08-01): the previous guard FELL BACK to _seed when the candidate was outside
+//--- [0..B]^2 - but on a no-water map the candidate it just rejected IS _seed (fallback
+//--- above), so the guard re-selected the same off-map point. On Zargabad
+//--- (WFBE_BOUNDARIESXY = 8192 < seed x = 10000, Common\Init\Init_Boundaries.sqf) the join
+//--- pen therefore resolved off-map and Client_HandleOnMap.sqf force-killed joining players
+//--- once the Init_Client.sqf invulnerability window lapsed. CLAMP each axis into
+//--- [margin .. B-margin] instead: deterministic (every client and
+//--- Init_DeadspawnPenEnclosure.sqf compute the same clamp), a no-op wherever the point was
+//--- already in-bounds (Chernarus/Takistan resolve exactly as before), and the final
+//--- surfaceIsWater check below re-decides wet/dry for any moved point.
+//--- RACE HARDENING: Init_Client.sqf calls this resolver inline at join placement, BEFORE
+//--- Init_Common.sqf (which runs Init_Boundaries.sqf at line 416) is guaranteed to have run -
+//--- the two are independent execVM threads with no ordering (documented at
+//--- Init_Client.sqf:78-87). If WFBE_BOUNDARIESXY is still nil here, a bare 15360 default
+//--- would un-clamp Zargabad (8192) right back off the map on the racing client while the
+//--- server-side enclosure (post-Init_Common) clamps against the real value - divergence.
+//--- Derive the boundary from worldName instead when the variable is not yet set: same
+//--- idiom + table as Common_RunCommanderTeam.sqf ~904 / Init_Boundaries.sqf (worldSize is
+//--- A3-only), identical on every machine at every init phase.
+_boundary = missionNamespace getVariable ["WFBE_BOUNDARIESXY", -1];
+if (_boundary < 0) then {
+	_boundary = switch (toLower worldName) do {
+		case "chernarus": {15360};
+		case "takistan":  {12800};
+		case "zargabad":  {8192};
+		default {15360};
+	};
+};
+_margin = 100; //--- keeps the 8m Init_DeadspawnPenEnclosure.sqf ring plus its occupant clear of the kill boundary.
 _posXY = [_seaPos select 0, _seaPos select 1];
-if (!(
-	((_posXY select 0) >= 0) && {(_posXY select 0) <= _boundary} &&
-	{(_posXY select 1) >= 0} && {(_posXY select 1) <= _boundary}
-)) then { _seaPos = _seed; _posXY = [_seed select 0, _seed select 1] };
+if ((_posXY select 0) < _margin) then { _posXY set [0, _margin] };
+if ((_posXY select 0) > (_boundary - _margin)) then { _posXY set [0, (_boundary - _margin)] };
+if ((_posXY select 1) < _margin) then { _posXY set [1, _margin] };
+if ((_posXY select 1) > (_boundary - _margin)) then { _posXY set [1, (_boundary - _margin)] };
 
 //--- BUGFIX (fable/deadspawn-redesign, landlocked follow-up): the original version of this
 //--- function set Z=-8 unconditionally, including on the DRY fallback branch (no water found

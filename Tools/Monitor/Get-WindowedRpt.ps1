@@ -9,6 +9,7 @@
 # Usage (dot-source from AicomWatch / post-deploy-verify.ps1):
 #   . C:\WASP\monitor\Get-WindowedRpt.ps1
 #   $lines = Get-WindowedRpt -RptPath $rpt                      # current-mission window
+#   $lines = Get-WindowedRpt -RptPath $rpt -RequireWindowMarker # fail closed if no current marker exists
 #   $errs  = Get-WindowedRpt -RptPath $rpt -Pattern 'Error|ERROR'
 #   $boot  = Get-WindowedRpt -RptPath $rpt -WindowMarker 'Dedicated host created' # per-boot window
 
@@ -21,6 +22,9 @@ function Get-WindowedRpt {
         # Marker that opens the window; default = mission init line stamped at every mission start.
         [ValidateNotNullOrEmpty()]
         [string] $WindowMarker = 'MISSINIT',
+        # When set, return no lines if the requested marker is absent. The default preserves
+        # the legacy whole-file fallback for early-boot callers.
+        [switch] $RequireWindowMarker,
         # Optional regex applied to lines inside the window.
         [string] $Pattern,
         # Return at most this many lines from the end of the window (0 = all).
@@ -50,8 +54,13 @@ function Get-WindowedRpt {
 
     # Find the LAST window marker; window = everything after it.
     $start = 0
+    $markerFound = $false
     for ($i = $all.Count - 1; $i -ge 0; $i--) {
-        if ($all[$i] -match $WindowMarker) { $start = $i; break }
+        if ($all[$i] -match $WindowMarker) { $start = $i; $markerFound = $true; break }
+    }
+    if ($RequireWindowMarker -and -not $markerFound) {
+        Write-Warning "Get-WindowedRpt: required window marker not found: $WindowMarker"
+        return @()
     }
     $window = if ($start -gt 0) { $all[$start..($all.Count - 1)] } else { $all }
 

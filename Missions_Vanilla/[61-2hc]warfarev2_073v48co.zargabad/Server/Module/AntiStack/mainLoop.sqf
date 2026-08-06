@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals.
-private ["_playerStats","_playerScore","_playerPrevStats","_playerPrevScoreTotal","_playerPrevTimePlayedTotal","_result","_oldScore","_playerScoreDiff","_playerNewScore","_playerNewScoreTotal","_sleep","_miniSleep","_hasConnectedAtLaunch","_flushSleep","_initialSleep","_perfStart","_perfPlayers","_perfAllUnits","_perfDbCalls"];
+private ["_playerStats","_playerScore","_playerPrevStats","_playerPrevScoreTotal","_playerPrevTimePlayedTotal","_result","_oldScore","_playerScoreDiff","_playerNewScore","_playerNewScoreTotal","_sleep","_miniSleep","_hasConnectedAtLaunch","_flushSleep","_initialSleep","_perfStart","_perfPlayers","_perfAllUnits","_perfDbCalls","_perfActive","_perfSliceMax","_perfSliceDt","_perfSlices","_sliceT0"];
 
 
 _miniSleep = _this select 0;
@@ -19,6 +19,12 @@ while { !WFBE_GameOver } do {
 	_perfPlayers = 0;
 	_perfDbCalls = 0;
 	_perfAllUnits = count allUnits;
+	//--- Round-2 perf fold: close each player slice before cooperative sleep; DB semantics unchanged.
+	_perfActive = 0;
+	_perfSliceMax = 0;
+	_perfSliceDt = 0;
+	_perfSlices = 0;
+	_sliceT0 = _perfStart;
 
 	{
 		if (!isNull _x) then {
@@ -40,7 +46,17 @@ while { !WFBE_GameOver } do {
 			missionNamespace setVariable [format["WFBE_CO_OLD_SCORE_PLAYER_%1", getPlayerUID _x], _playerScore];
 			_playerScoreDiff = _playerScore - _oldScore;
 			_playerNewScore = _playerPrevScoreTotal + _playerScoreDiff;
+			_perfSliceDt = diag_tickTime - _sliceT0;
+			_perfActive = _perfActive + _perfSliceDt;
+			if (_perfSliceDt > _perfSliceMax) then {_perfSliceMax = _perfSliceDt};
+			_perfSlices = _perfSlices + 1;
+			if !(isNil "PerformanceAudit_Record") then {
+				if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+					["antistack_main_slice", _perfSliceDt, "", "SERVER"] Call PerformanceAudit_Record;
+				};
+			};
 			uiSleep _miniSleep;
+			_sliceT0 = diag_tickTime;
 			_result = ["STORE", [getPlayerUID _x, _playerScoreDiff]] call WFBE_SE_FNC_CallDatabaseStore;
 			_perfDbCalls = _perfDbCalls + 1;
 		};
@@ -48,9 +64,14 @@ while { !WFBE_GameOver } do {
 	} forEach ([] call WFBE_CO_FNC_RealPlayers);
 
 	// Marty: Performance Audit record for AntiStack database score flush.
+	_perfSliceDt = diag_tickTime - _sliceT0;
+	_perfActive = _perfActive + _perfSliceDt;
+	if (_perfSliceDt > _perfSliceMax) then {_perfSliceMax = _perfSliceDt};
+	if (_perfPlayers > 0) then {_perfSlices = _perfSlices + 1};
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			["antistack_main", diag_tickTime - _perfStart, Format["allUnits:%1;players:%2;dbCalls:%3", _perfAllUnits, _perfPlayers, _perfDbCalls], "SERVER"] Call PerformanceAudit_Record;
+			if (_perfPlayers > 0) then { ["antistack_main_slice", _perfSliceDt, "", "SERVER"] Call PerformanceAudit_Record; };
+			["antistack_main", _perfActive, Format["allUnits:%1;players:%2;dbCalls:%3;slices:%4;sliceMaxMs:%5;wallMs:%6", _perfAllUnits, _perfPlayers, _perfDbCalls, _perfSlices, (_perfSliceMax * 1000) call PerformanceAudit_Round2, ((diag_tickTime - _perfStart) * 1000) call PerformanceAudit_Round2], "SERVER"] Call PerformanceAudit_Record;
 		};
 	};
 };

@@ -57,6 +57,16 @@ diag_log format ["GARNDRESS|START|interval=%1|cap=%2|radius=%3|lifetime=%4|searc
 while {!WFBE_GameOver} do {
     sleep _interval;
 
+    //--- r80: same live-burn guard as Server_GuerAirDef - nil LogVehDelete mid-match used to abort
+    //--- prune mid-registry (Call throw), leaking ZU-23 AA sites for the rest of the match.
+    if (isNil "WFBE_CO_FNC_LogVehDelete") then {
+        WFBE_CO_FNC_LogVehDelete = {};
+        if (isNil "wfbe_garndress_probestub_logged") then {
+            wfbe_garndress_probestub_logged = true;
+            diag_log "GARNDRESS|PROBE-STUBBED|LogVehDelete was nil at maintain tick - despawn probe stubbed, cleanup preserved";
+        };
+    };
+
     private ["_now","_kept","_townsWithGun","_dressedCount","_perfStart"];
     _perfStart     = diag_tickTime;
     _now           = time;
@@ -187,6 +197,11 @@ while {!WFBE_GameOver} do {
 
                         if (!isNull _crew) then {
                             //--- Move in as gunner; retry once (Common_CreateUnitForStaticDefence idiom).
+                            //--- r71b crew-seat: pair allowGetIn/assignAsGunner/orderGetIn before moveIn so a
+                            //--- failed instant seat still has a walk-in reservation (bare moveIn only).
+                            [_crew] allowGetIn true;
+                            _crew assignAsGunner _gun;
+                            [_crew] orderGetIn true;
                             _crew moveInGunner _gun;
                             if ((gunner _gun) != _crew) then {
                                 sleep 1;

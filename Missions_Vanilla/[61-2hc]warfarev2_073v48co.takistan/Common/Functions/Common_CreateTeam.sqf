@@ -1,5 +1,5 @@
 // Marty: Crew placement uses explicit private locals because town AI may be created on server, client, or headless client.
-Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx'];
+Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx','_aaEnrollList','_deferGlobalInitQueued'];
 
 _list = _this select 0;
 _position = _this select 1;
@@ -32,6 +32,7 @@ _perfInfantry = 0;
 _perfVehicles = 0;
 _perfCrew = 0;
 _perfSkipped = 0;
+_deferGlobalInitQueued = false;
 
 if (typeName _list != "ARRAY") then { _list = [_list] };
 
@@ -121,11 +122,12 @@ _rearmor = {
 		} else {
 		if (_x isKindOf 'Man') then {
 			// Marty: Forward the team global-init flag so town AI infantry can skip client marker/action setup.
-			_unit = [_x,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
+			_unit = [_x,_team,_position,_sideID,_global,"FORM",true] Call WFBE_CO_FNC_CreateUnit;
 			// Marty: Count and track only units the engine actually created.
 			if (isNull _unit) then {
 				_perfSkipped = _perfSkipped + 1;
 			} else {
+				_deferGlobalInitQueued = _deferGlobalInitQueued || _global;
 				_units = _units + [_unit];
 				_perfInfantry = _perfInfantry + 1;
 			};
@@ -180,7 +182,28 @@ _rearmor = {
 						_vehicle setVariable ["WFBE_CommanderAttackHeliSide", str _side, true];
 					};
 
+					//--- fix(irsmoke): this founding compositor is the ONLY vehicle-creation path AICOM team founding
+					//--- (Common_RunCommanderTeam.sqf), side patrols (Common_RunSidePatrol.sqf), and town garrisons
+					//--- (server_town.sqf / Common_CreateTownUnits.sqf) ever call - it never wired the IR Smoke module
+					//--- that Server_BuyUnit.sqf (AI refill path) and Client_BuildUnit.sqf (player purchase path) both
+					//--- carry, so no AICOM/town/patrol Tank or Car hull ever got wfbe_irs_flares set or the
+					//--- incomingMissile->IRS handler attached, regardless of the IRSMOKE upgrade being researched -
+					//--- matches the owner report "IR smoke not being used" even after unlocking it. Mirrors the exact
+					//--- IRS block at Server_BuyUnit.sqf (AI8: buying side _side, not client-side sideJoined).
+					if (((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") && {(missionNamespace getVariable "WFBE_C_MODULE_WFBE_IRSMOKE") > 0}) then {
+						if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 0) then {
+							private ["_irsGet"];
+							_irsGet = missionNamespace getVariable Format ["%1_IRS", (typeOf _vehicle)];
+							if !(isNil '_irsGet') then {
+								_vehicle setVariable ["wfbe_irs_flares", _irsGet select 1, true];
+								_vehicle addEventHandler ["incomingMissile", {_this spawn WFBE_CO_MOD_IRS_OnIncomingMissile}];
+								["INFORMATION", Format ["Common_CreateTeam.sqf: IRS wired for AICOM hull [%1] side [%2] flares=%3.", typeOf _vehicle, _side, _irsGet select 1]] Call WFBE_CO_FNC_LogContent;
+							};
+						};
+					};
+
 					_type = if (_vehicle isKindOf 'Man') then {missionNamespace getVariable Format ['WFBE_%1SOLDIER',_side]} else {if (_vehicle isKindOf 'Air') then {missionNamespace getVariable Format ['WFBE_%1PILOT',_side]} else {missionNamespace getVariable Format ['WFBE_%1CREW',_side]}};
+if (isNil "_type") then {_type = missionNamespace getVariable Format ["WFBE_%1SOLDIER",_side]};
 					_vehicleCrews = [];
 					// Marty: Assign crew roles before moveIn so locked or delegated town vehicles keep their crews mounted.
 					_vehicle allowCrewInImmobile true;
@@ -189,8 +212,9 @@ _rearmor = {
 						_crewRole = _x;
 						call {
 							if ((_vehicle emptyPositions _crewRole) <= 0) exitWith {};
-							_crewUnit = [_type,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
+							_crewUnit = [_type,_team,_position,_sideID,_global,"FORM",true] Call WFBE_CO_FNC_CreateUnit;
 							if (isNull _crewUnit) exitWith {};
+							_deferGlobalInitQueued = _deferGlobalInitQueued || _global;
 							[_crewUnit] allowGetIn true;
 
 							switch (_crewRole) do {
@@ -216,6 +240,31 @@ _rearmor = {
 						};
 					} forEach ["driver","gunner","commander"];
 
+//--- Turret seats (parity with Server_BuyUnit.sqf): founding/CreateTeam only manned
+//--- driver/gunner/commander, so multi-turret APCs/MBTs arrived with silent secondary weapons.
+//--- QUERYUNITTURRETS is the same unit-data field BuyUnit uses for refill crews.
+private ["_udTur","_turrets","_turPath"];
+_udTur = missionNamespace getVariable (typeOf _vehicle);
+if (!isNil "_udTur" && {typeName _udTur == "ARRAY"} && {!isNil "QUERYUNITTURRETS"} && {(count _udTur) > QUERYUNITTURRETS}) then {
+_turrets = _udTur select QUERYUNITTURRETS;
+if (!isNil "_turrets" && {typeName _turrets == "ARRAY"}) then {
+{
+_turPath = _x;
+if (isNull (_vehicle turretUnit _turPath)) then {
+if (!isNil "_type") then {
+_crewUnit = [_type,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
+if (!isNull _crewUnit) then {
+[_crewUnit] allowGetIn true;
+_crewUnit moveInTurret [_vehicle, _turPath];
+_crewUnit addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+_vehicleCrews = _vehicleCrews + [_crewUnit];
+};
+};
+};
+} forEach _turrets;
+};
+};
+
 					// Marty: A town combat vehicle without any crew is worse than no vehicle; remove it immediately.
 					if (count _vehicleCrews == 0) exitWith {
 						["WARNING", Format ["Common_CreateTeam.sqf: Vehicle [%1] for side [%2] at [%3] had no crew and was removed to prevent empty town defenses.", typeOf _vehicle, _side, _position]] Call WFBE_CO_FNC_LogContent;
@@ -227,6 +276,32 @@ _rearmor = {
 					_perfCrew = _perfCrew + count _vehicleCrews;
 					_vehicles = _vehicles + [_vehicle];
 					_perfVehicles = _perfVehicles + 1;
+					//--- fix/aa-hull-empty-reap-20260802 (owner-live report 2026-08-02, Takistan: "map is littered
+					//--- with...dead or empty shilka"). ROOT CAUSE (crewless-alive gap): a garrison/AI-founded AA
+					//--- vehicle (Server_GetTownGroups*.sqf's AA_Light/AA_Heavy templates, and AI-commander squad
+					//--- foundings such as Squad_RU.sqf's ZSU_INS entry - both round-trip through THIS function)
+					//--- is never enrolled anywhere once its crew dies: it is not in `allDead` (the hull itself
+					//--- is still alive, so server_collector_garbage.sqf's generic wreck sweep never sees it), it
+					//--- is not a player purchase (Client_BuildUnit.sqf's own "emptyVehicles" enrollment never runs
+					//--- for these), and it is not an AI-commander TEAM vehicle abandoned mid-tasking (Common_
+					//--- RunCommanderTeam.sqf's abandon-enrollment needs either a live crew (IMMOBILE-ABANDON) or
+					//--- a non-Tank/APC/Air hull (TRUCK-ABANDON) - an all-crew-dead AA hull satisfies neither). The
+					//--- destroyed-hull half of the report ("dead...shilka") is already covered by the generic
+					//--- allDead+TrashObject sweep; this closes only the alive-but-crewless half ("empty...shilka").
+					//--- FIX: enroll a known AA-vehicle hull into the SAME "emptyVehicles" watch-queue player
+					//--- purchases already use (Client_BuildUnit.sqf) at the moment it is founded WITH crew here.
+					//--- Server_HandleEmptyVehicle.sqf's existing crewless-timeout-then-locality-aware-delete logic
+					//--- (WFBE_C_UNITS_EMPTY_TIMEOUT, guer-fob-empty-exempt, airlift-exempt, bounded _reapAttempts/
+					//--- _reapRounds) does the rest unchanged - no new deletion logic, no flag: correctness/cleanup-
+					//--- coverage, not a volume or balance change (repo flag policy). Never reached for a hull that
+					//--- lost its whole crew at spawn - that case already `exitWith`s above (L220) before this
+					//--- point. Classname set mirrors Common_HandleSEADMissile.sqf's established AA-vehicle list
+					//--- (keep both in sync if a new AA hull class is ever added).
+					if (typeOf _vehicle in ["ZSU_CDF","ZSU_INS","ZSU_TK_EP1","2S6M_Tunguska","M6_EP1"]) then {
+						_aaEnrollList = (WF_Logic getVariable "emptyVehicles") + [_vehicle];
+						WF_Logic setVariable ["emptyVehicles", _aaEnrollList, true];
+						["INFORMATION", Format ["Common_CreateTeam.sqf: garrison/AI AA hull [%1] enrolled into the empty-vehicle collector (side %2).", typeOf _vehicle, _side]] Call WFBE_CO_FNC_LogContent;
+					};
 					if (_isAirHull) then {_airTeamHulls = _airTeamHulls + 1};
 					//--- carrier-air-deckspawn (claude 2026-07-27): CORRECTNESS FIX for the OWNER-REPORTED "units stuck on the
 					//--- carriers". AICOM founds AIR teams on a captured carrier via AI_Commander_Teams.sqf cmdcon41 (_spawnPos =
@@ -271,6 +346,8 @@ _rearmor = {
 		_perfSkipped = _perfSkipped + 1;
 	};
 } forEach _list;
+
+if (_deferGlobalInitQueued) then {processInitCommands};
 
 //--- TEMPLATE INTEGRITY (g1606): cargo seat mismatch at spawn. Mixed vehicle+infantry
 //--- rosters (town Motorized variants, side-patrol MTVR/LAV/technical dismount packs) used

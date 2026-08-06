@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay","_priorDispT0"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay","_priorDispT0","_aicomProgressAnchor","_guardTowns"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -19,6 +19,21 @@ if (isNil "_logik") exitWith {};
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
+
+//--- A convoy can keep a team stranded while its leader has dismounted and walks ahead.
+//--- Watch actual movable land-hull progress when present; infantry-only teams retain the leader anchor.
+_aicomProgressAnchor = {
+	private ["_paTeam","_paLeader","_paVehicle","_paCandidate"];
+	_paTeam = _this select 0;
+	_paLeader = leader _paTeam;
+	_paVehicle = objNull;
+	{
+		_paCandidate = vehicle _x;
+		if (isNull _paVehicle && {_paCandidate != _x} && {alive _paCandidate} && {_paCandidate isKindOf "LandVehicle"} && {canMove _paCandidate}) then {_paVehicle = _paCandidate};
+	} forEach (units _paTeam);
+	if (!isNull _paVehicle) then {_paLeader = _paVehicle};
+	_paLeader
+};
 
 //--- AICOM v2 (consolidate, Ray): after the fist captures a town the Allocator stamps wfbe_aicom_consolidate_until.
 //--- PER-TEAM SCOPING FIX (Ray): the OLD side-wide exitWith froze EVERY team for the window (harasser + en-route +
@@ -83,6 +98,25 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- every team after the first null (live-round towns stuck at 0/0). Skip nulls.
 	_aliveCount = 0;
 	if (!isNull _team) then {_aliveCount = {alive _x} count (units _team)};
+	//--- F1 fable/aicom-econ-triad (2026-08-02): DIED outcome for the assault ledger. A team wiped en route
+	//--- previously never resolved its OPEN dispatch (the whole outcome watcher sits behind _aliveCount > 0),
+	//--- so overnight aggregates could not tell died-en-route from stuck-en-route. Resolve it once with the
+	//--- last watcher-pass position/distance (stamped in the watcher below), then close the latch. groupsGC
+	//--- (60s loop) may null the group before this pass; those land in the ARRIVAL_BANDS residual instead.
+	if (!isNull _team && {_aliveCount == 0} && {[_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool}) then {
+		private ["_ddOrd","_ddTgt","_ddT0","_ddEl","_ddPos","_ddDist","_ddTown"];
+		_ddOrd = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
+		_ddTgt = objNull; _ddT0 = -1; _ddTown = "?";
+		if ((typeName _ddOrd == "ARRAY") && {count _ddOrd >= 2}) then {_ddTgt = _ddOrd select 0; _ddT0 = _ddOrd select 1};
+		if (typeName _ddTgt == "OBJECT" && {!isNull _ddTgt}) then {_ddTown = _ddTgt getVariable ["name","town"]};
+		_ddEl = -1;
+		if ((typeName _ddT0 == "SCALAR") && {_ddT0 >= 0}) then {_ddEl = round (time - _ddT0)};
+		_ddPos = _team getVariable "wfbe_aicom_watchpos"; if (isNil "_ddPos") then {_ddPos = []};
+		_ddDist = _team getVariable "wfbe_aicom_watchdist"; if (isNil "_ddDist") then {_ddDist = -1};
+		_logik setVariable ["wfbe_aicom_arrival_died", (_logik getVariable ["wfbe_aicom_arrival_died", 0]) + 1];
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_DIED|team=" + (str _team) + "|town=" + _ddTown + "|elapsed=" + str _ddEl + "|lastdist=" + str (round _ddDist) + "|lastpos=" + str _ddPos);
+		_team setVariable ["wfbe_aicom_dispatch_open", false];
+	};
 	if (_aliveCount > 0) then {
 	//--- ASSAULT TELEMETRY (task #48, #2): OUTCOME watcher. Rides this existing forEach _teams
 	//--- (fired every WFBE_C_AI_COMMANDER_TOWN_INTERVAL=120s). For each team with an OPEN dispatch
@@ -90,17 +124,21 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- STRANDED (timeout exceeded, still far). Latched by wfbe_aicom_dispatch_open so it fires
 	//--- once per dispatch; a re-dispatch in Hook A re-opens the latch. Logging only, no behaviour.
 	if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {
-		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed","_bandKey","_bandVal"];
+		private ["_dord","_dtgt","_dt0","_dldr","_danchor","_ddist","_arrR","_toSecs","_elapsed","_bandKey","_bandVal"];
 		_dord = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 		if (count _dord >= 2) then {
 			_dtgt = _dord select 0;
 			_dt0  = _dord select 1;
 			if (typeName _dtgt == "OBJECT" && {!isNull _dtgt}) then {
 				_dldr   = leader _team;
-				_ddist  = _dldr distance _dtgt;
+				_danchor = [_team] Call _aicomProgressAnchor;
+				_ddist  = _danchor distance _dtgt;
 				_arrR   = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250];
 				_toSecs = if (count _dord >= 4) then {_dord select 3} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420]};   //--- FIX A (fable, GR-2026-07-08a): per-dispatch dyn-timeout if the 4th tuple element is present (WFBE_C_AICOM_ASSAULT_DYNTIMEOUT), else legacy flat default. _dord already declared/guarded count>=2 above.
 				_elapsed = round (time - _dt0);
+				//--- F1: last-seen stamp for the DIED resolver above (one write per open dispatch per 120s pass).
+				_team setVariable ["wfbe_aicom_watchpos", [round ((getPos _dldr) select 0), round ((getPos _dldr) select 1)]];
+				_team setVariable ["wfbe_aicom_watchdist", round _ddist];
 				if (_ddist <= _arrR) then {
 					//--- WASPSCALE arrv counter (cmdcon42): bump the cumulative-arrival counter the server-side WASPSCALE emit reads (arrv=). One per successful journey (latched once per dispatch by wfbe_aicom_dispatch_open). Server-local, monotonic.
 					missionNamespace setVariable ["wfbe_waspscale_arrv", (missionNamespace getVariable ["wfbe_waspscale_arrv", 0]) + 1];
@@ -113,11 +151,21 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_team setVariable ["wfbe_aicom_dispatch_open", false];
 					//--- r40 intel freshness: arrival proves reachability - clear side-abandon memory for this town.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
-						private ["_sbaArr","_sbaArrKeep"];
+						private ["_sbaArr","_sbaArrKeep","_sblArr","_sblArrKeep"];
 						_sbaArr = _logik getVariable ["wfbe_aicom_side_abandons", []];
 						_sbaArrKeep = [];
 						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) != _dtgt}) then {_sbaArrKeep set [count _sbaArrKeep, _x]} } forEach _sbaArr;
 						if ((count _sbaArrKeep) != (count _sbaArr)) then {_logik setVariable ["wfbe_aicom_side_abandons", _sbaArrKeep]};
+						//--- r107: arrival is positive reachability proof - lift a LIVE side ban on this town too,
+						//--- not just the tally. Otherwise a proven-reachable town stays excluded side-wide until
+						//--- the ban's blind expiry (up to WFBE_C_AICOM_SIDE_BLACKLIST_COOLDOWN seconds).
+						_sblArr = _logik getVariable ["wfbe_aicom_side_blacklist", []];
+						_sblArrKeep = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) != _dtgt}) then {_sblArrKeep set [count _sblArrKeep, _x]} } forEach _sblArr;
+						if ((count _sblArrKeep) != (count _sblArr)) then {
+							_logik setVariable ["wfbe_aicom_side_blacklist", _sblArrKeep];
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SIDE_BLACKLIST_LIFT|town=" + (_dtgt getVariable ["name","town"]) + "|reason=arrival");
+						};
 					};
 					//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, claude-gaming 2026-07-02): the team reached a town
 					//--- this dispatch - a successful journey. Reset its failed-journey counter AND its per-pass
@@ -171,9 +219,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					if ((time - _dt0) > _toSecs) then {
 						private ["_moved","_stuck"];
 						_moved = -1;
-						if (count _dord >= 3) then {_moved = _dldr distance (_dord select 2)};
+						if (count _dord >= 3) then {_moved = _danchor distance (_dord select 2)};
 						_stuck = (behaviour _dldr != "COMBAT") && {_moved >= 0} && {_moved < (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200])};
-						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_STRANDED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed + "|moved=" + str (round _moved) + "|stuck=" + str _stuck);
+						_logik setVariable ["wfbe_aicom_arrival_stranded", (_logik getVariable ["wfbe_aicom_arrival_stranded", 0]) + 1]; //--- F1: window outcome counter (ARRIVAL_BANDS stranded=)
+						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_STRANDED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed + "|moved=" + str (round _moved) + "|stuck=" + str _stuck + "|pos=" + str [round ((getPos _dldr) select 0), round ((getPos _dldr) select 1)]);
 						if ((missionNamespace getVariable ["WFBE_C_AICOM_STRAND_RECOVERY", 0]) > 0 && {_moved >= 0} && {_moved < 200}) then {
 							_team setVariable ["wfbe_aicom_strand_recovery_pending", true];
 							_team setVariable ["wfbe_aicom_strand_recovery_target", _dtgt];
@@ -210,7 +259,18 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 				};
 			} else {
 				//--- Target captured/null (e.g. Strategy cleared the order): close the latch silently.
+				_logik setVariable ["wfbe_aicom_arrival_cleared", (_logik getVariable ["wfbe_aicom_arrival_cleared", 0]) + 1]; //--- F1: window outcome counter (ARRIVAL_BANDS cleared=)
 				_team setVariable ["wfbe_aicom_dispatch_open", false];
+				//--- r78: cancel undelivered airlift attached to the dead dispatch (no retarget this tick).
+				private ["_alGCap","_alChCap"];
+				_alGCap = _team getVariable "wfbe_aicom_airlift_grant";
+				if (!isNil "_alGCap" && {typeName _alGCap == "ARRAY"} && {count _alGCap >= 3}) then {
+					_alChCap = _alGCap select 2;
+					if (typeName _alChCap == "SCALAR" && {_alChCap > 0}) then {[_side, _alChCap] Call ChangeAICommanderFunds};
+					_team setVariable ["wfbe_aicom_airlift_grant", [], true];
+					_team setVariable ["wfbe_aicom_airlift_req", [], true];
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ORDER_CANCEL_AIRLIFT|team=" + (str _team) + "|refund=" + str _alChCap + "|why=dispatch-closed");
+				};
 			};
 		};
 	};
@@ -439,7 +499,12 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							_dwKeep set [count _dwKeep, [_dwTgt, time + _dwCd]];
 							_team setVariable ["wfbe_aicom_blacklist", _dwKeep];
 							_team setVariable ["wfbe_aicom_stuckstrikes", 0];
-							_team setVariable ["wfbe_aicom_dwell_town0", nil];
+							//--- r107: this clear must REACH the HC stamper - Common_RunCommanderTeam holds its own copy
+							//--- of wfbe_aicom_dwell_town0 and only re-stamps when its stored town differs. A local-only
+							//--- nil left the HC copy stale, so the HC never re-stamped and the dwell trigger stayed dead
+							//--- on every later visit to this town. Broadcast a concrete sentinel ([objNull,0] reads as
+							//--- "no clock" on both machines; the HC guard restamps fresh on the next capture phase).
+							_team setVariable ["wfbe_aicom_dwell_town0", [objNull, 0], true];
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|DWELL_ABANDON|team=" + (str _team) + "|town=" + (_dwTgt getVariable ["name","town"]) + "|cumDwell=" + str (round _dwCum));
 							//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
 							missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
@@ -457,7 +522,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							};
 						};
 					} else {
-						_team setVariable ["wfbe_aicom_dwell_town0", nil];
+						//--- r107: same broadcast-sentinel clear as the abandon path (was a local-only nil the HC
+						//--- never saw). Only rewrite a REAL stale town entry - the [objNull,0] sentinel itself needs
+						//--- no re-clear (avoids one group broadcast per worker pass per idle team).
+						if ((typeName _dwTgt == "OBJECT") && {!isNull _dwTgt}) then {_team setVariable ["wfbe_aicom_dwell_town0", [objNull, 0], true]};
 					};
 				};
 			};
@@ -475,7 +543,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							if (count _ord < 3 || {(_ord select 0) != _goto}) then {
 								//--- No bookkeeping yet (legacy order) or goto changed under us: book it
 								//--- once without re-issuing waypoints; the stuck check takes over from here.
-								_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos (leader _team)]];
+								_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos ([_team] Call _aicomProgressAnchor)]];
 								//--- STALL-ADVANCE FLOOR (Build84, claude-gaming 2026-07-02): stamp the "on this goto
 								//--- since" clock the moment a NEW/changed goto is booked. The uncap-parked branch below
 								//--- reads it to force a prompt retarget when a team parks on an unflippable depot for
@@ -483,8 +551,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								_team setVariable ["wfbe_aicom_goto_since", time];
 							} else {
 								if (time - (_ord select 1) > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_SECS", 210])) then {
-									private ["_ldr","_movedThr","_farThr","_airborne","_goalDeltaOn","_notProgressing"]; //--- claude/aicom-west-stuck: +2 privates for the goal-delta stuck test below
+									private ["_ldr","_anchor","_movedThr","_farThr","_airborne","_goalDeltaOn","_notProgressing"]; //--- claude/aicom-west-stuck: +2 privates for the goal-delta stuck test below
 									_ldr = leader _team;
+									_anchor = [_team] Call _aicomProgressAnchor;
 									_movedThr = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200];
 									_farThr   = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_FAR", 300];
 									//--- cmdcon42-f AIR-MOBILE EXEMPTION: a team FLYING an air-mobile leg is progressing, not
@@ -512,7 +581,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 									//--- claude/aicom-west-stuck: orders are already live in this file (object distance breadcrumb, object distance obj).
 									//--- claude/aicom-west-stuck: A2-OA-safe: numeric subtraction, no ==/!= on Booleans, no A3 commands, no group 2-arg getVariable.
 									_goalDeltaOn = (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_GOALDELTA", 0]) > 0;
-									_notProgressing = if (_goalDeltaOn) then {((_goto distance (_ord select 2)) - (_goto distance _ldr)) < _movedThr} else {(_ldr distance (_ord select 2)) < _movedThr};
+									_notProgressing = if (_goalDeltaOn) then {((_goto distance (_ord select 2)) - (_goto distance _anchor)) < _movedThr} else {(_anchor distance (_ord select 2)) < _movedThr};
 									if ((!_airborne) && {behaviour _ldr != "COMBAT"} && {_notProgressing} && {_ldr distance _goto > _farThr}) then {
 										_needs = true; //--- parked far from target, not in contact: re-issue (unstick)
 										//--- REAL UNSTUCK (task #14/#16): the old remedy just re-emitted the same
@@ -865,6 +934,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			//--- FOOT_STAGE owns the next selection pass: discard journey bookkeeping before the cap-lock gate.
 			if (_footStage) then {
 				_needs = true;
+				if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {_logik setVariable ["wfbe_aicom_arrival_cleared", (_logik getVariable ["wfbe_aicom_arrival_cleared", 0]) + 1]}; //--- F1: window outcome counter (ARRIVAL_BANDS cleared=)
 				_team setVariable ["wfbe_aicom_dispatch_open", false];
 				_team setVariable ["wfbe_aicom_townorder", [], false];
 			};
@@ -906,24 +976,37 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- V0.7 BOOTSTRAP BIAS: side owns 0 towns - pick the nearest-to-HQ,
 					//--- lowest-supplyValue uncaptured town so we grab income as fast as possible.
 					//--- Score = -(distance to HQ) - (supplyValue * 10): small near towns win.
+					//--- r98: (a) a NULL HQ (destroyed/undeployed before the first capture) zeroed the
+					//--- distance term, reducing the pick to "lowest supplyValue town anywhere on the map" -
+					//--- a cross-map (or offshore) opening dispatch. Skip the bootstrap pick when the HQ is
+					//--- gone; the normal picks run again next pass once HQRecovery redeploys. (b) The loop
+					//--- had no B756 naval-HVT gate, so the opening rush could send a ground team to an
+					//--- offshore carrier - mirror the spearhead/near-reach gate.
 					_hqObj = (_side) Call WFBE_CO_FNC_GetSideHQ;
-					_bestBoot = objNull;
-					_bestBootScore = -1e9;
-					{
-						_bootDist = if (!isNull _hqObj) then {_x distance _hqObj} else {0};
-						_bootScore = (0 - _bootDist) - ((_x getVariable ["supplyValue", 0]) * 10);
-						if (isNil "_bootScore") then {
-							diag_log ("CAPDBG|BOOT|" + (_x getVariable ["name","?"]) + "|residual");
+					if (!isNull _hqObj) then {
+						private "_bootAir";
+						_bootAir = false;
+						{ if (!_bootAir && {alive _x} && {(vehicle _x) isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0}) then {_bootAir = true} } forEach (units _team); //--- B756 idiom (see _teamAir below)
+						_bestBoot = objNull;
+						_bestBootScore = -1e9;
+						{
+							if (((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _bootAir) then {
+								_bootDist = _x distance _hqObj;
+								_bootScore = (0 - _bootDist) - ((_x getVariable ["supplyValue", 0]) * 10);
+								if (isNil "_bootScore") then {
+									diag_log ("CAPDBG|BOOT|" + (_x getVariable ["name","?"]) + "|residual");
+								};
+								_bootScore = if (isNil "_bootScore") then {-9999999} else {_bootScore};
+								if (_bootScore > _bestBootScore) then {_bestBootScore = _bootScore; _bestBoot = _x};
+							};
+						} forEach _uncaptured;
+						if (!isNull _bestBoot) then {_target = _bestBoot};
+						//--- Debounced log: at most once per 300 s per side.
+						_ltBootLog = _logik getVariable ["wfbe_aicom_bootstrap_lt", -1e9];
+						if (time - _ltBootLog > 300) then {
+							["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] BOOTSTRAP targeting active (0 towns owned) - biasing to nearest low-value town.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+							_logik setVariable ["wfbe_aicom_bootstrap_lt", time];
 						};
-						_bootScore = if (isNil "_bootScore") then {-9999999} else {_bootScore};
-						if (_bootScore > _bestBootScore) then {_bestBootScore = _bootScore; _bestBoot = _x};
-					} forEach _uncaptured;
-					if (!isNull _bestBoot) then {_target = _bestBoot};
-					//--- Debounced log: at most once per 300 s per side.
-					_ltBootLog = _logik getVariable ["wfbe_aicom_bootstrap_lt", -1e9];
-					if (time - _ltBootLog > 300) then {
-						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] BOOTSTRAP targeting active (0 towns owned) - biasing to nearest low-value town.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
-						_logik setVariable ["wfbe_aicom_bootstrap_lt", time];
 					};
 				} else {
 					//--- V0.8: MASS force on the strategy worker's spearhead targets first, in
@@ -997,7 +1080,7 @@ _waterBlocks = {
 					//--- side stops sending teams there. The empty-pool guardrail below clears _blTowns (incl these) so a
 					//--- team is never left idle. Flag-gated WFBE_C_AICOM_SIDE_BLACKLIST (default on), reversible. A2-safe.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
-						private ["_sbl","_sblLive","_sba","_sbaKeep"];
+						private ["_sbl","_sblLive","_sblAll","_sba","_sbaKeep"];
 						_sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
 						_sblLive = [];
 						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {
@@ -1007,9 +1090,18 @@ _waterBlocks = {
 						//--- r40 intel freshness: side_abandons is permanent 'unreachable town' contact memory.
 						//--- After blacklist cooldown, count stayed >= threshold so ONE abandon re-banned forever.
 						//--- Age abandon tallies with the live side blacklist so intelligence expires with the ban.
+						//--- r107 FIX: the r40 keep-test (town in _sblLive) dropped every tally whose town was NOT
+						//--- currently banned - i.e. every tally still ACCUMULATING toward WFBE_C_AICOM_SIDE_ABANDON.
+						//--- The first selector pass after any TARGET_ABANDON wiped the count, so the tally could
+						//--- never reach the threshold and the side blacklist never formed (dead on default flags).
+						//--- Keep tallies for towns still accumulating (no ban entry at all) AND towns under a live
+						//--- ban; drop a tally only when its town's ban has LAPSED (stored but expired) - intel
+						//--- expires WITH the ban, not before it can ever exist.
+						_sblAll = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)}) then {_sblAll set [count _sblAll, (_x select 0)]} } forEach _sbl;
 						_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
 						_sbaKeep = [];
-						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) in _sblLive}) then {_sbaKeep set [count _sbaKeep, _x]} } forEach _sba;
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {((_x select 0) in _sblLive) || {!((_x select 0) in _sblAll)}}) then {_sbaKeep set [count _sbaKeep, _x]} } forEach _sba;
 						if ((count _sbaKeep) != (count _sba)) then {_logik setVariable ["wfbe_aicom_side_abandons", _sbaKeep]};
 					};
 					_uncapturedF = _uncaptured - _blTowns;
@@ -1050,7 +1142,8 @@ _waterBlocks = {
 						_allocTtl  = missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TICK_TTL", 180];
 						if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TTL_HARDEN", 0]) > 0) then {if (_allocTtl < 300) then {_allocTtl = 300}};
 						if (!isNil "_allocTick") then {_allocAge = time - _allocTick} else {_allocAge = 1e9};
-						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}} && {!([_ldrPos, getPos _allocT] Call _waterBlocks)}) then { //--- review fix FOOT_STAGE + r37 water-leg gate
+						//--- r26 B756: the allocator path must keep naval-HVT targets air-only, while r37 keeps land teams off water legs.
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_allocT getVariable ["wfbe_is_naval_hvt", false])} || _teamAir} && {!([_ldrPos, getPos _allocT] Call _waterBlocks)}) then { //--- review fix FOOT_STAGE + B756 naval-HVT + r37 water-leg gate
 							_target = _allocT;
 						} else {
 							if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge >= _allocTtl}) then {
@@ -1101,6 +1194,18 @@ _waterBlocks = {
 							_tgtDist = _ldrPos distance _x;
 							if (_tgtDist <= _teamReach && {_tgtDist < _nearReachD} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _teamAir} && {!([_ldrPos, getPos _x] Call _waterBlocks)}) then {_nearReachD = _tgtDist; _nearReach = _x}; //--- B756 naval-HVT + r37 water-leg gate
 						} forEach _avail;
+						//--- r98 GUARDRAIL FILTER: the never-idle fallback below took the closest of ALL
+						//--- uncaptured towns with none of the B756/r37 gates the spearhead/near-reach picks
+						//--- apply - a land team could be routed to an offshore carrier or across a water leg
+						//--- and strand at the shoreline. Build the fallback pool with the same gates; only if
+						//--- gating empties the pool fall back to the unfiltered list (never-idle still wins).
+						_guardTowns = [];
+						{
+							if (((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _teamAir) then {
+								if (!([_ldrPos, getPos _x] Call _waterBlocks)) then {_guardTowns set [count _guardTowns, _x]};
+							};
+						} forEach _uncapturedF;
+						if (count _guardTowns == 0) then {_guardTowns = _uncapturedF};
 						if (!isNull _nearReach) then {
 							_target = _nearReach;
 						} else {
@@ -1151,22 +1256,40 @@ _waterBlocks = {
 									};
 									_team setVariable ["wfbe_aicom_foot_stage", true];
 									_team setVariable ["wfbe_aicom_foot_stage_pos", getPos _footStageTown];
+									if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {_logik setVariable ["wfbe_aicom_arrival_cleared", (_logik getVariable ["wfbe_aicom_arrival_cleared", 0]) + 1]}; //--- F1: window outcome counter (ARRIVAL_BANDS cleared=)
 									_team setVariable ["wfbe_aicom_townorder", [], false];
 									_team setVariable ["wfbe_aicom_dispatch_open", false];
 									_target = objNull;
 									_explicitMode = false;
 									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOOT_STAGE|team=" + (str _team) + "|town=" + (_footStageTown getVariable ["name","town"]));
 								} else {
-									_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity;
+									_target = [leader _team, _guardTowns] Call WFBE_CO_FNC_GetClosestEntity; //--- r98: gated pool
 								};
 							} else {
-							_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity; //--- WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
+							_target = [leader _team, _guardTowns] Call WFBE_CO_FNC_GetClosestEntity; //--- r98: gated pool. WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
 							};
 						};
 					};
 				};
 				if (!isNil "_target") then {
 					if (!isNull _target) then {
+						//--- r78 order-cancel propagation: a retarget abandons the prior objective. Pending
+						//--- airlift grant/req (charged transport still undelivered) would keep flying the old
+						//--- leg after cancel. Clear + refund prepaid charge (mirror RunCommanderTeam create-fail refund).
+						private ["_alGCancel","_alChCancel"];
+						_alGCancel = _team getVariable "wfbe_aicom_airlift_grant";
+						if (!isNil "_alGCancel" && {typeName _alGCancel == "ARRAY"} && {count _alGCancel >= 3}) then {
+							_alChCancel = _alGCancel select 2;
+							if (typeName _alChCancel == "SCALAR" && {_alChCancel > 0}) then {
+								[_side, _alChCancel] Call ChangeAICommanderFunds;
+							};
+							_team setVariable ["wfbe_aicom_airlift_grant", [], true];
+							_team setVariable ["wfbe_aicom_airlift_req", [], true];
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ORDER_CANCEL_AIRLIFT|team=" + (str _team) + "|refund=" + str _alChCancel);
+						} else {
+							//--- Clear empty/pending req even if no grant charge (cancel race with Produce charge).
+							_team setVariable ["wfbe_aicom_airlift_req", [], true];
+						};
 						_team setVariable ["wfbe_aicom_foot_stage", false];
 						_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 						[_team, "towns"] Call SetTeamMoveMode;
@@ -1258,15 +1381,19 @@ _waterBlocks = {
 									//--- stale order silently - the newer order wins. Only publish when the seq is unchanged.
 									if (!isNull _wsTeam && {({alive _x} count (units _wsTeam)) > 0} && {_wsSeqNow == _wsSeqSnap}) then {
 										_wsTeam setVariable ["wfbe_aicom_route", _wsRoute, true];
+										_wsTeam setVariable ["wfbe_aicom_route_seq", _wsSeqSnap + 1, true]; //--- r85: bind the chain to THIS order's seq (driver stale-chain guard).
 										_wsTeam setVariable ["wfbe_aicom_unstuck", _wsStrk, true];
 										_wsTeam setVariable ["wfbe_aicom_order", [_wsSeqSnap + 1, "towns-target", _wsDest, _wsStrk], true]; //--- feat/aicom-wave-stagger: same order-broadcast statement as the synchronous else-branch, just deferred; seq guarded above so a stale wave never clobbers a fresher retask.
 										diag_log ("AICOMSTAT|v2|EVENT|" + _wsSideText + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_PUBLISHED|team=" + (str _wsTeam) + "|mode=towns-target|wave=1|delay=" + str (round _wsDelay));
 									};
 								};
 							} else {
+								private "_hcSeqNew";
+								_hcSeqNew = (if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1;
 								_team setVariable ["wfbe_aicom_route", _hcRoute, true];
+								_team setVariable ["wfbe_aicom_route_seq", _hcSeqNew, true]; //--- r85: bind the chain to THIS order's seq (driver stale-chain guard).
 								_team setVariable ["wfbe_aicom_unstuck", _hcStrk, true];
-								_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", _hcDest, _hcStrk], true]; //--- UNSTUCK FIX (Ray 2026-06-16): carry the strike tier as order element 3 so it stays in sync with the seq it belongs to (reader: Common_RunCommanderTeam). The wfbe_aicom_unstuck flag (line ~367) is kept for the gear-slow governor + logging.
+								_team setVariable ["wfbe_aicom_order", [_hcSeqNew, "towns-target", _hcDest, _hcStrk], true]; //--- UNSTUCK FIX (Ray 2026-06-16): carry the strike tier as order element 3 so it stays in sync with the seq it belongs to (reader: Common_RunCommanderTeam). The wfbe_aicom_unstuck flag (line ~367) is kept for the gear-slow governor + logging.
 								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_PUBLISHED|team=" + (str _team) + "|mode=towns-target|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round (_hcOrigin distance _hcDest)) + "|route=" + str (count _hcRoute) + "|strike=" + str _hcStrk);
 							};
 						} else {
@@ -1282,10 +1409,21 @@ _waterBlocks = {
 									//--- team while this wave-stagger thread slept (seq bumped by a fresher retask), drop this
 									//--- stale direct move silently - the newer order wins. Only issue when the seq is unchanged.
 									if (!isNull _wsTeam && {!isNull _wsTarget} && {({alive _x} count (units _wsTeam)) > 0} && {_wsSeqNow == _wsSeqSnap}) then {
-										if (_wsArc) then {
-											[_wsTeam, _wsTarget] Call WFBE_SE_FNC_AI_SetTownAttackPath;
-										} else {
-											[_wsTeam, getPos _wsTarget, "SAD", 200] Call AIMoveTo;
+										//--- r85 SERVER-LOCAL STALENESS GUARD: the seq check above is toothless on this branch -
+										//--- a fresher SERVER-LOCAL re-task (Execute's explicit-order AIMoveTo, a relief divert, a
+										//--- wedge release) never bumps wfbe_aicom_order, so a stale delayed issue would clobber it.
+										//--- Require the team's live mode/goto to still be THIS dispatch (SetTeamMoveMode "towns" +
+										//--- SetTeamMovePos _wsTarget were written synchronously just before this thread spawned; any
+										//--- fresher tasking changes one of them). A2-OA-safe: GroupGetBool (G1), typeName, == on objects.
+										private ["_wsModeNow","_wsGotoNow"];
+										_wsModeNow = toLower ([_wsTeam, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+										_wsGotoNow = [_wsTeam, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetBool;
+										if (_wsModeNow == "towns" && {typeName _wsGotoNow == "OBJECT"} && {_wsGotoNow == _wsTarget}) then {
+											if (_wsArc) then {
+												[_wsTeam, _wsTarget] Call WFBE_SE_FNC_AI_SetTownAttackPath;
+											} else {
+												[_wsTeam, getPos _wsTarget, "SAD", 200] Call AIMoveTo;
+											};
 										};
 									};
 								};
@@ -1336,6 +1474,8 @@ _waterBlocks = {
 								_asltSpeed  = if (!isNil "_teamAir" && {_teamAir}) then {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SPEED_AIR", 35]} else {
 									if (!isNil "_mounted" && {_mounted}) then {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SPEED_MOUNTED", if (worldName == "Takistan") then {3.5} else {7.5}]} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SPEED_FOOT", if (worldName == "Takistan") then {0.9} else {2.2}]}
 								};
+								//--- A pre-set non-positive speed would yield #INF here and poison the strand timeout.
+								_asltSpeed = _asltSpeed max 0.1;
 								_asltDist   = (leader _team) distance _target;
 								_asltToSecs = ((_asltDist / _asltSpeed) * (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ROUTE_FACTOR", if (worldName == "Takistan") then {2.5} else {1.25}])) + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SLACK", 120]);
 								_asltToSecs = (_asltToSecs max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT_MIN", 420])) min (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX", if (worldName == "Takistan") then {2700} else {1500}]);
@@ -1365,6 +1505,7 @@ _waterBlocks = {
 						//--- outcome (mostly legitimate re-targeting, NOT failed attacks). Log RETARGET so the accounting closes:
 						//--- DISPATCH = ARRIVED + STRANDED + RETARGET + (in-flight). Pure telemetry, zero behaviour change.
 						if (_priorOpen && {!_sameTgt} && {count _priorOrd >= 1} && {(typeName (_priorOrd select 0)) == "OBJECT"} && {!isNull (_priorOrd select 0)}) then {
+							_logik setVariable ["wfbe_aicom_arrival_retarget", (_logik getVariable ["wfbe_aicom_arrival_retarget", 0]) + 1]; //--- F1: window outcome counter (ARRIVAL_BANDS retarget=)
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_RETARGET|team=" + (str _team) + "|from=" + ((_priorOrd select 0) getVariable ["name","town"]) + "|to=" + (_target getVariable ["name","town"]) + "|elapsed=" + str (round (time - _priorDispT0)));
 						};
 						if (((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES", 0]) > 0) || {(missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0}) then {

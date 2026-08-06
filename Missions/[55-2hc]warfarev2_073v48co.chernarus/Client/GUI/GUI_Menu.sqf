@@ -45,6 +45,8 @@ if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hanga
 [11006, commandInRange && (player == leader WFBE_Client_Team)] call _setWFMenuState; //--- Special Menu
 if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {[11006, true] call _setWFMenuState}; //--- fable/drones-menu: restore DRONES enable overridden by line above
 
+private ["_gvisLastLabel"];
+_gvisLastLabel = "";
 MenuAction = -1;
 WFBE_ForceUpdate = true;
 
@@ -69,6 +71,18 @@ while {alive player && dialog} do {
 			if ((missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) <= 0) then {[11006, false] call _setWFMenuState}; //--- fable/drones-menu: keep Drones button live when flag on
 				[11007, true] call _setWFMenuState; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
 				if (((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time) then { {[_x, false] call _setWFMenuState} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
+				//--- r95: refresh the Towns wallet readout in-loop; it was set once at dialog open, so stipend income
+				//--- and Commissar spending never showed while the hub stayed open (stale label).
+				if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+					private ["_gvisW2","_gvisL2"];
+					_gvisW2 = (group player) getVariable "wfbe_funds";
+					if (isNil "_gvisW2") then {_gvisW2 = 0};
+					_gvisL2 = Format ["Towns ($%1)", round _gvisW2];
+					if (_gvisL2 != _gvisLastLabel) then {
+						_gvisLastLabel = _gvisL2;
+						ctrlSetText [11008, _gvisL2];
+					};
+				};
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};
@@ -193,6 +207,10 @@ while {alive player && dialog} do {
 	if (MenuAction == 10) then { //added-MrNiceGuy
 		MenuAction = -1;
 		_vehicle = vehicle player;
+		//--- r72: under canopy vehicle player is ParachuteBase - PlaceSafe would slam the chute to ground mid-descent.
+		if (_vehicle isKindOf "ParachuteBase") exitWith {};
+		//--- r72: freefall infantry - do not invent a ground snap via unflip.
+		if (player == _vehicle && {((getPos player) select 2) > 3}) exitWith {};
 		if (player != _vehicle) then {
 			if (getPos _vehicle select 2 > 3 && !surfaceIsWater (getPos _vehicle)) then {
 				[_vehicle, getPos _vehicle, 15] Call PlaceSafe;
@@ -219,13 +237,22 @@ while {alive player && dialog} do {
 	//--- Headbug Fix.
 	if (MenuAction == 11) then { //added-MrNiceGuy
 		MenuAction = -1;
+		//--- r72: headbug Lada cargo swap mid-HALO/canopy ejects freefall and leaks a vehicle.
+		if ((vehicle player) isKindOf "ParachuteBase") exitWith {};
+		if (((getPos player) select 2) > 5) exitWith {};
 		closeDialog 0;
 		titleCut["","BLACK FADED",0];
 		_pos = position player;
 		_vehi = "Lada1" createVehicle [0,0,0];
-		player moveInCargo _vehi;
-		deleteVehicle _vehi;
-		player setPos _pos;
+		//--- r44: missing Lada1 (class/mod strip) -> moveInCargo/delete on null is a no-op leave black-fade stuck path. (dup-fixed by #1699 + #1700)
+		if (isNull _vehi) then {
+			["WARNING", "GUI_Menu.sqf: headbug fix Lada1 createVehicle failed; restoring player pose only."] Call WFBE_CO_FNC_LogContent;
+			player setPos _pos;
+		} else {
+			player moveInCargo _vehi;
+			deleteVehicle _vehi;
+			player setPos _pos;
+		};
 		titleCut["","BLACK IN",5];
 	};
 

@@ -109,19 +109,25 @@ WFBE_CO_FNC_AICOM_AirEnvelope_Steer = {
 //--- ============================================================================
 //--- Walk one group's units, steering each eligible one. _seen dedupes across the whole
 //--- sweep (arrays are by-reference, so the shared _seen accumulates). _this = [group,
-//--- range, seen]. Returns the number of locks cleared in this group.
+	//--- range, seen, sweepId]. Returns the number of locks cleared in this group.
 //--- ============================================================================
 WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam = {
-	private ["_team", "_rng", "_seen", "_n"];
-	_team = _this select 0;
-	_rng  = _this select 1;
-	_seen = _this select 2;
-	_n    = 0;
+	private ["_team", "_rng", "_seen", "_sweepId", "_n", "_seenEpoch"];
+_team = _this select 0;
+_rng  = _this select 1;
+_seen = _this select 2;
+_sweepId = _this select 3;
+_n    = 0;
 	if (isNull _team) exitWith {_n};
 	{
-		//--- O(1) machine-local visited flag replaces the O(n) `in` scan of the sweep-wide _seen.
-		if (!(_x getVariable ["WFBE_airenv_seen", false])) then {
-			_x setVariable ["WFBE_airenv_seen", true, false];
+		//--- O(1) machine-local epoch replaces both the old O(n) `in` scan and the
+		//--- post-sweep O(n) boolean-clear pass. Old boolean values are treated as stale.
+		_seenEpoch = _x getVariable ["WFBE_airenv_seen", -1];
+		if ((typeName _seenEpoch) != "SCALAR") then {
+			_seenEpoch = -1;
+		};
+		if (_seenEpoch != _sweepId) then {
+			_x setVariable ["WFBE_airenv_seen", _sweepId, false];
 			_seen set [count _seen, _x];
 			_n = _n + ([_x, _rng] Call WFBE_CO_FNC_AICOM_AirEnvelope_Steer);
 		};
@@ -134,7 +140,7 @@ WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam = {
 //--- Enumerates AICOM wfbe_teams (both machines, local-only via the Steer guard) + the
 //--- town-AI registries (server: towns' wfbe_town_teams; HC: WFBE_CL_TownAI_Groups).
 //--- ============================================================================
-private ["_perfStart", "_perfGroups", "_perfSteers", "_seen", "_anyEnemyAir", "_side", "_logik", "_team", "_chunkSleepTotal"];
+private ["_perfStart", "_perfGroups", "_perfSteers", "_seen", "_sweepId", "_anyEnemyAir", "_side", "_logik", "_team", "_chunkSleepTotal"];
 
 while {!WFBE_gameover} do {
 
@@ -147,6 +153,8 @@ while {!WFBE_gameover} do {
 		_perfStart  = diag_tickTime;
 		_perfGroups = 0;
 		_perfSteers = 0;
+		_sweepId    = (missionNamespace getVariable ["WFBE_AIRENV_SWEEP_ID", 0]) + 1;
+		missionNamespace setVariable ["WFBE_AIRENV_SWEEP_ID", _sweepId];
 		_seen       = [];
 		_chunkSleepTotal = 0;
 
@@ -160,7 +168,7 @@ while {!WFBE_gameover} do {
 					_team = _x;
 					if (!isNull _team) then {
 						_perfGroups = _perfGroups + 1;
-						_perfSteers = _perfSteers + ([_team, _range, _seen] Call WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam);
+						_perfSteers = _perfSteers + ([_team, _range, _seen, _sweepId] Call WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam);
 					};
 				} forEach (_logik getVariable ["wfbe_teams", []]);
 			};
@@ -180,7 +188,7 @@ while {!WFBE_gameover} do {
 					_team = _x;
 					if (!isNull _team) then {
 						_perfGroups = _perfGroups + 1;
-						_perfSteers = _perfSteers + ([_team, _range, _seen] Call WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam);
+						_perfSteers = _perfSteers + ([_team, _range, _seen, _sweepId] Call WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam);
 					};
 				} forEach (_x getVariable ["wfbe_town_teams", []]);
 			} forEach towns;
@@ -190,7 +198,7 @@ while {!WFBE_gameover} do {
 				_team = _x select 2;
 				if (!isNull _team) then {
 					_perfGroups = _perfGroups + 1;
-					_perfSteers = _perfSteers + ([_team, _range, _seen] Call WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam);
+					_perfSteers = _perfSteers + ([_team, _range, _seen, _sweepId] Call WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam);
 				};
 			} forEach (missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []]);
 		};
@@ -205,9 +213,7 @@ while {!WFBE_gameover} do {
 			};
 		};
 
-		//--- O(n) flag-clear pass so the NEXT sweep dedupes fresh (cleared to false, not nil; local
-		//--- write, silent no-op on units deleted mid-sweep).
-		{_x setVariable ["WFBE_airenv_seen", false, false];} forEach _seen;
+		//--- The next sweep gets a fresh epoch; no per-unit clear pass is needed.
 	};
 
 	//--- ALWAYS-ON 300s telemetry heartbeat (fires even when idle, so a soak can tell ARMED-IDLE

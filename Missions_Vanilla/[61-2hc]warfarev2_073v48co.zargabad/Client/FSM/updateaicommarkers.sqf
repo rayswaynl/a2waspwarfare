@@ -12,7 +12,7 @@
 
 scriptName "Client\FSM\updateaicommarkers.sqf";
 
-private ["_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN","_reqSent","_reqTicks","_typeTag","_label","_ldr"];
+private ["_entry","_list","_tracked","_keep","_unit","_sid","_dir","_team","_mk","_known","_i","_k","_color","_x2","_present","_t","_mySid","_pos","_lastPos","_lastDir","_dirDiff","_t0","_diagTicks","_ownN","_reqSent","_reqTicks","_typeTag","_label","_ldr"];
 
 //--- B63 (Ray 2026-06-21): BOUNDED gate. The loop must wait for client init, but if a blocking
 //--- init waitUntil ever stalls, the old unbounded `waitUntil {clientInitComplete}` would suppress
@@ -165,8 +165,14 @@ while {true} do {
 	//--- the team is gone from the list, null or its leader is dead.
 	_keep = [];
 	{
-		_team = _x select 0;
-		_mk   = _x select 1;
+		//--- r103 marker-primitives fix: capture the tracked entry FIRST. The presence forEach and the
+		//--- liveness `count` below permanently rebind _x (A2-OA nested forEach does NOT restore it), so the
+		//--- old `_entry = _x` inside the if-branch captured the team's last UNIT OBJECT - the very next
+		//--- `_x select 2` then threw `select: Type Object` and killed this execVM loop outright (no watchdog;
+		//--- every HQ-team arrow froze and the drop/objective-marker blocks never ran again).
+		_entry = _x;
+		_team = _entry select 0;
+		_mk   = _entry select 1;
 		//--- Find this team's current entry in the public list (presence test only).
 		_present = false;
 		{
@@ -177,24 +183,24 @@ while {true} do {
 		//--- between leader-death and the next heading patch never drops the arrow). Draw at the
 		//--- team CURRENT leader.
 		if (_present && {!isNull _team} && {({alive _x} count units _team) > 0}) then {
-			_entry = _x; _ldr = leader _team; //--- B66 + Game 2026-06-29: _entry captured because the units-forEach classifier below clobbers _x (A2-OA nested forEach does NOT restore it)
+			_ldr = leader _team;
 			//--- PERF4 - only re-write pos/dir when the team actually moved/turned, sparing a stationary
 			//--- HQ team two setMarker* writes every ~8s for zero visible change.
 			_pos = getPos _ldr;
-			_lastPos = _x select 2;
+			_lastPos = _entry select 2;
 			if (isNil "_lastPos" || {(_pos distance _lastPos) > 3}) then {
 				_mk setMarkerPosLocal _pos;
-				_x set [2, _pos];
+				_entry set [2, _pos];
 			};
 			//--- DIR FIX (Game 2026-06-29): live leader heading, like the patrol arrows (see create pass note).
 			_dir = getDir _ldr;
-			_lastDir = _x select 3;
+			_lastDir = _entry select 3;
 			if (isNil "_lastDir") then {_lastDir = -999};
 			_dirDiff = abs (_dir - _lastDir);
 			if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};
 			if (_lastDir < 0 || _dirDiff > 7) then { //--- _lastDir<0 forces the first write past the seed (mirrors team/patrol loops)
 				_mk setMarkerDirLocal _dir;
-				_x set [3, _dir];
+				_entry set [3, _dir];
 			};
 			//--- TYPE TAG refresh: re-derive the INF/LGHT/HVY/AIR tag from the live composition and re-label
 			//--- only when it changed (cached in slot 4), so a team that loses its armour/air updates its tag

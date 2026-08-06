@@ -9,11 +9,18 @@
 	When a player is in the radiated area (see radzone.sqf), this broadcast a public variable PLAYER_RADIATED and trigger the eventHandler, playing this script here.
 		    
 */
-private["_PLAYER_radiated"];
+private ["_radData", "_radUnit", "_radDose"];
 
-_PLAYER_radiated = _this select 1;
+//--- Payload is [unit, dose]. radzone.sqf routes each player's radiation dose here because
+//--- setDammage is a LOCAL-argument command: the server (where radzone runs) cannot damage a
+//--- player unit that is local to the player's OWN client. This handler runs on that owning
+//--- client, so applying the dose to 'player' here is where it actually lands.
+_radData = _this select 1;
+_radUnit = _radData select 0;
+_radDose = _radData select 1;
 
-if (player == _PLAYER_radiated) then 
+if (player == _radUnit) then 
 {
+	player setDammage ((getDammage player) + _radDose);
 	playSound ["radiationSound",true];
 };

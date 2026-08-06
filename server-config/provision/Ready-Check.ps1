@@ -1,7 +1,11 @@
+# -MissionPbo is an optional full-path override; otherwise the configured
+# template in C:\WASP\profiles-pr8\server-pr8.cfg selects the PBO.
 Param(
-    [ValidateRange(1, 4)][Int]$HcCount = 4
+    [ValidateRange(1, 4)][Int]$HcCount = 4,
+    [String]$MissionPbo = ''
 )
 $oa = 'C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead'
+$serverConfigPath = 'C:\WASP\profiles-pr8\server-pr8.cfg'
 $script:pass = 0
 $script:fail = 0
 function C {
@@ -12,13 +16,30 @@ function C {
 # Mission filenames contain [ and ], which Test-Path treats as WILDCARDS - a plain
 # Test-Path reports a present PBO as missing. Always -LiteralPath for these.
 function TP { Param([string]$Path) return (Test-Path -LiteralPath $Path) }
+function Resolve-MissionPbo {
+    Param([string]$ConfigPath, [string]$MissionPboOverride, [string]$MissionRoot)
+    if (-not [string]::IsNullOrWhiteSpace($MissionPboOverride)) { return $MissionPboOverride }
+    if (-not (Test-Path -LiteralPath $ConfigPath)) { return $null }
+    $template = $null
+    foreach ($line in Get-Content -LiteralPath $ConfigPath -ErrorAction SilentlyContinue) {
+        if ($line -match '^\s*template\s*=\s*"([^"]+)"') { $template = $Matches[1]; break }
+    }
+    if ([string]::IsNullOrWhiteSpace($template)) { return $null }
+    return Join-Path $MissionRoot ("{0}.pbo" -f $template)
+}
+
+$missionPboPath = Resolve-MissionPbo -ConfigPath $serverConfigPath -MissionPboOverride $MissionPbo -MissionRoot (Join-Path $oa 'MPMissions')
 
 C (Test-Path (Join-Path $oa 'arma2oaserver.exe')) 'dedicated server exe'
 C (Test-Path (Join-Path $oa 'Dll\mimalloc.dll')) 'mimalloc (server allocator)'
 C (Test-Path (Join-Path $oa 'Dll\tbb4malloc_bi.dll')) 'tbb4malloc_bi (HC allocator)'
 foreach ($m in @('@CBA_CO', '@adwasp', '@admkswf')) { C (Test-Path (Join-Path $oa $m)) "mod $m" }
-C (TP (Join-Path $oa 'MPMissions\[61-2hc]warfarev2_073v48co_wave0725c4hc.zargabad.pbo')) 'soak mission PBO (zargabad 4hc)'
-C (Test-Path 'C:\WASP\profiles-pr8\server-pr8.cfg') 'server config'
+if ($null -eq $missionPboPath) {
+    C $false ("configured mission PBO (template missing in {0})" -f $serverConfigPath)
+} else {
+    C (TP $missionPboPath) ("mission PBO: {0}" -f $missionPboPath)
+}
+C (Test-Path -LiteralPath $serverConfigPath) 'server config'
 C (Test-Path 'C:\WASP\profiles-pr8\basic.cfg') 'basic.cfg (network tuning)'
 C (Test-Path 'C:\WASP\hc-profile\hc-video.cfg') 'hc-video.cfg'
 # Only the launchers for the configured HC count are required (HC1 = hc_launch.cmd).

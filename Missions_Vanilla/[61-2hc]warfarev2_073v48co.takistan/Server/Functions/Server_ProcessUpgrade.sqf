@@ -7,15 +7,49 @@
 		- Player's call
 */
 
-Private ["_artilleryIndex","_artilleryTypes","_artilleryTypesByIndex","_logic","_ownedBySide","_refreshedArtillery","_side","_sideText","_stime","_upgrades","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrade_time","_vehicle","_patrolNewLevel","_patrolCashPool","_patrolPlayers","_patrolShare","_patrolSupply"];
+Private ["_artilleryIndex","_artilleryTypes","_artilleryTypesByIndex","_curLvl","_logic","_ownedBySide","_refreshedAir","_refreshedArtillery","_side","_sideID","_sideText","_stime","_times","_upgrades","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrade_time","_vehicle","_vehicleSideID","_patrolNewLevel","_patrolCashPool","_patrolPlayers","_patrolShare","_patrolSupply"];
+
+//--- Fail-clean: callers (RequestUpgrade / upgradeQueue / AI_Com_Upgrade) already latch
+//--- wfbe_upgrading=true BEFORE Spawn. A throw here on short/malformed args or missing TIMES
+//--- leaves the side permanently "upgrading" with money already debited and the queue dead.
+if (typeName _this != "ARRAY" || {count _this < 4}) exitWith {
+	["WARNING", Format ["Server_ProcessUpgrade.sqf: rejected short/malformed payload type [%1] count [%2].", typeName _this, if (typeName _this == "ARRAY") then {count _this} else {-1}]] Call WFBE_CO_FNC_LogContent;
+};
 
 _side = _this select 0;
 _upgrade_id = _this select 1;
 _upgrade_level = _this select 2;
 _upgrade_isplayer = _this select 3;
 
-_upgrade_time = ((missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_TIMES",str _side]) select _upgrade_id) select _upgrade_level;
+if (typeName _side != "SIDE") exitWith {
+	["WARNING", Format ["Server_ProcessUpgrade.sqf: rejected non-side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _upgrade_id != "SCALAR" || {_upgrade_id != floor _upgrade_id}) exitWith {
+	["WARNING", Format ["Server_ProcessUpgrade.sqf: rejected non-integer upgrade id [%1].", _upgrade_id]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _upgrade_level != "SCALAR" || {_upgrade_level != floor _upgrade_level} || {_upgrade_level < 0}) exitWith {
+	["WARNING", Format ["Server_ProcessUpgrade.sqf: rejected non-integer upgrade level [%1].", _upgrade_level]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _upgrade_isplayer != "BOOL") then {_upgrade_isplayer = false};
+
 _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
+if (isNull _logic) exitWith {
+	["WARNING", Format ["Server_ProcessUpgrade.sqf: rejected null side logic for side %1.", _side]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- TIMES array must exist and cover [id][level] before any sleep or latch publish. On fail, CLEAR the
+//--- caller-set upgrading latch so the queue worker and commander menu can recover (money already taken
+//--- is logged; silent stuck flag is worse than a refund-less abort).
+_times = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_TIMES", str _side];
+if (typeName _times != "ARRAY" || {_upgrade_id < 0} || {_upgrade_id >= count _times} || {typeName (_times select _upgrade_id) != "ARRAY"} || {_upgrade_level >= count (_times select _upgrade_id)}) exitWith {
+	_logic setVariable ["wfbe_upgrading", false, true];
+	_logic setVariable ["wfbe_upgrading_id", -1, true];
+	_logic setVariable ["wfbe_upgrading_end_time", -1, true];
+	["WARNING", Format ["Server_ProcessUpgrade.sqf: rejected missing/OOB TIMES side %1 id %2 level %3 - cleared upgrading latch.", _side, _upgrade_id, _upgrade_level]] Call WFBE_CO_FNC_LogContent;
+};
+_upgrade_time = (_times select _upgrade_id) select _upgrade_level;
+if (typeName _upgrade_time != "SCALAR" || {_upgrade_time < 0}) then {_upgrade_time = 0};
+
 // Marty: Publish only the active upgrade ID from the server; the menu computes its own display countdown without touching the upgrade flow.
 _logic setVariable ["wfbe_upgrading", true, true];
 _logic setVariable ["wfbe_upgrading_id", _upgrade_id, true];
@@ -44,7 +78,15 @@ if (_upgrade_isplayer) then {
 };
 
 _upgrades = +(_side Call WFBE_CO_FNC_GetSideUpgrades);
-_upgrades set [_upgrade_id, (_upgrades select _upgrade_id) + 1];
+if (typeName _upgrades != "ARRAY" || {_upgrade_id < 0} || {_upgrade_id >= count _upgrades}) exitWith {
+	_logic setVariable ["wfbe_upgrading", false, true];
+	_logic setVariable ["wfbe_upgrading_id", -1, true];
+	_logic setVariable ["wfbe_upgrading_end_time", -1, true];
+	["WARNING", Format ["Server_ProcessUpgrade.sqf: abort completion - upgrades array missing/OOB side %1 id %2.", _side, _upgrade_id]] Call WFBE_CO_FNC_LogContent;
+};
+_curLvl = _upgrades select _upgrade_id;
+if (typeName _curLvl != "SCALAR") then {_curLvl = 0};
+_upgrades set [_upgrade_id, _curLvl + 1];
 
 _logic setVariable ["wfbe_upgrades", _upgrades, true];
 _logic setVariable ["wfbe_upgrading", false, true];
@@ -111,6 +153,29 @@ if (_upgrade_id == WFBE_UP_ARTYAMMO) then {
 	};
 
 	["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Refreshed [%2] existing artillery pieces after Artillery Ammunition upgrade.", _sideText, count _refreshedArtillery]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Aircraft that existed before Flares/Countermeasures research already ran their Init_Unit path at level 0,
+//--- so they have neither its FlareCount reset nor the incomingMissile handler. Re-run only that narrow setup
+//--- through global init; full Init_Unit would duplicate player actions and marker workers. The local done stamp
+//--- makes the refresh idempotent per machine while retaining the normal per-machine EH attachment model.
+if (_upgrade_id == WFBE_UP_FLARESCM) then {
+	_sideID = _side Call GetSideID;
+	_refreshedAir = [];
+	{
+		_vehicle = _x;
+		if (alive _vehicle && {_vehicle isKindOf "Air"}) then {
+			_vehicleSideID = _vehicle getVariable ["wfbe_side_id", -1];
+			if (_vehicleSideID == _sideID) then {
+				clearVehicleInit _vehicle;
+				_vehicle setVehicleInit "this Call WFBE_CO_FNC_RefreshAirCountermeasures";
+				processInitCommands;
+				clearVehicleInit _vehicle;
+				_refreshedAir = _refreshedAir + [_vehicle];
+			};
+		};
+	} forEach vehicles;
+	["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Refreshed [%2] existing aircraft after Flares/Countermeasures upgrade.", str _side, count _refreshedAir]] Call WFBE_CO_FNC_LogContent;
 };
 
 [_side, "NewIntelAvailable"] Spawn SideMessage;

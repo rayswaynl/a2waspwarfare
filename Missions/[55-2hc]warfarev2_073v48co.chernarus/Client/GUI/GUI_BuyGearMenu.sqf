@@ -1,5 +1,5 @@
 scriptName "Client\GUI\GUI_BuyGearMenu.sqf";
-disableSerialization; //--- cmdcon42 (Ray 2026-07-02): scheduled dialog loop touches display/controls across sleep; guard against "does not support serialization" (matches the convention already in the other GUI_Menu_* handlers).
+//--- A2 OA: display is held only in uiNamespace; do not call disableSerialization before this scheduled loop.
 
 //--- Register the UI.
 uiNamespace setVariable ["wfbe_display_buygear", _this select 0];
@@ -471,6 +471,15 @@ while {true} do {
 	if (_purchase) then {
 		_purchase = false;
 		if ((Call WFBE_CL_FNC_GetClientFunds) >= _price) then {
+			//--- The vehicle list is a dialog-open snapshot. Revalidate the live cargo holder before
+			//--- Common_EquipVehicle clears and repopulates it, otherwise a player can edit it remotely.
+			Private ["_vehicleCargo","_vehicleCommitAllowed"];
+			_vehicleCommitAllowed = true;
+			if (_has_veh_changed) then {
+				_vehicleCargo = vehicle _target;
+				if (isNull _vehicleCargo || {!alive _vehicleCargo} || {player distance _vehicleCargo > (missionNamespace getVariable "WFBE_C_PLAYERS_GEAR_VEHICLE_RANGE")}) then {_vehicleCommitAllowed = false};
+			};
+			if (_vehicleCommitAllowed) then {
 			//--- fable/gear-charge-fix: snapshot the pre-purchase ("old") side of every UpdatePrice pair
 			//--- BEFORE the four lines below overwrite them with the new selection - needed to recompute
 			//--- the true post-cap charge when the magazine cap discards part of the selection (see below).
@@ -534,9 +543,12 @@ while {true} do {
 				hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Purchased Equipement to %1 for $<t color='#F5D363'>%2</t>.</t>%3",_msg,_price,_hint_overflow];
 				_price = 0;
 			} else {hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The gear was not purchased since nothing has changed.</t>");};
-			_has_inv_changed = false;
-			_has_veh_changed = false;
-			_update_inventory = true;
+				_has_inv_changed = false;
+				_has_veh_changed = false;
+				_update_inventory = true;
+			} else {
+				hint "Vehicle cargo changed position or is no longer available. Return to the vehicle before purchasing gear.";
+			};
 		} else {
 			hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t><t color='#F56363'>Cannot</t> purchase equipment, missing $<t color='#F5D363'>%1</t>.</t>",_price - (Call WFBE_CL_FNC_GetClientFunds)];
 		};

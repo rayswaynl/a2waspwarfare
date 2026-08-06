@@ -1,10 +1,13 @@
 disableSerialization;
-Private ["_control","_duration","_text","_textcontent"];
+Private ["_control","_display","_ctrl"];
 _control = _this select 0;
 
-with uinamespace do {
-	if !(ctrlShown (currentBEDialog displayCtrl _control)) exitWith {};
+//--- Resolve the active dialog once. A missing/closed dialog is a normal race with menu teardown.
+_display = uiNamespace getVariable ["currentBEDialog", displayNull];
+if (isNull _display) exitWith {};
+_ctrl = _display displayCtrl _control;
+if (isNull _ctrl) exitWith {};
+if !(ctrlShown _ctrl) exitWith {};
 
-	(currentBEDialog displayCtrl _control) ctrlSetStructuredText parseText ("");
-	(currentBEDialog displayCtrl _control) ctrlShow false;
-};
+_ctrl ctrlSetStructuredText parseText ("");
+_ctrl ctrlShow false;

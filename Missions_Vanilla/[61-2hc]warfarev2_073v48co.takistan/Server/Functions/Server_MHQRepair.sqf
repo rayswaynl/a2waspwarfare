@@ -21,6 +21,11 @@ _hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 //--- this, any client could force-delete a living, fully deployed HQ. Release the flag we took.
 if (alive _hq) exitWith {
 	_logik setVariable ['wfbe_hq_repairing', false, true];
+	//--- r90: a rejected cash repair must not keep the depot latch - Action_RepairMHQDepot
+	//--- sets cashrepaired at click time and only a COMPLETED repair (:73) used to clear it,
+	//--- so this reject permanently disabled depot cash repair ("cannot be repaired using
+	//--- cash twice!") for the rest of the match even though no cash repair ever ran.
+	_logik setVariable ['cashrepaired', false, true];
 	["WARNING", Format ["Server_MHQRepair.sqf: [%1] rejected - HQ is alive; repair only rebuilds a destroyed HQ.", _sideText]] Call WFBE_CO_FNC_LogContent;
 };
 _position = getPos _hq;
@@ -47,18 +52,19 @@ if !(isNull _commanderTeam) then {
 _MHQ = [missionNamespace getVariable Format["WFBE_%1MHQNAME", _sideText], _position, _sideID, _direction, true, false] Call WFBE_CO_FNC_CreateVehicle;
 if (isNull _MHQ) exitWith {
 	_logik setVariable ['wfbe_hq_repairing', false, true];
+	//--- r90: same latch release on the create-fail abort - the cash repair did not rebuild
+	//--- the HQ, so the depot must not stay latched.
+	_logik setVariable ['cashrepaired', false, true];
 	["WARNING", Format ["Server_MHQRepair.sqf: [%1] replacement MHQ creation failed.", _sideText]] Call WFBE_CO_FNC_LogContent;
 };
 if (_side == west && !(IS_chernarus_map_dependent)) then {
-	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]";
-	_MHQ setVehicleInit "this setObjectTexture [1,""Textures\lavbody2_coD.paa""]";
-	_MHQ setVehicleInit "this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
+	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]; this setObjectTexture [1,""Textures\lavbody2_coD.paa""]; this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
 	processinitcommands;
 	};
 _MHQ setVariable ["WFBE_Taxi_Prohib", true];
 _MHQ setVariable ["wfbe_trashed", false];
-_MHQ setVariable ["wfbe_side", _side];
-_MHQ setVariable ["wfbe_structure_type", "Headquarters"];
+_MHQ setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+_MHQ setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 _MHQ addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}];
 _MHQ setVelocity [0,0,-1];
 _MHQ setVariable ["wfbe_trashable", false];

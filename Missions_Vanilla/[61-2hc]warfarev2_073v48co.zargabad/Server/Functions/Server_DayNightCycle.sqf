@@ -40,18 +40,22 @@ if (!isServer) exitWith {};
 // Marty: Defensive guard in case this script is executed while the mission parameter is disabled.
 if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") != 1) exitWith {};
 
-_day_duration_real = missionNamespace getVariable "WFBE_DAY_DURATION";
-_night_duration_real = missionNamespace getVariable "WFBE_NIGHT_DURATION";
+//--- r76b: duration/tick/weight nil or 0 => scalar divide-by-zero NaN rates (clock freezes / runaway).
+_day_duration_real = missionNamespace getVariable ["WFBE_DAY_DURATION", 180];
+_night_duration_real = missionNamespace getVariable ["WFBE_NIGHT_DURATION", 30];
+if (isNil "_day_duration_real" || {typeName _day_duration_real != "SCALAR"} || {_day_duration_real <= 0}) then {_day_duration_real = 180};
+if (isNil "_night_duration_real" || {typeName _night_duration_real != "SCALAR"} || {_night_duration_real <= 0}) then {_night_duration_real = 30};
 
 _day_duration_real_seconds = _day_duration_real * 60;
 _night_duration_real_seconds = _night_duration_real * 60;
 
 // Marty: Phase boundaries are estimated for Chernarus on 28 June, the mission's effective date after the month override.
-_dawn_start = missionNamespace getVariable "WFBE_DAYNIGHT_DAWN_START";
-_dawn_end = missionNamespace getVariable "WFBE_DAYNIGHT_DAWN_END";
-_dusk_start = missionNamespace getVariable "WFBE_DAYNIGHT_DUSK_START";
-_dusk_end = missionNamespace getVariable "WFBE_DAYNIGHT_DUSK_END";
-_twilight_weight = missionNamespace getVariable "WFBE_DAYNIGHT_TWILIGHT_WEIGHT";
+_dawn_start = missionNamespace getVariable ["WFBE_DAYNIGHT_DAWN_START", 4];
+_dawn_end = missionNamespace getVariable ["WFBE_DAYNIGHT_DAWN_END", 5];
+_dusk_start = missionNamespace getVariable ["WFBE_DAYNIGHT_DUSK_START", 20.5];
+_dusk_end = missionNamespace getVariable ["WFBE_DAYNIGHT_DUSK_END", 21.5];
+_twilight_weight = missionNamespace getVariable ["WFBE_DAYNIGHT_TWILIGHT_WEIGHT", 3];
+if (isNil "_twilight_weight" || {typeName _twilight_weight != "SCALAR"} || {_twilight_weight <= 0}) then {_twilight_weight = 3};
 
 _dawn_hours_game = _dawn_end - _dawn_start;
 _day_hours_game = _dusk_start - _dawn_end;
@@ -65,8 +69,10 @@ _twilight_hours_per_second = _day_weighted_hours / (_day_duration_real_seconds *
 _night_hours_per_second = _night_hours_game / _night_duration_real_seconds;
 
 // Marty: Small server-side skipTime steps reduce visible shadow and star movement jumps.
-_tick = missionNamespace getVariable "WFBE_DAYNIGHT_CLIENT_TICK";
-_sync_interval = missionNamespace getVariable "WFBE_DAYNIGHT_SERVER_SYNC_INTERVAL";
+_tick = missionNamespace getVariable ["WFBE_DAYNIGHT_CLIENT_TICK", 0.1];
+_sync_interval = missionNamespace getVariable ["WFBE_DAYNIGHT_SERVER_SYNC_INTERVAL", 30];
+if (isNil "_tick" || {typeName _tick != "SCALAR"} || {_tick <= 0}) then {_tick = 0.1};
+if (isNil "_sync_interval" || {typeName _sync_interval != "SCALAR"} || {_sync_interval <= 0}) then {_sync_interval = 30};
 _sync_elapsed = _sync_interval;
 
 while {(missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1} do {

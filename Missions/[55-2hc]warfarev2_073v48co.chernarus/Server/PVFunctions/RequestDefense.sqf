@@ -1,14 +1,100 @@
-Private ["_builtByRepairTruck","_defenseType","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure"];
-_side            = _this select 0;
-_defenseType     = _this select 1;
-_pos             = _this select 2;
-_dir             = _this select 3;
-_manned          = _this select 4;
-_builtByRepairTruck = if (count _this > 5) then {_this select 5} else {false};
-_reqPlayer          = if (count _this > 6) then {_this select 6} else {objNull};
-// Defense auto-manning defaults on client-side and Custom Action 16 can still toggle it off/on.
+Private ["_builtByRepairTruck","_defenseType","_defenses","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure"];
 
-_index = (missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",str _side]) find _defenseType;
+//--- Client PV ingress: validate the complete envelope before selecting any field.
+//--- RequestDefense constructs server-local objects, so a malformed short or mistyped array
+//--- must fail cleanly instead of throwing mid-handler and leaving partial request state.
+if (isNil "_this") exitWith {
+	["WARNING", "RequestDefense.sqf: rejected nil payload."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _this != "ARRAY") exitWith {
+	["WARNING", "RequestDefense.sqf: rejected non-array payload."] Call WFBE_CO_FNC_LogContent;
+};
+if (count _this < 7) exitWith {
+	["WARNING", Format ["RequestDefense.sqf: rejected short payload (%1 args).", count _this]] Call WFBE_CO_FNC_LogContent;
+};
+
+_side = _this select 0;
+_defenseType = _this select 1;
+_pos = _this select 2;
+_dir = _this select 3;
+_manned = _this select 4;
+_builtByRepairTruck = _this select 5;
+_reqPlayer = _this select 6;
+
+if (typeName _side != "SIDE" || {!(_side in WFBE_PRESENTSIDES)}) exitWith {
+	["WARNING", Format ["RequestDefense.sqf: rejected invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+if (typeName _defenseType != "STRING" || {_defenseType == ""}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid defense classname."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+if (typeName _pos != "ARRAY" || {count _pos < 3}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid placement payload."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+if (typeName (_pos select 0) != "SCALAR" || {typeName (_pos select 1) != "SCALAR"} || {typeName (_pos select 2) != "SCALAR"} || {typeName _dir != "SCALAR"}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid placement payload."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+if (typeName _manned != "BOOL" || {typeName _builtByRepairTruck != "BOOL"}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid defense options."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+if (typeName _reqPlayer != "OBJECT" || {isNull _reqPlayer} || {!isPlayer _reqPlayer} || {side group _reqPlayer != _side}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid requester."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+
+// Defense auto-manning defaults on client-side and Custom Action 16 can still toggle it off/on.
+_defenses = missionNamespace getVariable [Format ["WFBE_%1DEFENSENAMES", str _side], []];
+if (typeName _defenses != "ARRAY") exitWith {
+	["WARNING", Format ["RequestDefense.sqf: rejected unavailable defense list for side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+_index = _defenses find _defenseType;
 if (_index != -1) then {
 	//--- Position anchors spawn a whole WDDM composition; everything else is a single defense.
 	//--- Release-merge (WDDM + engineer-EASA): the single-defense path keeps the EASA repair-truck tagging args
@@ -201,7 +287,7 @@ if (_index != -1) then {
 			//     Compositions are exempt (cap is B3b above); only single
 			//     defenses hit per-category budget.
 			//------------------------------------------------------------------
-			private ["_catStatics","_catForts","_catMines","_pendingS","_pendingF","_pendingM","_capS","_capF","_capM","_countS","_countF","_countM","_allDefNames"];
+			private ["_catStatics","_catForts","_catMines","_pendingS","_pendingF","_pendingM","_capS","_capF","_capM","_countS","_countF","_countM","_allDefNames","_mineEntry","_mineObj","_mineSide","_mineFieldID","_mineFields"];
 
 			if (!_isAnchor) then {
 				//--- Single defenses only: count pending objects against per-category caps.
@@ -246,9 +332,23 @@ if (_index != -1) then {
 					} forEach (nearestObjects [_nearestCenter, _catForts, _baseRange]);
 				};
 				if (count _catMines > 0 && _pendingM > 0) then {
-					{
-						if (alive _x && !(_x getVariable ["WFBE_WDDMPositionChild", false])) then {_countM = _countM + 1}
-					} forEach (nearestObjects [_nearestCenter, _catMines, _baseRange]);
+					//--- Sign_Danger deletes its anchor after creating 26 mines, so count the shared
+					//--- field identities kept by Construction_StationaryDefense instead of the dead anchor.
+					_mineFields = [];
+					if (!isNil "mines") then {
+						{
+							_mineEntry = _x;
+							if (typeName _mineEntry == "ARRAY" && {count _mineEntry >= 4}) then {
+								_mineObj = _mineEntry select 0;
+								_mineSide = _mineEntry select 2;
+								_mineFieldID = _mineEntry select 3;
+								if (!isNull _mineObj && {_mineSide == _side} && {(_mineObj distance _nearestCenter) < _baseRange} && {!(_mineFieldID in _mineFields)}) then {
+									_mineFields = _mineFields + [_mineFieldID];
+								};
+							};
+						} forEach mines;
+					};
+					_countM = count _mineFields;
 				};
 
 				if (_pendingS > 0 && (_countS + _pendingS) > _capS) then {

@@ -40,7 +40,9 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0) then {
 	_checks = _deathLoc nearEntities[_mobileRespawns,_range];
 	if (count _checks > 0) then {
 		{
-			if (_x emptyPositions "cargo" > 0) then {
+			//--- bughunt-20260730: require friendly side (matches Client_AmbulanceRedeployCircles).
+			//--- Classname-only nearEntities offered enemy-crewed/stolen own-side MEVs as spawn points.
+			if ((side _x == _side) && {_x emptyPositions "cargo" > 0}) then {
 				_availableSpawn = _availableSpawn + [_x];
 			};
 		} forEach _checks;
@@ -65,9 +67,10 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && WFBE_
 			private ["_veh","_tooClose"];
 			_veh = _x;
 			//--- Cargo available, stationary, engine off.
-			if (_veh emptyPositions "cargo" > 0
+			//--- bughunt-20260730: friendly-side gate (same classnames are ordinary transports).
+			if ((side _veh == _side) && {_veh emptyPositions "cargo" > 0
 				&& abs(speed _veh) < 1
-				&& !(isEngineOn _veh)) then {
+				&& !(isEngineOn _veh)}) then {
 				//--- Not within 500 m of an enemy-held or contested town.
 				_tooClose = false;
 				{
@@ -133,6 +136,17 @@ if (_side != resistance) then {
 			_availableSpawn = _availableSpawn + [_x];
 		};
 	} forEach towns;
+};
+
+//--- Star Fortress Phase 1: the keep is a forward hard-spawn for WEST/EAST while it stands.
+//--- The existing final pass below removes a dead keep immediately after the broadcast drops.
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0 && {_side != resistance}) then {
+	private ["_sfKeep","_sfAliveKey"];
+	_sfKeep = missionNamespace getVariable [if (_side == west) then {"WFBE_STARFORT_WEST"} else {"WFBE_STARFORT_EAST"}, objNull];
+	_sfAliveKey = if (_side == west) then {"wfbe_starfort_keepalive_west"} else {"wfbe_starfort_keepalive_east"};
+	if (!isNull _sfKeep && {alive _sfKeep} && {missionNamespace getVariable [_sfAliveKey, false]}) then {
+		_availableSpawn = _availableSpawn + [_sfKeep];
+	};
 };
 
 //--- r67: final pass — drop null/dead entries (menu clean only filtered isNull).

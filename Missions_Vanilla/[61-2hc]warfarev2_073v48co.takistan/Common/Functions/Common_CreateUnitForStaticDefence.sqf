@@ -11,6 +11,12 @@
 
 Private ["_assignedUnit", "_built", "_defence", "_diagEnabled", "_groups", "_hcGrpIdx", "_hcGrpKey", "_hcLocalGrp", "_manningInProgress", "_moveInGunner", "_perfActive", "_perfItemStart", "_perfScope", "_perfStart", "_position", "_positions", "_serverTeam", "_side", "_sideID", "_team", "_teamLeader", "_teams", "_unit"];
 
+//--- r80 fail-clean: short/malformed call must not throw on select or leave latches half-set.
+if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 6}) exitWith {
+	["WARNING", "Common_CreateUnitForStaticDefence.sqf: short/malformed args - static manning aborted."] Call WFBE_CO_FNC_LogContent;
+	[[]]
+};
+
 _side = _this select 0;
 _groups = _this select 1;
 _positions = _this select 2;
@@ -24,6 +30,12 @@ _teams = [];
 _perfStart = diag_tickTime;
 _perfActive = 0;
 _diagEnabled = missionNamespace getVariable ["TownDefenseDiagnosticsEnabled", false];
+
+//--- r80: groups/positions must be arrays (nil/wrong type throws on count/select mid-manning).
+if (isNil "_groups" || {typeName _groups != "ARRAY"} || {isNil "_positions"} || {typeName _positions != "ARRAY"}) exitWith {
+	["WARNING", Format["Common_CreateUnitForStaticDefence.sqf: [%1] groups/positions not arrays - static manning aborted.", _side]] Call WFBE_CO_FNC_LogContent;
+	[_teams]
+};
 
 if (isNull _defence) exitWith {
 	//--- D3 2026-06-19: a null defence object is an EXPECTED, benign no-op for sides/towns
@@ -40,9 +52,21 @@ if (isNull _defence) exitWith {
 	[_teams]
 };
 
-if !(isNull (gunner _defence)) exitWith {
+//--- r71b crew-seat: a DEAD gunner corpse still occupies the gunner slot (isNull false) and used
+//--- to block remanning forever. HandleDefense already uses isNull||!alive; match that here so HC
+//--- static reman (and any other CreateUnitForStaticDefence caller) can reseat after a KIA gunner.
+if (!(isNull (gunner _defence)) && {alive (gunner _defence)}) exitWith {
 	["INFORMATION", Format["Common_CreateUnitForStaticDefence.sqf: [%1] skipped duplicate request for [%2], gunner already alive.", _side, typeOf _defence]] Call WFBE_CO_FNC_LogContent;
 	[_teams]
+};
+//--- Dead corpse still seated: free the slot so assignAsGunner/moveInGunner can take it.
+if (!(isNull (gunner _defence)) && {!(alive (gunner _defence))}) then {
+	private ["_deadGun"];
+	_deadGun = gunner _defence;
+	if (!isNull _deadGun) then {
+		unassignVehicle _deadGun;
+		moveOut _deadGun;
+	};
 };
 
 _assignedUnit = _defence getVariable "WFBE_StaticDefenseAssignedUnit";
@@ -67,7 +91,20 @@ if (_manningInProgress) exitWith {
 };
 _defence setVariable ["WFBE_StaticDefenseManningInProgress", true, true];
 
-for '_i' from 0 to count(_groups)-1 do {
+//--- r80: clamp to shared length so positions select never OOB (OOB threw mid-loop and left
+//--- WFBE_StaticDefenseManningInProgress=true forever - AA/static reman permanently blocked).
+private ["_pairCount"];
+_pairCount = (count _groups) min (count _positions);
+if (_pairCount < (count _groups)) then {
+	["WARNING", Format["Common_CreateUnitForStaticDefence.sqf: [%1] groups/positions length mismatch (g=%2 p=%3) - clamping.", _side, count _groups, count _positions]] Call WFBE_CO_FNC_LogContent;
+};
+if (_pairCount < 1) exitWith {
+	_defence setVariable ["WFBE_StaticDefenseManningInProgress", false, true];
+	["WARNING", Format["Common_CreateUnitForStaticDefence.sqf: [%1] empty groups/positions - manning latch cleared.", _side]] Call WFBE_CO_FNC_LogContent;
+	[_teams]
+};
+
+for '_i' from 0 to (_pairCount - 1) do {
 	_position = _positions select _i;
 
 	["INFORMATION", Format["Common_CreateUnitForStaticDefence.sqf: [%1] will create a team template %2 at %3", _side, _groups select _i, _position]] Call WFBE_CO_FNC_LogContent;
@@ -135,6 +172,15 @@ for '_i' from 0 to count(_groups)-1 do {
 		} else {
 			_built = _built + 1;
 			_defence setVariable ["WFBE_StaticDefenseAssignedUnit", _unit, true];
+			//--- r128 alife-crew-bailout: town-static gunners created on THIS path (HC-delegated)
+			//--- never received WFBE_IsTownDefenderAI, but BOTH receiver-gated remote de-man paths
+			//--- require it (HandleSpecial "cleanup-town-defense-gunner" gates on local + !isPlayer
+			//--- + this tag) - so the r62 remove-case dispatch and the #1370 GUER capture-teardown
+			//--- reap silently no-op'd for exactly the HC-local gunners they were built for. Tag
+			//--- only TOWN statics (the hull carries the tag from Server_SpawnTownDefense.sqf);
+			//--- base statics stay untagged so the town-wake exclusion / garrison UI / AICOM
+			//--- telemetry readers of the tag are unaffected.
+			if (_defence getVariable ["WFBE_IsTownDefenderAI", false]) then {_unit setVariable ["WFBE_IsTownDefenderAI", true, true]};
 
 			if (_diagEnabled) then {
 				["TOWN_DEFENSE_DIAG", Format ["static_create_unit_result side:%1;template:%2;unitNull:%3;teamNull:%4;defense:%5;moveIn:%6;localServer:%7;hasInterface:%8", _side, _groups select _i, isNull _unit, isNull _team, typeOf _defence, _moveInGunner, isServer, hasInterface]] Call WFBE_CO_FNC_LogContent;

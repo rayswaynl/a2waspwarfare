@@ -58,6 +58,8 @@ REENTRANCY_GUARD_SET = '_logic setVariable ["wfbe_camp_repairing", true, true];'
 REENTRANCY_GUARD_RELEASE = '_logic setVariable ["wfbe_camp_repairing", false, true];'
 
 CLIENT_PAYLOAD = '["repair-camp", _camp, WFBE_Client_SideID, player]'
+ENGINEER_ON_FOOT_GUARD = 'if (vehicle _vehicle != _vehicle) exitWith {};'
+ENGINEER_LOOP_ON_FOOT_GUARD = 'if (!alive _vehicle || (vehicle _vehicle != _vehicle)'
 
 
 def test_pvf_gate_present_on_all_terrains() -> None:
@@ -72,15 +74,154 @@ def test_pvf_gate_present_on_all_terrains() -> None:
         )
 
 
+def _exitwith_block_spans(source: str) -> list:
+    """Return brace-matched (open_brace_index, close_brace_index) spans for every
+    `exitWith {...}` block in ``source``. Brace-matched (not regex-greedy) because these
+    blocks routinely contain their own nested `{}` - e.g. `&& {isPlayer _x}` conditions or an
+    inner `if () then {}` - which would truncate a naive scan early."""
+    marker = "exitWith {"
+    spans = []
+    i = 0
+    while True:
+        idx = source.find(marker, i)
+        if idx == -1:
+            break
+        open_brace = idx + len(marker) - 1
+        depth = 1
+        j = open_brace + 1
+        while depth > 0 and j < len(source):
+            if source[j] == "{":
+                depth += 1
+            elif source[j] == "}":
+                depth -= 1
+            j += 1
+        spans.append((open_brace, j))
+        i = j
+    return spans
+
+
+# Statements that only belong to "the repair actually happened" work. If an early-exit
+# release (one sitting inside an `exitWith {}` block) shares a block with any of these, that
+# block is not a clean bail-out - it is doing real camp-mutation work AND releasing the guard
+# in the same breath, which reopens the double-spawn race harden-repair-camp closed.
+# The two named early-exit branches that must EACH release the reentrancy flag on their own.
+_EARLY_EXIT_BRANCHES = (
+    ("if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {", "alive-reject"),
+    ("if (isNull _townModel) exitWith {", "createVehicle-fail"),
+)
+
+_CAMP_MUTATION_MARKERS = (
+    "createVehicle [",
+    "setDir (",
+    "setPos [",
+    "setPosASL [",
+    "addEventHandler [",
+    'setVariable ["wfbe_camp_bunker"',
+    'setVariable ["sideID"',
+    "WFBE_CO_FNC_SendToClients",
+)
+
+
 def test_handlespecial_reentrancy_guard_present() -> None:
+    """Behavioural version of the harden-repair-camp reentrancy contract: the flag must be
+    acquired exactly once per call, every early-exit release must be a clean bail-out with no
+    camp-mutation work sharing its `exitWith` block, and exactly one release must survive
+    outside any `exitWith` block (the success path) - and that one must come only after the
+    bunker was actually created and registered, with no further camp mutation after it. This
+    intentionally does NOT hard-code a literal release count: a fold may legitimately add
+    another early-abort path (e.g. a `createVehicle` failure guard) without invalidating the
+    test, so long as that path stays a clean bail-out per the checks above.
+    """
     for terrain in TERRAINS:
         source = (ROOT / terrain / HANDLE_SPECIAL).read_text(encoding="utf-8")
         assert REENTRANCY_GUARD_CHECK in source, f"{terrain}: repair-camp reentrancy check missing"
         assert REENTRANCY_GUARD_SET in source, f"{terrain}: repair-camp reentrancy flag never set"
-        # Set once (top of case) + released on the two exit paths (alive-camp reject, success) = 3.
-        assert source.count(REENTRANCY_GUARD_RELEASE) == 2, (
-            f"{terrain}: expected exactly 2 reentrancy-flag releases (alive-reject + success)"
+
+        case_start = source.index('case "repair-camp": {')
+        case_end = source.index('\n\tcase "', case_start + 1)
+        body = source[case_start:case_end]
+
+        assert body.count(REENTRANCY_GUARD_SET) == 1, (
+            f"{terrain}: expected the reentrancy flag to be acquired exactly once per repair-camp call"
         )
+        set_index = body.index(REENTRANCY_GUARD_SET)
+
+        release_indices = []
+        cursor = 0
+        while True:
+            idx = body.find(REENTRANCY_GUARD_RELEASE, cursor)
+            if idx == -1:
+                break
+            release_indices.append(idx)
+            cursor = idx + 1
+
+        assert len(release_indices) >= 2, (
+            f"{terrain}: expected at least 2 reentrancy-flag releases (alive-reject + success)"
+        )
+        assert all(idx > set_index for idx in release_indices), (
+            f"{terrain}: a reentrancy-flag release appears before the flag is even acquired"
+        )
+
+        blocks = _exitwith_block_spans(body)
+
+        tail_releases = []
+        for idx in release_indices:
+            enclosing = next(((o, c) for (o, c) in blocks if o <= idx < c), None)
+            if enclosing is None:
+                tail_releases.append(idx)
+                continue
+            block_text = body[enclosing[0]:enclosing[1]]
+            for marker in _CAMP_MUTATION_MARKERS:
+                assert marker not in block_text, (
+                    f"{terrain}: an early-exit reentrancy release shares its exitWith block with "
+                    f"camp-mutation work ({marker!r}) - this releases the guard while a repair "
+                    f"may still be in flight"
+                )
+
+        # Exactly one release must survive outside every exitWith block: the unconditional
+        # success-path release taken once the repair is actually finished. Zero means a leaked
+        # (never-released) flag on success; two or more means a duplicate/premature release -
+        # both are the reentrancy bug shape this test exists to catch.
+        assert len(tail_releases) == 1, (
+            f"{terrain}: expected exactly 1 unconditional (success-path) reentrancy release, "
+            f"found {len(tail_releases)}"
+        )
+        tail_index = tail_releases[0]
+
+        assert body.index("createVehicle [") < tail_index, (
+            f"{terrain}: success-path reentrancy release happens before the bunker is even created"
+        )
+        assert body.index('setVariable ["wfbe_camp_bunker"') < tail_index, (
+            f"{terrain}: success-path reentrancy release happens before the bunker is registered "
+            f"- a concurrent request could pass the alive-check while the bunker is still unset"
+        )
+        tail = body[tail_index + len(REENTRANCY_GUARD_RELEASE):]
+        for marker in _CAMP_MUTATION_MARKERS:
+            assert marker not in tail, (
+                f"{terrain}: camp-mutation work ({marker!r}) still runs AFTER the reentrancy flag "
+                f"is released - the guard no longer covers the full repair"
+            )
+
+        # Each NAMED early-exit branch must carry its OWN release. The aggregate ">= 2 clean
+        # releases" check above is satisfied by either branch alone, so dropping exactly one of
+        # them slips through - and dropping either one permanently latches the flag the first
+        # time that branch fires, blocking every future repair of that camp.
+        for anchor, label in _EARLY_EXIT_BRANCHES:
+            anchor_index = body.find(anchor)
+            assert anchor_index != -1, (
+                f"{terrain}: could not locate the {label} early-exit branch "
+                f"({anchor!r}) - the reentrancy guard's shape has changed"
+            )
+            open_brace = anchor_index + len(anchor) - 1
+            span = next(((o, c) for (o, c) in blocks if o == open_brace), None)
+            assert span is not None, (
+                f"{terrain}: the {label} branch is no longer a brace-matched exitWith block"
+            )
+            assert REENTRANCY_GUARD_RELEASE in body[span[0]:span[1]], (
+                f"{terrain}: the {label} early-exit branch does not release the reentrancy flag - "
+                f"the first time it fires, wfbe_camp_repairing latches true forever and no further "
+                f"repair of that camp can ever start"
+            )
 
 
 def test_server_radius_constant_defined_and_consistent() -> None:
@@ -102,6 +243,37 @@ def test_client_actions_send_requester_identity() -> None:
             assert CLIENT_PAYLOAD in source, (
                 f"{terrain}/{relative}: repair-camp request no longer sends `player` as the 4th element"
             )
+
+
+def test_engineer_repair_requires_an_on_foot_animation_subject() -> None:
+    """The engineer action must not run its foot medic animation from a vehicle seat.
+
+    Unlike the standard repair-camp action, this action is attached directly to the
+    player and repeatedly issues ``playMove`` to that action unit.  A seated unit
+    cannot perform the foot animation, so reject a seated caller before charging
+    and also cancel/refund if the player boards during the repair delay.
+    """
+    for terrain in TERRAINS:
+        source = (ROOT / terrain / "Client/Action/Action_RepairCampEngineer.sqf").read_text(encoding="utf-8")
+        assert ENGINEER_ON_FOOT_GUARD in source, (
+            f"{terrain}: engineer repair does not reject a seated player before charging"
+        )
+        assert source.index(ENGINEER_ON_FOOT_GUARD) < source.index("//--- Check if the repair is free"), (
+            f"{terrain}: engineer on-foot guard must precede the funds debit path"
+        )
+        loop_start = source.index("while {_delay > 0} do {")
+        assert ENGINEER_LOOP_ON_FOOT_GUARD in source, (
+            f"{terrain}: engineer repair loop does not cancel when the player boards"
+        )
+        assert source.index(ENGINEER_LOOP_ON_FOOT_GUARD, loop_start) < source.index("_vehicle playMove", loop_start), (
+            f"{terrain}: engineer repair issues playMove before checking for a vehicle seat"
+        )
+        cancellation_start = source.index("if (!(alive _vehicle)")
+        cancellation_end = source.index("};", cancellation_start)
+        cancellation = source[cancellation_start:cancellation_end]
+        assert "(vehicle _vehicle != _vehicle)" in cancellation, (
+            f"{terrain}: engineer repair does not refund when boarding cancels the action"
+        )
 
 
 def test_internal_presence_repair_caller_untouched() -> None:

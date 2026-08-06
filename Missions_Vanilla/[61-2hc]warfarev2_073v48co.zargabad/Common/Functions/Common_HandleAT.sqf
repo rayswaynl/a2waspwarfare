@@ -7,6 +7,7 @@ if (_ammo in _at) then {
 _unit = _this select 0;
 _weapon = currentWeapon _unit;
 _rocket = nearestObject [_unit,_ammo];
+if (isNull _rocket) exitWith {};
 
      
         _vec = velocity _rocket;

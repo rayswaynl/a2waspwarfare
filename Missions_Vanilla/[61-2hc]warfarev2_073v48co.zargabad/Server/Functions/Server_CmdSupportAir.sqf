@@ -39,8 +39,6 @@ _side   = _this select 4;
 _uid    = _this select 5;
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
-if (isNull _logik) exitWith {};
-if (isNull _team) exitWith {};
 
 _ttl      = missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR_TTL", 300];
 _int      = missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR_FOLLOW_INT", 20];
@@ -55,10 +53,19 @@ _end    = _t0 + _ttl;
 _reason = "timeout";
 _emergSince = -1;
 _running    = true;
+//--- r104 init-invalid: never exitWith on a null logik/team at worker start - the grant already booked
+//--- the side-wide slot (wfbe_cmd_support_active) and stamped the holder BEFORE this worker was spawned
+//--- (Server_HandleSpecial.sqf "aicom-support-air" case), so an early exit leaked the slot (with
+//--- WFBE_C_CMD_SUPPORT_AIR_MAX_ACTIVE = 1 the side could NEVER receive support air again that match)
+//--- and left the team stamped held + the airframe loitering. Fall through to the shared RETURN path
+//--- instead: it unbooks the slot, clears the stamps and flies the airframe home.
+if (isNull _logik || {isNull _team}) then {_running = false; _reason = "init-invalid"};
 
-if (!isNull _hull && {alive _hull}) then {_hull flyInHeight _alt};
-diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|GRANT|" + str _side + "|" + str (round (time / 60)) + "|kind=" + _kind + "|uid=" + _uid + "|heli=" + (typeOf _hull) + "|ttl=" + str _ttl);
-["INFORMATION", Format ["Server_CmdSupportAir.sqf: [%1] heli support GRANTED to uid %2 (kind %3, airframe %4, ttl %5s).", _side, _uid, _kind, typeOf _hull, _ttl]] Call WFBE_CO_FNC_LogContent;
+if (_running) then {
+	if (!isNull _hull && {alive _hull}) then {_hull flyInHeight _alt};
+	diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|GRANT|" + str _side + "|" + str (round (time / 60)) + "|kind=" + _kind + "|uid=" + _uid + "|heli=" + (typeOf _hull) + "|ttl=" + str _ttl);
+	["INFORMATION", Format ["Server_CmdSupportAir.sqf: [%1] heli support GRANTED to uid %2 (kind %3, airframe %4, ttl %5s).", _side, _uid, _kind, typeOf _hull, _ttl]] Call WFBE_CO_FNC_LogContent;
+};
 
 while {_running} do {
 	//--- ---------- TERMINATION CHECKS (ordered cheapest-first) ----------
@@ -155,11 +162,15 @@ diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|RELEASE|" + str _side + "|" + str (round 
 //--- Free the SIDE-WIDE grant slot immediately: the player-facing loan is over, so another player
 //--- may request a DIFFERENT airframe right away. The team itself stays marked held (below) until
 //--- it has actually flown home, so the same team can never be double-granted mid-return.
-_logik setVariable ["wfbe_cmd_support_active", ((_logik getVariable ["wfbe_cmd_support_active", 1]) - 1) max 0];
-if (_reason == "recall-emergency") then {
-	//--- HYSTERESIS, second half: hold off new grants on this side for the same dwell, so the next
-	//--- request cannot immediately re-lend the airframe the AI just took back for its emergency.
-	_logik setVariable ["wfbe_cmd_support_recall_until", time + _hyst];
+//--- r104: null-guard - on the init-invalid path _logik may be objNull (the slot then lives nowhere
+//--- and nothing can be unbooked; every other path has a live logic).
+if (!isNull _logik) then {
+	_logik setVariable ["wfbe_cmd_support_active", ((_logik getVariable ["wfbe_cmd_support_active", 1]) - 1) max 0];
+	if (_reason == "recall-emergency") then {
+		//--- HYSTERESIS, second half: hold off new grants on this side for the same dwell, so the next
+		//--- request cannot immediately re-lend the airframe the AI just took back for its emergency.
+		_logik setVariable ["wfbe_cmd_support_recall_until", time + _hyst];
+	};
 };
 if (!isNull _holder && {alive _holder} && {isPlayer _holder}) then {
 	[_holder, "HandleSpecial", ["cmdv2-receipt", ["Heli support ended - " + _reason + "."]]] Call WFBE_CO_FNC_SendToClient;

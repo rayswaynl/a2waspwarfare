@@ -21,11 +21,25 @@ _votes = [];
 _teams = _logic getVariable "wfbe_teams";
 
 //--- Get the votes from everyone.
+//--- Ballots are public group vars (client-writable). Sanitize hard: only SCALAR indexes
+//--- in [-1 .. count(teams)-1] count. Garbage / OOB / nil would otherwise nil+1 crash the
+//--- resolution script after the countdown (seat stuck at prior commander, votetime=-1).
 for '_i' from 0 to (count _teams)-1 do {[_votes, 0] Call WFBE_CO_FNC_ArrayPush};
 {
 	if (isPlayer leader _x) then {
 		_vote = _x getVariable "wfbe_vote";
-		if (_vote == -1) then {_aiVotes = _aiVotes + 1} else {_votes set [_vote, (_votes select _vote) + 1]};
+		if (isNil "_vote") then {_vote = -1};
+		if ((typeName _vote) != "SCALAR") then {_vote = -1};
+		if (_vote == -1) then {
+			_aiVotes = _aiVotes + 1
+		} else {
+			if (_vote >= 0 && {_vote < count _votes}) then {
+				_votes set [_vote, (_votes select _vote) + 1];
+			} else {
+				//--- OOB / negative-other: treat as abstain-for-AI rather than crashing.
+				_aiVotes = _aiVotes + 1;
+			};
+		};
 	};
 } forEach _teams;
 

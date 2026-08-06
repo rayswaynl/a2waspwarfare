@@ -9,7 +9,7 @@ MISSION = ROOT / "Missions/[55-2hc]warfarev2_073v48co.chernarus"
 
 
 class TerritorialHudContractTests(unittest.TestCase):
-    def test_feature_is_default_off_and_server_publishes_one_snapshot(self):
+    def test_feature_is_armed_and_server_publishes_one_snapshot(self):
         constants = (MISSION / "Common/Init/Init_CommonConstants.sqf").read_text(
             encoding="utf-8"
         )
@@ -21,7 +21,9 @@ class TerritorialHudContractTests(unittest.TestCase):
             'isNil "WFBE_C_TERRITORIAL_HUD"',
             constants,
         )
-        self.assertIn("WFBE_C_TERRITORIAL_HUD = 0", constants)
+        # The owner armed this already-merged opt-in in the current master wave;
+        # 0 remains the documented rollback value, not the current contract.
+        self.assertIn("WFBE_C_TERRITORIAL_HUD = 1", constants)
         self.assertIn('WFBE_TERRITORIAL_HUD', server)
         self.assertIn('publicVariable "WFBE_TERRITORIAL_HUD"', server)
         self.assertIn('WFBE_TERRITORIAL_CLOCK_', server)

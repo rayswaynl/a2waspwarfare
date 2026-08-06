@@ -26,11 +26,18 @@ missionNamespace setVariable [Format["WFBE_%1ECMTRUCKS", _side], ['MtvrRefuel_DE
 missionNamespace setVariable [Format["WFBE_%1LIFTVEHICLE", _side], ["MH60S","MV22","C130J","UH60M_EP1","UH60M_MEV_EP1","CH_47F_EP1","C130J_US_EP1","BAF_Merlin_HC3_D","CH_47F_BAF","Mi17_Civilian"]];
 missionNamespace setVariable [Format["WFBE_%1ARTYVEHICLE", _side], ['MLRS_DES_EP1','MLRS','M1129_MC_EP1']];
 
-// Capture-to-unlock: holding a trigger town/airfield unlocks an ACR premium unit at own factories (Takistan).
-// Loy Manara (town, mirror of Krasnostav) -> T72M4CZ lvl4 Heavy.
-// Rasman AF  (airfield, mirror of NWAF)    -> RM70_ACR lvl4 Light.
+// Capture-to-unlock: holding a trigger town/airfield unlocks an ACR premium unit at own factories (Takistan/Zargabad - this Root file loads on both non-Chernarus maps).
+// Takistan: Loy Manara (town, mirror of Krasnostav) -> T72M4CZ lvl4 Heavy; Rasman AF (airfield, mirror of NWAF) -> RM70_ACR lvl4 Light.
+// Zargabad: Military Base (town, mirror of Loy Manara/Krasnostav) -> T72M4CZ lvl4 Heavy; Zargabad AF (airfield, mirror of Rasman AF/NWAF) -> RM70_ACR lvl4 Light.
+// fable/airfield-quickwins-20260802: was hardcoded to Takistan-only town names, so the mechanic was
+// silently dead on Zargabad (neither trigger town exists there). worldName-branched so both mirror
+// maps get a live unlock path; Takistan values are unchanged (else branch).
 // Format per entry: [classname, townName, requiredFactoryLevel]
-missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Loy Manara',4],['RM70_ACR','Rasman AF',4]]];
+if (worldName == "Zargabad") then {
+	missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Military Base',4],['RM70_ACR','Zargabad AF',4]]];
+} else {
+	missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Loy Manara',4],['RM70_ACR','Rasman AF',4]]];
+};
 
 //--- Radio Announcers.
 missionNamespace setVariable [Format ["WFBE_%1_RadioAnnouncers", _side], ['WFHQ_EN0_EP1','WFHQ_EN1_EP1','WFHQ_EN2_EP1','WFHQ_EN4_EP1','WFHQ_EN5_EP1']];
@@ -174,7 +181,7 @@ missionNamespace setVariable [Format["WFBE_%1_DefaultGearOfficer", _side], [
 // Soldier
 missionNamespace setVariable [Format["WFBE_%1_DefaultGearSoldier", _side], [
 	['M4A1_Aim','M136','ItemCompass','ItemMap','ItemWatch','ItemRadio','Binocular','NVGoggles'],
-	['30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','HandGrenade_West','HandGrenade_West','HandGrenade_West','HandGrenade_West'],
+	['30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','M136','HandGrenade_West','HandGrenade_West','HandGrenade_West','HandGrenade_West'],
 	['M4A1_Aim']
 ]];
 

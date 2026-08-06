@@ -57,8 +57,10 @@ switch (_localize) do {
 	case "BankAlreadyBuilt": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "BankAlreadyBuilt"};
 	case "BankTooCloseToBase": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "BankTooCloseToBase"};
 	case "StructureCapReached": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "StructureCapReached"}; //--- build/defense audit 2026-07-28
+	case "StructurePlacementInvalid": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = "Structure build rejected: choose dry ground with a clear factory footprint."};
 	//--- FANOUT-R29: RequestStructure.sqf reject path sends this key with [refundPrice, liveIndex] for side-mismatch / missing requester. Without a case the tail still group/command-chatted empty text and never refunded or rolled back wfbe_structures_live.
 	case "StructureRequesterMismatch": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = "Structure build rejected: requester not authorized for that side."};
+	case "StructureBuildFailed": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; _txt = Localize "StructureBuildFailed"}; //--- r31: server rolled back live; refund only to avoid a client double-decrement.
 	case "BankDestroyed": {
 		//--- _this: [1]=killerName, [2]=sideName — broadcast to all (both sides hear it).
 		_txt = Format [Localize "BankDestroyed", _this select 1, _this select 2];
@@ -211,6 +213,22 @@ switch (_localize) do {
     //--- AI Commander Wildcard event announcement: _this select 1 is the already display-ready message text.
     case "Wildcard": {_txt = _this select 1; _commandChat = true;};
     case "QuartermasterRefit": {_txt = _this select 1; _commandChat = true;}; //--- cmdcon42 TOPUP Option B: server-built quartermaster refit-charge line, UID-targeted at the seated human commander only (Client_HandlePVF STRING-destination filter).
+
+    case "DefenseRequestRejected": {
+        //--- 2026-08-04: generic server-side validation reject (RequestDefense hardening guards).
+        //--- Same refund contract as DefenseThreatGate below: [1] = NUMBER or classname STRING.
+        private ["_rrArg","_rrGet","_rrAmt"];
+        _rrArg = _this select 1;
+        _rrAmt = 0;
+        if (typeName _rrArg == "STRING") then {
+            _rrGet = missionNamespace getVariable _rrArg;
+            if (!isNil "_rrGet") then { _rrAmt = _rrGet select QUERYUNITPRICE };
+        } else {
+            if (typeName _rrArg == "SCALAR") then { if (_rrArg > 0) then { _rrAmt = _rrArg } };
+        };
+        if (_rrAmt > 0) then { _rrAmt Call WFBE_CMD_DEF_SUPPLY_REFUND };
+        _txt = "Defense request was rejected by the server - your payment has been refunded.";
+    };
 
     case "DefenseThreatGate": {
         // _this: [1]=refund — NUMBER (refund directly) or classname STRING (look up the

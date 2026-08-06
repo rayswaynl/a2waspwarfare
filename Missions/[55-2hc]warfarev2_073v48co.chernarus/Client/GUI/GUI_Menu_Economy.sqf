@@ -273,7 +273,11 @@ while {alive player && dialog} do {
 				_cutSuffix = if (_isSeatedCom) then {Format [" (you keep %1%2 as commander)", _comPct, "%"]} else {Format [" (commander keeps %1%2)", _comPct, "%"]};
 			};
 
-			_dash ctrlSetStructuredText (parseText Format ["<t color='#9fb0bc' shadow='1'>Side income pool: </t><t color='#e0b94f' shadow='1'>$%1/min</t><t color='#9fb0bc' shadow='1'>  ($%2/hr)</t><br/><t color='#9fb0bc' shadow='1'>Towns held: </t><t shadow='1'>%3 / %4</t><br/><t color='#9fb0bc' shadow='1'>Supply: </t><t shadow='1'>%5</t><br/><t color='#9fb0bc' shadow='1'>Your cut: </t><t color='#76f563' shadow='1'>$%6</t><t color='#9fb0bc' shadow='1'>/tick%7</t>", _perMin, (_perMin * 60), (sideJoined Call GetTownsHeld), _totalTowns, (missionNamespace getVariable [format ["wfbe_supply_%1", str sideJoined], "?"]), _yourCut, _cutSuffix]);	//--- FIX: non-blocking read (GetSideSupply does a publicVariableServer+waitUntil that can stall this loop)
+			_supplyDash = missionNamespace getVariable [format ["wfbe_supply_%1", str sideJoined], "?"];
+			//--- r95: funds-only currency mode (WFBE_C_ECONOMY_CURRENCY_SYSTEM != 0) never publishes wfbe_supply_<side>
+			//--- (every writer gates on == 0), so the "?" fallback is permanent; show n/a instead of a bogus readout.
+			if ((missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) != 0) then {_supplyDash = "n/a"};
+			_dash ctrlSetStructuredText (parseText Format ["<t color='#9fb0bc' shadow='1'>Side income pool: </t><t color='#e0b94f' shadow='1'>$%1/min</t><t color='#9fb0bc' shadow='1'>  ($%2/hr)</t><br/><t color='#9fb0bc' shadow='1'>Towns held: </t><t shadow='1'>%3 / %4</t><br/><t color='#9fb0bc' shadow='1'>Supply: </t><t shadow='1'>%5</t><br/><t color='#9fb0bc' shadow='1'>Your cut: </t><t color='#76f563' shadow='1'>$%6</t><t color='#9fb0bc' shadow='1'>/tick%7</t>", _perMin, (_perMin * 60), (sideJoined Call GetTownsHeld), _totalTowns, _supplyDash, _yourCut, _cutSuffix]);	//--- FIX: non-blocking read (GetSideSupply does a publicVariableServer+waitUntil that can stall this loop)
 		};
 	};
 

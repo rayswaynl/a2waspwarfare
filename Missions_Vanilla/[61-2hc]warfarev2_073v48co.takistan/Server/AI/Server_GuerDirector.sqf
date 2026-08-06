@@ -26,6 +26,11 @@ AICOMV2_GDIR_INSTANCE = 1;
 waitUntil {!isNil "towns"};
 waitUntil {count towns > 0};
 
+//--- r98: also wait for the STARTING-MODE assignment (Server\Init\Init_Towns.sqf sets
+//--- townInitServer=true when done; Init_Server launches this worker BEFORE that file runs).
+//--- Seeding off pre-assignment sideIDs would register every map-default DEFENDER town as GUER.
+waitUntil {!isNil "townInitServer"};
+
 //--- Short delay to let town ownership settle before seeding ledger.
 sleep 5;
 
@@ -37,7 +42,7 @@ _fnGuerGroups = {
     _t = _this select 0;
     _out = [];
     {
-        if ((side _x == resistance) && {alive (leader _x)} && {(leader _x) distance _t < 600}) then {
+        if ((side _x == resistance) && {!([_x, "wfbe_naval_cap", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_x, "wfbe_usv_flotilla", false] Call WFBE_CO_FNC_GroupGetBool)} && {alive (leader _x)} && {(leader _x) distance _t < 600}) then {
             _out set [count _out, _x];
         };
     } forEach allGroups;
@@ -48,7 +53,7 @@ _fnGuerGroups = {
 
 //--- Constants (read once at startup).
 private ["_tickSec","_regenFullSec","_surgeCap","_surgeCapPaid","_grpBudgetMax",
-         "_minSpawnM","_ambushBubbleM","_suppressSec","_retakeEnabled","_playerSupport"];
+         "_minSpawnM","_ambushBubbleM","_suppressSec","_retakeEnabled","_playerSupport","_suppressWire"];
 
 _tickSec        = missionNamespace getVariable ["AICOMV2_GDIR_TICK_SEC",         30];
 _regenFullSec   = missionNamespace getVariable ["AICOMV2_GDIR_REGEN_FULL_SEC",   1800];
@@ -60,6 +65,7 @@ _ambushBubbleM  = missionNamespace getVariable ["AICOMV2_GDIR_AMBUSH_BUBBLE_M", 
 _suppressSec    = missionNamespace getVariable ["AICOMV2_GDIR_SUPPRESS_SEC",     600];
 _retakeEnabled  = missionNamespace getVariable ["AICOMV2_GDIR_RETAKE",           0];
 _playerSupport  = missionNamespace getVariable ["AICOMV2_GDIR_PLAYER_SUPPORT",   0];
+_suppressWire   = (missionNamespace getVariable ["AICOMV2_GDIR_SUPPRESS_WIRE", 0]) > 0;
 //--- P1/P2 hardening flags (fable/gdir-harden-shop).
 private ["_hardenOn","_moveTimeoutFactor","_cellSpeedMs","_jipSnapInterval","_jipSnapLastT"];
 _hardenOn          = (missionNamespace getVariable ["AICOMV2_GDIR_HARDEN",             1]) > 0;
@@ -67,6 +73,64 @@ _moveTimeoutFactor = missionNamespace getVariable ["AICOMV2_GDIR_MOVE_TIMEOUT_FA
 _cellSpeedMs       = missionNamespace getVariable ["AICOMV2_GDIR_CELL_SPEED_MS",       8];
 _jipSnapInterval   = missionNamespace getVariable ["AICOMV2_GDIR_JIP_SNAP_INTERVAL",   60];
 _jipSnapLastT      = 0;
+
+//--- P5 salvage: world-specific movement dials. The default-off gate keeps the active
+//--- Director byte-for-byte behaviour-neutral. A profile writes only when a dial still has
+//--- its registered default, so a mission/lobby owner override always wins.
+private ["_mapProfileOn","_mapName","_mapProfileRows","_mapProfileRow","_mapProfileFound"];
+_mapProfileOn    = (missionNamespace getVariable ["AICOMV2_GDIR_MAP_PROFILE", 0]) > 0;
+_mapName         = toLower worldName;
+_mapProfileRows  = [];
+_mapProfileRow   = [];
+_mapProfileFound = false;
+if (_mapProfileOn) then {
+    _mapProfileRows = [
+        ["takistan", [
+            ["AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR", 3, 5],
+            ["AICOMV2_GDIR_CELL_SPEED_MS", 8, 5]
+        ]]
+    ];
+    {
+        if (!_mapProfileFound && {(_x select 0) == _mapName}) then {
+            _mapProfileRow   = _x select 1;
+            _mapProfileFound = true;
+        };
+    } forEach _mapProfileRows;
+    if (_mapProfileFound) then {
+        {
+            private ["_profileKey","_profileDefault","_profileValue","_profileCurrent","_profileOwnerSet"];
+            _profileKey     = _x select 0;
+            _profileDefault = _x select 1;
+            _profileValue   = _x select 2;
+            _profileCurrent = missionNamespace getVariable [_profileKey, _profileDefault];
+            _profileOwnerSet = missionNamespace getVariable [(_profileKey + "_OWNER_SET"), false];
+            if (!_profileOwnerSet && {_profileCurrent == _profileDefault}) then {
+                missionNamespace setVariable [_profileKey, _profileValue];
+            } else {
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_PROFILE ownerOverrideRespected key=%1 ownerVal=%2 profileVal=%3",
+                    _profileKey, _profileCurrent, _profileValue];
+            };
+        } forEach _mapProfileRow;
+        _moveTimeoutFactor = missionNamespace getVariable ["AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR", 3];
+        _cellSpeedMs       = missionNamespace getVariable ["AICOMV2_GDIR_CELL_SPEED_MS", 8];
+        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_PROFILE map=%1 moveTimeoutFactor=%2 cellSpeedMs=%3",
+            _mapName, _moveTimeoutFactor, _cellSpeedMs];
+    };
+};
+
+//--- P6 salvage: the Director reads the two occupier snapshots but never writes AICOM state.
+//--- A missing/stale snapshot is deliberately neutral (multiplier 1.0), not a quiet-world signal.
+private ["_aicomHookOn","_coordMult","_coordMultPrev","_coordBaselineRestore","_westLogik","_eastLogik"];
+_aicomHookOn          = (missionNamespace getVariable ["AICOMV2_GDIR_AICOM_HOOK", 0]) > 0;
+_coordMult            = 1.0;
+_coordMultPrev        = 1.0;
+_coordBaselineRestore = [];
+_westLogik             = objNull;
+_eastLogik             = objNull;
+if (_aicomHookOn) then {
+    _westLogik = west Call WFBE_CO_FNC_GetSideLogic;
+    _eastLogik = east Call WFBE_CO_FNC_GetSideLogic;
+};
 
 //===================================================================================
 // LEDGER: array of records, one per GUER/unknown town.
@@ -132,6 +196,57 @@ while {!WFBE_GameOver} do {
     _elmin = floor (diag_tickTime / 60);
 
     //--------------------------------------------------------------------
+    // PHASE 0 (r98): MEMBERSHIP REFRESH - re-apply the seed filter every tick.
+    //--- The ledger was seeded ONCE and never re-validated: a town captured by
+    //--- WEST/EAST kept its record forever (regen, wfbe_gdir_str publish, PHASE-4
+    //--- reinforcement cells and auto-armed QRF contracts all kept acting on a town
+    //--- GUER no longer holds), and a town that flipped TO GUER mid-match never got
+    //--- a record at all. Pick up new GUER/unknown towns; drop lost ones. A record
+    //--- with an ARMED counter-attack contract survives the drop (the contract's
+    //--- retake boost looks the record up by town name) until it fires or expires.
+    //--------------------------------------------------------------------
+    {
+        private ["_pTown","_pSide","_pFound","_pGrps","_pBase"];
+        _pTown = _x;
+        _pSide = _pTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+        if (_pSide == WFBE_C_GUER_ID || {_pSide == WFBE_C_UNKNOWN_ID}) then {
+            _pFound = false;
+            {if ((_x select 0) == _pTown) then {_pFound = true}} forEach _ledger;
+            if (!_pFound) then {
+                _pGrps = [_pTown] call _fnGuerGroups;
+                _pBase = 0.5;
+                if (count _pGrps > 0) then {_pBase = 1.0};
+                _ledger set [count _ledger, [_pTown, _pBase, _pBase, 0, 0, count _pGrps, 0]];
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PICKUP town=%2", _elmin, _pTown getVariable ["name", "?"]];
+            };
+        };
+    } forEach towns;
+    private ["_mContracts","_kept"];
+    _mContracts = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
+    _kept = [];
+    {
+        private ["_rec","_mTown","_mSide","_mName","_mKeep"];
+        _rec   = _x;
+        _mTown = _rec select 0;
+        _mSide = _mTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+        _mKeep = (_mSide == WFBE_C_GUER_ID || {_mSide == WFBE_C_UNKNOWN_ID});
+        if (!_mKeep) then {
+            _mName = _mTown getVariable ["name", ""];
+            {if ((_x select 1) == "counterAttack" && {(_x select 2) == _mName} && {(_x select 7) == "armed"}) then {_mKeep = true}} forEach _mContracts;
+        };
+        if (_mKeep) then {
+            _kept set [count _kept, _rec];
+        } else {
+            //--- Neutralize the stale sizing ratio: Server_GetTownGroupsDefender reads
+            //--- wfbe_gdir_str for the town's CURRENT owner, so a GUER value must not linger.
+            _mTown setVariable ["wfbe_gdir_str", 1];
+            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_DROP town=%2 side=%3", _elmin, _mTown getVariable ["name", "?"], _mSide];
+        };
+    } forEach _ledger;
+    _ledger = _kept;
+    _ledgerCount = count _ledger;
+
+    //--------------------------------------------------------------------
     // PHASE 1: REGEN - advance each town strength toward baseline.
     //--------------------------------------------------------------------
     {
@@ -173,6 +288,7 @@ while {!WFBE_GameOver} do {
                 _rec set [2, ((_rec select 2) * _ratio) max 0];
             };
             _rec set [5, 0];
+            if (_suppressWire) then {_rec set [4, diag_tickTime + _suppressSec]}; //--- stamp the post-wipe suppression deadline PHASE-3 :220 reads as _suppEnd < diag_tickTime; clock-consistent, was never written.
         };
         if (_active) then {
             _grps        = [_town] call _fnGuerGroups;
@@ -187,6 +303,81 @@ while {!WFBE_GameOver} do {
             _rec set [5, _nowGrpCount];
         };
     } forEach _ledger;
+
+    //--------------------------------------------------------------------
+    // P6: read-only occupier-awareness. ENEFF is the enemy-of-snapshot-side
+    // effectiveness; reading MYEFF here was the P5/P6 index bug and measures
+    // the wrong side. Only two valid snapshots may classify the world as quiet.
+    //--------------------------------------------------------------------
+    _coordMultPrev        = _coordMult;
+    _coordMult            = 1.0;
+    _coordBaselineRestore = [];
+    if (_aicomHookOn) then {
+        private ["_occTeamsW","_occTeamsE","_occEffW","_occEffE","_occTgtW","_occTgtE",
+                 "_westSnapOk","_eastSnapOk","_pressureW","_pressureE","_bothQuiet","_snapMaxAge"];
+        _occTeamsW = 0; _occTeamsE = 0;
+        _occEffW   = 0; _occEffE   = 0;
+        _occTgtW   = []; _occTgtE  = [];
+        _westSnapOk = false; _eastSnapOk = false;
+        _snapMaxAge = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60]) + 5;
+
+        if (!isNull _westLogik) then {
+            private ["_westSnap","_westSnapAge"];
+            _westSnap = _westLogik getVariable ["wfbe_aicom2_snap", []];
+            if (typeName _westSnap == "ARRAY" && {count _westSnap > WFBE_SNAP_TGTTOWNOBJS}) then {
+                _westSnapAge = time - (_westSnap select WFBE_SNAP_TIME);
+                if (_westSnapAge >= 0 && {_westSnapAge <= _snapMaxAge}) then {
+                    _occTeamsW = count (_westSnap select WFBE_SNAP_TEAMS);
+                    _occEffW   = _westSnap select WFBE_SNAP_ENEFF;
+                    _occTgtW   = _westSnap select WFBE_SNAP_TGTTOWNOBJS;
+                    _westSnapOk = true;
+                };
+            };
+        };
+        if (!isNull _eastLogik) then {
+            private ["_eastSnap","_eastSnapAge"];
+            _eastSnap = _eastLogik getVariable ["wfbe_aicom2_snap", []];
+            if (typeName _eastSnap == "ARRAY" && {count _eastSnap > WFBE_SNAP_TGTTOWNOBJS}) then {
+                _eastSnapAge = time - (_eastSnap select WFBE_SNAP_TIME);
+                if (_eastSnapAge >= 0 && {_eastSnapAge <= _snapMaxAge}) then {
+                    _occTeamsE = count (_eastSnap select WFBE_SNAP_TEAMS);
+                    _occEffE   = _eastSnap select WFBE_SNAP_ENEFF;
+                    _occTgtE   = _eastSnap select WFBE_SNAP_TGTTOWNOBJS;
+                    _eastSnapOk = true;
+                };
+            };
+        };
+
+        _pressureW = _westSnapOk && {_occTeamsW >= 3} && {_occEffW >= 12};
+        _pressureE = _eastSnapOk && {_occTeamsE >= 3} && {_occEffE >= 12};
+        _bothQuiet = _westSnapOk && {_eastSnapOk} && {!_pressureW} && {!_pressureE};
+        if (_bothQuiet) then {_coordMult = 1.1};
+
+        //--- An occupier targeting a GUER ledger town gets a 10% priority baseline
+        //--- for this tick. It starts after regeneration and is restored before materialization.
+        if (_pressureW || {_pressureE}) then {
+            private ["_occTargets"];
+            _occTargets = [];
+            {if (!isNil "_x") then {_occTargets set [count _occTargets, _x]}} forEach _occTgtW;
+            {if (!isNil "_x") then {_occTargets set [count _occTargets, _x]}} forEach _occTgtE;
+            {
+                private ["_coordRec","_coordTown","_coordTargeted"];
+                _coordRec = _x;
+                _coordTown = _coordRec select 0;
+                _coordTargeted = false;
+                {if (!_coordTargeted && {_x == _coordTown}) then {_coordTargeted = true}} forEach _occTargets;
+                if (_coordTargeted) then {
+                    _coordBaselineRestore set [count _coordBaselineRestore, [_coordRec, _coordRec select 1]];
+                    _coordRec set [1, [(_coordRec select 1) * 1.1, 0, _surgeCapPaid] call _fnClamp];
+                };
+            } forEach _ledger;
+        };
+        if (_coordMult != _coordMultPrev) then {
+            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_COORD mult=%2 westSnap=%3 eastSnap=%4 pressureW=%5 pressureE=%6",
+                _elmin, _coordMult, _westSnapOk, _eastSnapOk, _pressureW, _pressureE];
+        };
+    };
+
 
     //--------------------------------------------------------------------
     // PHASE 3: ASSESSMENT - classify each town.
@@ -305,7 +496,7 @@ while {!WFBE_GameOver} do {
                 _src    = _sources select _srcIdx;
                 _srcStr = _src select 2;
                 _srcBase= _src select 1;
-                _send   = [_needed * 0.5, 0, _srcStr - (_srcBase * 0.5)] call _fnClamp;
+                _send   = [_needed * 0.5 * _coordMult, 0, _srcStr - (_srcBase * 0.5)] call _fnClamp;
                 if (_send > 0.05) then {
                     _src set [2, _srcStr - _send];
                     _src set [3, (_src select 3) + _send];
@@ -340,7 +531,7 @@ while {!WFBE_GameOver} do {
                 _src    = _sources select _srcIdx;
                 _srcStr = _src select 2;
                 _srcBase= _src select 1;
-                _send   = [_needed * 0.3, 0, _srcStr - (_srcBase * 0.6)] call _fnClamp;
+                _send   = [_needed * 0.3 * _coordMult, 0, _srcStr - (_srcBase * 0.6)] call _fnClamp;
                 if (_send > 0.05) then {
                     _src set [2, _srcStr - _send];
                     _src set [3, (_src select 3) + _send];
@@ -564,14 +755,42 @@ while {!WFBE_GameOver} do {
                                         //--- here, so combo fired two Ka-137s and the telemetry lied).
                                         _hClass = _qrfGunPick;
                                         _h    = _hClass createVehicle _spawnPos;
+                                        //--- r37 fail-clean: null hull / group / pilot-seat must not run setPos, waypoints,
+                                        //--- HandleEmptyVehicle, or leak an empty resistance group.
+                                        if (isNull _h) then {
+                                            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP reason=gunship-create-failed class=%3 town=%4",
+                                                _elmin, _cId, _hClass, _cTown];
+                                            ["WARNING", Format ["Server_GuerDirector.sqf: qrfCombo gunship create failed class [%1] town [%2].", _hClass, _cTown]] Call WFBE_CO_FNC_LogContent;
+                                        } else {
                                         _hGrp = [resistance, "qrf-air"] Call WFBE_CO_FNC_CreateGroup;
+                                        if (isNull _hGrp) then {
+                                            deleteVehicle _h;
+                                            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP reason=gunship-group-failed class=%3 town=%4",
+                                                _elmin, _cId, _hClass, _cTown];
+                                            ["WARNING", Format ["Server_GuerDirector.sqf: qrfCombo gunship group create failed class [%1] town [%2].", _hClass, _cTown]] Call WFBE_CO_FNC_LogContent;
+                                        } else {
                                         //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64). Crew via the
                                         //--- proven wildcard-GUER pattern: CreateUnit into the group + moveIn*.
-                                        private ["_uPilot","_uGun"];
+                                        private ["_uPilot","_uGun","_qrfPilotReady","_qrfGunReady"];
                                         _uPilot = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uPilot) then {_uPilot assignAsDriver _h; [_uPilot] orderGetIn true};
-                                        _uGun = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uGun) then {_uGun assignAsGunner _h; [_uGun] orderGetIn true};
+                                        _uGun = objNull;
+                                        if (!isNull _uPilot) then {
+                                            _uPilot assignAsDriver _h;
+                                            [_uPilot] orderGetIn true;
+                                            _uGun = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                            if (!isNull _uGun) then {_uGun assignAsGunner _h; [_uGun] orderGetIn true};
+                                        };
+                                        _qrfPilotReady = !isNull _h && {!isNull _uPilot} && {driver _h == _uPilot};
+                                        _qrfGunReady = isNull _uGun || {!isNull _h && {gunner _h == _uGun}};
+                                        if (!_qrfPilotReady || {!_qrfGunReady}) then {
+                                            sleep 1;
+                                            if (!isNull _h && {!isNull _uPilot} && {driver _h != _uPilot}) then {_uPilot moveInDriver _h};
+                                            if (!isNull _h && {!isNull _uGun} && {gunner _h != _uGun}) then {_uGun moveInGunner _h};
+                                            _qrfPilotReady = !isNull _h && {!isNull _uPilot} && {driver _h == _uPilot};
+                                            _qrfGunReady = isNull _uGun || {!isNull _h && {gunner _h == _uGun}};
+                                        };
+                                        if (_qrfPilotReady) then {
+                                            if (!_qrfGunReady && {!isNull _uGun}) then {deleteVehicle _uGun; _uGun = objNull};
                                         _hGrp addWaypoint [_cTownPos, 200];
                                         //--- fable/qrf-ground-spawn: grounded start - no velocity kick, no setPos re-seat. Cruise
                                         //--- height + posture apply once the boarded crew lifts off (flyInHeight is sticky pre-takeoff).
@@ -623,10 +842,29 @@ while {!WFBE_GameOver} do {
                                         };
                                         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",
                                             _elmin, _cId, _hClass, _cTown, _cUid];
+                                        } else {
+                                            if (!isNull _uPilot) then {deleteVehicle _uPilot};
+                                            if (!isNull _uGun) then {deleteVehicle _uGun};
+                                            {if (!isNull _x) then {deleteVehicle _x}} forEach (units _hGrp);
+                                            deleteVehicle _h;
+                                            deleteGroup _hGrp;
+                                            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP reason=gunship-pilot-seat-failed class=%3 town=%4",
+                                                _elmin, _cId, _hClass, _cTown];
+                                            ["WARNING", Format ["Server_GuerDirector.sqf: qrfCombo gunship pilot seat failed class [%1] town [%2].", _hClass, _cTown]] Call WFBE_CO_FNC_LogContent;
+                                        };
+                                        };
+                                        };
                                         _hClass = "Ka137_MG_PMC";
                                         _spawnPos = _spawnPosB; //--- fable/qrf-ground-spawn: second hull on its OWN pad - the same-point pair spawn was the "immediately blow up".
                                     };
                                     _h    = _hClass createVehicle _spawnPos;
+                                    //--- r37 fail-clean: null hull / group / pilot-seat must not register contract fired
+                                    //--- or spawn cleanup watchers on garbage objects.
+                                    if (isNull _h) then {
+                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP reason=create-failed class=%3 town=%4",
+                                            _elmin, _cId, _hClass, _cTown];
+                                        ["WARNING", Format ["Server_GuerDirector.sqf: QRF create failed class [%1] town [%2].", _hClass, _cTown]] Call WFBE_CO_FNC_LogContent;
+                                    } else {
                                     //--- Ka137 HP multiplier EH (mirrors WFBE_CO_FNC_CreateVehicle hook; raw createVehicle misses it).
                                     if (_hClass == "Ka137_MG_PMC" && {(missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3]) > 1}) then {
                                         private ["_hpMult"];
@@ -639,14 +877,35 @@ while {!WFBE_GameOver} do {
                                         }];
                                     };
                                     _hGrp = [resistance, "qrf-air"] Call WFBE_CO_FNC_CreateGroup;
+                                    if (isNull _hGrp) then {
+                                        deleteVehicle _h;
+                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP reason=group-failed class=%3 town=%4",
+                                            _elmin, _cId, _hClass, _cTown];
+                                        ["WARNING", Format ["Server_GuerDirector.sqf: QRF group create failed class [%1] town [%2].", _hClass, _cTown]] Call WFBE_CO_FNC_LogContent;
+                                    } else {
                                     //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
-                                    private ["_uPilot2","_uGun2"];
+                                    private ["_uPilot2","_uGun2","_qrfPilotReady","_qrfGunReady"];
                                     _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                    if (!isNull _uPilot2) then {_uPilot2 assignAsDriver _h; [_uPilot2] orderGetIn true};
-                                    if (_hClass != "Ka137_MG_PMC") then {
-                                        _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uGun2) then {_uGun2 assignAsGunner _h; [_uGun2] orderGetIn true};
+                                    _uGun2 = objNull;
+                                    if (!isNull _uPilot2) then {
+                                        _uPilot2 assignAsDriver _h;
+                                        [_uPilot2] orderGetIn true;
+                                        if (_hClass != "Ka137_MG_PMC") then {
+                                            _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                            if (!isNull _uGun2) then {_uGun2 assignAsGunner _h; [_uGun2] orderGetIn true};
+                                        };
                                     };
+                                    _qrfPilotReady = !isNull _h && {!isNull _uPilot2} && {driver _h == _uPilot2};
+                                    _qrfGunReady = isNull _uGun2 || {!isNull _h && {gunner _h == _uGun2}};
+                                    if (!_qrfPilotReady || {!_qrfGunReady}) then {
+                                        sleep 1;
+                                        if (!isNull _h && {!isNull _uPilot2} && {driver _h != _uPilot2}) then {_uPilot2 moveInDriver _h};
+                                        if (!isNull _h && {!isNull _uGun2} && {gunner _h != _uGun2}) then {_uGun2 moveInGunner _h};
+                                        _qrfPilotReady = !isNull _h && {!isNull _uPilot2} && {driver _h == _uPilot2};
+                                        _qrfGunReady = isNull _uGun2 || {!isNull _h && {gunner _h == _uGun2}};
+                                    };
+                                    if (_qrfPilotReady) then {
+                                        if (!_qrfGunReady && {!isNull _uGun2}) then {deleteVehicle _uGun2; _uGun2 = objNull};
                                     _hGrp addWaypoint [_cTownPos, 200];
                                     //--- fable/qrf-ground-spawn: grounded start - no velocity kick, no setPos re-seat. Cruise
                                     //--- height + posture apply once the boarded crew lifts off (flyInHeight is sticky pre-takeoff).
@@ -686,6 +945,18 @@ while {!WFBE_GameOver} do {
                                     if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
                                         WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: %1 inbound to %2", _cKind, _cTown];
                                         publicVariable "WFBE_GDIR_ORDER_MSG";
+                                    };
+                                    } else {
+                                        if (!isNull _uPilot2) then {deleteVehicle _uPilot2};
+                                        if (!isNull _uGun2) then {deleteVehicle _uGun2};
+                                        {if (!isNull _x) then {deleteVehicle _x}} forEach (units _hGrp);
+                                        deleteVehicle _h;
+                                        deleteGroup _hGrp;
+                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP reason=pilot-seat-failed class=%3 town=%4",
+                                            _elmin, _cId, _hClass, _cTown];
+                                        ["WARNING", Format ["Server_GuerDirector.sqf: QRF pilot seat failed class [%1] town [%2].", _hClass, _cTown]] Call WFBE_CO_FNC_LogContent;
+                                    };
+                                    };
                                     };
                                 } else {
                                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP groupCapExceeded=%3/%4",
@@ -754,7 +1025,15 @@ while {!WFBE_GameOver} do {
                 };
             } forEach _stateThr;
         };
-        missionNamespace setVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", _updContracts];
+        //--- r126 long-match hygiene: prune fired/expired contract records before write-back.
+        //--- Every reader (this poll, the auto-arm check above, RequestGDirPanel gate 5, the
+        //--- Commissar panel indicator) matches state == "armed" only, so dead records were pure
+        //--- growth: each fire/re-arm cycle appended one permanent record and the per-tick scans
+        //--- above walked the whole match history for the rest of the round.
+        private ["_liveContracts"];
+        _liveContracts = [];
+        {if ((_x select 7) == "armed") then {_liveContracts set [count _liveContracts, _x]}} forEach _updContracts;
+        missionNamespace setVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", _liveContracts];
     };
 
     //--------------------------------------------------------------------
@@ -784,6 +1063,11 @@ while {!WFBE_GameOver} do {
             if (_hardenOn && {_eta > 0} && {(count _rec) > 6}) then {_rec set [6, 0]};
         };
     } forEach _ledger;
+
+    //--- GDIR_COORD_BASELINE_RESTORE: priority-only inflation must not persist into the next tick.
+    {
+        (_x select 0) set [1, _x select 1];
+    } forEach _coordBaselineRestore;
 
     //--------------------------------------------------------------------
     // PHASE 6: MATERIALIZATION - GDIR_VOLUME telemetry for active towns.
@@ -833,16 +1117,26 @@ while {!WFBE_GameOver} do {
     //--------------------------------------------------------------------
     if (_hardenOn && {(diag_tickTime - _jipSnapLastT) >= _jipSnapInterval}) then {
         _jipSnapLastT = diag_tickTime;
-        private ["_snapNames","_snapStr","_snapBase","_snapFund","_snapCD","_snapTransit"];
+        private ["_snapNames","_snapStr","_snapBase","_snapFund","_snapCD","_snapTransit","_snapContracts"];
         _snapNames = [];
         _snapStr   = [];
         _snapBase  = [];
         _snapFund  = [];
         _snapCD    = [];
         _snapTransit = []; //--- fable/guer-town-intel: in-transit strength per town (snap index 5)
-        private ["_snapNowT","_cdMap"];
+        _snapContracts = []; //--- r129: sanitized [townName, kind] pairs for armed QRF/counter contracts (snap index 6)
+        private ["_snapNowT","_cdMap","_snapContractRows"];
         _snapNowT = diag_tickTime;
         _cdMap    = missionNamespace getVariable ["AICOMV2_GDIR_COOLDOWN_MAP", []];
+        _snapContractRows = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
+        {
+            private ["_ctrSnap"];
+            _ctrSnap = _x;
+            if (typeName _ctrSnap == "ARRAY" && {count _ctrSnap > 7} && {(_ctrSnap select 7) == "armed"}) then {
+                //--- Do not expose requester UID, price, or timestamps to clients; the indicator only needs town + kind.
+                _snapContracts set [count _snapContracts, [_ctrSnap select 2, _ctrSnap select 1]];
+            };
+        } forEach _snapContractRows;
         {
             private ["_sRec","_sTown","_sName","_sFundKey","_sFund","_sCD"];
             _sRec  = _x;
@@ -861,7 +1155,7 @@ while {!WFBE_GameOver} do {
             _snapCD    set [count _snapCD,    _sCD];
             _snapTransit set [count _snapTransit, _sRec select 3];
         } forEach _ledger;
-        AICOMV2_GDIR_JIP_SNAP = [_snapNames, _snapStr, _snapBase, _snapFund, _snapCD, _snapTransit]; //--- fable/guer-town-intel: index 5 appended - existing consumers read 0-4 unaffected
+        AICOMV2_GDIR_JIP_SNAP = [_snapNames, _snapStr, _snapBase, _snapFund, _snapCD, _snapTransit, _snapContracts]; //--- fable/guer-town-intel: indices 5/6 appended - existing consumers read 0-4 unaffected
         publicVariable "AICOMV2_GDIR_JIP_SNAP";
         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_JIP_SNAP published towns=%2", _elmin, count _snapNames];
     };

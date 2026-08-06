@@ -340,8 +340,14 @@ if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 	// Weapon/vehicle class: what killed. Use typeOf the killing vehicle (may differ from killer's unit class).
 	_wsk_weapon = typeOf (vehicle _killer);
 	if (_wsk_weapon == "") then { _wsk_weapon = _killer_type };
-	// Distance: guard against null killer (delayed attribution already resolved above).
-	_wsk_dist = if !(isNull _killer) then { round(_killer distance _killed) } else { -1 };
+	// Distance: guard against a null killer AND a null victim. On OA 1.64 'distance' returns
+	// the 1e10 sentinel when EITHER operand is objNull, so an unguarded null _killed leaked
+	// into the wire format as "1e+010" instead of the documented -1 (docs/WASPSTAT-FORMAT.md).
+	// The killer branch is unreachable in practice - line ~156 exits when the killer is dead or
+	// null - so the victim is the case that actually fires: a corpse deleted or GC'd before this
+	// queued PVF lands resolves as objNull, which is why typeOf _killed (the vc= field) is also
+	// empty on exactly the same records.
+	_wsk_dist = if (!(isNull _killer) && {!(isNull _killed)}) then { round(_killer distance _killed) } else { -1 };
 	// Category based on killed unit type.
 	_wsk_cat = "INF";
 	if (!_killed_isman) then {

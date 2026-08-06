@@ -63,6 +63,9 @@ $errors = Get-WindowedRpt -RptPath C:\WASP\arma2oaserver.RPT -Pattern 'Error|ERR
 
 `-Tail` returns the last N selected lines, and `-WindowMarker` can switch from the
 default `MISSINIT` mission window to a boot marker such as `Dedicated host created`.
+Evidence-sensitive callers can add `-RequireWindowMarker` to fail closed with an
+empty result when the requested marker is absent; omitting it preserves the legacy
+whole-file fallback used by early-boot callers.
 
 ## Public Stats Generator
 

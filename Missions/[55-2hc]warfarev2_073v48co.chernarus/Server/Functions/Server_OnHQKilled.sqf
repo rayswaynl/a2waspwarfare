@@ -35,11 +35,24 @@ _points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF;
 //--- If HQ was mobibilized, spawn a dead hq.
 if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) then {
 	Private ["_hq"];
+	//--- r37 fail-clean: never publish objNull as wfbe_hq / wreck marker track target.
+	//--- If MHQ wreck create fails, keep tracking the destroyed deployed structure and still
+	//--- clear deploy state + walls so the side is not stuck "deployed" with no repairable wreck.
 	_hq = [missionNamespace getVariable Format["WFBE_%1MHQNAME", _side], getPos _structure, (_side) Call WFBE_CO_FNC_GetSideID, getDir _structure, false, false, false] Call WFBE_CO_FNC_CreateVehicle;
-	_hq setPos (getPos _structure);
-	_hq setVariable ["wfbe_trashable", false];
-	_hq setVariable ["wfbe_side", _side];
-	_hq setDamage 1;
+	if (isNull _hq) then {
+			["WARNING", Format ["Server_OnHQKilled.sqf: [%1] MHQ wreck create failed; tracking destroyed structure for repair marker.", _side]] Call WFBE_CO_FNC_LogContent;
+			_wreckObject = _structure;
+			_logik setVariable ["wfbe_hq_deployed", false, true];
+			//--- Keep logic pointer on the still-existing structure (do not setVariable null).
+			_logik setVariable ["wfbe_hq", _structure, true];
+			{if (!isNull _x) then {deleteVehicle _x}} forEach (_structure getVariable ["wfbe_hq_walls", _structure getVariable ["WFBE_Walls", []]]);
+			//--- Do NOT schedule structure delete: it is the only wreck object clients can track/repair against.
+	} else {
+		_hq setPos (getPos _structure);
+		_hq setVariable ["wfbe_trashable", false];
+		_hq setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+		_hq setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
+		_hq setDamage 1;
 
 	// Marty : from now on, the marker must track the newly created dead MHQ wreck,
 	// not the deployed HQ structure that will be deleted after 10 seconds.
@@ -56,6 +69,7 @@ if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) then {
 
 	//--- Remove the structure after the burial.
 	(_structure) Spawn {sleep 10; deleteVehicle _this};
+	};
 };
 
 //--- B69 S6 : base-fall spectacle. This fires ONCE per (rare) HQ destruction, so spawning

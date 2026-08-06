@@ -178,6 +178,10 @@ for '_i' from 0 to count(_groups)-1 do {
 	// Marty: Skip tracking/patrol work when no valid group could be created on this machine.
 	if (isNull _team || {((count _units) + (count _vehicles)) == 0}) then {
 		["WARNING", Format["Common_CreateTownUnits.sqf: Town [%1] [%2] skipped patrol setup for template %3 because no valid team assets were created.", _town, _side, _groups select _i]] Call WFBE_CO_FNC_LogContent;
+		//--- DESPAWN-BUDGET INTEGRITY: a preallocated empty shell (server_town_ai CreateGroup before
+		//--- CreateTeam) that produced zero assets must be deletedGroup'd here. Otherwise the empty
+		//--- group stays out of wfbe_town_teams / cleanup and leaks against the side group budget.
+		if (!isNull _team && {(count (units _team)) == 0}) then {deleteGroup _team};
 	} else {
 		_team setVariable ["WFBE_TownAI_Town", _town, false];
 		_team setVariable ["WFBE_TownAI_Side", _side, false];
@@ -199,11 +203,14 @@ for '_i' from 0 to count(_groups)-1 do {
 				_skillSpot    = 0.70 + random 0.25;
 				_skillSpeed   = 0.70 + random 0.25;
 				_skillCourage = 0.80 + random 0.20;
+				//--- The number-form setSkill resets EVERY sub-skill, so apply the scalar base FIRST,
+				//--- then the per-sub-skill overrides - otherwise the scalar below wiped the aim/spot
+				//--- spread and made every garrison uniform-accurate (matches Common_RunSidePatrol.sqf).
+				_x setSkill _skillScalar;
 				_x setSkill ["aimingAccuracy", _skillAcc];
 				_x setSkill ["aimingSpeed",    _skillSpeed];
 				_x setSkill ["spotDistance",   _skillSpot];
 				_x setSkill ["courage",        _skillCourage];
-				_x setSkill _skillScalar;
 
 				//--- fable/gdir-cache-materializer (GR-2026-07-08a): AICOMV2_GDIR_CACHE loadout-apply
 				//--- hook. Cumulative by tier (a town holds ONE tier; higher tiers include lower-tier
@@ -291,10 +298,14 @@ if (count _town_teams > 0) then {
 		{
 			_ent = _x;
 			_reveal = [_ent];
-			if (_ent != vehicle _ent) then {_reveal = _reveal + (crew _ent)};
+			if !(_ent isKindOf "Man") then {
+				_reveal = _reveal + (crew _ent);
+			} else {
+				if (_ent != vehicle _ent) then {_reveal = _reveal + (crew _ent)};
+			};
 			{
 				_grp = _x;
-				{_grp reveal _ent} forEach _reveal;
+				{_grp reveal _x} forEach _reveal;
 			} forEach _teams;
 		} forEach _near;
 	};

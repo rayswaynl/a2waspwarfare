@@ -162,7 +162,7 @@ while {!gameOver} do {
 					_destBx = (_destPos select 0) - (getPos player select 0);
 					_destBy = (_destPos select 1) - (getPos player select 1);
 					if (abs _destBx > 0.01 || {abs _destBy > 0.01}) then {
-						_ownDir = (_destBx atan2 _destBy) % 360;
+						_ownDir = ((_destBx atan2 _destBy) + 360) % 360;
 					};
 				};
 			};
@@ -329,9 +329,8 @@ while {!gameOver} do {
 								//--- colour cues (see the PRECEDENCE note above): skips own-squad (ColorOrange
 								//--- stays highest identity) and skips when the wound-tint above already fired,
 								//--- so an AFK-but-wounded ally still reads as wounded, not silently grey.
-								//--- "ColorGray" (not "Grey") matches the spelling this codebase already ships
-								//--- live for neutral markers (Init_CommonConstants.sqf WFBE_C_NEUTRAL_COLOR).
-								if (!(player == _leader) && {!_teamMarkerWoundTinted}) then {_markerColor = "ColorGray"};
+								//--- ColorBlack is an Arma 2/OA built-in neutral fallback.
+								if (!(player == _leader) && {!_teamMarkerWoundTinted}) then {_markerColor = "ColorBlack"};
 							};
 						};
 						// Marty: WF_Debug map-side probe confirms the marker loop sees the networked AFK state.
@@ -484,7 +483,7 @@ while {!gameOver} do {
 								_destDx = (_destPos select 0) - (getPos _leader select 0);
 								_destDy = (_destPos select 1) - (getPos _leader select 1);
 								if (abs _destDx > 0.01 || {abs _destDy > 0.01}) then {
-									_dir = (_destDx atan2 _destDy) % 360;
+									_dir = ((_destDx atan2 _destDy) + 360) % 360;
 								};
 							};
 						};

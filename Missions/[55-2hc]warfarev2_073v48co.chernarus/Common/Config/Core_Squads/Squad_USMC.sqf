@@ -555,6 +555,30 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
 _aiTeamTypes = _aiTeamTypes + [0];
 _aiTeamUpgrades = _aiTeamUpgrades + [[1,0,0,0]];
 
+//--- WEST FIXED-WING (research finding 2026-07-28, "WEST cannot found a fixed-wing bomber on Chernarus"):
+//--- Root_US_Camo.sqf compiles ONLY this file for WEST and it carried zero Plane team templates, while
+//--- Squad_OA_US.sqf:124-125,164-165 (A-10 / AV-8B jet rows) never loads on Chernarus at all. Two Plane
+//--- templates modelled directly on those OA_US rows, gated dark by default. Admission for a founded
+//--- team still flows through the EXISTING AI_Commander_Teams.sqf / AI_Commander_AssignTypes.sqf
+//--- isKindOf-Plane + airfield-ownership + jet time-ramp gates (unchanged) - this only makes the
+//--- templates visible to that pipeline; it invents no new admission logic. Flag off = this whole
+//--- block never executes, so the four roster arrays stay byte-identical to HEAD.
+if (missionNamespace getVariable ["WFBE_C_AICOM_WEST_JETS", 0] > 0) then {
+	_u		= ["A10_US_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - A-10 CAS (Airfield)"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u];
+	_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,true]];
+	_aiTeamTypes = _aiTeamTypes + [3];
+	_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+	_u		= ["AV8B2"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - AV-8B Strike"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u];
+	_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,true]];
+	_aiTeamTypes = _aiTeamTypes + [3];
+	_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+};
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];

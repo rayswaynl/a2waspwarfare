@@ -19,8 +19,9 @@
 	    OWN locality via the upward team-status channel (added in M1). Until then the slot
 	    is [] and consumers fall back to the coarse server view.
 
-	M0 is behaviour-neutral: nothing reads the snapshot yet (legacy Strategy/AssignTowns
-	still drive the war). This worker only POPULATES the cache and emits AICOM2 telemetry.
+	M0 population was behaviour-neutral; the v2 Strategy/Allocate/closer layers now
+	consume the cache, while legacy/manual calls retain their local fallbacks. This
+	worker remains the single server-authoritative publisher and emits AICOM2 telemetry.
 
 	A2-OA-safe: reuses the legacy _myStr remnant-exclusion idiom (Strategy.sqf:45-63),
 	WFBE_CO_FNC_GroupGetBool for group bools, plain-get+isNil for group vars, no A3 commands.
@@ -88,8 +89,24 @@ _myStr = 0;
 		};
 	};
 } forEach _teams;
+//--- r100 (force-strength symmetry): the enemy sum must use the SAME maneuver-strength policy as _myStr
+//--- above (exclude in-refit teams + stranded lone remnants). The legacy asymmetric form counted enemy
+//--- refit/straggler bodies while excluding our own, so every _myStr-vs-_enStr gate over-rated the enemy
+//--- by its refit pool (a refit team is 8-12 bodies for the whole walk home + top-up) and both
+//--- commanders systematically read themselves as the weaker side. Enemy HQ anchors the lone-far check.
 _enStr = 0;
-{ if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
+{
+	if (!isNull _x) then {
+		_tAlive = {alive _x} count (units _x);
+		if (_tAlive > 0) then {
+			_isRemnant = false;
+			_rf = _x getVariable "wfbe_aicom_refit";
+			if (!isNil "_rf" && {_rf}) then {_isRemnant = true};
+			if (!_isRemnant && {_tAlive < _loneAlive} && {_loneFar > 0} && {!isNull (leader _x)} && {!isNull _enemyHQ} && {((leader _x) distance _enemyHQ) > _loneFar}) then {_isRemnant = true};
+			if (!_isRemnant) then {_enStr = _enStr + _tAlive};
+		};
+	};
+} forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 
 //--- EFFECTIVE STRENGTH = maneuver + held-town credit. This (NOT raw _myStr) is what the v2
 //--- stance machine and closer decide on, so a territory-winning side never flips itself into

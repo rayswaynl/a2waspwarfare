@@ -1,9 +1,18 @@
-Private ["_allowCustom","_buildings","_charge","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
+Private ["_allowCustom","_buildings","_charge","_deathLoc","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_respawnAvailable","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
 
+//--- r80b player-respawn-gear: short/malformed call args used to throw on select 0/1 and abort the whole
+//--- respawn path (naked body, no gear, no re-attach EHs). Fail-closed when unit is missing.
+if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 1}) exitWith {};
 _unit = _this select 0;
-_spawn = _this select 1;
+if (isNil "_unit" || {typeName _unit != "OBJECT"} || {isNull _unit}) exitWith {};
+_spawn = if (count _this > 1) then {_this select 1} else {objNull};
+if (isNil "_spawn" || {typeName _spawn != "OBJECT"}) then {_spawn = objNull};
+//--- r131 respawn-destination validity: the menu refresh is asynchronous, so a selected base, camp, mobile, or town can be destroyed, moved, or captured after its last UI tick. Rebuild the canonical availability list at execution time from the preserved death location; an ineligible handle must take the existing null fallback instead of being placed on stale ground.
+_deathLoc = if (count _this > 2 && {typeName (_this select 2) == "ARRAY"}) then {_this select 2} else {getPos _unit};
+_respawnAvailable = [sideJoined, _deathLoc] Call GetRespawnAvailable;
+if !(_spawn in _respawnAvailable) then {_spawn = objNull};
 _loadDefault = true;
-_typeof = typeOf _spawn;
+_typeof = if (isNull _spawn) then {""} else {typeOf _spawn};
 
 WFBE_Client_IsRespawning = false;
 if (!isNil "WFBE_CL_FNC_AutoRunCancel") then {[] call WFBE_CL_FNC_AutoRunCancel};
@@ -59,23 +68,25 @@ _unit setVariable ["lastActionTime", time];
 _unit setVariable ["lastPosition", position _unit];
 
 //--- Default gear enforcement on mobile respawn.
-if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") == 2) then {
-	if (_typeof in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES",sideJoinedText])) then {_allowCustom = false};
+//--- r80b: bare getVariable of AMBULANCES can be nil before side gear init / JIP race — `_x in nil` throws
+//--- and aborts the rest of the respawn gear path. Default [] and scalar-gate RESPAWN_MOBILE/LEADER.
+if ((missionNamespace getVariable ["WFBE_C_RESPAWN_MOBILE", 0]) == 2) then {
+	if (_typeof in (missionNamespace getVariable [Format ["WFBE_%1AMBULANCES",sideJoinedText], []])) then {_allowCustom = false};
 };
 //--- Default gear enforcement on redeploy truck respawn (same mode gate as mobile).
-if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && (missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") == 2) then {
+if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && (missionNamespace getVariable ["WFBE_C_RESPAWN_MOBILE", 0]) == 2) then {
 	if (_typeof in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]])) then {_allowCustom = false};
 };
 
 //--- Default gear enforcement on leader respawn.
-if ((missionNamespace getVariable "WFBE_C_RESPAWN_LEADER") == 2) then {
-	if (_spawn == leader group _unit) then {_allowCustom = false};
+if ((missionNamespace getVariable ["WFBE_C_RESPAWN_LEADER", 0]) == 2) then {
+	if (!isNull _spawn && {_spawn == leader group _unit}) then {_allowCustom = false};
 };
 
 //--- Respawn.
 if (_spawn isKindOf "Man") then {_spawn = vehicle _spawn};
 _spawnInside = false;
-if (_typeof in (missionNamespace getVariable Format ["WFBE_%1AMBULANCES",sideJoinedText]) && alive _spawn) then {
+if (_typeof in (missionNamespace getVariable [Format ["WFBE_%1AMBULANCES",sideJoinedText], []]) && alive _spawn) then {
 	if (_spawn emptyPositions "cargo" > 0 && !(locked _spawn)) then {_unit moveInCargo _spawn;_spawnInside = true};
 };
 if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && _typeof in (missionNamespace getVariable [Format ["WFBE_%1REDEPLOYTRUCKS",sideJoinedText],[]]) && alive _spawn) then {
@@ -169,6 +180,13 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoi
 	};
 };
 
+//--- Star Fortress Phase 1: commander-only map-click request. The server repeats every gate.
+if !(_unit getVariable ["wfbe_starfort_action_added", false]) then {
+	_unit setVariable ["wfbe_starfort_action_added", true];
+	_unit addAction ["<t color='#e8c84a'>Star Fortress</t>","Client\Action\Action_StarFort.sqf", [], 6, false, true, "",
+		'alive _target && {(missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0} && {sideJoined != resistance} && {!isNull commanderTeam && {commanderTeam == group player}}'];
+};
+
 //--- fable/marker-combat-flash (owner 2026-07-09) RESPAWN-BLINK-EH FIX: Common\Init\Init_Unit.sqf
 //--- attaches WFBE_BlinkFiredEH (the Fired handler that drives combat-icon-blink / teammate marker
 //--- flash) exactly once, at unit CREATION (Common_CreateUnit.sqf / Common_CreateVehicle.sqf). This
@@ -209,8 +227,13 @@ if ((missionNamespace getVariable ["WFBE_C_SATCHEL_TK_DETECT", 0]) > 0) then {
 };
 
 //--- Loadout.
-if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear && _allowCustom) then {
-	_mode = missionNamespace getVariable "WFBE_C_RESPAWN_PENALTY";
+//--- r80b: WFBE_RespawnDefaultGear is Init_Client-set but can be nil on early/pre-init respawn races;
+//--- bare `!nil` throws and skips both custom and default gear application (naked respawn).
+//--- RESPAWN_PENALTY bare getVariable can also be nil — `nil in [...]` throws the same way.
+if (isNil "WFBE_RespawnDefaultGear") then {WFBE_RespawnDefaultGear = false};
+if (!isNil {_unit getVariable "wfbe_custom_gear"} && {!WFBE_RespawnDefaultGear} && {_allowCustom}) then {
+	_mode = missionNamespace getVariable ["WFBE_C_RESPAWN_PENALTY", 0];
+	if (isNil "_mode" || {typeName _mode != "SCALAR"}) then {_mode = 0};
 	
 	if (_mode in [1]) then {
 		(localize "STR_WF_CHAT_Gear_RespawnDenied") Call GroupChatMessage;  //--- salvage-527 (item 4): dedicated mode-1 denial feedback (was the cryptic "RESPAWN: Penalty / Default Gear" composite).
@@ -263,8 +286,18 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 		//--- Use the respawn loadout.
 		if !(_skip) then {
 			_get = _unit getVariable "wfbe_custom_gear";
-			[_unit, _get select 0, _get select 1, _get select 4, _get select 2, _get select 3] Call WFBE_CO_FNC_EquipUnit;
-			_loadDefault = false;
+			//--- r72b loadout-equip-null: require full custom-gear shape
+			//--- [weapons, mags, backpack, bpContent, [primary,pistol,secondary]] before select 0..4.
+			//--- Short/corrupt profile rows used to pass nil into EquipUnit mid-strip (naked respawn).
+			if (!isNil "_get" && {typeName _get == "ARRAY"} && {count _get >= 5}
+				&& {typeName (_get select 0) == "ARRAY"} && {typeName (_get select 1) == "ARRAY"}
+				&& {typeName (_get select 4) == "ARRAY"}) then {
+				[_unit, _get select 0, _get select 1, _get select 4, _get select 2, _get select 3] Call WFBE_CO_FNC_EquipUnit;
+				_loadDefault = false;
+			} else {
+				["WARNING", "Client_OnRespawnHandler.sqf: wfbe_custom_gear missing/short/malformed - falling back to default gear."] Call WFBE_CO_FNC_LogContent;
+				//--- leave _loadDefault true
+			};
 		};
 	};
 };

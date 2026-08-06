@@ -82,7 +82,7 @@ if (_cts == 0 && {_price > 0}) then {_price Call ChangePlayerFunds;};
 //--- Heal the damages?
 if (_cts != 0) then {
 	if (_veh isKindOf "Man") then {_veh setDammage 0} else {
-		_veh setDammage 0; //--- wiki-wins: repair the vehicle HULL itself, not just the crew (was a no-op on the hull)
+		//--- HEAL is priced from crew damage only; vehicle hull and hitpoint repair belongs to SupportRepair.
 		_crews = crew _veh;
 		if (count _crews > 0) then {{_x setDammage 0} forEach _crews};
 	};

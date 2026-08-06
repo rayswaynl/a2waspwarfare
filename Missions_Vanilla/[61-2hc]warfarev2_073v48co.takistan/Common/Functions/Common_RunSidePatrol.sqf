@@ -24,7 +24,7 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_upgLvl","_paidThisVisit","_sweepDone",
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
-         "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
+         "_driver","_cargo","_u","_remountPending","_remountUnit","_remountVeh","_remountSeats","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
          "_pUnstuckStreak","_pUnstuckMax","_pBridgeTier","_pWedgePos","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
          "_cIsNaval","_navSkipLogged",
          "_rosterChoices","_rosterKey",
@@ -293,8 +293,12 @@ while {!WFBE_GameOver && _alive} do {
 						for "_ci" from 0 to ((count _townCamps) - 1) do {
 							_campObj = _townCamps select _ci;
 
-							//--- Skip dead camps to avoid nil-access on getPos of a null object.
-							if (isNull _campObj) exitWith {};
+							//--- r83 alife camp-sweep: skip a dead camp PER-ITERATION (if-nesting, the A2 idiom).
+							//--- The old `if (isNull _campObj) exitWith {}` BROKE the whole for-loop at the first
+							//--- deleted camp logic (cmdcon44q: deleted camps leave null refs in the camps array),
+							//--- so every later camp in the town was never visited this sweep - and the once-per-visit
+							//--- wfbe_patrol_sweep_town latch above meant the patrol never retried them on this visit.
+							if (!isNull _campObj) then {
 
 							//--- Order move to camp.
 							if (!isNull leader _team && alive leader _team) then {
@@ -336,17 +340,29 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Dwell at camp (~75 s total including settle phase).
 							sleep 75;
 
-							//--- REMOUNT: re-assign cargo and order back in (25 s grace, then proceed regardless).
+							//--- REMOUNT: distribute passengers across every live transport's actual cargo capacity.
+							//--- A patrol can start with several vehicles; assigning every dismount to _vehicles select 0
+							//--- strands the excess when that first hull fills. Keep the normal orderGetIn animation and grace.
 							if (count _vehicles > 0 && count _dismounted > 0) then {
-								_veh = _vehicles select 0;
+								_remountPending = +_dismounted;
 								{
-									if (alive _x && alive _veh) then {
-										_x assignAsCargo _veh;
-										[_x] orderGetIn true;
+									_remountVeh = _x;
+									if (alive _remountVeh) then {
+										_remountSeats = _remountVeh emptyPositions "cargo";
+										while {count _remountPending > 0 && {_remountSeats > 0}} do {
+											_remountUnit = _remountPending select 0;
+											_remountPending = _remountPending - [_remountUnit];
+											if (alive _remountUnit) then {
+												_remountUnit assignAsCargo _remountVeh;
+												[_remountUnit] orderGetIn true;
+												_remountSeats = _remountSeats - 1;
+											};
+										};
 									};
-								} forEach _dismounted;
+								} forEach _vehicles;
 								sleep 25;
 							};
+							}; //--- end per-camp null-camp guard (r83)
 						};
 
 						//--- After the camp sweep, if all camps belong to us OR the 8-min
@@ -527,5 +543,13 @@ if (isServer) then {
 {
 	if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x};
 } forEach (units _team);
+//--- Terminal patrol cleanup owns the created hull list too: deleteGroup only reaps the empty group,
+//--- so an RTB or timeout left its now-empty transports parked indefinitely. Units go first (seat-race safe);
+//--- never delete a hull carrying a player who boarded it during the patrol.
+{
+	private "_cleanupVehicle";
+	_cleanupVehicle = _x;
+	if (!isNull _cleanupVehicle && {({isPlayer _x} count (crew _cleanupVehicle)) == 0}) then {deleteVehicle _cleanupVehicle};
+} forEach _vehicles;
 //--- r70 empty-group: also reap corpses (combat-wipe left dead units so deleteGroup no-op'd; SidePatrol skipped by BASE-GC).
 if (!isNull _team && {({isPlayer _x} count (units _team)) == 0}) then {deleteGroup _team};

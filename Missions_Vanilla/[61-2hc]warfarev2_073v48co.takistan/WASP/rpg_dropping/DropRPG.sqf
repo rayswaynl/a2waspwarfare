@@ -6,6 +6,14 @@
 ///////////////////////////////////////////////
 private ["_this","_addMag"];
 
+//--- r90 dedupe (mirrors the HandleAT/HandleRocketTraccer remove-before-add in
+//--- Client_PreRespawnHandler.sqf): this file runs on every respawn, and on a REUSED body
+//--- (group respawn / redeploy-truck spawn) its Fired EH and hidden addAction stacked once
+//--- per death - one launcher shot then spawned N WeaponHolders and one mine placement
+//--- fired N register-mine PVs. Stamp the unit; a fresh body is unstamped and arms normally.
+if (_this getVariable ["wfbe_droprpg_armed", false]) exitWith {};
+_this setVariable ["wfbe_droprpg_armed", true, false];
+
 _this setVariable ["OldWeapon","some weapon", false];
 
 _addMag =	{
@@ -90,16 +98,21 @@ _this addeventhandler ["Fired", {
 
 		_sol removeWeapon _weapon;
 		_wep = "WeaponHolder" createVehicle [(_pos select 0) + (sin _dir*_d),(_pos select 1) + (cos _dir*_d),_pos select 2];
-		_wep setPosATL [(_pos select 0) + (sin _dir*_d),(_pos select 1) + (cos _dir*_d),_pos select 2];
-		_wep setDir (_dir);
-		_wep addWeaponCargoGlobal[_weapon,1];
-		_wep setDammage 1;			// ?????? ??????????? ?????? 1 (??????????) ??? ???? ????? ?????? ???? ??????? ??? ?????
+		//--- FAIL-CLEAN r44: WeaponHolder create null must not setPos/setDir/cargo/setDammage; guard the delayed delete too.
+		if (isNull _wep) then {
+			["WARNING", Format ["DropRPG.sqf: WeaponHolder create failed for %1 at %2.", _weapon, _pos]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_wep setPosATL [(_pos select 0) + (sin _dir*_d),(_pos select 1) + (cos _dir*_d),_pos select 2];
+			_wep setDir (_dir);
+			_wep addWeaponCargoGlobal[_weapon,1];
+			_wep setDammage 1;			// ?????? ??????????? ?????? 1 (??????????) ??? ???? ????? ?????? ???? ??????? ??? ?????
 
-		[_wep]spawn {
+			[_wep]spawn {
 				private ["_wep"];
 				_wep = _this select 0;
 				sleep 30;
-				deleteVehicle _wep;
+				if !(isNull _wep) then {deleteVehicle _wep};
+			};
 		};
 	};
 }];

@@ -258,11 +258,12 @@ _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s ca
 _ltIntent = 0; //--- COMMAND CONSOLE: throttle for the AI-INTENT publish block (now runs on the _active gate, not _canBuild, so the readout refreshes + reaches JIP/assist clients).
 _prevHuman = false; _prevState = "";
 _prevDelegate = true; //--- cmdcon27 THREAD B: init TRUE to match the new delegate default (avoids a spurious edge-reset at loop start). prev value of the AI-maneuver delegate flag, for the edge-reset that neutralises sticky orders on a mode flip.
-_cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
+//--- Persist one-shot latch on side logic (wfbe_aicom_cbr_research_appended).
+_cbrResearchAppended = _logik getVariable ["wfbe_aicom_cbr_research_appended", false];
 //--- V0.7 bootstrap stipend state.
 _prevStipendActive = false;
 _ltStipend = -1e8; //--- First-grant sentinel; keep aligned with the guard below.
-_noHumanSince = -1;
+_noHumanSince = _logik getVariable ["wfbe_aicom_no_human_since", -1]; //--- supervisor restart: retain the current no-human edge so an already-expired build grace does not restart.
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1 (owner generation %2).", str _side, _ownerSeq]] Call WFBE_CO_FNC_AICOMLog;
 
@@ -376,8 +377,12 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- with no human commander - from match start, re-armed each time a human commander leaves.
 		if (_humanCmd) then {
 			_noHumanSince = -1;
+			_logik setVariable ["wfbe_aicom_no_human_since", _noHumanSince];
 		} else {
-			if (_noHumanSince < 0) then {_noHumanSince = time};
+			if (_noHumanSince < 0) then {
+				_noHumanSince = time;
+				_logik setVariable ["wfbe_aicom_no_human_since", _noHumanSince];
+			};
 		};
 		_canBuild = (_noHumanSince >= 0) && {(time - _noHumanSince) >= (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BUILD_GRACE", 300])};
 
@@ -916,16 +921,54 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|REQDRAW_ARM|funds=" + str _funds + "|teams=" + str _fTeams + "|target=" + str _dynTarget);
 			};
 
+			//--- F3 fable/aicom-econ-triad (2026-08-02): FUNDS->SUPPLY CONVERSION (flag WFBE_C_AICOM_F2S_ENABLE
+			//--- default 0 = dark). Overnight 2026-08-01 Takistan war: EAST ended at funds=1.44M climbing +29k/window
+			//--- while netSupply=-45k/window - in dual-currency mode every heavy sink (ECON_SINK research above, base
+			//--- construction) also charges SUPPLY, and no cash->supply channel exists (see the cmdcon42 note on the
+			//--- econ-sink block), so a supply-starved rich side hoards unspendable cash and the war stalls instead
+			//--- of concluding. When armed: once per cooldown, if the side is rich (funds >= FLOOR + AMOUNT) AND
+			//--- supply-starved (supply < LOW), burn AMOUNT funds for round(AMOUNT*RATIO) supply. Guards: dual-
+			//--- currency mode only; WFBE_C_SUPPLY_SERVER_FIX == 2 required (any other value makes the server-
+			//--- originated credit a silent publicVariableServer no-op - funds would vanish); human-seated commander
+			//--- pauses it (same contract as ECON_SINK/REQDRAW); west/east only by construction (this supervisor
+			//--- never runs for GUER). Stagnation multiplier explicitly bypassed (4th arg false, same as the
+			//--- bootstrap stipend) - this is a conversion, not income; the server handler still clamps the pool to
+			//--- WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT. Conservative: at most AMOUNT per cooldown against a measured
+			//--- +29k/window income; FLOOR keeps non-rich sides untouched; LOW keeps healthy-supply sides untouched.
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_F2S_ENABLE", 0]) > 0
+				&& {(missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0}
+				&& {(missionNamespace getVariable ["WFBE_C_SUPPLY_SERVER_FIX", 0]) == 2}
+				&& {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}) then {
+				private ["_f2sFloor","_f2sAmt","_f2sFunds","_f2sSupply","_f2sGain"];
+				_f2sFloor = missionNamespace getVariable ["WFBE_C_AICOM_F2S_FLOOR", 400000];
+				_f2sAmt   = missionNamespace getVariable ["WFBE_C_AICOM_F2S_AMOUNT", 25000];
+				_f2sFunds = (_side) Call GetAICommanderFunds; //--- fresh read - _funds is stale if ECON_SINK above spent this tick
+				if (_f2sFunds >= (_f2sFloor + _f2sAmt) && {(time - (_logik getVariable ["wfbe_aicom_f2s_t0", -1e10])) > (missionNamespace getVariable ["WFBE_C_AICOM_F2S_COOLDOWN", 300])}) then {
+					_f2sSupply = (_side) Call WFBE_CO_FNC_GetSideSupply;
+					if ((typeName _f2sSupply) != "SCALAR") then {_f2sSupply = 0};
+					if (_f2sSupply < (missionNamespace getVariable ["WFBE_C_AICOM_F2S_SUPPLY_LOW", 15000])) then {
+						_f2sGain = round (_f2sAmt * (missionNamespace getVariable ["WFBE_C_AICOM_F2S_RATIO", 1]));
+						[_side, -_f2sAmt] Call ChangeAICommanderFunds;
+						[_side, _f2sGain, "AICOM funds->supply conversion.", false] Call ChangeSideSupply;
+						_logik setVariable ["wfbe_aicom_f2s_t0", time];
+						diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_CONVERT|spent=" + str _f2sAmt + "|gained=" + str _f2sGain + "|fundsPre=" + str _f2sFunds + "|supplyPre=" + str _f2sSupply);
+					};
+				};
+			};
+
 			//--- Commander Town Ledger investment arm (fable/ctl-impl-v1, B6/B7). Flag-off
 			//--- (AICOMV2_LANE_CMD_TOWN_LEDGER=0 or AICOMV2_CTL_INVEST_ENABLE=0) => skipped
 			//--- silently - the lane flag gates existence, not just behaviour, so no telemetry
 			//--- at all fires when either master switch is off.
 			if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0
 				&& {(missionNamespace getVariable ["AICOMV2_CTL_INVEST_ENABLE", 0]) > 0}) then {
-				private ["_ctlHumanBlock","_ctlFundsOk","_ctlCooldownOk","_ctlSkipReason","_ctlNow2"];
+				private ["_ctlHumanBlock","_ctlFundsOk","_ctlCooldownOk","_ctlSkipReason","_ctlNow2","_ctlFunds"];
 				_ctlNow2       = time;
 				_ctlHumanBlock = _humanSeated && {(missionNamespace getVariable ["AICOMV2_CTL_INVEST_HUMAN_OFF", 1]) > 0};
-				_ctlFundsOk    = _funds >= ((missionNamespace getVariable ["AICOMV2_CTL_INVEST_COST", 50000]) + (missionNamespace getVariable ["AICOMV2_CTL_INVEST_FLOOR", 250000]));
+				//--- r114: re-read the treasury HERE - _funds was snapshotted before the ECON_SINK debit
+				//--- above, so gating on it could commit COST while the real balance is already under FLOOR.
+				_ctlFunds      = (_side) Call GetAICommanderFunds;
+				_ctlFundsOk    = _ctlFunds >= ((missionNamespace getVariable ["AICOMV2_CTL_INVEST_COST", 50000]) + (missionNamespace getVariable ["AICOMV2_CTL_INVEST_FLOOR", 250000]));
 				_ctlCooldownOk = (_ctlNow2 - (_logik getVariable ["WFBE_CTL_INVEST_T0", -1e10])) > (missionNamespace getVariable ["AICOMV2_CTL_INVEST_COOLDOWN", 480]);
 				_ctlSkipReason = "";
 				if (_ctlHumanBlock) then {_ctlSkipReason = "human"};
@@ -952,7 +995,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 							_val = _town getVariable ["wfbe_town_value", 0];
 							if (_val > _ctlBestVal || {_val == _ctlBestVal && {_str < _ctlBestStr}}) then {_ctlBestVal = _val; _ctlBestStr = _str; _ctlTarget = _ctlI};
 						};
-						if (_eligible && {_str >= 1.0 && {_str < 1.5}} && {_funds >= (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_FLOOR", 600000])}) then {
+						if (_eligible && {_str >= 1.0 && {_str < 1.5}} && {_ctlFunds >= (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_FLOOR", 600000])}) then {
 							_val = _town getVariable ["wfbe_town_value", 0];
 							if (_val > _ctlBestVal || {_val == _ctlBestVal && {_str < _ctlBestStr}}) then {_ctlBestVal = _val; _ctlBestStr = _str; _ctlTarget = _ctlI};
 						};
@@ -972,10 +1015,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 						//--- The GLOBAL invest cooldown (WFBE_CTL_INVEST_T0 below - a logik var, not the ledger array)
 						//--- still fires here; its 480s window >> the 30s tick, so f cannot double-invest before apply.
 						(_ctlRec select 0) setVariable ["wfbe_ctl_pending_invest", ((_ctlRec select 0) getVariable ["wfbe_ctl_pending_invest", 0]) + _ctlGain];
+						//--- r98: also publish the COST so the CTL tick can refund it when the town flips
+						//--- side before the pending gain is applied (drop-pass REFUND in Server_CmdTownLedger.sqf).
+						(_ctlRec select 0) setVariable ["wfbe_ctl_pending_invest_cost", ((_ctlRec select 0) getVariable ["wfbe_ctl_pending_invest_cost", 0]) + _ctlCost];
 						_logik setVariable ["WFBE_CTL_INVEST_T0", _ctlNow2];
 						[_side, -_ctlCost] Call ChangeAICommanderFunds;
 						diag_log Format ["AICOMSTAT|v2|EVENT|%1|%2|CTL_INVEST|town=%3|tier=%4|cost=%5|str=%6|funds=%7|fundedBy=aicom",
-							str _side, round (time / 60), (_ctlRec select 0) getVariable ["name", "?"], _ctlTier, _ctlCost, _ctlNewStr, _funds - _ctlCost];
+							str _side, round (time / 60), (_ctlRec select 0) getVariable ["name", "?"], _ctlTier, _ctlCost, _ctlNewStr, _ctlFunds - _ctlCost];
 					} else {
 						_ctlSkipReason = "noTarget";
 					};
@@ -997,6 +1043,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
 					missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_CBRADAR,1],[WFBE_UP_CBRADAR,2]]];
 					_cbrResearchAppended = true;
+					_logik setVariable ["wfbe_aicom_cbr_research_appended", true];
 					["INFORMATION", Format ["AI_Commander.sqf: [%1] CBRadar research (lvl 1-2) appended to program - arty threat confirmed at %2 min.", str _side, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
@@ -1095,11 +1142,26 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		_arrMed = _logik getVariable ["wfbe_aicom_arrival_med", 0];
 		_arrSlow = _logik getVariable ["wfbe_aicom_arrival_slow", 0];
 		_arrDisp = _logik getVariable ["wfbe_aicom_arrival_dispatched", 0];
-		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp);
+		//--- F1 fable/aicom-econ-triad (2026-08-02): full per-window outcome accounting. stranded/retarget/died/
+		//--- cleared are bumped at the AssignTowns/Strategy resolution sites; inflight = live open-latch count at
+		//--- emit. Identity: dispatched ~= fast+med+slow+stranded+retarget+died+cleared+delta-inflight; residual =
+		//--- closes this ledger cannot see (HC-local ServiceTick detours; groups nulled by groupsGC pre-watcher).
+		private ["_arrStr","_arrRtg","_arrDie","_arrClr","_arrInf"];
+		_arrStr = _logik getVariable ["wfbe_aicom_arrival_stranded", 0];
+		_arrRtg = _logik getVariable ["wfbe_aicom_arrival_retarget", 0];
+		_arrDie = _logik getVariable ["wfbe_aicom_arrival_died", 0];
+		_arrClr = _logik getVariable ["wfbe_aicom_arrival_cleared", 0];
+		_arrInf = 0;
+		{ if (!isNull _x && {[_x, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool}) then {_arrInf = _arrInf + 1} } forEach (_logik getVariable ["wfbe_teams", []]);
+		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp + "|stranded=" + str _arrStr + "|retarget=" + str _arrRtg + "|died=" + str _arrDie + "|cleared=" + str _arrClr + "|inflight=" + str _arrInf);
 		_logik setVariable ["wfbe_aicom_arrival_fast", 0];
 		_logik setVariable ["wfbe_aicom_arrival_med", 0];
 		_logik setVariable ["wfbe_aicom_arrival_slow", 0];
 		_logik setVariable ["wfbe_aicom_arrival_dispatched", 0];
+		_logik setVariable ["wfbe_aicom_arrival_stranded", 0];
+		_logik setVariable ["wfbe_aicom_arrival_retarget", 0];
+		_logik setVariable ["wfbe_aicom_arrival_died", 0];
+		_logik setVariable ["wfbe_aicom_arrival_cleared", 0];
 
 		_ltStat = time; //--- advance the throttle BEFORE CMDRSTAT so a CMDRSTAT failure could never spam/stall the AICOMSTAT tick
 
@@ -1211,8 +1273,8 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//---                deployed PBO filename (missionName), which the deploy convention bumps with the cmdcon token
 		//---                per the wiki filename-cache rule. We parse the cmdcon<...> token out of missionName ONCE and
 		//---                cache it in wfbe_buildtag (falls back to the raw missionName if no cmdcon token is present).
-		//---   hc_fps=<n>   min diag_fps across HCs that reported (via the existing 60s HCStat channel, cached in
-		//---                WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
+		//---   hc_fps=<n>   min diag_fps across REGISTERED live HCs that reported (via the existing 60s HCStat channel,
+		//---                cached in WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
 		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0];
 		_bt = missionNamespace getVariable ["wfbe_buildtag", ""];
 		if (_bt == "") then {
@@ -1239,8 +1301,14 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- keyed by netId via HCStat.sqf). Single HC -> hc2fps == hc_fps; no fresh HC -> both -1. New key `hc2fps=`
 		//--- follows the SAME shape as the existing `hc_fps=` (which already contains the substring `fps=`), so pipe-
 		//--- anchored `|fps=` greps and longest-key KV parsers keep resolving each field distinctly (no TFPS-style collision).
-		private ["_hc2Fps"]; _hc2Fps = -1;
-		{ if (((time - (_x select 2)) <= 120) && {(typeName (_x select 1)) == "SCALAR"}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1}; if ((_hc2Fps < 0) || {(_x select 1) > _hc2Fps}) then {_hc2Fps = _x select 1} } } forEach _hcReg2;
+		private ["_hc2Fps","_hcLiveKeys","_hcGroups","_hcLeader"]; _hc2Fps = -1; _hcLiveKeys = []; _hcGroups = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+		{
+			if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 2}) then {
+				_hcLeader = leader _x;
+				_hcLiveKeys set [count _hcLiveKeys, Format ["HC-%1", netId _hcLeader]];
+			};
+		} forEach _hcGroups;
+		{ if ((typeName _x) == "ARRAY" && {(count _x) >= 3} && {(_x select 0) in _hcLiveKeys} && {(typeName (_x select 1)) == "SCALAR"} && {(typeName (_x select 2)) == "SCALAR"} && {((time - (_x select 2)) <= 120)}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1}; if ((_hc2Fps < 0) || {(_x select 1) > _hc2Fps}) then {_hc2Fps = _x select 1} } } forEach _hcReg2;
 		//--- APPENDED v2-EXT telemetry (all CHEAP reads of state the systems already maintain; NO new allUnits/allGroups walk):
 		//---   townsW/E/G  per-side towns held: iterate `towns` ONCE bucketing by the SAME `sideID` var GetTownsHeld reads
 		//---               (W=0 E=1 G=2). Also collect the per-town sortie flag in the SAME pass -> `sort` (active sorties).
@@ -1341,7 +1409,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		private ["_hcReg","_hcLive","_hcOwners","_hcCounts","_ho","_hidx","_hMax","_hMin","_hCsv","_hRatio","_hc"];
 		_hcReg = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
 		_hcLive = [];
-		{ if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_hcLive = _hcLive + [_x]} } forEach _hcReg;
+		{ if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 2}) then {_hcLive = _hcLive + [_x]} } forEach _hcReg;
 		if (count _hcLive > 0) then {
 			_hcOwners = []; _hcCounts = [];
 			{ _hcOwners set [_forEachIndex, owner (leader _x)]; _hcCounts set [_forEachIndex, 0] } forEach _hcLive;

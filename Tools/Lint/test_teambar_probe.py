@@ -102,7 +102,9 @@ class TeambarProbeTests(unittest.TestCase):
         killed = code("Client/Functions/Client_OnKilled.sqf")
         resync = 'if (!isNull (group player)) then {WFBE_Client_Team = group player};'
         self.assertIn(resync, killed)
-        self.assertLess(killed.index('waitUntil {alive player}'), killed.index(resync))
+        # scheduler-leak fold reshaped the respawn wait (bounded sleep-poll form);
+        # anchor on its stable prefix - the resync must still follow it.
+        self.assertLess(killed.index('waitUntil {sleep 0.2; alive player'), killed.index(resync))
         self.assertLess(killed.index(resync), killed.index('if (group player == WFBE_Client_Team) then {'))
         self.assertLess(killed.index(resync), killed.index('"respawn", "rejoin-check"'))
 
@@ -112,6 +114,14 @@ class TeambarProbeTests(unittest.TestCase):
         self.assertIn("phase=pre-client-rejoin", text)
         for token in ("getPlayerUID _leader", "leaderIsGrpLeader=", "rank _leader", 'WFBE_C_TEAMBAR_PROBE", 0]'):
             self.assertIn(token, text)
+
+    def test_server_slot1_heal_call_is_flag_gated(self) -> None:
+        # This is a correctness fix to the already-armed feature. The server mirror must remain
+        # unreachable when WFBE_C_PLAYER_TEAMBAR_FIRST is disabled.
+        text = code("Server/Functions/Server_HandleSpecial.sqf")
+        gate = text.index('if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0')
+        call = text.index('"teamleader-update"] Call WFBE_SE_FNC_TeambarSlot1Rejoin')
+        self.assertLess(gate, call)
 
     def test_registration_and_armed(self) -> None:
         """wave0721 arming ruling (2026-07-21): WFBE_C_TEAMBAR_PROBE flipped 0->1. The getVariable

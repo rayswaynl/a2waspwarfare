@@ -2,13 +2,29 @@ private ["_canJoin","_name","_player","_side","_uid","_skillBLUFOR","_skillOPFOR
 
 _player = _this select 0;
 _side = _this select 1;
+//--- r70: reject null/non-object player before name/UID.
+if (isNil "_player" || {typeName _player != "OBJECT"} || {isNull _player}) exitWith {
+	["WARNING", "RequestJoin.sqf: null player - join request ignored."] Call WFBE_CO_FNC_LogContent;
+};
 _name = name _player;
 
 _uid = getPlayerUID(_player);
+//--- Invalid/local-host UIDs are not identities: never allow them into shared JIP keyspace.
+if (_uid == "" || {_uid == "0"}) exitWith {};
 _canJoin = true;
 
 _teamJoinedConfirmed = missionNamespace getVariable Format["WFBE_JIP_USER%1_TEAM_JOINED", _uid];
 _hasConnectedAtLaunchToSide = missionNamespace getVariable format ["WFBE_PLAYER_%1_CONNECTED_AT_LAUNCH", _uid];
+//--- CASTER SEATS ARE NOT A TEAM (owner live repro 2026-08-02: sat in the CIV caster seat, then was
+//--- denied "teamswap from CIV to WEST" and lobby-bounced). CIV is an OBSERVER seat: a stored CIV
+//--- side must never lock a player out of a real team, and moving INTO the caster seat is always
+//--- allowed. Treat any stored civilian as "no previous side" (protection still applies between the
+//--- real teams W/E), and a civilian JOIN target skips the checks entirely.
+if (!(isNil "_teamJoinedConfirmed") && {_teamJoinedConfirmed == civilian}) then {_teamJoinedConfirmed = nil};
+if (!(isNil "_hasConnectedAtLaunchToSide") && {_hasConnectedAtLaunchToSide == civilian}) then {_hasConnectedAtLaunchToSide = nil};
+if (_side == civilian) then {
+	["INFORMATION", Format["RequestJoin.sqf: [%1] [%2] entering the CIV caster/observer seat - teamswap checks skipped (not a team).", _name, _uid]] Call WFBE_CO_FNC_LogContent;
+};
 
 _skillBLUFOR = 0;
 _skillOPFOR = 0;
@@ -19,7 +35,7 @@ if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if t
 	if (_teamJoinedConfirmed != _side) then {
 
 		_canJoin = false;
-		[leader group _player, "LocalizeMessage", ['Teamswap',_name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_SendToClient; //--- Inform the client about the teamswap.
+		[_player, "LocalizeMessage", ['Teamswap',_name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_SendToClient; //--- r70: address the joining unit (leader group can be null/wrong).
 		["INFORMATION", Format["RequestJoin.sqf: Player [%1] [%2] has been sent back to the lobby for teamswapping, original side [%3], joined side [%4].", _name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_LogContent;
 
 	} else {
@@ -35,7 +51,7 @@ if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if t
 		if (_hasConnectedAtLaunchToSide != _side) then {
 
 			_canJoin = false;
-			[leader group _player, "LocalizeMessage", ['Teamswap',_name,_uid,_hasConnectedAtLaunchToSide,_side]] Call WFBE_CO_FNC_SendToClient; //--- Inform the client about the teamswap.
+			[_player, "LocalizeMessage", ['Teamswap',_name,_uid,_hasConnectedAtLaunchToSide,_side]] Call WFBE_CO_FNC_SendToClient; //--- r70: address the joining unit (leader group can be null/wrong).
 			["INFORMATION", Format["RequestJoin.sqf: Player [%1] [%2] has been sent back to the lobby for teamswapping, original side [%3], attempted side [%4].", _name,_uid,_hasConnectedAtLaunchToSide,_side]] Call WFBE_CO_FNC_LogContent;
 		} else {
 
@@ -72,6 +88,8 @@ if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if t
 
 if (WF_A2_Vanilla) then {
 
+	//--- caster seat target: always allowed regardless of any check above (observer, not a team).
+	if (_side == civilian) then {_canJoin = true};
 	[_uid, "HandleSpecial", ["join-answer", _canJoin, _skillBLUFOR, _skillOPFOR]] Call WFBE_CO_FNC_SendToClients;
 
 } else {
@@ -85,7 +103,10 @@ if (WF_A2_Vanilla) then {
 
 if (_canJoin) then {
 
-	missionNamespace setVariable [Format["WFBE_JIP_USER%1_TEAM_JOINED", _uid], _side];
+	//--- caster seats are not a team: never record CIV as the joined side (see header note).
+	if (_side != civilian) then {
+		missionNamespace setVariable [Format["WFBE_JIP_USER%1_TEAM_JOINED", _uid], _side];
+	};
 	_result = ["STORE_SIDE", [_uid, _side]] call WFBE_SE_FNC_CallDatabaseStoreSide;
 
 	//--- B748.1 (Ray 2026-06-24): hand the actual player body to the enrollment handler so it never has to HUNT

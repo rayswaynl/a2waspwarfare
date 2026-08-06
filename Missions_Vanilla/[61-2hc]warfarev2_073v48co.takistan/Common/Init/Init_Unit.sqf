@@ -153,6 +153,36 @@ if (!(_unit isKindOf "Man") && {!(_unit isKindOf "StaticWeapon")}) then {
 	];
 };
 
+//--- Forward FOB (flag WFBE_C_STRUCTURES_FOB, 2026-07-17): Build action on a WEST/EAST repair truck.
+//--- Mirrors the GUER Build-FOB block above, with three differences from owner ruling 2: it gates on the
+//--- standard per-side repair-truck roster (WFBE_%1REPAIRTRUCKS - the PLURAL array is the one actually
+//--- read at runtime below (RepairVehicle marker) and aggregated into WFBE_REPAIRTRUCKS in Init_Common.sqf;
+//--- it is the same roster that already carries the Repair / Repair-Camp actions above) instead of a
+//--- dedicated delivery-truck list, it has no commander/token gate, and it is cash-priced + capped.
+//--- OWNER CORRECTION 2026-07-17: v1 mistakenly gated this on the SUPPLY-truck roster
+//--- (WFBE_%1SUPPLYTRUCKS); the ruled intent (Radio Tower "engineer truck only" ruling) is the REPAIR
+//--- truck. Corrected before WFBE_C_STRUCTURES_FOB ever shipped at non-zero.
+//--- Flag-off: the action is never attached, so the truck is byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FOB", 0]) > 0 && {_side in [west, east]} && {_unit_kind in (missionNamespace getVariable [Format ['WFBE_%1REPAIRTRUCKS', str _side], []])}) then {
+	_unit addAction [
+		"<t color='#76F563'>Build Forward FOB</t>",
+		"Client\Action\Action_BuildForwardFOB.sqf",
+		[],
+		99,
+		false,
+		true,
+		"",
+		Format ["side group player == side _target && alive _target && player distance _target <= %1", missionNamespace getVariable ["WFBE_C_FOB_BUILD_RANGE", 30]]
+	];
+};
+
+//--- Starting armor is created by Init_Server.sqf, where addAction would be server-local and invisible
+//--- on dedicated clients. The server broadcasts this marker; each client registers its own local entry.
+if (_unit getVariable ["wfbe_engine_stealth_action", false]) then {
+	_unit addEventHandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
+	_unit addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];
+};
+
 if (_unit isKindOf "Tank") then { //--- Tanks.
 	//--- Valhalla Low gear.
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(vehicle player == _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
@@ -183,9 +213,59 @@ if (_unit isKindOf "Ship") then { //--- Boats.
 if (_unit isKindOf "Air") then { //--- Air units.
 	if ((getNumber (configFile >> 'CfgVehicles' >> _unit_kind >> 'transportSoldier')) > 0) then { //--- Transporters only.
 		//--- HALO action.
-		_unit addAction ['HALO','Client\Action\Action_HALO.sqf', [], 97, false, true, '', Format['getPos _target select 2 >= %1 && alive _target', missionNamespace getVariable 'WFBE_C_PLAYERS_HALO_HEIGHT']];
+		//--- Only occupants may see/use HALO; Action_HALO rechecks the seat at invocation.
+		_unit addAction ['HALO','Client\Action\Action_HALO.sqf', [], 97, false, true, '', Format['vehicle _this == _target && alive _this && alive _target && getPos _target select 2 >= %1', missionNamespace getVariable 'WFBE_C_PLAYERS_HALO_HEIGHT']];
 		//--- Cargo Eject action.
 		_unit addAction [localize 'STR_WF_Cargo_Eject','Client\Action\Action_EjectCargo.sqf', [], 99, false, true, '', 'driver _target == _this && alive _target'];
+		//--- r72: emergency player HALO on involuntary high-altitude GetOut (shot-down / forced leave).
+		//--- Action_HALO stamps wfbe_halo_scripted so intentional jumps do not double-start HALO_getout.
+		_unit addEventHandler ["GetOut", {
+			Private ["_unit"];
+			_unit = _this select 2;
+			if (isNil "_unit" || {isNull _unit}) exitWith {};
+			if (!local _unit) exitWith {};
+			if !(isPlayer _unit) exitWith {};
+			if !(alive _unit) exitWith {};
+			if (_unit getVariable ["wfbe_halo_scripted", false]) exitWith {};
+			_unit spawn {
+				Private ["_u","_h"];
+				_u = _this;
+				sleep 0.05;
+				if (isNull _u || {!alive _u}) exitWith {};
+				if (_u getVariable ["wfbe_halo_scripted", false]) exitWith {};
+				if (vehicle _u != _u && {(vehicle _u) isKindOf "ParachuteBase"}) exitWith {};
+				_h = (getPos _u) select 2;
+				if (_h < 30) exitWith {};
+				if (vehicle _u != _u && {!((vehicle _u) isKindOf "ParachuteBase")}) exitWith {};
+				_u setVariable ["wfbe_halo_scripted", true];
+				_u setVelocity [0,0,0];
+				[_u] Exec "ca\air2\Halo\data\Scripts\HALO_getout.sqs";
+				_u spawn {
+					Private ["_u","_t0","_near","_c"];
+					_u = _this;
+					_t0 = time;
+					waitUntil {
+						sleep 0.35;
+						isNull _u || {!alive _u} || {((getPos _u) select 2) < 25} || {(time - _t0) > 180}
+					};
+					if (isNull _u || {!alive _u}) exitWith {};
+					if (((getPos _u) select 2) < 25) then {
+						_u allowDamage false;
+						waitUntil {
+							sleep 0.2;
+							isNull _u || {!alive _u} || {((getPos _u) select 2) < 1.5} || {(time - _t0) > 200}
+						};
+						sleep 0.8;
+						if (!isNull _u && {alive _u}) then {_u allowDamage true};
+					};
+					if (!isNull _u) then {
+						_near = (getPos _u) nearEntities ["ParachuteBase", 12];
+						{ if (!isNull _x && {(count crew _x) == 0}) then {deleteVehicle _x} } forEach _near;
+						_u setVariable ["wfbe_halo_scripted", false];
+					};
+				};
+			};
+		}];
 	};
 
 	if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") > 0 && WF_A2_Vanilla) then { //--- Use of a custom CM parameter (Vanilla Only).
@@ -204,17 +284,16 @@ if (_unit isKindOf "Air") then { //--- Air units.
 	};
 
 	if (!WF_A2_Vanilla && (missionNamespace getVariable ["WFBE_C_MODULE_AUTO_CM_OA", 0]) > 0) then { //--- OA opt-in: AUTO-deploy flares on incoming IR missile (native OA flares are manual). Default OFF; shares the FLARES master switch + FlareCount budget.
-		if (isNil "WFBE_CL_FNC_AutoCM_OA") then {WFBE_CL_FNC_AutoCM_OA = compile preprocessFileLineNumbers "Client\Module\CM\CM_AutoCM_OA.sqf"};
 		switch (missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") do {
 			case 1: { //--- Enabled with upgrades.
 				if ((_upgrades select WFBE_UP_FLARESCM) > 0) then {
 					(_unit) ExecVM 'Client\Module\CM\CM_Set.sqf';
-					_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CL_FNC_AutoCM_OA}];
+					_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CO_FNC_AutoCM_OA}];
 				};
 			};
 			case 2: { //--- Enabled.
 				(_unit) ExecVM 'Client\Module\CM\CM_Set.sqf';
-				_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CL_FNC_AutoCM_OA}];
+				_unit addEventHandler ['incomingMissile',{_this Spawn WFBE_CO_FNC_AutoCM_OA}];
 			};
 		};
 	};

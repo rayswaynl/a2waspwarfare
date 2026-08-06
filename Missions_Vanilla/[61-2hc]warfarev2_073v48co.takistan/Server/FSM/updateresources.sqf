@@ -1,4 +1,5 @@
 private["_is","_ii","_awaits","_incomeCoef","_divisor","_commander_enabled","_currency_system","_logik","_playerOldScore","_playerNewScore","_scoreDiff","_income","_income_player","_income_commander","_supply","_comTeam","_paycheck", "_supply_max_limit", "_supplyStagnation"];
+private ["_wealthCap","_aicomFunds","_incomeCredit","_stipendCredit"];
 
 //--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate (see
 //--- server_town.sqf for the full note).
@@ -89,15 +90,27 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 
 			_income = if (_is != 3) then {_supply} else {round(_supply * _incomeCoef)};
 
+			//--- r115 (income-tick denominator drift): the per-team paycheck divides by wfbe_teams_count,
+			//--- but that variable is only re-synced at Init_Server and by the HC-prune in
+			//--- Server_HandleSpecial; every AICOM team founding / aicom-team-created / groupsGC append
+			//--- mutates wfbe_teams WITHOUT updating the count. The denominator then drifts low vs the
+			//--- roster actually paid below (the side pool overpays after foundings) and jumps back whenever
+			//--- an HC re-registration re-syncs it. Derive the divisor from the live roster snapshot the
+			//--- paycheck loop iterates (nil-holes and null groups excluded, mirroring the pay guard) so the
+			//--- tick total payout always equals the designed commander/player split.
+			private ["_tickTeams","_tickTeamsCount"];
+			_tickTeams = _logik getVariable "wfbe_teams";
+			if (isNil "_tickTeams") then {_tickTeams = []};
+			_tickTeamsCount = {if (isNil "_x") then {false} else {!(isNull _x)}} count _tickTeams;
 			switch (_is) do {
 				case 2: {_income = round(_income / 2)};
 				case 3: {
-					_income_player = round(_income * (((100 - (_logik getVariable "wfbe_commander_percent"))/100)/((_logik getVariable "wfbe_teams_count") max 1)));
+					_income_player = round(_income * (((100 - (_logik getVariable "wfbe_commander_percent"))/100)/(_tickTeamsCount max 1)));
 					_income_commander = round((_income * ((_logik getVariable "wfbe_commander_percent")/100)) / _divisor) + _income_player;
 				};
 				case 4: {
 					_income_player = round(_income * 1.5 * (100 - (_logik getVariable "wfbe_commander_percent"))/100);
-					_income_commander = round((_income * 1.5 - _income_player)*(_logik getVariable "wfbe_teams_count")) + _income_player;
+					_income_commander = round((_income * 1.5 - _income_player)*_tickTeamsCount) + _income_player;
 				};
 			};
 
@@ -127,10 +140,13 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 
 						if (_paycheck != 0) then {[_x, _paycheck] Call WFBE_CO_FNC_ChangeTeamFunds};
 					};
-				} forEach (_logik getVariable "wfbe_teams");
+				} forEach _tickTeams;
 
 				if ((isNull(_sideNow Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
-					if (((_sideNow) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_sideNow, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds}; //--- B752 (Ray 2026-06-25) anti-hoard funds-cap: stop town income above WFBE_C_AICOM_WEALTH_CAP (the 12h soak ballooned to 18M; the side still keeps millions to spend, the number just stops being meaningless).
+					_wealthCap = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
+					_aicomFunds = (_sideNow) Call GetAICommanderFunds;
+					_incomeCredit = round(_income * _pcMult * _aicomTaper);
+					if (_aicomFunds < _wealthCap && {_incomeCredit > 0}) then {[_sideNow, (_incomeCredit min ((_wealthCap - _aicomFunds) max 0))] Call ChangeAICommanderFunds}; //--- B752: credit no more than the remaining anti-hoard capacity.
 				};
 			};
 
@@ -138,7 +154,10 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 			//--- Flows even with zero town income so PvE on a near-empty server stays fun
 			//--- (the AI keeps fielding armies); supply remains the real shared war resource.
 			if ((isNull(_sideNow Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
-				if (((_sideNow) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_sideNow, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds}; //--- B752: same anti-hoard cap on the stipend drip.
+				_wealthCap = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
+			_aicomFunds = (_sideNow) Call GetAICommanderFunds;
+			_stipendCredit = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25];
+			if (_aicomFunds < _wealthCap && {_stipendCredit > 0}) then {[_sideNow, (_stipendCredit min ((_wealthCap - _aicomFunds) max 0))] Call ChangeAICommanderFunds}; //--- B752: credit no more than the remaining anti-hoard capacity.
 			};
 
 		};
@@ -154,9 +173,15 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 			_income = if (_is != 3) then {_supply} else {round(_supply * _incomeCoef)};
 			if (_is == 2) then {_income = round(_income / 2)};
 			if (_income > 0) then {
-				if (((_sideNow) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_sideNow, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds}; //--- B752 (Ray 2026-06-25) anti-hoard funds-cap: stop town income above WFBE_C_AICOM_WEALTH_CAP (the 12h soak ballooned to 18M; the side still keeps millions to spend, the number just stops being meaningless).
+				_wealthCap = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
+				_aicomFunds = (_sideNow) Call GetAICommanderFunds;
+				_incomeCredit = round(_income * _pcMult * _aicomTaper);
+				if (_aicomFunds < _wealthCap && {_incomeCredit > 0}) then {[_sideNow, (_incomeCredit min ((_wealthCap - _aicomFunds) max 0))] Call ChangeAICommanderFunds}; //--- B752: credit no more than the remaining anti-hoard capacity.
 			};
-			if (((_sideNow) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_sideNow, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds}; //--- B752: same anti-hoard cap on the stipend drip.
+			_wealthCap = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
+			_aicomFunds = (_sideNow) Call GetAICommanderFunds;
+			_stipendCredit = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25];
+			if (_aicomFunds < _wealthCap && {_stipendCredit > 0}) then {[_sideNow, (_stipendCredit min ((_wealthCap - _aicomFunds) max 0))] Call ChangeAICommanderFunds}; //--- B752: credit no more than the remaining anti-hoard capacity.
 		};
 
 		//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): on this same income cadence, give a rich AICOM somewhere to

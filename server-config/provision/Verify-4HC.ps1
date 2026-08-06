@@ -5,6 +5,7 @@
 # PowerShell 5.1 compatible.
 Param(
     [String]$WaspDir = 'C:\WASP',
+    [String]$ServerRpt = "$env:USERPROFILE\AppData\Local\ArmA 2 OA\arma2oaserver.RPT",
     [ValidateRange(1, 4)][Int]$HcCount = 4
 )
 $ErrorActionPreference = 'Stop'
@@ -58,10 +59,9 @@ foreach ($n in 1..$HcCount) {
 }
 
 # --- server RPT: HC registrations within the current mission window ---
-$rptDir = Join-Path $WaspDir 'profiles-pr8'
-$rpt = Get-ChildItem -LiteralPath $rptDir -Filter '*.RPT' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$rpt = Get-Item -LiteralPath $ServerRpt -ErrorAction SilentlyContinue
 if ($null -eq $rpt) {
-    Check $false 'server RPT present' ("(none in {0})" -f $rptDir)
+    Check $false 'server RPT present' ("(not found at {0})" -f $ServerRpt)
 } else {
     Write-Host ("RPT: {0} ({1:N1} MB)" -f $rpt.FullName, ($rpt.Length / 1MB))
     # A2 OA RPTs never truncate and the server holds the file open for writing:

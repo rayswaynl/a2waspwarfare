@@ -1,4 +1,4 @@
-Private["_ammo","_angle","_artillery","_artillery_classes","_artillery_type","_burst","_CBREH","_destination","_dispersion","_direction","_distance","_FEH","_ffAbort","_ffNear","_ffRad","_gunner","_i","_index","_minRange","_maxRange","_position","_radius","_reloadTime","_side","_type","_velocity","_watchPosition","_weapon","_xcoord","_ycoord"];
+Private["_ammo","_ammoText","_angle","_artillery","_artillery_classes","_artillery_type","_burst","_CBREH","_destination","_dispersion","_direction","_distance","_FEH","_ffAbort","_ffNear","_ffRad","_gunner","_i","_index","_minRange","_maxRange","_position","_radius","_reloadTime","_side","_type","_velocity","_watchPosition","_weapon","_xcoord","_ycoord"];
 
 _artillery = _this select 0;
 _destination = _this select 1;
@@ -25,7 +25,15 @@ if (_artillery getVariable ["restricted", false]) exitWith {
 };
 //--- WFBE_C_ARTILLERY_DISABLED_GUARD
 _artillery setVariable ["restricted",true];
-{if(isPlayer _x) then {_x action  ["getOut", _artillery]};} forEach (crew _artillery);
+{
+	if (isPlayer _x) then {
+		if (local _x) then {
+			_x action ["getOut", _artillery];
+		} else {
+			[_x, "HandleSpecial", ["action-perform", _x, "getOut", _artillery]] Call WFBE_CO_FNC_SendToClient;
+		};
+	};
+} forEach (crew _artillery);
 
 _minRange 	= (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",_side]) select _index;
 _maxRange 	= round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",_side]) select _index) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1));
@@ -58,7 +66,8 @@ if (_distance < 0 || _distance + _minRange > _maxRange) exitWith {
 	_artillery setVariable ["restricted",false];
 };
 
-_FEH = Call Compile Format ["_artillery addEventHandler ['Fired',{[_this select 4,_this select 6,%1,%2,%3,%4,%5,%6,%7,%8,%9] Spawn WFBE_CO_FNC_HandleArtillery}];",_ammo,_destination,_velocity,_dispersion,getPos _artillery,_distance,_radius,_maxRange,_side];
+_ammoText = str _ammo;
+_FEH = Call Compile Format ["_artillery addEventHandler ['Fired',{[_this select 4,_this select 6,%1,%2,%3,%4,%5,%6,%7,%8,%9] Spawn WFBE_CO_FNC_HandleArtillery}];",_ammoText,_destination,_velocity,_dispersion,getPos _artillery,_distance,_radius,_maxRange,_side];
 
 //--- CBR detection hook: runs where the arty is local (server for AI; client for player-crewed).
 //--- Route to server in both cases via SendToServer when not already on server.

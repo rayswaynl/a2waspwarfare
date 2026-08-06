@@ -48,6 +48,8 @@ _updateDetails = true;
 _updateList = true;
 _updateMap = true;
 _val = 0;
+//--- Keep the open catalogue in step with replicated research completions.
+_shopUpgradesSeen = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
 //--- B74.2: per-player AI cap now follows the live pop-tier (WFBE_PopTier is publicVariable'd, read live on the client).
 _mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX'; //--- fallback scalar if the tiered array is unset
 _mbuByTier = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX_BY_TIER';
@@ -382,9 +384,15 @@ _IDCS = _IDCS - [_currentIDC];
 		_uid33 = getPlayerUID player;
 		//--- A2-safe "token starts with UID" test. `string find string` is ARMA 3-only and
 		//--- throws "Type String, expected Array" on A2 OA; compare leading bytes via toArray.
+		//--- type-mismatch residual (2026-07-30): shared factory "queu" mixes player STRING tokens
+		//--- with AI SCALAR tokens (see #1050 Server_BuyUnit queue-fix). toArray on NUMBER throws
+		//--- and aborts Cancel Last when AI orders share the factory - skip non-STRING (false).
 		_uidPrefix33 = {
-			private ["_tokA","_uidA","_ul","_ok","_j"];
-			_tokA = toArray (_this select 0);
+			private ["_tok","_tokA","_uidA","_ul","_ok","_j"];
+			_tok = _this select 0;
+			if (typeName _tok != "STRING") exitWith {false};
+			if (typeName (_this select 1) != "STRING") exitWith {false};
+			_tokA = toArray _tok;
 			_uidA = toArray (_this select 1);
 			_ul = count _uidA;
 			_ok = (_ul > 0) && (_ul <= count _tokA);
@@ -481,6 +489,16 @@ _IDCS = _IDCS - [_currentIDC];
 			_tabI = _tabI + 1;
 		} forEach _tabIDC;
 	
+	//--- Rebuild the catalogue when a side upgrade completes while this dialog remains open.
+	_shopUpgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
+	//--- 2026-08-03 LIVE FIX: this test previously used the `in` operator against a one-element array
+	//--- compares ARRAYS BY REFERENCE, so a rebuilt array never matches the stored copy - the test was
+	//--- true on EVERY loop pass, forcing _update every tick: the catalogue rebuilt continuously and
+	//--- the player's selection snapped back to the top of the list on every click (owner report).
+	//--- Compare by VALUE via str; equal contents give equal strings, so a rebuild happens only when
+	//--- the side's upgrade set actually changes - the original intent.
+	if ((str _shopUpgrades) != (str _shopUpgradesSeen)) then {_shopUpgradesSeen = _shopUpgrades + []; _update = true};
+
 	//--- Update tabs.
 	if (_update) then {
 		_listUnits = missionNamespace getVariable Format ['WFBE_%1%2UNITS',sideJoinedText,_type];
@@ -594,13 +612,17 @@ _IDCS = _IDCS - [_currentIDC];
 				if (isNil "_rLongest" || {_rLongest <= 0}) then {_rLongest = 60};
 				_rHead = _rQueu select 0;
 				_rSeen = _closest getVariable ["wfbe_queu_head_seen", ["", -1]];
-				if (((_rSeen select 0) != _rHead) || {(_rSeen select 1) < 0}) then {
+				//--- type-mismatch residual (2026-07-30 / #1050 class): shared "queu" head is STRING
+				//--- (player) or SCALAR (AI). Default seen[0] is "" - raw `!=` / `==` on mixed types
+				//--- throws "Generic error in expression" on A2 OA and kills the buy-menu tick
+				//--- (orphan reaper + queue display). Use type-safe `in [head]` (never throws).
+				if ((!(_rHead in [_rSeen select 0])) || {(_rSeen select 1) < 0}) then {
 					//--- New/changed head => (re)start its stagnation timer.
 					_closest setVariable ["wfbe_queu_head_seen", [_rHead, time]];
 				} else {
 					if ((time - (_rSeen select 1)) > (_rLongest + 60)) then {
 						_rQueu = _closest getVariable ["queu", []];
-						if ((count _rQueu > 0) && {(_rQueu select 0) == _rHead}) then {
+						if ((count _rQueu > 0) && {(_rQueu select 0) in [_rHead]}) then {
 							_rQueu = _rQueu - [_rHead];
 							_closest setVariable ["queu", _rQueu, true];
 							_closest setVariable ["wfbe_queu_head_seen", ["", -1]];
@@ -977,9 +999,14 @@ _IDCS = _IDCS - [_currentIDC];
 			_qLabels33 = _closest getVariable ["queu_labels", []];
 			_uid33 = getPlayerUID player;
 			//--- A2-safe "token starts with UID" test (string find is A3-only, throws on A2 OA).
+			//--- type-mismatch residual (2026-07-30): skip non-STRING AI SCALAR tokens - toArray on
+			//--- NUMBER aborts the queue list render every menu tick when AI shares the factory.
 			_uidPrefix33b = {
-				private ["_tokA","_uidA","_ul","_ok","_j"];
-				_tokA = toArray (_this select 0);
+				private ["_tok","_tokA","_uidA","_ul","_ok","_j"];
+				_tok = _this select 0;
+				if (typeName _tok != "STRING") exitWith {false};
+				if (typeName (_this select 1) != "STRING") exitWith {false};
+				_tokA = toArray _tok;
 				_uidA = toArray (_this select 1);
 				_ul = count _uidA;
 				_ok = (_ul > 0) && (_ul <= count _tokA);

@@ -397,7 +397,9 @@ _shortfall = _price - _townFund;
 if (_shortfall < 0) then {_shortfall = 0};
 if (_shortfall > _wallet) exitWith {
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|town=%3|product=%4|deny=insufficientFunds|fundedBy=%5|pricePaid=0|price=%6|wallet=%7|fund=%8", _elmin, _verb, _townId, _product, getPlayerUID _player, _price, _wallet, _townFund];
-	[_player, "GDirPanelResult", ["deny", Format ["Costs $%1. Wallet $%2, Town fund $%3.", _price, round _wallet, round _townFund], _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
+	//--- floor, not round: the gate above compares the RAW fractional wallet (assist bounties can credit x.5);
+	//--- a rounded-up display made a correct deny read "Costs $800. Wallet $800" - contradictory.
+	[_player, "GDirPanelResult", ["deny", Format ["Costs $%1. Wallet $%2, Town fund $%3.", _price, floor _wallet, floor _townFund], _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
 //--- Debit: town fund first, then wallet for remainder.

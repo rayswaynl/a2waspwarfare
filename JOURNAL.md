@@ -1,5 +1,692 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-04 — reconcile PR #2092 onto wave0805
+
+- PR #2092 was stacked on #2060. The wave tip already contains the immobile-hull
+  crew egress behavior, so that parent hunk was not duplicated.
+- Ported the unique tier-2/3 `WFBE_C_AICOM_STUCK_REPAIR` correction into the Chernarus
+  source: after the existing scalar reset, configured vehicle hitpoints are cleared with
+  local-object `setHit` calls so a damaged wheel, track, or engine cannot leave the hull
+  immobile.
+- Added focused Chernarus regression coverage. TK/ZG mirror generation was intentionally
+  deferred to the fold orchestrator per the reconcile task boundary.
+
+## wave0804b hotfix — 2026-08-04 [update/wave-20260802]
+
+Task: implement four fixes for three live regressions root-caused by a 6-agent triage
+workflow with adversarial verification (results file `wamco7bqt.output`, not part of this
+repo — the 'result' field's three lane entries carry the file:line evidence, verified fix
+shapes, and verifier `corrections`/`fixRisk`). Worktree `C:\tmp\fixwt\update0802`, sole
+writer, branch `update/wave-20260802`, tip at start `47364d446b` (the LIVE Arma 2 OA 1.64
+build).
+
+### FIX 1 — build-menu apostrophe/quote corruption (DONE — commit `eb7fa20752`)
+
+BIS_fnc_createmenu (vanilla, `coin_interface.sqf:1038` `call compile '%3'`) formats each
+category's WHOLE `_arrayParams` array into a SINGLE-quoted string. Any apostrophe/quote in
+one item's resolved label corrupted every sibling's click handler in the same category —
+this is why "LoS Screen (Tall)" (itself clean) read as broken: collateral damage from a
+TKA/EAST sibling in the same Fortification category payload.
+
+- `coin_interface.sqf` (~line 1008-1021): sanitize `_itemname` right after it's resolved
+  and before it reaches `_arrayParams` (~line 1028) — strip ASCII 39 (`'`) and ASCII 34
+  (`"`) via the A2-safe `toArray` → filter → `toString` idiom (precedent:
+  `GUI_EndOfGameStats.sqf` HC-name strip). **Verifier-confirmed: `regexReplace` does NOT
+  exist on A2 OA 1.64** (A3 2.06+ only) — never used.
+- `Core_TKA.sqf` (lines 217-234): gave the six TKA empty-label Fortification items real,
+  apostrophe-free labels (`Barrier Wall (5x)`, `Barrier Wall (10x)`, `Barrier Wall (10x
+  Tall)`, `Camo Net`, `Camo Net (Var)`, `Camo Net (B)`) so the stock-displayName fallback
+  never fires for them at all (defense in depth alongside the sanitize).
+- Tests: `Tools/Lint/test_coin_menu_label_apostrophe_sanitize.py`,
+  `Tools/Lint/test_tka_fortification_item_labels.py`.
+
+### FIX 2 — tooltip `_itemname`/`_preview` undefined-variable RPT spam (DONE — commit `4ce0bf9b4a`)
+
+PROVEN regression from today's commit `942bb614ef`. RPT: "Undefined variable in expression:
+_itemname" at `coin_interface.sqf:873` and a matching `_preview` undefined at `:890`, every
+preview tick.
+
+- Line ~873: `(if (isNil "_itemname") then {""} else {_itemname})`. Deliberately fell back
+  to `""`, **not** the pre-942bb614ef stock-CfgVehicles-displayName re-derivation — the
+  existing pinned test `test_fortif_placement_preview_facing.py::
+  test_tooltip_header_uses_itemname_not_type_displayname` asserts that expression must
+  never reappear in the header `format[]` args (it would silently revert 942bb614ef's
+  intent). Confirmed this test still passes.
+- Line ~890: guarded the rotate-readout's `round (getDir _preview)` the same way —
+  `&& {!(isNil "_preview")}`.
+- Tests: `Tools/Lint/test_coin_tooltip_itemname_preview_guard.py`.
+
+### FIX 3 — placement rejected inside HQ circle (DONE — commit `14e662d665`)
+
+Arming `WFBE_C_DEF_PREVIEW_MAP` made `typeOf _preview` a REAL WDDM composition-child
+classname, tripping the itemcategory==2 same-classname/DEFENSENAMES proximity checks
+against any pre-existing composition nearby (HQ walls etc.) — rejecting placement well
+inside the 200m HQ circle.
+
+- `Init_CommonConstants.sqf`: added `WFBE_ANCHOR_PREVIEW_CLASSES` (flat list built via
+  `forEach`, never A3 `apply`) right after `WFBE_ANCHOR_PREVIEW_MAP`.
+- `Init_Client.sqf` (~1797-1839): wrapped ONLY the two same-classname/DEFENSENAMES checks
+  (~1802-1805) in `if !((typeOf _preview) in WFBE_ANCHOR_PREVIEW_CLASSES) then {...}`. The
+  factory-clearance ring check (~1808-1831) is intentionally left unconditional — comment
+  documents that real density/spacing control stays server-side
+  (`WFBE_C_WDDM_COMP_CAP`/fortification cap in `RequestDefense.sqf`).
+- Tests: `Tools/Lint/test_fortif_preview_classes_proximity_exemption.py`.
+
+### FIX 4 — whitelisted caster kicked after faction stint (HELD — NOT applied)
+
+PROVEN dead code: `Server/PVFunctions/RequestJoin.sqf`'s CIV-caster always-allowed override
+(`if (_side == civilian) then {_canJoin = true};`, ~line 88) sits inside
+`if (WF_A2_Vanilla) then {...}` (~85-95), and `WF_A2_Vanilla` is a compile-time
+`#ifdef VANILLA` flag (`initJIPCompatible.sqf`) that is FALSE on the deployed OA/CombinedOps
+build, so the override never runs live — a caster who played a real faction earlier in the
+session gets bounced to the lobby re-joining the CIV seat.
+
+**Not applied, and deliberately excluded from this hotfix wave**, for two independent,
+concrete reasons found while reading the repo before coding (as instructed):
+
+1. `CLAUDE.md` "Owner constraints" (line 229): *"Never touch: HC architecture, player
+   enrollment/JIP flow, deploy/box scripts."* `RequestJoin.sqf` is exactly player
+   enrollment/JIP flow. No carve-out for correctness fixes exists in that section (the
+   separate Flag Policy section's "correctness fixes ship unflagged" governs flag-gating
+   only, not the file-touch ban — independent axes).
+2. `Tools/Lint/test_commander_lease.py` already encodes a **dated, independent owner
+   ruling** to the identical effect: *"Round 4 (owner ruling 2026-07-21): the side-change
+   stand-down enqueue was relocated OFF RequestJoin.sqf - a JIP-flow file agents must never
+   modify... RequestJoin.sqf is now pinned byte-identical to its pre-C1 base."* (see
+   `test_07b_requestjoin_is_untouched_jip_flow_file`).
+
+The triage workflow's own adversarial verifier reached the same conclusion independently
+(lane 3 `fixRisk`): *"This fix must not be shipped/PR'd without explicit owner sign-off
+overriding that constraint; the lane should escalate rather than proceed on 'correctness
+fix' reasoning alone."*
+
+**Action taken**: flagged the conflict, held the fix, and did not touch `RequestJoin.sqf`.
+Added `Tools/Lint/test_requestjoin_civ_caster_override_unconditional.py` with both
+assertions `@pytest.mark.skip`'d (reason references this journal entry) so CI stays green
+while the intended contract is captured and re-runnable the moment this is authorized.
+
+**Ready-to-apply patch (verified against current source, held pending owner sign-off)** —
+apply via the standard targeted-Python CRLF-preserving edit workflow, mirror CH→TK/ZG, then
+un-skip the two tests above:
+
+```
+--- Server/PVFunctions/RequestJoin.sqf (current, live-broken)
++++ Server/PVFunctions/RequestJoin.sqf (proposed)
+@@ -83,11 +83,15 @@
+ };
+
+-if (WF_A2_Vanilla) then {
++//--- caster seat target: always allowed regardless of any check above (observer, not a
++//--- team). Hoisted OUT of the WF_A2_Vanilla conditional below: WF_A2_Vanilla is a
++//--- compile-time #ifdef VANILLA flag (initJIPCompatible.sqf) that is FALSE on the
++//--- deployed OA/CombinedOps build, so nesting this override inside `if (WF_A2_Vanilla)`
++//--- made it unreachable dead code on live - a caster with a stored prior-faction side
++//--- kept getting the raw (false) _canJoin from the teamswap-mismatch branch above and
++//--- was bounced to the lobby.
++if (_side == civilian) then {_canJoin = true};
++
++if (WF_A2_Vanilla) then {
+
+-	//--- caster seat target: always allowed regardless of any check above (observer, not a team).
+-	if (_side == civilian) then {_canJoin = true};
+ 	[_uid, "HandleSpecial", ["join-answer", _canJoin, _skillBLUFOR, _skillOPFOR]] Call WFBE_CO_FNC_SendToClients;
+
+ } else {
+```
+
+Net bracket delta zero (pure statement relocation + comment). Byte-identical in the
+`WF_A2_Vanilla == true` branch; only changes behavior for a civilian join target on the
+live (`else`, `WF_A2_Vanilla == false`) path — exactly the branch that's currently broken.
+
+**To ship**: get explicit fresh owner confirmation to override the standing "never touch
+RequestJoin.sqf" ruling, apply the patch above with the mandatory Python CRLF-preserving
+edit workflow, mirror, un-skip
+`Tools/Lint/test_requestjoin_civ_caster_override_unconditional.py`, re-run all gates, amend
+`test_07b_requestjoin_is_untouched_jip_flow_file`'s docstring/scope in
+`test_commander_lease.py` if the owner ruling itself is being formally revised (or get a
+second, narrower ruling that exempts this specific hoist), and commit separately.
+
+### Gates (fixes 1-3 + tests)
+
+- Mirror: `dotnet run -c RELEASE` (CH→TK/ZG) clean, `-- --check` reports zero drift on both.
+  `version.sqf.template` restored to **branch HEAD** (not `origin/master` — this branch is
+  ahead of master on the WF_MAXPLAYERS=34 bump) on TK/ZG; all three CH/TK/ZG templates
+  confirmed `WF_MAXPLAYERS 34`.
+- `python -m pytest Tools/ -q` → 864 passed, 2 skipped (the held FIX 4 contract), 0 failed.
+- CLAUDE.md lint gate verbatim → 168 findings, all pre-existing `A3MARKER` (none in any file
+  touched by this wave).
+- Bracket delta zero (curly + square) per edited file vs `origin/master`: confirmed for all
+  four hand-edited Chernarus files.
+
+### Discovered Issues (off-scope, not fixed here)
+
+- `Tools/Ops/Test-WaspVersionTemplates.ps1` is **stale**: it asserts
+  `WF_MAXPLAYERS 32/31/33` (Chernarus/Takistan/Zargabad), last touched 2026-07-21. The
+  actual branch HEAD (already true *before* this session touched anything, confirmed via
+  `git show HEAD:.../version.sqf.template`) and CLAUDE.md's documented current values are
+  all `34`. This script was already failing before this session started; it is not one of
+  this task's required gates (which specify mirror `--check` clean + templates restored to
+  branch HEAD with all three = 34, not this script), so left as-is and flagged here rather
+  than silently "fixed" by rewriting someone else's stale ops guard mid-hotfix.
+
+## Working State 2026-08-04 — fortification placement/preview/facing fix package [update/wave-20260802]
+
+Task: owner complaint "The issue is placement, preview, facing direction indications" for
+defense/fortification building. A prior 16-agent verification workflow confirmed root causes
+with file:line evidence (results file: `wyb0vtw3u.output`, not part of this repo). Worktree
+`C:\tmp\fixwt\update0802`, sole writer, branch `update/wave-20260802` (base commit
+`c01352736c` at start). Implemented findings 2, 3, 5, 6 from that verification; explicitly
+SKIPPED finding 1's collision-footprint rework (composition-vs-anchor collision checks) per
+task scope — see "Discovered Issues / Follow-up" below.
+
+### Root cause (confirmed by the verification workflow, re-verified here against source)
+
+`Client/Module/CoIn/coin_interface.sqf` builds the WDDM placement ghost from a `ghostpreview`
+CfgVehicles property (`getText (configFile >> "CfgVehicles" >> _itemclass >> "ghostpreview")`)
+that NO class in this mission tree defines — confirmed via `git grep -i ghostpreview`, zero
+`ghostpreview = "..."` definitions anywhere. The lookup always falls back to `_itemclass`
+itself (the raw WDDM anchor placeholder classname), so every WDDM-composition item (walls,
+HESCO, LoS screen, gate, hedgehog line, flak tower) previews as a cheap decoy prop (cargo
+container / industrial tank / concrete slab) that looks nothing like what actually gets built,
+and is near-symmetric so a facing (setDir) change is visually imperceptible. Separately, the
+ROTATE=[Ctrl] hint (`str_coin_rotate`) was dead: `_ctrl` was computed every poll tick
+(`BIS_CONTROL_CAM_keys`) and never read again — no `setDir` call in the file was gated on it.
+The no-preview failure path (`isnull _preview`) only wrote an RPT `diag_log` line and silently
+cleared the player's selection with zero on-screen feedback. The placement tooltip header
+re-derived the anchor's stock CfgVehicles `displayName` instead of using the already-computed
+WFBE buy-menu label (`_itemname`, set at the top of the same tick).
+
+### Fix 2 — WFBE_ANCHOR_PREVIEW_MAP (classname->classname preview override)
+
+New flag `WFBE_C_DEF_PREVIEW_MAP` (default 0) + new always-defined data array
+`WFBE_ANCHOR_PREVIEW_MAP` in `Common/Init/Init_CommonConstants.sqf` (loads on both client and
+server — `Init_Defenses.sqf`'s `WFBE_POSITION_TEMPLATE_MAP` is server-only, confirmed absent
+from Client/Common via grep, so it could not be reused directly). Maps each of the 7 "decoy
+prop" anchors (the ones the owner's complaint specifically names: cargo containers, industrial
+tank, concrete slab) to ONE lightweight, already-spawned-elsewhere representative classname,
+never the full multi-object composition (would churn 3-10 spawn/despawn pairs every
+preview-refresh tick):
+
+| Anchor (buy-menu item)         | Preview override          | Verified real host (Init_Defenses.sqf) |
+|---------------------------------|----------------------------|------------------------------------------|
+| Misc_cargo_cont_small (Hedgehog Line) | Hedgehog_EP1         | WFBE_NEURODEF_HEDGEHOGLINE child |
+| Land_Ind_TankSmall (Flak Tower) | Land_Ind_IlluminantTower  | WFBE_C_DEF_FLAKTOWER_STRUCTURE default host |
+| Misc_cargo_cont_net1 (Wall Row) | Concrete_Wall_EP1         | WFBE_NEURODEF_FORTIF_WALL_ROW child |
+| Misc_cargo_cont_net2 (Wall Corner) | Land_HBarrier3          | WFBE_NEURODEF_WALL_CORNER hub piece |
+| Misc_cargo_cont_net3 (LoS Screen) | Base_WarfareBBarrier10xTall | WFBE_NEURODEF_FORTIF_LOS_SCREEN child |
+| Misc_cargo_cont_tiny (HESCO Line) | Land_HBarrier_large     | WFBE_NEURODEF_FORTIF_HESCO_LINE child |
+| Misc_concrete_High (Gate Complex) | Land_BarGate2           | WFBE_NEURODEF_FORTIF_GATE_COMPLEX gate |
+
+Every representative classname was cross-checked (a) pairwise-distinct from every other entry
+and from every anchor classname (preserves the existing `typeof _preview != _itemclass_preview`
+respawn-on-switch check), and (b) already spawned somewhere in `Init_Defenses.sqf`'s
+`WFBE_NEURODEF_*` arrays or `Server_ConstructPosition.sqf` (never an invented/unverified
+classname) — both asserted by `test_anchor_preview_map_*` in the new test file. `coin_interface.sqf`
+gets one small addition immediately after the existing `ghostpreview` getText + fallback (lines
+524-525 pre-edit): when the flag is armed, a `forEach` over the map overrides
+`_itemclass_preview` if the current `_itemclass` has an entry; flag-off, the two original lines
+are untouched and behavior is byte-identical. The 9 non-decoy anchors (Paleta1/2,
+Land_Ind_Timbers, RoadCone, Land_WoodenRamp, Land_Barrel_sand, Land_Ind_BoardsPack1/2,
+Land_CncBlock_Stripes) are deliberately left unmapped — they already have plausible physical
+shapes and are out of the owner's specific "decoy prop" complaint.
+
+### Fix 3 — Tick-increment placement rotation + live heading readout
+
+New flags `WFBE_C_DEF_PLACE_ROTATE` (default 0) and `WFBE_C_DEF_PLACE_ROTATE_DEG_SEC` (default
+90, degrees/second tunable). In `coin_interface.sqf`'s existing-preview branch (the `} else {`
+right before the "Check zone" comment — NOT the fresh-preview/`_new` branch, so a newly created
+preview still cleanly inherits `BIS_COIN_lastdir` first), while the preview flag is armed AND
+`_ctrl` is held, `_preview setDir ((getDir _preview) + (WFBE_C_DEF_PLACE_ROTATE_DEG_SEC *
+_pollSleep))` — a TICK-INCREMENT rotation scaled by the poll interval, not mouse-delta (this
+poll loop hardcodes `_mode = "mousemoving"` as a literal string and has no per-frame mouse-move
+delta available at this call site — confirmed by the verification workflow and re-checked here
+by reading the whole 1039-line file). The same block sets `WF_RequestUpdate = true` so the
+tooltip's own change-detection cache (`(_tooltipType+_tooltip) != _oldTooltip || ... ||
+WF_RequestUpdate`) rebuilds THAT tick — without this, the rotate-hint text (`_text1`) would go
+stale while Ctrl is held, since the cache key (`_tooltipType + _tooltip`, both fixed classname
+strings) never itself changes as the player rotates. `_text1` now appends
+`round (getDir _preview)` in degrees next to the existing "ROTATE = Ctrl" hint whenever the flag
+is armed and `_tooltipType == "preview"` (a genuine preview exists this tick — guards against
+reading a stale/deleted `_preview` on a tick where the whole `count _params > 0` block never
+ran). Used plain ASCII "deg" instead of the "°" glyph to avoid any SQF-string/codepage risk.
+
+### Fix 5 — Visible feedback on preview-creation failure
+
+Inside the existing `if (isnull _preview) then {...}` block (the `createVehicleLocal` failure
+path — a genuine, reproducible A2 OA failure mode per the pre-existing `diag_log
+COINPLACE|v1|no-preview|...` line added 2026-07-28), added one `hintSilent Format ["Cannot
+place %1 - no preview available.", _itemname];` immediately after the existing `diag_log` and
+before the existing selection reset (`BIS_COIN_preview`/`BIS_COIN_params` cleared). Unflagged,
+direct fix — this is a correctness/UX fix (surfacing an already-silent failure with zero
+behavior change), not a new feature, matching this repo's flag policy
+("Correctness fixes... ship directly, no flag required"). Reset/cleanup flow is completely
+unchanged; only the missing player notice was added.
+
+### Fix 6 — Placement tooltip label uses the WFBE buy-menu name
+
+`_textHeader`'s `format [...]` call (inside `if (_tooltipType != "empty") then {...}`) used
+`getText (configFile >> "cfgvehicles" >> _type >> "displayname")` — the anchor's raw stock
+CfgVehicles name (e.g. a generic cargo-container prop name) — instead of `_itemname`, already
+computed earlier in the same tick (line 523) as the WFBE buy-menu label, and already correctly
+used for the menu button text elsewhere in the same file. Swapped the one argument. Icon/picture
+resolution (`_fileIcon`/`_filePicture`, keyed off `_type`) is deliberately untouched — separate,
+out-of-scope concern per the verification workflow's own note. Unflagged, direct correctness fix
+(same reasoning as Fix 5).
+
+### Flags summary
+
+| Flag | Default | Armed this session? |
+|---|---|---|
+| `WFBE_C_DEF_PREVIEW_MAP` | 0 | Yes, final commit "ARMED 2026-08-04 owner fortification complaint" |
+| `WFBE_C_DEF_PLACE_ROTATE` | 0 | Yes, same commit |
+| `WFBE_C_DEF_PLACE_ROTATE_DEG_SEC` | 90 | n/a (tunable, not a boolean gate) |
+
+Fixes 5 and 6 are unflagged correctness fixes (see above), so there was nothing to arm for them.
+
+### Commits (this session, oldest first)
+
+- `b49ed0e793` fix(coin): WDDM placement-ghost preview map [flag WFBE_C_DEF_PREVIEW_MAP default 0]
+- `8621fd433f` fix(coin): tick-increment placement rotation + live heading readout [flag WFBE_C_DEF_PLACE_ROTATE default 0]
+- `4a6869ed76` fix(coin): visible feedback when the placement ghost fails to spawn (unflagged)
+- `942bb614ef` fix(coin): placement tooltip header shows the WFBE buy-menu label (unflagged)
+- `6cd6c00759` test: behavior contract for fortification placement/preview/facing fixes
+- `db2a57fc8a` feat(coin): arm WFBE_C_DEF_PREVIEW_MAP and WFBE_C_DEF_PLACE_ROTATE
+
+Each commit was independently mirror-regenerated (Tools/LoadoutManager) and bracket-delta-
+verified before the next was applied, so any of the 6 can be reverted individually without
+corrupting the sequence. No `Co-Authored-By` trailer in any commit. Not pushed.
+
+### Verification
+
+- `python -m pytest Tools/ -q`: 840 passed, 0 failed (baseline before this session's edits: 827
+  passed after mirror regen; +13 new tests in `Tools/Lint/test_fortif_placement_preview_facing.py`).
+  Caught and fixed one self-inflicted regression along the way: a code comment in
+  `Init_CommonConstants.sqf` literally contained the word "deleteVehicle" (in
+  "createVehicleLocal/deleteVehicle pairs"), which bumped `Tools/Lint/vehdel_inventory.json`'s
+  tracked count for that file from 4 to 5 and failed `test_veh_delete_probe.py`'s ratchet
+  manifest test — reworded the comment ("spawn/despawn (createVehicleLocal) pairs") rather than
+  regenerating the manifest, since the change was comment-only, not a real delete call site.
+- Lint gate (verbatim CLAUDE.md selector list, `--no-classname-index`): 168 findings, all
+  pre-existing (matches the documented baseline exactly) — 0 new findings in either edited file.
+- Net bracket (`{}`/`[]`) delta: 0 on every edited file, all three terrains (6 files total).
+- `dotnet run -c RELEASE -- --check` (Tools/LoadoutManager): Takistan and Zargabad both report
+  "drift: none". `version.sqf.template` untouched by this session's edits; confirmed all three
+  still read `WF_MAXPLAYERS 34` (this branch's established 34/34/34 convention — NOT the
+  31/33 values the wiki mirror-regen doc or `Test-WaspVersionTemplates.ps1` still expect for
+  TK/ZG; that script is known-stale for this branch per a prior gate-repair session's journal
+  entry and CLAUDE.md itself — its 3 FAILs on max-player values are expected noise, not a real
+  regression, and were NOT "fixed" by reverting to the older per-map values).
+- New tests assert BEHAVIOR (structural invariants: pairwise distinctness, flag-gating,
+  tick-scaling, code ordering, cross-references into `Init_Defenses.sqf` for classname
+  verification) rather than pasting implementation-literal diff text.
+
+### Discovered Issues / Follow-up (not done this session)
+
+- **Collision-footprint rework (finding 1, explicitly out of scope per task instructions).**
+  `Client/Init/Init_Client.sqf`'s `_itemcategory == 2` placement-validity block (~line 1780+)
+  measures anti-stack/defense-proximity/entity checks from the decoy anchor's own tiny
+  bounding box, never the real multi-object composition's true footprint (LoS Screen ~43 m,
+  HESCO Line ~39 m, Wall Row ~22 m — all live by default, `WFBE_C_DEF_FORTIF_PACK = 1`). The
+  verification workflow's finalFix (a `WFBE_FORTIF_FOOTPRINT_RADIUS` table + scanning for the
+  `WFBE_WDDMPositionAnchor` tag instead of a classname) is a separate, larger change — left
+  for a dedicated follow-up PR, not touched here.
+- The verification workflow also flagged a separate `relDir` facing-offset bug (composition
+  children silently rotate away from the anchor ghost's authored facing for non-zero-relDir
+  hosts, e.g. the Gate Complex's `Land_BarGate2` at relDir 90) and a full per-child ghost
+  preview (spawning every composition child as its own oriented ghost, not just the anchor).
+  Both are larger changes explicitly out of this session's scope (fix 2 here only swaps WHICH
+  single classname previews, not a multi-object preview or a facing-offset correction) — noted
+  for the same follow-up as the collision-footprint rework.
+- Did NOT re-add the pre-fix facing-arrow (commit 25357c0dfe) — the verification workflow
+  confirmed a literal re-add would resurrect an already-fixed crash/leak (the arrow-creation
+  call sat in a spot that regresses on every no-preview failure, and only 1 of 6 original
+  cleanup sites survived the revert). Chose the live text degree-readout (Fix 3) instead of a
+  3D facing indicator, which sidesteps that whole class of spawn/cleanup risk entirely.
+- No live/box runtime smoke test performed this session (static validation only, matching this
+  repo's evidence-wording convention) — an in-engine check that `getDir`/`setDir` on a
+  `createVehicleLocal`-spawned preview object behave as expected mid-placement is still owed
+  before the owner treats rotation as fully verified, though both commands are already used
+  elsewhere in this same file on the same object (lines ~616, ~629, ~693), so this is low-risk.
+
+## Working State 2026-08-04 — wave0804 gate repair (73 PR-fold merges) [update/wave-20260802]
+
+Task: after 73 "fold #NNNN into wave0804" merge commits landed on this branch (base
+42d0191ea8, HEAD 3af93fe675), all three gates (LoadoutManager mirror check, pytest,
+lint) were failing. Goal: make every gate pass without weakening any test, no push.
+
+### 1. LoadoutManager mirror drift
+
+`dotnet run -c RELEASE -- --check` reported 4-file drift on BOTH Takistan and Zargabad
+(Common_CommanderLease.sqf, Server_OnPlayerDisconnected.sqf, Server_VoteForCommander.sqf,
+RequestCommanderVote.sqf) — folds had touched the Chernarus source without the mirror
+generator having run since. Fix: `A2WASP_SKIP_ZIP=1 dotnet run -c RELEASE` from
+Tools/LoadoutManager, twice (once before the pytest-driven CH edits below, once after,
+to also propagate those). `--check` now reports zero drift on both mirrors.
+
+WF_MAXPLAYERS: verified all three `version.sqf.template` files (CH/TK/ZG) read 34 both
+before and after each generator run — no drift occurred this run, matching branch HEAD
+and this branch's own CLAUDE.md ("TK: WF_MAXPLAYERS 34 ... ZG: WF_MAXPLAYERS 34" — the
+34/34/34 normalization is this branch's intentional, owner-approved state, NOT the older
+31/33 values documented in the repo wiki's mirror-regen skill doc, which is stale for
+this branch). No revert was needed.
+
+### 2. pytest — 5 failures, root causes and resolutions
+
+- **test_fpv_purchase_authority.py::test_server_validates_wallet_and_per_uid_rearm_before_registering**
+  — fold #1636 (fix commit 713e830ce3, "object/missionNamespace var pollution — CBR
+  registry, FPV PV, disconnect keys") deliberately replaced `publicVariable _nextKey`
+  (a real bug: broadcasting a per-UID rearm-cooldown variable to every connected client)
+  with a private targeted send via the file's existing `_sendPrivate` helper
+  (`["fpv-rearm-cooldown", _next], _replyId, _uid] Call _sendPrivate`), fully mirrored to
+  TK/ZG and consumed by a matching new `case "fpv-rearm-cooldown"` handler in
+  Client/PVFunctions/HandleSpecial.sqf. Legitimate improvement — realigned the test to
+  assert the new private-send behavior instead of the old broadcast literal, and added a
+  regression guard (`assertNotIn("publicVariable _nextKey", code)`) so the bug can't
+  silently come back.
+
+- **test_overrun_razer_reachability.py::test_engagegate_patch_alive_filters_before_ranging**
+  — NOT a test-vs-behavior mismatch. Fold #1738 (fix commit 461de7d48b, "rally regroup
+  hold + live dest revalidation (r61)") introduced a genuine SQF syntax bug in
+  Common_RunCommanderTeam.sqf: an unterminated string literal —
+  `[_stB,_stC,"WEDGE","NORMAL]]]] Spawn WFBE_CO_FNC_WaypointsAdd;` — missing the closing
+  `"` after NORMAL (compare the two correct sibling call sites a few lines below/above
+  using the identical idiom `"WEDGE","NORMAL"]]]]`). The runaway string swallowed the
+  rest of the file for `mask_comments`'s state machine, which is why the FIRST occurrence
+  of the FLAG token the test searched for landed inside an unmasked comment instead of
+  the real gate condition. **Fixed the bug directly** (added the missing `"`) rather than
+  reverting the whole fold — the feature (defensive SAD hold on rally arrival) is sound,
+  it was a single-character typo. Test needed no changes; it passes once the source
+  bug is fixed. Mirrored to TK/ZG via the LoadoutManager regen.
+
+- **test_settownattackpath_nilside.py::test_deleted_dispatch_inputs_exit_before_dereference**
+  — fold #1781 (fix commit b177657b36, "town attack pathfind fail-clean (r78b)") added a
+  null-leader guard in Server_AI_SetTownAttackPath.sqf: `leader _team` is now captured
+  into `_fallbackLeader`, null-checked with its own `exitWith` (logged), and only then
+  dereferenced via `getPos _fallbackLeader` — replacing the old unguarded
+  `_wp_origin = getPos (leader _team);` that could throw on an empty/culled group.
+  Legitimate defensive fix (part of a 5-bug integrity pass, CH→TK/ZG mirrored,
+  byte-identical across all three). Realigned the test to assert the new capture/guard/
+  read sequence and disambiguated the two `_fallbackLeader = leader _team` occurrences in
+  the file (the new r78b guard near the top, and the pre-existing #1209 side-recovery
+  block further down) by anchoring each `.index()` search from the correct offset.
+
+- **test_supply_completion_authority.py::test_client_completion_rederives_sender_side_and_validates_delivery_state**
+  — fold #1619 (fix commit 49a565ca4f, "cargo transfer world revalidation + deliverer +
+  exitWith latch") changed `_sidePlayer = side _playerObject;` to
+  `_sidePlayer = side group _playerObject;` with an inline comment explaining why
+  (`side group` is more stable than bare `side unit` when the unit is mid-state-change).
+  Legitimate hardening, consistent with the rest of that fold's "never trust the
+  client-provided side slot" theme. Realigned the test's expected token.
+
+- **test_veh_delete_probe.py::test_ratchet_manifest_matches_the_entire_tree** — folds
+  added/changed deleteVehicle call sites in 6 files (Common_RunSidePatrol.sqf,
+  Server_GuerDirector.sqf, server_town.sqf, Server_ManageTownDefenses.sqf,
+  Server_OnPlayerDisconnected.sqf, Server_TownGarrisonDressing.sqf) without regenerating
+  vehdel_inventory.json. Wrote a regen script mirroring the test's own computation
+  (`text.count("deleteVehicle")` / `text.count("WFBE_CO_FNC_LogVehDelete")` per file,
+  same JSON style: 1-space indent, CRLF, no BOM) — but did NOT blindly overwrite first.
+  Diffed old-vs-fresh manifest and found fold #1631 (fix commit 19d4703805, "reclaim
+  town-AI budget on capture") had added 2 NEW deleteVehicle sites to server_town.sqf
+  (town-capture-unit/hull teardown) WITH proper adjacent probes for those 2 sites, but
+  this pushed the file's `probed` count from 0 to 2 — which would newly subject the
+  file's other 10 pre-existing, never-probed deleteVehicle sites (hangar/navsp/defense-
+  gunner/defense-structure/mop-up-squad/garrison-unit/SP/dressing-props/radar teardown)
+  to `test_every_code_delete_in_probed_files_is_probe_adjacent`'s all-or-nothing
+  per-file policy, which is enforced on purpose ("no curated subset left to argue
+  about"). Added matching `[<reason>, _obj, ""] Call WFBE_CO_FNC_LogVehDelete;` probe
+  calls (telemetry-only, gated behind WFBE_C_VEH_DELETE_PROBE, no behavior change) to
+  all 10 remaining sites, following the exact same-line convention already used
+  elsewhere in this file and in Server_TownGarrisonDressing.sqf. Verified 0/0 bracket
+  delta on both edited files. Regenerated the manifest after — all 5 veh_delete_probe
+  tests pass, including the adjacency check.
+
+No fold was reverted. All 5 failures traced to either (a) a stale test pinned to
+superseded literal behavior that the fold legitimately and deliberately changed, or
+(b) one real syntax bug (fold #1738) that was fixed at the source instead of reverting
+the whole feature.
+
+### 3. Lint gate
+
+Ran the verbatim gate command from this repo's CLAUDE.md (A3CMD..TRAILCOMMA incl.
+BAREEXIT, `--no-classname-index`). See gate-output tail in the final report / PR body.
+
+### Files touched (source)
+
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf`
+  — 1-byte string-terminator fix (missing `"`), mirrored to TK/ZG.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town.sqf` — 10 new
+  probe-call insertions (telemetry only), mirrored to TK/ZG.
+- `Tools/Lint/test_fpv_purchase_authority.py`, `test_settownattackpath_nilside.py`,
+  `test_supply_completion_authority.py` — realigned to current (post-fold) behavior.
+- `Tools/Lint/vehdel_inventory.json` — regenerated ratchet manifest.
+- Mirror propagation touched the corresponding TK/ZG copies of the two edited CH files
+  plus the 4 previously-drifted files (Common_CommanderLease.sqf,
+  Server_OnPlayerDisconnected.sqf, Server_VoteForCommander.sqf,
+  RequestCommanderVote.sqf) on both Takistan and Zargabad.
+
+
+
+Task: owner live bug report (m0801h-era, Takistan, mid-match 2026-08-02 16:47) - two AICOM
+production-placement defects. Worktree C:/tmp/claudewt/founding-fix, branch
+fable/founding-placement-20260802, base master (6ea2bcf17b at clone time).
+
+### Symptom 1: infantry founding/reinforcing at an owned airfield with no Barracks
+
+Root cause found: NOT the B74/cmdcon41 airfield-runway relocation (that only fires for a real
+isKindOf "Air" template, gated on _hasAirfield, and only relocates a team that IS an air team).
+The actual defect is in AI_Commander_Produce.sqf's always-on "(4) TOWN-CENTER TOP-UP DISPATCHER"
+(cmdcon41-w2, unconditional - not behind any flag). Its "parked" test (~line 195-198 pre-fix)
+accepted ANY owned town within 400m of the team leader (sideID match only), with NO check that the
+town hosts a Barracks or any production structure. An infantry team resting/rallying near a
+captured airfield-only town (no Barracks ever built there) still satisfied "parked", so the
+topup_req dispatch conjured fresh infantry bodies directly at the leader's exact rally position -
+the same "magic infantry" anti-pattern WFBE_C_AICOM_FOUND_REQUIRE_FACTORY was armed (2026-07-10) to
+stop for founding, just never wired into this reinforcement path. (Confirmed towns[] includes
+airfields uniformly with city/village markers - AI_Commander_Teams.sqf:526 does the identical
+wfbe_is_airfield scan over the same towns array.) The separate AI_Commander_HCTopUp.sqf file has
+the identical unstructured-town defect but is inert by default (WFBE_C_AICOM_HC_TOPUP_ENABLE=0),
+so it is not the live cause.
+
+Fix: new flag WFBE_C_AICOM_TOPUP_REQUIRE_BARRACKS (default 0, byte-identical at 0). When armed,
+the town-proximity "parked" grant is replaced with "an alive owned Barracks within the same 400m
+range" (HQ-parked branch untouched). One always-on INFORMATION line logs the withheld case.
+
+### Symptom 2: AI commander refuses to build/found units at forward factories
+
+Root cause found: WFBE_C_AICOM_FACTORY_TARGET_ENABLE (default 0) governs ONLY the deficit-fill
+refill loop in AI_Commander_Produce.sqf, which per the B57/Build83 comments in
+AI_Commander_Teams.sqf only serves SERVER-LOCAL, NON-HC teams - "100% of the live army" is now
+HC-founded and explicitly SKIPPED by Produce.sqf's _canProduce gate (line ~297: excludes
+wfbe_aicom_hc teams). So that flag's own effect is nearly moot for the live game; it is NOT purely
+the dark flag "working as designed" causing the report - a separate, bigger defect sits upstream.
+
+The actual bug: AI_Commander_Teams.sqf's HC-team FOUNDING factory pick (the "doctrine factory"
+scan, and the OWNED-FACTORY-GATE re-anchor scan) both resolve the spawn structure via a bare
+forEach+exitWith over wfbe_structures - which is APPEND-ONLY build order (new structures are
+always `+ [_site]`, confirmed in Construction_SmallSite.sqf/_MediumSite.sqf), never distance-sorted.
+So the AI commander ALWAYS spawns founded units from the FIRST factory of the matching type it ever
+built (the original rear base), and a later player-built FORWARD factory of the same type is never
+reached no matter how close to the front it stands, or how depleted/far the rear one is.
+
+Fix: new Common function WFBE_CO_FNC_PickForwardFactory (Common/Functions/Common_PickForwardFactory.sqf)
+scans all alive matching-type structures and picks the one nearest an unowned/enemy town (the most
+forward one). Wired behind new flag WFBE_C_AICOM_FOUND_FACTORY_FORWARD (default 0, byte-identical at
+0) at both factory-selection call sites in AI_Commander_Teams.sqf. One always-on INFORMATION line
+logs each forward pick.
+
+### Owner judgment needed
+
+Both new flags default 0 (mission byte-identical to HEAD until armed) per repo flag policy - these
+are behavior changes, not crash/nil-deref fixes, so neither is armed in this PR. See PR body /
+final report for the arm recommendation.
+
+### Gates run
+
+- Lint gate (full select list, --no-classname-index): 0 new findings in any edited/created file
+  across all 3 terrains (168 pre-existing findings unchanged).
+- Bracket delta (git diff origin/master, curly+square): 0 on every edited file, all 3 terrains.
+- Mirror regen (dotnet run -c RELEASE, A2WASP_SKIP_ZIP=1): CH/TK/ZG all DONE; --check reports zero
+  drift; version.sqf.template needed no restore (untouched by this change).
+- Test-WaspVersionTemplates.ps1: all PASS (CH/TK/ZG).
+- pytest Tools/Lint: 15 failed / 480 passed on THIS branch - identical 15 failing test IDs and
+  identical count confirmed on origin/master baseline (stash-and-rerun). Zero new failures.
+
+## Working State 2026-08-02 — endgame leaderboard + awards [fable/endgame-awards-20260802]
+
+Task: owner ruling 2026-08-02 17:17 authorized SPEC-SCENARIO-POLISH-20260802.md lane 1 ONLY - a
+per-player end-of-round leaderboard + named awards bolted onto the existing `GUI_EndOfGameStats.sqf`
+screen. All other lanes from that spec run are out of scope. Worktree `C:\tmp\claudewt\endgame-awards`,
+branch `fable/endgame-awards-20260802` from `origin/update/wave-20260802`.
+
+**Scope discipline honored**: no new networking, no new persistent state, no server-side changes.
+The leaderboard is built entirely client-local inside `GUI_EndOfGameStats.sqf` from `allPlayers` +
+the engine's own native `score`/`side`/`name` commands (the same `score player` already displayed
+per-client at line 96 pre-existing) - not the spec's original server-side
+`WFBE_CO_FNC_CollectRoundScores` + `publicVariable` recommendation, which would have been new
+networking. Deviation noted in the PR body.
+
+**Flags**: `WFBE_C_ENDGAME_LEADERBOARD` (default 0) and `WFBE_C_ENDGAME_AWARDS` (default 0, dependent
+on leaderboard). Both registered in `Common/Init/Init_CommonConstants.sqf`.
+
+**Files touched (CH source only; TK/ZG are LoadoutManager mirror output, byte-identical to CH)**:
+- `Client/GUI/GUI_EndOfGameStats.sqf` - flag reads near `_guerPanel`; new `if (_leaderboardFlag)`
+  block (collect `allPlayers` scores, insertion-sort descending, render Top 5 + awards as
+  structured text) inserted after the existing guer-vehicle-lost-bar block, before the counter
+  animation loop starts.
+- `Rsc/Titles.hpp` - two new controls in `class EndOfGameStats`: `LeaderboardBackground` (idc 90409)
+  and `LeaderboardPanel` (idc 90410, `RscStructuredText`). Both default positioned OFF-SCREEN
+  (y=2), mirroring the existing off-screen-by-default `Guer*` control idiom already in this class -
+  SQF only repositions them onscreen (y=0.92/0.925) when the leaderboard flag is on. This keeps
+  flag-off byte-identical without needing any `#ifdef`/preprocessor branching in the static config.
+- `Common/Init/Init_CommonConstants.sqf` - the two flag registrations, appended at file end (after
+  the existing `WFBE_C_STATS_ROUNDEND_FLUSH` block, before the `INITIALIZATION` log line).
+
+**Layout decision**: did NOT try to reflow the existing tightly-packed East/West/Guer bar columns
+(measured: default gap between East/West bars is only ~0.10 screen-width; with the Guer panel on,
+two ~0.065 gaps) - reflowing those would have meant repositioning 8-24 existing controls and real
+regression risk to a screen other PRs may also touch. Instead the new panel lives in genuinely free
+space BELOW the existing stats panel (y 0.92-0.99), fully additive, zero risk to existing controls.
+Renders regardless of `WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL` state (no collision to design around).
+
+**Deviations from spec** (spec wins where explicitly owner-approved; code reality wins otherwise):
+1. Leaderboard built client-local (see above) instead of server-side + publicVariable.
+2. "GUER MVP" implemented as "Top Killer (GUER)" from the same per-player score rows, NOT from the
+   cumulative `WFBE_GUER_PLAYER_KILLS` counter the spec named - that counter is side-wide, not
+   attributable to one player; a true per-player version needs a new counter, which is out of scope
+   per the owner's "no new persistent state" constraint. The spec's own text flagged this same gap.
+3. "Most Vehicles Lost" implemented as a side-level award (West/East/GUER), not a named individual -
+   no per-player vehicle-loss counter exists (only the WF_Logic side aggregates already displayed).
+4. Does not depend on/reference `WFBE_C_STATS_ROUNDEND_FLUSH` or `WFBE_CO_CURRENT_SCORE_PLAYER_*` at
+   all - native `score` already reflects the full round live, independent of that persistence flush.
+
+**Gates run**: lint gate (168 findings before and after - 0 new, none in touched files); bracket
+delta 0 on all 3 CH files; mirror ran (`A2WASP_SKIP_ZIP=1`), `--check` clean, TK/ZG
+`version.sqf.template` untouched by the run (no restore needed), `Test-WaspVersionTemplates.ps1`
+all PASS; TK/ZG mirror output diffed byte-identical to CH source for both touched files.
+
+**Not yet done / open items**: no runtime (box) smoke test - static validation only, per repo
+evidence-wording rules. Draft PR not yet opened as of this note (see PR section once created).
+
+**Wave reconcile 2026-08-03** (worktree `C:\tmp\reconwt\pr1915`, branch `recon/pr1915-20260803`):
+merged cleanly onto `origin/update/wave-20260802`. Only conflicts were pure-addition collisions in
+`Init_CommonConstants.sqf` (all 3 terrains, both PR #1912's barracks/forward-factory flags and this
+PR's two flags appended at the same anchor point - combined, no logic change to either) and this
+JOURNAL.md file. `GUI_EndOfGameStats.sqf` and `Rsc/Titles.hpp` merged with zero conflicts on all 3
+terrains - nothing else in the wave touches those files at this branch point (confirmed via `git log`
+on the merge-base..wave range). #1777 (separate open draft, null-guard fixes to the same file) is
+NOT yet merged into the wave, so there was no overlap to resolve against it.
+
+## Working State 2026-08-03 — SQF utility library adoption [claude/sqf-util-lib]
+
+**Card**: #25 in the FLEET-20260802 mining-review batch ("CBA-derived SQF utility adoption:
+hash/dict store + 3D vector math + delayless dispatch"). Effort S / Risk low / "Clear to build".
+
+**Delivered** (5 commits, all three maps mirrored via LoadoutManager):
+1. `Common_HashCreate/Get/Set/HasKey/Rem.sqf` - parallel-array key/value store, documented
+   as an honest linear scan, not a perf win over `Server_CmdTownLedger.sqf`'s existing idiom.
+   `HashSet` mutates in place; `HashRem` returns a new handle (no `deleteAt` on A2 OA).
+2. `Common_VectDot/Cross/Magnitude/ElevationSolve/LeadAngle/SurfaceNormal.sqf` - manual-
+   arithmetic vector math (not wrapping any native `vect*` command).
+3. `Common_DelaylessCall.sqf` + `Common/FSM/delayless.fsm` - execFSM-based zero-scheduler-
+   delay dispatch for hot-path one-shot calls, as an alternative to `spawn`.
+4. `Common_UtilLibSelfTest.sqf`, registration in `Init_Common.sqf`, flag
+   `WFBE_C_UTIL_LIB_SELFTEST` (default 0, boot smoke-test only) in `Init_CommonConstants.sqf`.
+5. `docs/design/SQF-UTIL-LIB.md` - API reference.
+
+Pure additive, no call-site migrations (card names no explicit demonstrative adoption target -
+future consumers are #1/#12/#14, all separate flag-gated PRs). Lint gate clean (zero findings
+in any touched/new file), bracket delta zero per file, mirrors identical across CH/TK/ZG,
+`Test-WaspVersionTemplates.ps1` all PASS.
+
+**Discovered issue / unresolved blocker (soft, matches the card's own note)**: this session ran
+with no network access (role-locked), so the `a2oa-verify-command` skill's rungs 1-2 (repo wiki,
+BI wiki) could not be climbed for two claims:
+- whether A2 OA 1.64 natively exposes any vector command equivalent to
+  `VectDot`/`VectCross`/`VectMagnitude` (if so, the manual-arithmetic versions here are
+  functionally fine but partially redundant);
+- whether an FSM's `Init` state genuinely executes its `init` code in the same frame
+  `execFSM` is called, with the `execFSM` argument bound to `_this` inside that state (the
+  premise `Common_DelaylessCall.sqf` is built on).
+
+Mitigated by writing both as clean-room implementations that don't call any commands whose
+existence is in question, and by having `Common_UtilLibSelfTest.sqf` (flag-gated, default off)
+empirically MEASURE the delayless same-frame behavior via global marker variables rather than
+asserting it, logging the result to RPT. **Next agent/owner should**: arm
+`WFBE_C_UTIL_LIB_SELFTEST=1` on a real server once, read the RPT for the
+`DELAYLESS same-frame=...` line, and only then treat `Common_DelaylessCall` as safe to adopt on
+a real hot path in a follow-up PR. See `docs/design/SQF-UTIL-LIB.md` for the full writeup.
+
+### Review-fix pass (same day, before PR)
+
+A second reviewer flagged two issues against the above; both verified against A2 SQF semantics
+and fixed:
+
+1. **MAJOR, confirmed — `Common_VectElevationSolve.sqf` sentinel collision.** The original `-1`
+   failure sentinel is itself an ordinary, in-range low-arc angle (e.g. `[200, -23.117, 100]`
+   solves to `theta ~ -1.000`), so a caller checking `_theta > -1` per the documented contract
+   would wrongly treat a real solution as "unreachable." Fixed by moving the sentinel to `-999`,
+   which sits outside `atan`'s valid `(-90,90)` output range and can never collide with a real
+   result. Updated the function header, `docs/design/SQF-UTIL-LIB.md`, and the one self-test
+   assertion that referenced the old sentinel (`Common_UtilLibSelfTest.sqf`).
+2. **minor, confirmed — `Common_VectLeadAngle.sqf` under-length `_targetVel`.** If a caller ever
+   passes a `_targetVel` with fewer dimensions than `_targetPos`, the old loop's
+   `_targetVel select _i` goes out of range on the last axis; per this repo's own verified A2
+   trap (a failed statement doesn't abort the script, it's skipped — see
+   `a2-failed-statement-continues.md`), that silently left a hole in the returned `_aimPoint`
+   instead of erroring loudly. Currently unreachable (zero call sites) but cheap to harden: the
+   loop now defaults any missing `_targetVel` component to `0` instead of indexing out of range,
+   and the header documents the same-dimensionality expectation.
+
+Both fixes are additive/defensive only — behavior for well-formed same-dimensionality inputs is
+unchanged. Re-verified after the fix: lint gate clean (zero findings in touched files), net
+bracket delta zero per file, LoadoutManager mirror re-run clean across CH/TK/ZG (byte-identical
+diffs across all three terrains), `version.sqf.template` untouched by the regen this time,
+`Test-WaspVersionTemplates.ps1` all PASS.
+
+Rejected: none — both review findings were confirmed against source and fixed.
+
+**Wave reconcile 2026-08-03** (worktree `C:\tmp\reconwt3\pr2033`, branch `recon3/pr2033-20260803`,
+supersedes PR #2033): merged cleanly onto `origin/update/wave-20260802`. Collision check requested
+by the reconcile task — searched the wave for any existing `WFBE_CO_FNC_Hash*`, `WFBE_CO_FNC_Vect*`,
+`WFBE_CO_FNC_DelaylessCall`, `Common_UtilLibSelfTest`, or `WFBE_C_UTIL_LIB_SELFTEST` symbols and any
+`Common_Hash*`/`Common_Vect*`/`Common_Delayless*`/`delayless.fsm` files already in the wave: none
+found, so no rename-collision to resolve. All new function/FSM files (all 3 terrains) applied with
+zero conflicts. `Init_Common.sqf` (all 3 terrains) auto-merged cleanly — the wave has not touched
+that registration region since this PR's base commit. Only conflicts were the same append-only
+collision shape as the #1912/#1915 reconcile above: `Init_CommonConstants.sqf` (all 3 terrains, this
+PR's `WFBE_C_UTIL_LIB_SELFTEST` flag registration landing at the same end-of-file anchor as several
+other wave PRs' flag blocks — combined, no logic change to any of them) and this JOURNAL.md file.
+Note for the owner: this PR's own PR body/header comments assert "A2 OA has no native `surfaceNormal`"
+as the reason for `Common_VectSurfaceNormal.sqf`'s manual `getTerrainHeightASL`-sampling
+reimplementation — that claim does not hold up against this repo's own code: `surfaceNormal` is
+called natively and extensively elsewhere in the wave (`Common_RunCommanderTeam.sqf`,
+`Client_BuildUnit.sqf`, `AI_Commander_Base.sqf`, `Server_Oilfields.sqf`, `Init_CommonConstants.sqf`
+comments). Not a naming collision (no function shares the `surfaceNormal` name) and not fixed in this
+reconcile since `Common_VectSurfaceNormal` has zero call sites (inert, additive-only) — flagged here
+so a future adopting PR reaches for the native command instead of this library function.
+
+---
+
 ## Working State 2026-08-01 — crash 014EFCF4 crew-delete sweep [fix/014e-crew-delete-sweep-20260801]
 
 Task: sweep the remaining direct crew-delete sites for crash 014EFCF4 (deleteVehicle on a Man still
@@ -984,3 +1671,106 @@ same crash window re-arms ~100min into AI-heavy sessions until cutover).
 
 Residual (not this crash, watch seatSeen diag): cold-wreck SEATED corpse deletes keep
 today's behaviour; HC-side executor unchanged.
+
+
+## 2026-08-02 22:30 NL - wave0802 DEPLOYED to the live box (176.9.104.115)
+
+Owner instruction: "deploy + Play Zargabad > Chernarus > Takistan". Done and verified live.
+
+VERIFIED LIVE at 22:47 NL (13:47 box, UTC-7):
+  RPT: WASPRELEASE|v1|candidate=wave0802|git=update/wave-20260802|terrain=zargabad
+  RPT: MISSINIT: missionName=[61] Miksuu's Warfare Zargabad
+  A2S: map=zargabad  players=1/37   server fps ~45.5
+  Rotation in effect: Zargabad -> Chernarus -> Takistan (owner order)
+
+Build inputs:
+  branch update/wave-20260802 @ 5f32327cdd, gates 605 pass / 13 fail (zero new vs master)
+  PBO sha256 - ch 772ceed6..., tk 76438e98..., zg d204f4bf... (hash-matched on box)
+
+THREE BLOCKERS HIT AND FIXED (all worth remembering):
+
+1. pack_pbo.py WF_MAXPLAYERS guard aborted all three terrains. Cause: the untracked,
+   generated version.sqf files carried FOLDER-LABEL numbers (55/61/61) while the guard
+   computes human = total - headless - caster = 32/31/33, which is exactly what the
+   tracked version.sqf.template files already said. Fix: regenerate version.sqf from
+   version.sqf.template, as the template's own header instructs ("Copy to version.sqf
+   at deploy time"), and stamp a fresh WF_RELEASE_MARKER. The stale marker had read
+   candidate=build89-cmdcon44t-20260704 since July.
+
+2. EDITED THE WRONG CFG - cost a live restart and one player's match.
+   C:\WASP\server-pr8.cfg (root) is a STALE DECOY: it still read wave0722g / single
+   Takistan / maxPlayers=56. The server reads ONLY the path in its own command line,
+   -config=C:\WASP\profiles-pr8\server-pr8.cfg, which was already a 3-map m0801h
+   rotation at 58. There is NO propagation between the copies, contrary to the repo
+   header (now corrected in server-config/server-pr8.cfg). Always read the -config=
+   path out of the RPT boot banner first.
+
+3. The cfg is file-locked while arma2oaserver.exe runs. Correct order is: build and
+   validate the new text while the server is still UP (fail fast, nothing touched) ->
+   stop the chain -> write -> restart. Same as Deploy-Wasp.ps1 "BUG 1".
+
+TOOLING HAZARD (not fixed, documented): Tools/Ops/Set-MissionTemplate.ps1 rewrites
+EVERY matching `template = "...";` line to one mission name and only Write-Warnings on
+>1 match (Set-MissionTemplate.ps1:89-98). Against a 3-map rotation cfg it collapses all
+three entries into the same map. Deploy-Wasp.ps1 -Apply would therefore have destroyed
+the rotation. The cfg was written as a whole block instead.
+
+Also corrected a wrong belief of mine: the box DOES init the mission unattended. The
+"empty box never starts the mission" note is wrong for this box - Start-Wasp-4HC.ps1
+documents a measured 540-601s cold boot to MATCH|v1|START|, and the HC launch waits on
+that marker (900s timeout, then a legacy 45s settle). That wait is why a restart looks
+wedged for ~16 min with hc=0. It is not wedged.
+
+Rollback ready if the 01:00 allocator bench turns up trouble:
+  m0801h PBOs for all 3 terrains retained in MPMissions
+  C:\WASP\profiles-pr8\server-pr8.cfg.bak-20260802-132922 (pre-deploy effective cfg)
+
+RESOLVED 22:48 NL: HC2 seated - A2S players=2/37, both HCs connected. HC1 seated
+clean too (HCSIDE|v1|reseat|result=done|sideNow=CIV). Full 2-HC topology restored; the
+~17 min hc=0 window was the documented MATCH|v1|START| wait, not a failure.
+
+
+## 2026-08-04 - Serial fold of 12 resolved wave0804 branches (worktree C:\tmp\fixwt\update0802)
+
+Sole writer in this worktree. Folded exactly 12 `resolved/wave0804-NNNN` branches (each a
+merge of old-wave-tip + PR head, pre-resolved and adversarially verified) into
+`update/wave-20260802` with `git merge --no-ff`, in the deliberate dependency-safe order:
+1607, 2082, 1615, 2097, 2061, 2071, 2078, 2084, 2093, 2098, 2100, 2101.
+2060 and 2066 were explicitly excluded (superseded - their fixes already on tip).
+
+### Per-branch merge result
+
+| # | Result |
+|---|---|
+| 1607 | clean |
+| 2082 | auto-merged clean (git's ort resolved Server_BuyUnit.sqf on its own); verified both #1607's `_tq` nil/array queue-release guard AND #2082's r127 wrong-victim-token fix survive at every queue-release site, CH+TK+ZG |
+| 1615 | clean |
+| 2097 | auto-merged clean (git's ort resolved server_town_ai.sqf on its own); verified #1615's hysteresis comment + `WFBE_C_TOWNS_DETECTION_RANGE_ACTIVE_COEF=1.25` AND #2097's GARRISON_CAP_DEFER/TOWN_AI_GROUP_CAP_DEFER activation-deferral both present, nil-safe `getVariable ["wfbe_active", false]` reads intact |
+| 2061 | clean |
+| 2071 | **hand-resolved** - real conflict in Init_CommonConstants.sqf (CH+TK+ZG): both HEAD (fortification placement/preview/facing constants block) and #2071 (bughunt r124 dead-guard constants block) appended new content at the same anchor. First byte-surgery attempt at C:\tmp\resolve_2071.py had a bug - naive `"=======\r\n"` search matched inside HEAD's own 86-`=`-char divider comment line instead of the real conflict separator, gluing the blocks together wrong. Caught before commit by reading the resolved region back; reset via `git checkout -m` to regenerate clean markers, rewrote the script to anchor the mid-marker search on `"\r\n=======\r\n"` (only matches a standalone marker line), re-ran, verified both blocks intact in order, bracket delta zero (pre-existing 203/202 `[`/`]` imbalance unchanged by the edit) |
+| 2078 | clean |
+| 2084 | auto-merged clean |
+| 2093 | clean |
+| 2098 | clean |
+| 2100 | clean |
+| 2101 | clean |
+
+No real 7-char conflict markers anywhere post-fold (`git grep -nP "^<{7}(?!<)|^={7}(?!=)|^>{7}(?!>)" -- "*.sqf"` empty). The 13 pre-existing 8-char decorative banner files under Modded_Missions (AntiStackPreparation legacy merge artifacts) are unchanged and untouched by any of the 12 folds.
+
+### Gate suite (all run after all 12 merges)
+
+1. **LoadoutManager --check**: `Takistan drift: none`, `Zargabad drift: none`, exit 0. No drift despite the resolved branches predating the fortification mirror-state commits - the mirrors were already in sync going in.
+2. **pytest Tools/**: first run 848 passed / 2 failed. Both diagnosed as gate-engineer calls, not merge breakage:
+   - `test_town_defer_sideeffects.py::test_deferred_activation_skips_all_creation_side_effects` asserted `_activationDeferred = true;` count == 2 (implementation literal). Git-archaeology confirmed count was 2 immediately before #2097's merge and 4 immediately after (fold #2097 legitimately adds two new deferral gates, GARRISON_CAP_DEFER and TOWN_AI_GROUP_CAP_DEFER, ahead of the two pre-existing budget-defer sites) - all four still gate the same guard block with all required side effects intact. Realigned the assertion to 4 with an explanatory comment.
+   - `test_veh_delete_probe.py::test_ratchet_manifest_matches_the_entire_tree` - the deleteVehicle inventory ratchet drifted on 2 files: `Server_OperateTownDefensesUnits.sqf` (5->6, #2084 adds an "operator" cleanup site mirroring the existing "gunner" cleanup, AI-only) and `Init_NavalHVT.sqf` (26->34, #2100 adds unmanned-aircraft CAP pilot-fallback deletes, AI-only). Both new sites keep `probed=0` consistent with the pre-existing convention in those files (probe is for player-vehicle-usage tracking only). Regenerated `vehdel_inventory.json` via a script matching the test's own computation; diffed to confirm only those two entries changed.
+   Re-run after both fixes: **850 passed, 0 failed.**
+3. **check_sqf.py lint gate** (exact command from CLAUDE.md, `--select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BAREEXIT,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index`): **168 findings, all A3MARKER, zero new** - cross-referenced the 168 finding files against the full list of 90 `.sqf` files touched across all 12 folds: zero overlap.
+4. WF_MAXPLAYERS spot-check: all three `version.sqf.template` (CH/TK/ZG) still read `34`, untouched by any fold - matches this branch's own CLAUDE.md convention.
+5. No `Co-Authored-By` trailer in any of the 14 new commits (12 merges + this gate-fix + journal commit).
+
+### Commits added (old-wave-tip `c0135273` -> tip)
+
+12 merge commits (`fold #NNNN into wave0804 (conflict-resolved)`), one gate-fix commit
+(`b37f7008cf`, realigns the two contract tests above), this journal commit.
+
+Pushed to `origin/update/wave-20260802`.

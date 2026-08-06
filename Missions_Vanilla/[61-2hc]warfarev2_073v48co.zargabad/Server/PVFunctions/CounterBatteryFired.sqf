@@ -13,7 +13,10 @@ if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 2}) exitWith 
 Private ["_unit","_fpos"];
 _unit = _this select 0;
 _fpos = _this select 1;
-if (isNil "_unit" || {isNull _unit}) exitWith {};
+if (isNil "_unit" || {typeName _unit != "OBJECT"} || {isNull _unit}) exitWith {};
 if (isNil "_fpos" || {typeName _fpos != "ARRAY"} || {count _fpos < 2}) then {_fpos = getPos _unit};
+//--- PR #1630: reject non-numeric firing-position elements (forged/short PV tuple) before
+//--- WFBE_SE_FNC_CounterBatteryCheck runs distance/vector math on them.
+if (typeName (_fpos select 0) != "SCALAR" || {typeName (_fpos select 1) != "SCALAR"}) then {_fpos = getPos _unit};
 
 [_unit, _fpos] Call WFBE_SE_FNC_CounterBatteryCheck;

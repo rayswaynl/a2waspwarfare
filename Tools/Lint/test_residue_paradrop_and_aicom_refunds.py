@@ -34,6 +34,11 @@ class ResidueParadropAndAicomRefundTests(unittest.TestCase):
         self.assertIn("forEach crew _transporter", text)
         self.assertIn("deleteVehicle _transporter", text)
 
+    def test_aicom_paratroopers_rehome_to_ordered_objective(self) -> None:
+        text = code(PARATROOPERS)
+        self.assertIn("_dropPos = _destination;", text)
+        self.assertIn('if (isNil "_dropPos" || {typeName _dropPos != "ARRAY"} || {count _dropPos < 2}) then {', text)
+
     def test_vehicle_and_ammo_abort_paths_are_gated_before_drop_or_return(self) -> None:
         for path in (PARA_VEHICLES, PARA_AMMO):
             text = code(path)

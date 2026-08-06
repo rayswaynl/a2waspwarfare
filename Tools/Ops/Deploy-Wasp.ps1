@@ -472,7 +472,16 @@ if ($Rollback) {
     Stop-WaspChain -ServiceName $ServiceName
     & $setTemplate -CfgPath $CfgPath -MissionName $restoreMissionName -Pattern $TemplatePattern -Apply | Out-Null
     $rbUp = Invoke-WaspServiceRestart -RestartTask $RestartTask -ServiceName $ServiceName -GuardSec $RestartGuardSec
-    Write-Output ("WASP_DEPLOY_ROLLBACK_DONE restored={0} restart={1}" -f $restoreName, ($(if($rbUp){'OK'}else{'STUCK'})))
+    # restart=OK only proves the service guard passed; the restored mission still needs the
+    # same current-match RPT/build/HC proof as a normal deploy before rollback can be successful.
+    $rbOk = $false
+    if ($rbUp) {
+        $rbOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath `
+            -ExpectBuild (Get-ExpectedBuildToken $restoreMissionName) `
+            -TimeoutSec $VerifyTimeoutSec -HcMin $HcCount
+    }
+    Write-Output ("WASP_DEPLOY_ROLLBACK_DONE restored={0} restart={1} verify={2}" -f $restoreName, ($(if($rbUp){'OK'}else{'STUCK'})), ($(if($rbOk){'OK'}else{'UNCONFIRMED'})))
+    if (-not $rbOk) { throw "rollback verification failed or was unconfirmed for '$restoreMissionName'" }
     return
 }
 

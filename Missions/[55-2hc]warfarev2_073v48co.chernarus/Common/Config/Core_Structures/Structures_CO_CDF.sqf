@@ -166,4 +166,29 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {
 	_n = _n + ["Land_Pneu"];			//--- Site Clearance (commander only)
 };
 
+//======================================================================================
+//--- cmdcon42-g parity (2026-08-04, owner in-game report "items still missing"): CDF was the ONLY
+//--- faction file that never received the DEFENSES/FORTIFICATIONS MENU v2 block - US/RU/GUE/OA_TKA
+//--- all have it, so Chernarus-WEST players were missing Watchtower, Hedgehog Line, Flak Tower and
+//--- the 5-item Fortification Pack that exist on every other side/terrain. Mirrors
+//--- Structures_CO_US.sqf (same _side = "WEST", same anchors) minus the BAF-tripod removals CDF
+//--- never listed. Legacy `_n` above is untouched; flag=0 registers the exact legacy list.
+//======================================================================================
+if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {
+	_n = _n - ["SearchLight_CDF"];	//--- permanent-daylight clamp -> zero function
+	_n = _n - ["Land_Campfire"];		//--- decoration only
+	_n = _n + ["Land_Fort_Watchtower_EP1"];	//--- elevated overwatch buildable (IN-TREE)
+	_n = _n + ["Misc_cargo_cont_small"];	//--- Hedgehog Line anchor -> WFBE_NEURODEF_HEDGEHOGLINE
+	if ((missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER", 1]) > 0) then {
+		_n = _n + ["Land_Ind_TankSmall"];	//--- anchor -> WFBE_NEURODEF_FLAKTOWER_WEST
+	};
+	if ((missionNamespace getVariable ["WFBE_C_DEF_FORTIF_PACK", 0]) > 0) then {
+		_n = _n + ["Misc_cargo_cont_net1"];		//--- Wall Row (Concrete, ~22 m)
+		_n = _n + ["Misc_cargo_cont_net2"];		//--- Wall Corner (Concrete, L-section)
+		_n = _n + ["Misc_cargo_cont_net3"];		//--- LoS Screen (Tall, ~43 m)
+		_n = _n + ["Misc_cargo_cont_tiny"];		//--- HESCO Line (~39 m)
+		_n = _n + ["Misc_concrete_High"];		//--- Gate Complex (drive-through mouth)
+	};
+};
+
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];

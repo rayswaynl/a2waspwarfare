@@ -43,7 +43,10 @@ if (_isHeadless) then {
 		//---   sidepatrol-watchdog        = server_side_patrols.sqf (WFBE_C_SIDE_PATROL_UNSTUCK; routes the
 		//---        external stuck watchdog to this HC when the wedged patrol's leader is HC-local - the
 		//---        receiver case already exists in HandleSpecial.sqf; this key was the missing wire-up)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder"]);
+		//---   endgame                    = server_victory_threeway.sqf (nil broadcast at round end; lets the HC flip
+		//---        gameOver/WFBE_GameOver so its local A-Life loops (side patrols, AICOM teams, town-AI
+		//---        delegates, GroupsGC) tear down on their next tick instead of running to mission unload)
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder","endgame"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };

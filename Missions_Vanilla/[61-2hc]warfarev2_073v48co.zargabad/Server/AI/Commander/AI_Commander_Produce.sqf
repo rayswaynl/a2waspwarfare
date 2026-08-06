@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_crewSlots","_hasCommander","_hasGunner","_extraTurretCount","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_missingClass","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax","_cullMember","_cullHull","_cullHulls"];
 
 _side = _this;
 _sideText = str _side;
@@ -32,6 +32,22 @@ _capTierLast = (count _capTiers) - 1;
 if (_capTier > _capTierLast) then {_capTier = _capTierLast};
 _cap = _capTiers select _capTier;   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
 _sideAI = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
+//--- F2 fable/aicom-econ-triad (2026-08-02): pending-spawn ledger. _sideAI counts ALIVE units only, but
+//--- every producer pipeline is latent (factory FIFO in Server_BuyUnit.sqf sleeps through build time; HC
+//--- founding/top-up dispatches spawn on the HC later), so committed-but-unspawned mass was invisible at
+//--- production time and WEST overshot its tier cap 226/170 (overnight 2026-08-01 Takistan war). Commit
+//--- sites below + the Teams.sqf founding dispatch append [units, expiry]; entries age out after
+//--- WFBE_C_AICOM_CAP_PENDING_TTL (spawn-complete decrements would have to cross server/HC machines -
+//--- expiry approximates them conservatively). Counted against the cap ONLY when WFBE_C_AICOM_CAP_PENDING
+//--- > 0 (default 0 = ledger + pending= telemetry only, cap behaviour byte-identical). Exempt spawners,
+//--- each tiny + own-capped: AI_Commander_AirResp (AIRRESP flight cap), Server_AicomSupplySquad (flag +
+//--- one squad). GUER runs neither this file nor Teams founding (WFBE_PRESENTSIDES - [resistance]).
+private ["_pendArr","_pendKeep","_pendSum"];
+_pendArr = _logik getVariable ["wfbe_aicom_pending_spawn", []];
+_pendKeep = []; _pendSum = 0;
+{ if ((typeName _x == "ARRAY") && {count _x >= 2} && {(_x select 1) > time}) then {_pendKeep = _pendKeep + [_x]; _pendSum = _pendSum + (_x select 0)} } forEach _pendArr;
+if ((count _pendKeep) != (count _pendArr)) then {_logik setVariable ["wfbe_aicom_pending_spawn", _pendKeep]};
+if ((missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING", 0]) > 0) then {_sideAI = _sideAI + _pendSum};
 if (_sideAI >= _cap) exitWith {
 	private "_produceCapCount";
 	private "_produceCapLast";
@@ -40,7 +56,7 @@ if (_sideAI >= _cap) exitWith {
 	_logik setVariable ["wfbe_aicom_producecap_count", _produceCapCount];
 	if ((time - _produceCapLast) >= 300) then {
 		_logik setVariable ["wfbe_aicom_producecap_log_t", time];
-		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|PRODUCE_SKIP|reason=side-cap|count=" + str _produceCapCount + "|sideAI=" + str _sideAI + "|tierCap=" + str _cap + "|tier=" + str _capTier);
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|PRODUCE_SKIP|reason=side-cap|count=" + str _produceCapCount + "|sideAI=" + str _sideAI + "|tierCap=" + str _cap + "|tier=" + str _capTier + "|pending=" + str _pendSum);
 		_logik setVariable ["wfbe_aicom_producecap_count", 0];
 	};
 };
@@ -72,7 +88,7 @@ if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3]
 //--- attack helis + transport helis TOGETHER), REMOVE "Aircraft" from _facDefs so the producer SKIPS every air refill this
 //--- cycle - no factory then handles an air class, so the deficit loop below falls through to a ground/foot class (the same
 //--- degrade the founding strip achieves). Self-limiting: the count drops when an airframe dies and air refill resumes. COUNT
-//--- matches the founding gate: side-resolved alive isKindOf "Air" (crewed -> crew side; crewless -> wfbe_side tag), which is
+//--- matches the founding gate: side-resolved alive isKindOf "Air" (crewed -> crew side; crewless -> wfbe_side_id stamp (r101: wfbe_side is never stamped on vehicle hulls), which is
 //--- AICOM air since town garrisons are ground-only in this mission. A2-OA-safe: isKindOf "Air" + crew/side resolve over vehicles.
 private ["_airMaxTotalP","_airAliveP","_facDefsNoAir"];
 _airMaxTotalP = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3];
@@ -85,7 +101,7 @@ if (_airMaxTotalP > 0) then {
 			if ((count crew _x) > 0) then {
 				if (side ((crew _x) select 0) == _side) then {_airSideOKP = true};
 			} else {
-				if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_airSideOKP = true};
+				if ((_x getVariable ["wfbe_side_id", -1]) == _myID) then {_airSideOKP = true};
 			};
 			if (_airSideOKP) then {_airAliveP = _airAliveP + 1};
 		};
@@ -136,10 +152,28 @@ if (_airMaxTotalP > 0) then {
 			};
 		};
 
+		//--- (2b) DRIVERLESS DISBAND CONSUMER (r127): wfbe_aicom_disband's only autonomous executor is the
+		//--- owning machine's RunCommanderTeam driver. A team whose leader is SERVER-LOCAL has no HC driver -
+		//--- a no-HC fallback founding never spawns one, and an HC-drop demotion kills it - so a flag set before
+		//--- the demotion (or by the recycle pass above for such a team) latched forever and the retire never
+		//--- ran, permanently holding a founding slot. Mirror the console _dDispatch idiom
+		//--- (Server_HandleSpecial.sqf): execute locally when the leader is server-local; the executor itself
+		//--- re-checks leader locality, the ended-stamp guard prevents a double-fire against a surviving
+		//--- server-local driver, and clearing the flag makes that driver no-op.
+		private ["_wm_disFlag","_wm_disEnded"];
+		_wm_disFlag = _team getVariable "wfbe_aicom_disband";
+		_wm_disEnded = _team getVariable "wfbe_aicom_ended_fired";
+		if (!isNil "_wm_disFlag" && {_wm_disFlag} && {isNil "_wm_disEnded"} && {local _wm_ldr}) then {
+			if ([_team] Call WFBE_CO_FNC_AICOMDisbandTeam) then {
+				_team setVariable ["wfbe_aicom_disband", false, true];
+				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] DRIVERLESS_DISBAND executed server-side (no live driver for a server-local leader).", _sideText, _team]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+
 		//--- (3) AIRMOBILE TRANSPORT REQUISITION: the local driver requests a transport only
 		//--- for a long airmobile leg without one. Server owns class/unlock/factory/treasury/cap
 		//--- validation, then publishes a paid grant for the HC-local CreateTeam consumer.
-		private ["_alReq","_alGrant","_alUnits","_alClass","_alData","_alTryData","_alKind","_alFactories","_alFactory","_alPrice","_alFunds","_alCapCost","_alAirOK","_alGrantPending"];
+		private ["_alReq","_alGrant","_alUnits","_alClass","_alData","_alTryData","_alKind","_alFactories","_alFactory","_alPrice","_alFunds","_alCapCost","_alCrewSlots","_alHasCommander","_alHasGunner","_alAirOK","_alGrantPending"];
 		_alReq = _team getVariable "wfbe_aicom_airlift_req";
 		_alGrant = _team getVariable "wfbe_aicom_airlift_grant";
 		_alGrantPending = !isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant > 0};
@@ -164,7 +198,23 @@ if (_airMaxTotalP > 0) then {
 				_alFactory = _alFactories select 0;
 				{ if ((_x distance _wm_ldr) < (_alFactory distance _wm_ldr)) then {_alFactory = _x} } forEach _alFactories;
 				_alPrice = _alData select QUERYUNITPRICE;
-				_alCapCost = 3 + count (_alData select QUERYUNITTURRETS);
+				//--- Reserve exactly the crew CreateTeam can materialize for this transport:
+				//--- driver plus the class-specific gunner/commander primary seats.
+				_alCrewSlots = _alData select QUERYUNITCREW;
+				_alHasCommander = false;
+				_alHasGunner = false;
+				if (typeName _alCrewSlots == "ARRAY") then {
+					_alHasCommander = _alCrewSlots select 0;
+					_alHasGunner = _alCrewSlots select 1;
+				} else {
+					switch (_alCrewSlots) do {
+						case 2: {_alHasGunner = true};
+						case 3: {_alHasGunner = true; _alHasCommander = true};
+					};
+				};
+				_alCapCost = 1;
+				if (_alHasGunner) then {_alCapCost = _alCapCost + 1};
+				if (_alHasCommander) then {_alCapCost = _alCapCost + 1};
 				_alFunds = (_side) Call GetAICommanderFunds;
 				if (_capRemaining >= _alCapCost) then {
 					if (_alFunds >= _alPrice) then {
@@ -172,6 +222,7 @@ if (_airMaxTotalP > 0) then {
 						_team setVariable ["wfbe_aicom_airlift_grant", [_alClass, getPosATL _alFactory, _alPrice, time], true];
 						_team setVariable ["wfbe_aicom_airlift_req", [], true];
 						_capRemaining = _capRemaining - _alCapCost;
+						_logik setVariable ["wfbe_aicom_pending_spawn", (_logik getVariable ["wfbe_aicom_pending_spawn", []]) + [[_alCapCost, time + (missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING_TTL", 180])]]]; //--- F2 fable/aicom-econ-triad: book committed-but-unspawned airlift grant on the pending ledger
 						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_GRANT|team=" + str _team + "|class=" + _alClass + "|cost=" + str _alPrice);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] transport requisition approved (%3 at aircraft factory, cost %4).", _sideText, _team, _alClass, _alPrice]] Call WFBE_CO_FNC_AICOMLog;
 					};
@@ -184,7 +235,7 @@ if (_airMaxTotalP > 0) then {
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
 		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
 		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not) or while pending disband (PR #542).
-		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag","_wm_costOn","_wm_afford","_wm_existingReq","_wm_hasPending"];
+		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag","_wm_costOn","_wm_afford","_wm_existingReq","_wm_hasPending","_wm_townParked"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
 			_wm_rally = _team getVariable "wfbe_aicom_rallying";
 			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
@@ -194,7 +245,26 @@ if (_airMaxTotalP > 0) then {
 			if (!isNull _wm_hqP && {(_wm_ldr distance _wm_hqP) < 400}) then {_wm_parked = true};
 			if (!_wm_parked) then {
 				_wm_myID = (_side) Call WFBE_CO_FNC_GetSideID;
-				{ if (((_x getVariable ["sideID", -1]) == _wm_myID) && {(_wm_ldr distance _x) < 400}) exitWith {_wm_parked = true} } forEach towns;
+				_wm_townParked = false;
+				{ if (((_x getVariable ["sideID", -1]) == _wm_myID) && {(_wm_ldr distance _x) < 400}) exitWith {_wm_townParked = true} } forEach towns;
+				//--- BARRACKS-PRESENT GUARD (flag WFBE_C_AICOM_TOPUP_REQUIRE_BARRACKS, default 0, fix
+				//--- fable/founding-placement-20260802): the legacy town-only test above matched ANY owned
+				//--- town regardless of whether it hosts a Barracks - a captured airfield-only town (no
+				//--- production structure at all) still granted "parked", so the TOPUP_REQ dispatch below
+				//--- conjured fresh infantry at the leader's exact rally position there (the same "magic
+				//--- infantry" anti-pattern WFBE_C_AICOM_FOUND_REQUIRE_FACTORY was armed to stop for
+				//--- founding). When armed, require an ALIVE owned Barracks within the SAME 400m range
+				//--- instead of merely town ownership - the earlier HQ-parked check above is unaffected
+				//--- (the HQ always carries the home base's own factories). Flag 0 => byte-identical.
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_REQUIRE_BARRACKS", 0]) > 0) then {
+					_wm_parked = false;
+					{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x} && {(_wm_ldr distance _x) < 400}) exitWith {_wm_parked = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+					if (_wm_townParked && {!_wm_parked}) then {
+						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ withheld - parked near an owned town with no alive Barracks within 400m (TOPUP_REQUIRE_BARRACKS armed).", _sideText, _team]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				} else {
+					_wm_parked = _wm_townParked;
+				};
 			};
 			_wm_disbanding = _team getVariable "wfbe_aicom_disband";
 			_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
@@ -265,6 +335,7 @@ if (_airMaxTotalP > 0) then {
 								//--- (Common_RunCommanderTeam.sqf) can refund it exactly if this request ages out unfilled.
 								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now, _wm_charge], true];
 								_capRemaining = _capRemaining - _wm_missing;
+								_logik setVariable ["wfbe_aicom_pending_spawn", (_logik getVariable ["wfbe_aicom_pending_spawn", []]) + [[_wm_missing, time + (missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING_TTL", 180])]]]; //--- F2 fable/aicom-econ-triad: book committed-but-unspawned HC top-up request on the pending ledger
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
 								//--- VISIBILITY: UID-targeted command-chat line to the seated human commander ONLY (Client_HandlePVF
 								//--- STRING destination = exact player UID; LocalizeMessage "QuartermasterRefit" is a passthrough case).
@@ -386,7 +457,12 @@ if (_airMaxTotalP > 0) then {
 							if (!isNull _cand && {_cand != _team}) then {
 								_candLdr = leader _cand;
 								//--- (b) server-local + non-HC: leader local to server AND not an HC team.
-								if (local _candLdr && {!(isPlayer _candLdr)} && {(behaviour _candLdr) != "COMBAT"} && {!([_cand, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+								//--- r87 merge-target re-check: never absorb the survivor into a team already flagged
+								//--- wfbe_aicom_disband/wfbe_aicom_recycle (recycle->disband converter above, Teams PC-cleanup,
+								//--- DisbandLowTier, Strategy) - disband is a DESTRUCTIVE grenade-drop of every member, so the
+								//--- "body preserved" merge would be grenaded on the target team next driver tick. Fall through
+								//--- to the cull instead (same net group/unit count).
+								if (local _candLdr && {!(isPlayer _candLdr)} && {(behaviour _candLdr) != "COMBAT"} && {!([_cand, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_cand, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_cand, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 									_candAlive = {alive _x} count (units _cand);
 									//--- (c) alive>=2 healthy, (d) below the 12 ceiling so the merge can't overflow
 									//--- 8-12 policy: surviving body count must still fit (_candAlive + _aliveNow <= MAX).
@@ -402,17 +478,54 @@ if (_airMaxTotalP > 0) then {
 						//--- MERGE: survivor joins healthy team; empty donor fully reclaimed (team-ended + deleteGroup).
 						//--- Net groups -1, body preserved. Bare deleteGroup alone leaked ledger/markers (r29 fix).
 						_mergedInto = _mergeTeam;  //--- capture for the log before _team is gutted
-						(units _team) joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
+						Private ["_liveMerge"];
+						_liveMerge = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
+						_liveMerge joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
+						{if (!alive _x && {!(isPlayer _x)}) then {["produce-merge-cull-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] stranded survivor MERGED into [%3] (alive=%4, dist=%5, mergeDist=%6) - body preserved, groups-1.", _sideText, _team, _mergedInto, _aliveNow, _curDist, round _mergeBest]] Call WFBE_CO_FNC_AICOMLog;
 						//--- r29 idle-reclaim: full ledger cleanup (match HCTopUp B69) BEFORE deleteGroup.
 						_team setVariable ["wfbe_persistent", false, true];
 						["aicom-team-ended", _myID, _team] Call HandleSpecial;
-						if (!isNull _team) then {deleteGroup _team};
+						if (!isNull _team && {(count (units _team)) == 0}) then {deleteGroup _team};
 						_canProduce = false;
 					} else {
 						//--- No eligible nearby team: cull then full reclaim (same ledger cleanup as merge).
 						//--- Non-player guard is belt-and-braces (this branch is already server-local non-HC, non-player-led).
-						{ if (!(isPlayer _x)) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
+						//--- fable/hull-leak-sources-20260802 SOURCE 1 fix: this cull deleted only the surviving crew
+						//--- member below and never touched the hull they were riding, leaving it ALIVE and crewless
+						//--- forever - the majority "dead-but-empty hull" map-litter class (owner report 2026-08-02).
+						//--- Collect each member's hull BEFORE the cull loop (vehicle _x is meaningless once _x is
+						//--- deleted), skip any hull still carrying a live player, then enroll each unique hull with
+						//--- the SAME server husk-collector pipeline Common_RunCommanderTeam.sqf's TRUCK-ABANDON /
+						//--- IMMOBILE-ABANDON sites already use ("aicom-vehicle-abandoned" -> WF_Logic "emptyVehicles"
+						//--- -> emptyvehiclescollector.sqf -> Server_HandleEmptyVehicle.sqf), which already resolves
+						//--- locality correctly (direct deleteVehicle once local, HandleSpecial "cleanup-empty-vehicle"
+						//--- remote-delete dispatch via WFBE_CO_FNC_SendToClient while still HC-owned). A silent
+						//--- background reap fits this recycle path better than the disband executor's cook/grenade
+						//--- treatment (Common_AICOMDisbandTeam.sqf) - this cull is a no-progress bookkeeping recycle,
+						//--- not a witnessed battlefield death, so there is no audience for a visible explosion and no
+						//--- reason to spend the extra damage/EH churn. This file is Server-side-only (header comment,
+						//--- top of file), so HandleSpecial is called directly - no isServer/RequestSpecial branch.
+						_cullHulls = [];
+						{
+							_cullMember = _x;
+							if (!isNull _cullMember) then {
+								_cullHull = vehicle _cullMember;
+								if (_cullHull != _cullMember && {!isNull _cullHull} && {alive _cullHull} && {({isPlayer _x} count (crew _cullHull)) == 0} && {!(_cullHull in _cullHulls)}) then {
+									_cullHulls = _cullHulls + [_cullHull];
+								};
+							};
+						} forEach (units _team);
+						{
+							if !(_x getVariable ["wfbe_aicom_abandoned", false]) then {
+								_x setVariable ["wfbe_aicom_abandoned", true];
+								["aicom-vehicle-abandoned", _x] Call HandleSpecial;
+							};
+						} forEach _cullHulls;
+						if (count _cullHulls > 0) then {
+							["INFORMATION", Format ["HULLGC|v1|cull side=%1 team=%2 hulls=%3", _sideText, _team, count _cullHulls]] Call WFBE_CO_FNC_AICOMLog;
+						};
+						{ if (!isNull _x && {!(isPlayer _x)}) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
 						_team setVariable ["wfbe_persistent", false, true];
 						["aicom-team-ended", _myID, _team] Call HandleSpecial;
@@ -522,7 +635,17 @@ if (_airMaxTotalP > 0) then {
 				{
 					_d = _x;
 					_have = ({typeOf _x == _d} count (units _team)) + ({_x == _d} count _ordered); //--- E7: real members + this-batch pending (async) orders
-					if (_have < ({_x == _d} count _template)) exitWith {_toBuild = _d};
+					if (_have < ({_x == _d} count _template)) then {
+						//--- A template can reference an addon asset unavailable in the current runtime. Do not
+						//--- queue/refund-fail it: keep scanning so a valid template sibling is the fallback.
+						if (isClass (configFile >> "CfgVehicles" >> _d)) exitWith {_toBuild = _d};
+						_missingClass = _team getVariable "wfbe_aicom_unavailable_class";
+						if (isNil "_missingClass" || {_missingClass != _d}) then {
+							_team setVariable ["wfbe_aicom_unavailable_class", _d, true];
+							["WARNING", Format ["AI_Commander_Produce.sqf: [%1] team [%2] skipped unavailable template classname [%3]; selecting an available fallback.", _sideText, _team, _d]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log Format ["AICOMBUY|v1|UNAVAILABLE_CLASS|side=%1|team=%2|class=%3|fallback=continue", _sideText, _team, _d];
+						};
+					};
 				} forEach _template;
 
 				//--- FILL-TO-FLOOR (deficit-fill 2026-06-18): the template composition is already satisfied
@@ -548,10 +671,29 @@ if (_airMaxTotalP > 0) then {
 
 				_ud = missionNamespace getVariable _toBuild;
 				if (isNil "_ud") exitWith {};
-				//--- Reserve the maximum bodies Server_BuyUnit can materialize from this async order.
-				//--- Vehicle orders request driver, gunner, commander, and every configured turret crew.
+				//--- Match Server_BuyUnit's driver + optional-seat contract to the effective catalog tuple.
+				//--- QUERYUNITCREW = [commander, gunner, totalCrewIncludingDriver, extraTurrets].
+				_crewSlots = _ud select QUERYUNITCREW;
+				_hasCommander = false;
+				_hasGunner = false;
+				_extraTurretCount = 0;
 				_capCost = 1;
-				if (!(_toBuild isKindOf "Man")) then {_capCost = 3 + count (_ud select QUERYUNITTURRETS)};
+				if (!(_toBuild isKindOf "Man")) then {
+					_extraTurretCount = count (_ud select QUERYUNITTURRETS);
+					if (typeName _crewSlots == "ARRAY") then {
+						_hasCommander = _crewSlots select 0;
+						_hasGunner = _crewSlots select 1;
+					} else {
+						//--- Backward-compatible scalar crew tuple: driver, gunner, commander.
+						switch (_crewSlots) do {
+							case 2: {_hasGunner = true};
+							case 3: {_hasGunner = true; _hasCommander = true};
+						};
+					};
+					if (_hasGunner) then {_capCost = _capCost + 1};
+					if (_hasCommander) then {_capCost = _capCost + 1};
+					_capCost = _capCost + _extraTurretCount;
+				};
 				if (_capRemaining < _capCost) exitWith {};
 
 				_typeName = _fac select 0;
@@ -601,7 +743,7 @@ if (_airMaxTotalP > 0) then {
 					if (_funds < _priceCharged) exitWith {}; //--- Cannot afford the actual discounted charge; stop batch.
 					[_side, -_priceCharged] Call ChangeAICommanderFunds;
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNIT_PRODUCED|class=" + _toBuild + "|factory=" + _typeName + "|cost=" + str _priceCharged + "|listCost=" + str _price + "|batch=" + str (_batchOrdered + 1));
-				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
+				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true, _hasGunner, _hasCommander, (_extraTurretCount > 0)]};
 				_id = [floor (random 1000000)];
 				_q = _team getVariable "wfbe_queue";
 				if (isNil "_q") then {_q = []};
@@ -611,6 +753,7 @@ if (_airMaxTotalP > 0) then {
 				//--- the SAME amount on a createVehicle spawn failure instead of re-deriving list price.
 				[_id, _facObj, _toBuild, _side, _team, _isVeh, _priceCharged] Spawn AIBuyUnit;
 				_capRemaining = _capRemaining - _capCost;
+				_logik setVariable ["wfbe_aicom_pending_spawn", (_logik getVariable ["wfbe_aicom_pending_spawn", []]) + [[_capCost, time + (missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING_TTL", 180])]]]; //--- F2 fable/aicom-econ-triad: book committed-but-unspawned factory order on the pending ledger
 				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it
 				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5, batch %6/%7 rich=%8).", _sideText, _team, _toBuild, _typeName, _price, _batchOrdered + 1, _batchCap, _richFlag]] Call WFBE_CO_FNC_AICOMLog;
 

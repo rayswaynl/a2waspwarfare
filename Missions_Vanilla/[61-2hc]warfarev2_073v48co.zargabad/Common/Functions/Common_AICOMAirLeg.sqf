@@ -256,8 +256,9 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT", 1]) > 0) then {
 			if (!(surfaceIsWater _candPos)) then {
 				private "_fe";
 				_fe = _candPos isFlatEmpty [15, 0, 3, 15, 0, false, objNull];
-				if (count _fe > 0) then {_vehDrop = _fe} else {_vehDrop = _candPos};
-				_ok = true;
+				if (count _fe > 0) then {_vehDrop = _fe; _ok = true} else {
+					if (_tryDepth <= 0) then {_vehDrop = _candPos; _ok = true};
+				};
 			};
 			if (!_ok) then {
 				if (_tryDepth <= 0) exitWith {_vehDrop = _dest; _ok = true}; //--- even dest is water (rare): use it anyway, loop ends.
@@ -307,7 +308,7 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 //--- L584-689, minus the fly-off/refund - the transport RETURNS to base + HOLDS to persist).
 //--- ===================================================================
 [_h, _lzPos, _flat, _lifted, _team, _dest, _side, _sideID, _liftVeh, _vehDrop] Spawn {
-	private ["_h","_lz","_fl","_pax","_tm","_obj","_sd","_sID","_t0","_lveh","_vdrop","_approachLimited"];
+	private ["_h","_lz","_fl","_pax","_tm","_obj","_sd","_sID","_t0","_lveh","_vdrop","_approachLimited","_hDropPos"];
 	_h    = _this select 0;
 	_lz   = _this select 1;
 	_fl   = _this select 2;
@@ -335,7 +336,7 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 	} forEach _pax;
 	if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 		//--- Heli lost mid-lift: any survivors still aboard/around get an unconditional move.
-		{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
+	{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false; if (vehicle _x != _x) then {moveOut _x}}; _x doMove _obj}} forEach _pax;
 		//--- P1.1 TERMINAL VEHLIFT TELEMETRY (claude 2026-07-19): true ABORT outcome - a vehicle was slung but the
 		//--- heli was lost before the pax even boarded/reached the LZ. Checked BEFORE the detach below (which nils
 		//--- nothing but keep the guard on the still-attached hull, mirroring the detach condition). Flag default 0.
@@ -364,7 +365,7 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 	};
 	if (_approachLimited) then {(group (driver _h)) setSpeedMode "FULL"};
 	if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
-		{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
+		{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false; if (vehicle _x != _x) then {moveOut _x}}; _x doMove _obj}} forEach _pax;
 		//--- P1.1 TERMINAL VEHLIFT TELEMETRY (claude 2026-07-19): true ABORT outcome - the heli was lost during the
 		//--- run-in to the LZ (pax boarded, deep-drop never reached). Flag default 0.
 		if (!isNull _lveh && {alive _lveh} && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0}) then {diag_log ("AICOMAIR|v1|" + str _sID + "|" + str (round (time / 60)) + "|stage=vehlift|reason=abort-runin|veh=" + (typeOf _lveh) + "|team=" + (str _tm))};
@@ -375,6 +376,35 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 			{if (alive _x) then {_x doMove _obj}} forEach (crew _lveh);
 		};
 		_tm setVariable ["wfbe_aicom_airborne_until", 0, true];
+	};
+
+	//--- ARRIVAL HOT-LZ RECHECK: the decision-time scan above can be stale after boarding + a long
+	//--- run-in. Re-read town ownership and hostile presence before descending; a newly hot LZ takes
+	//--- the existing para-unload path so the transport never lands into a flipped/contested objective.
+	private ["_arrivalAbort","_hotTown","_arrivalScanR","_arrivalMinHostiles","_arrivalHostiles","_arrivalReason"];
+	_arrivalAbort = false;
+	_arrivalReason = "";
+	if (count _fl > 0 && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP", 1]) > 0}) then {
+		_hotTown = objNull;
+		if (count towns > 0) then {_hotTown = [_lz, towns] Call WFBE_CO_FNC_GetClosestEntity};
+		if (!isNull _hotTown && {(_hotTown getVariable ["sideID", -1]) != _sID}) then {
+			_arrivalAbort = true;
+			_arrivalReason = "town-flipped";
+		};
+		if (!_arrivalAbort) then {
+			_arrivalScanR = missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_SCAN_R", 400];
+			_arrivalMinHostiles = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_MIN_HOSTILE", 2]) max 1;
+			_arrivalHostiles = {!isNull _x && {alive _x} && {((side _tm) getFriend (side _x)) < 0.6} && {!(_x isKindOf "Man") || {(vehicle _x) == _x}}} count (_lz nearEntities [["Man","LandVehicle","Tank"], _arrivalScanR]);
+			if (_arrivalHostiles >= _arrivalMinHostiles) then {
+				_arrivalAbort = true;
+				_arrivalReason = "contested";
+			};
+		};
+		if (_arrivalAbort) then {
+			_fl = [];
+			diag_log ("AICOMSTAT|v2|EVENT|" + str _sID + "|" + str (round (time / 60)) + "|AIRMOBILE_HOT_LZ_ABORT|team=" + (str _tm) + "|reason=" + _arrivalReason);
+			["WARNING", Format ["Common_AICOMAirLeg.sqf: [%1] team [%2] aborting land at newly hot LZ (%3); paradropping instead.", _sd, _tm, _arrivalReason]] Call WFBE_CO_FNC_AICOMLog;
+		};
 	};
 
 	if (count _fl > 0) then {
@@ -432,7 +462,8 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 		waitUntil {
 			sleep 2;
 			_tm setVariable ["wfbe_aicom_airborne_until", time + 120, true];
-			time > _t0 || isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || {(_h distance _vdrop) < 90}
+			_hDropPos = getPosATL _h;
+			time > _t0 || isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)} || {(_hDropPos distance [_vdrop select 0, _vdrop select 1, _hDropPos select 2]) < 90}
 		};
 		//--- Descend to ~15m so the released vehicle drops onto the deck, not from altitude.
 		if (!isNull _h && {alive _h} && {!isNull (driver _h)} && {alive (driver _h)}) then {
@@ -463,10 +494,10 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 		//--- aloft to a LIVE heli - release it safely under the heli so it is never carried off / lost.
 		//--- P1.1 TERMINAL VEHLIFT TELEMETRY (claude 2026-07-19): a lift WAS attempted (non-null/alive _lveh) but
 		//--- the deep-drop leg above did not complete (heli/driver lost en route, or _vdrop never resolved to a
-		//--- valid array) - distinct from a full drop-success. Checked BEFORE the altitude-gated safety-detach so
+		//--- valid array) - distinct from a full drop-success. Checked before the unconditional safety-detach so
 		//--- it still reports even when the vehicle already settled on its own. Flag default 0.
 		if (!isNull _lveh && {alive _lveh} && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0}) then {diag_log ("AICOMAIR|v1|" + str _sID + "|" + str (round (time / 60)) + "|stage=vehlift|reason=drop-safety-release|veh=" + (typeOf _lveh) + "|team=" + (str _tm))};
-		if (!isNull _lveh && {alive _lveh} && {((getPos _lveh) select 2) > 3}) then {
+		if (!isNull _lveh && {alive _lveh}) then {
 			detach _lveh;
 			_lveh setVelocity [0,0,0];
 			_lveh setPos [(getPos _lveh) select 0, (getPos _lveh) select 1, 0.5];

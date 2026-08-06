@@ -51,8 +51,8 @@ if (!_deployed) then {
 	};
 	_site setDir _direction;
 	_site setPos _position;
-	_site setVariable ["wfbe_side", _side];
-	_site setVariable ["wfbe_structure_type", "Headquarters"];
+	_site setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+	_site setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 
 	_logik setVariable ['wfbe_hq_deployed', true, true];
 	_logik setVariable ["wfbe_hq", _site, true];
@@ -123,9 +123,9 @@ if (!_deployed) then {
 	{if (!isNull _x) then {deleteVehicle _x}} forEach _defenses;
 	_MHQ setVelocity [0,0,-1];
 	_MHQ setVariable ["WFBE_Taxi_Prohib", true];
-	_MHQ setVariable ["wfbe_side", _side];
+	_MHQ setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
 	_MHQ setVariable ["wfbe_trashable", false];
-	_MHQ setVariable ["wfbe_structure_type", "Headquarters"];
+	_MHQ setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 	_MHQ addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 	_logik setVariable ["wfbe_hq", _MHQ, true];
 	_logik setVariable ['wfbe_hq_deployed', false, true];
@@ -148,7 +148,7 @@ if (!_deployed) then {
 
 	if (isMultiplayer) then {[_side, "HandleSpecial", ["set-hq-killed-eh", _MHQ]] Call WFBE_CO_FNC_SendToClients}; //--- WAVE-3 (60-audit): _mhq -> _MHQ (case-sensitive local was nil -> mobilized HQ's killed round-ender wired to nothing). Since the Killed EH fires localy, we send the information to the existing clients, JIP clients need to have the event in init_client.sqf (if !deployed).
 
-	_MHQ addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3] Call BuildingHandleDamages}];
+	_MHQ addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3,_this select 4] Call BuildingHandleDamages}];
 
 	["INFORMATION", Format ["Construction_HQSite.sqf: [%1] MHQ has been mobilized.", _sideText]] Call WFBE_CO_FNC_LogContent;
 

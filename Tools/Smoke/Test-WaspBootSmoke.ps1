@@ -274,7 +274,7 @@ if ($SelfTest) { exit (Invoke-SelfTest) }
 if (-not $ServerRpt) { throw "Provide -ServerRpt <path> (or -SelfTest)." }
 . (Join-Path $here '..\Monitor\Get-WindowedRpt.ps1')
 $cfg = Get-Config
-$srv = Get-WindowedRpt -RptPath $ServerRpt
+$srv = Get-WindowedRpt -RptPath $ServerRpt -RequireWindowMarker
 $results = Invoke-BootSmokeChecks -Lines $srv -Cfg $cfg
 $verdict = if (@($results | Where-Object { $_.status -eq 'FAIL' }).Count -gt 0) { 'FAIL' } else { 'PASS' }
 Write-Scorecard $results $verdict

@@ -2,6 +2,7 @@ private ["_u","_wp","_rkt","_am","_i","_vlnrd","_vl","_vlnr","_vcnr",
 "_vc","_vcnrd","_vg","_vgnr","_vgnrd","_trg","_fp","_spd","_dis","_trvldis","_sltd",
 "_sspd","_acc","_agl","_trgtp","_rtp",
 "_msl","_trgp","_trgv","_ttimp","_prd","_t"];
+scopeName "OUT";
 
 _u = _this select 0;
 _wp = currentWeapon _u;
@@ -76,10 +77,11 @@ if(isNull _trg || _u aimedAtTarget [_trg] == 0 || {_trgtp isKindOf _x} count _rt
                         _vgnr =_vg distance [0,0,0];
                         _vgnrd = [(_vg select 0)/_vgnr,(_vg select 1)/_vgnr,(_vg select 2)/_vgnr];
                         _rkt setvectorDirandUp [[(_vgnrd select 0),(_vgnrd select 1),(_vgnrd select 2)],[0,0,1]];
-                        _rkt setVelocity [(_vgnrd select 0)*_spd,(_vgnrd select 1)*_spd,(_vgnrd select 2)*_spd];                                                                                            
+                        _rkt setVelocity [(_vgnrd select 0)*_spd,(_vgnrd select 1)*_spd,(_vgnrd select 2)*_spd];
+                        //--- Fired starts one scheduled guidance worker per missile; yield each steering tick so concurrent salvos cannot monopolise the scheduler.
+                        sleep 0.01;
                                                };
                      					   				
-scopeName "OUT";
 exit;
 
 

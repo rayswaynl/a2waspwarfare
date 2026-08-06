@@ -154,9 +154,17 @@ _createBorder = {
 		_zpos = (_center select 2);
 
 		_a = "transparentwall" createVehicleLocal [_xpos,_ypos,_zpos];
-		_a setposasl [_xpos,_ypos,0];
-		_a setdir (_dir + 90);
-		_border = _border + [_a];
+		//--- r105 bughunt: was setPosASL z=0 (sea level) - the whole border ring sat BURIED under any
+		//--- terrain above 0m ASL (all inland build areas on CH/TK/ZG), so the build-area boundary never
+		//--- rendered away from the coast. Ground-snap each segment instead (setPosATL z=0 = terrain surface).
+		//--- FAIL-CLEAN r44: null create must not setpos/setdir or append a null border segment.
+		if (isNull _a) then {
+			["WARNING", Format ["coin_interface.sqf: transparentwall border create failed at [%1,%2,%3].", _xpos, _ypos, _zpos]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_a setPosATL [_xpos,_ypos,0];
+			_a setdir (_dir + 90);
+			_border = _border + [_a];
+		};
 	};
 	missionNamespace setVariable ["BIS_COIN_border",_border];
 };
@@ -520,6 +528,15 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 			_itemname = if (count _params > 3) then {_params select 3} else {getText (configFile >> "CfgVehicles" >> _itemclass >> "displayName")};
 			_itemclass_preview = getText (configFile >> "CfgVehicles" >> _itemclass >> "ghostpreview");
 			if (_itemclass_preview == "") then {_itemclass_preview = _itemclass};
+			//--- fable/fortif-placement-preview-facing (owner 2026-08-04): ghostpreview is never authored
+			//--- anywhere in this mission's configs (see WFBE_ANCHOR_PREVIEW_MAP, Init_CommonConstants.sqf),
+			//--- so every WDDM anchor fell back to its own raw decoy classname above. Override from the
+			//--- shared preview map when armed - flag 0 (default) leaves the two lines above byte-identical.
+			if ((missionNamespace getVariable ["WFBE_C_DEF_PREVIEW_MAP", 0]) > 0) then {
+				{
+					if ((_x select 0) == _itemclass) exitWith {_itemclass_preview = _x select 1};
+				} forEach (missionNamespace getVariable ["WFBE_ANCHOR_PREVIEW_MAP", []]);
+			};
 
 			//--- Preview building
 			_preview = camtarget BIS_CONTROL_CAM;
@@ -599,8 +616,8 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 							sleep 2;
 							_mhq = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
 							if (alive _mhq) then {
-								_mhq addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [], 95, false, true, '', 'alive _target && locked _target'];
-								_mhq addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)'];
+								_mhq addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && locked _target'];
+								_mhq addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && !(locked _target)'];
 							};
 						};
 					};
@@ -609,39 +626,18 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				};
 
 				_preview = _itemclass_preview createVehicleLocal (screenToWorld [0.5,0.5]);
-				_gdir = _logic getVariable 'BIS_COIN_lastdir';
-				if !(isNil '_gdir') then {_preview setDir _gdir};
-				BIS_CONTROL_CAM camSetTarget _preview;
-				BIS_CONTROL_CAM camCommit 0;
-				_logic setVariable ["BIS_COIN_preview",_preview];
-				_new = true;
-
-				//--- Preview Helper.
-				if (_itemclass in _greenList && _index != -1) then {
-					_distance = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",sideJoinedText]) select _index;
-					_direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",sideJoinedText]) select _index;
-					_npos = [getPos _preview,_distance,getDir _preview + _direction] Call GetPositionFrom;
-					_helper = "Sign_Danger" createVehicleLocal _npos;
-					_helper setPos _npos;
-					_helper setDir (_direction+65);
-
-					_array = _preview worldToModel (getPos _helper);
-					_array set [2,0];
-					_helper attachTo [_preview,_array];
-
-					_logic setVariable ['WFBE_Helper',_helper];
-				};
-
-				_preview setObjectTexture [0,_colorGray];
-				_preview setVariable ["BIS_COIN_color",_colorGray];
-
-				//--- Exception - preview not created
-				if (isnull _preview) then {
+				//--- FAIL-CLEAN r44: guard create null BEFORE setDir/camSetTarget/helper (late isnull ran after mutators)
+				if (isNull _preview) then {
+					["WARNING", Format ["coin_interface.sqf: preview class [%1] createVehicleLocal failed.", _itemclass_preview]] Call WFBE_CO_FNC_LogContent;
 					//--- fable/coin-placement-fixes (owner live report 2026-07-28 "some things dont even show a preview"):
 					//--- createVehicleLocal can silently return objNull for some ghostpreview/item classnames with no
 					//--- error and no trace in RPT; log the failed classname here so it is diagnosable. Placement is not
 					//--- blocked by this - the existing reset below already lets the flow continue without a preview.
 					diag_log Format ["COINPLACE|v1|no-preview|class=%1|itemclass=%2", _itemclass_preview, _itemclass];
+					//--- fable/fortif-placement-preview-facing (owner 2026-08-04): the reset below silently
+					//--- cancels the player's just-made selection with zero on-screen feedback (RPT is invisible
+					//--- in-game) - surface it so this reads as an explicit failure, not "I clicked and nothing happened."
+					hintSilent Format ["Cannot place %1 - no preview available.", _itemname];
 					deleteVehicle _preview;
 					_logic setVariable ["BIS_COIN_preview",nil];
 					_logic setVariable ["BIS_COIN_params",[]];
@@ -650,9 +646,49 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						deleteVehicle _get;
 						_logic setVariable ['WFBE_Helper',nil];
 					};
-				};
+				} else {
+					_gdir = _logic getVariable 'BIS_COIN_lastdir';
+					if !(isNil '_gdir') then {_preview setDir _gdir};
+					BIS_CONTROL_CAM camSetTarget _preview;
+					BIS_CONTROL_CAM camCommit 0;
+					_logic setVariable ["BIS_COIN_preview",_preview];
+					_new = true;
 
+					//--- Preview Helper.
+					if (_itemclass in _greenList && _index != -1) then {
+						_distance = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",sideJoinedText]) select _index;
+						_direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",sideJoinedText]) select _index;
+						_npos = [getPos _preview,_distance,getDir _preview + _direction] Call GetPositionFrom;
+						_helper = "Sign_Danger" createVehicleLocal _npos;
+						//--- FAIL-CLEAN r44: helper null must not setPos/setDir/attachTo.
+						if (isNull _helper) then {
+							["WARNING", Format ["coin_interface.sqf: Sign_Danger helper create failed at %1.", _npos]] Call WFBE_CO_FNC_LogContent;
+						} else {
+							_helper setPos _npos;
+							_helper setDir (_direction+65);
+
+							_array = _preview worldToModel (getPos _helper);
+							_array set [2,0];
+							_helper attachTo [_preview,_array];
+
+							_logic setVariable ['WFBE_Helper',_helper];
+						};
+					};
+
+					_preview setObjectTexture [0,_colorGray];
+					_preview setVariable ["BIS_COIN_color",_colorGray];
+				};
 			} else {
+				//--- fable/fortif-placement-preview-facing (owner 2026-08-04, "facing direction indications"):
+				//--- ROTATE=[Ctrl] hint (str_coin_rotate, below) promised a control that was never wired to any
+				//--- setDir - _ctrl (line 491) was computed every poll tick and never read again. Tick-increment
+				//--- (not mouse-delta - this loop has no per-frame mouse-move delta available) rotation while an
+				//--- existing preview is up; forces a same-tick tooltip rebuild so the live degree readout
+				//--- (below, _text1) never goes stale while Ctrl is held. Flag 0 (default) = inert.
+				if (((missionNamespace getVariable ["WFBE_C_DEF_PLACE_ROTATE", 0]) > 0) && _ctrl) then {
+					_preview setDir ((getDir _preview) + ((missionNamespace getVariable ["WFBE_C_DEF_PLACE_ROTATE_DEG_SEC", 90]) * _pollSleep));
+					_logic setVariable ["WF_RequestUpdate", true];
+				};
 				//--- Check zone
 				if (
 					([position _preview,_startPos] call BIS_fnc_distance2D) > _limitH
@@ -844,7 +880,12 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 				if (_tooltipType != "empty") then {
 					_textHeader = format ["<t color='#42b6ff' shadow='1' align='center' size='1.8'> %1 </t><br />",
-						getText (configFile >> "cfgvehicles" >> _type >> "displayname"),
+						(if (isNil "_itemname") then {""} else {_itemname}), //--- wave0804b (coin_interface.sqf:873, regression from 942bb614ef): _itemname can be out of scope on some
+						//--- preview ticks (RPT: "Undefined variable in expression: _itemname") - guard with isNil and fall back to an
+						//--- empty string (never re-derive the stock CfgVehicles displayName - test_fortif_placement_preview_facing.py
+						//--- pins that commit 942bb614ef's WFBE-label switch must not be reverted) so no undefined-variable error can
+						//--- fire. fable/fortif-placement-preview-facing (owner 2026-08-04): still show the WFBE buy-menu label (line 523)
+						//--- whenever it IS in scope.
 						if (isnull _selected) then {""} else {str round ((1 - damage _selected) * 100) + "%"}
 					];
 					//--- QoL (C3): show build count vs limit for this structure while placing.
@@ -861,7 +902,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_textPicture = format ["<t color='#42b6ff' shadow='2' align='left' size='2.8'><img image='%1'/></t> ",_filePicture];
 				};
 
-				_text1 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_rotate" + "<t align='right'>" + call compile (keyname 29) + "</t></t><br />"} else {"<br />"};
+				_text1 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_rotate" + "<t align='right'>" + call compile (keyname 29) + (if (((missionNamespace getVariable ["WFBE_C_DEF_PLACE_ROTATE", 0]) > 0) && (_tooltipType == "preview") && {!(isNil "_preview")}) then {format [" (%1 deg)", round (getDir _preview)]} else {""}) /*--- wave0804b: guard _preview - RPT proved "Undefined variable in expression: _preview" at this line; "preview" tooltipType alone doesn't guarantee _preview is bound on every tick. ---*/ + "</t></t><br />"} else {"<br />"};
 
 				_status = if (manningDefense) then {localize "STR_WF_On"} else {localize "STR_WF_Off"};
 				_text2 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_build" + "<t align='right'>" + call compile (actionKeysNames ["DefaultAction",1]) + "</t></t><br />"} else {"<t color='#42b6ff' shadow='2'>" + localize "STR_WF_AutoDefense" + ":<t align='right'>" + _status + "</t></t><br />"};
@@ -980,6 +1021,19 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_cashValue = _cashValues select _itemcash;
 						_cashDescription = if (count _fundsDescription > _itemcash) then {_fundsDescription select _itemcash} else {"?"};
 						_itemname = if (count _x > 3) then {_x select 3} else {getText (configFile >> "CfgVehicles" >> _itemclass >> "displayName")};
+						//--- wave0804b (build-menu apostrophe corruption): _itemname rides into _arrayParams (below) which is
+						//--- embedded as the single-quoted %3 payload in the vanilla BIS_fnc_createmenu click-handler (line ~1038,
+						//--- `call compile '%3'`). Any apostrophe/quote in the resolved label prematurely closes that single-quoted
+						//--- string and corrupts every sibling item's click handler in the same category. Strip ASCII 39 (') and
+						//--- ASCII 34 (") before it ever reaches _arrayParams. regexReplace does NOT exist on A2 OA 1.64 (A3
+						//--- 2.06+ only) - use the toArray/toString filter idiom (precedent: GUI_EndOfGameStats.sqf HC-name strip).
+						_wc19Chars = toArray _itemname;
+						_wc19Clean = [];
+						for "_wc19i" from 0 to (count _wc19Chars - 1) do {
+							_wc19c = _wc19Chars select _wc19i;
+							if (_wc19c != 39 && {_wc19c != 34}) then {_wc19Clean set [count _wc19Clean, _wc19c]};
+						};
+						_itemname = toString _wc19Clean;
 						//--- Build Limit reached?
 						_buildLimit = false;
 						_find = _buildingsNames find _itemclass;

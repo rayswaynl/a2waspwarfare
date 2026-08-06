@@ -17,6 +17,9 @@ if ((missionNamespace getVariable ["WFBE_C_FIX_RESPAWN_UNITQUEU_RESET", 0]) > 0)
 };
 
 (_unit) Call WFBE_SK_FNC_Apply;
+//--- The preceding OnKilled wait ends after this replacement body is alive. Advance the FSM
+//--- epoch so the old player-global loop reaches its own End state instead of surviving respawn.
+missionNamespace setVariable ["WFBE_CL_UpdateActionsEpoch", (missionNamespace getVariable ["WFBE_CL_UpdateActionsEpoch", 0]) + 1];
 [] execFSM "Client\FSM\updateactions.fsm";
 
 // Marty: Re-add the WF menu on the new respawned unit and store the action ID on that unit.

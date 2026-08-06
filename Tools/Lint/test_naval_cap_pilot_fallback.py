@@ -20,6 +20,19 @@ PILOT_FALLBACKS = (
 )
 
 
+def test_naval_cap_pilot_fallback_failure_skips_follow_up_commands() -> None:
+    """A failed fallback must not issue move/seat commands on objNull."""
+    for mission_root in MISSION_ROOTS:
+        naval_path = mission_root / "Server/Init/Init_NavalHVT.sqf"
+        text = (ROOT / naval_path).read_text(encoding="utf-8")
+
+        for pilot_name, expected_count in PILOT_FALLBACKS:
+            guard = f"if (!(isNull {pilot_name})) then {{"
+            assert text.count(guard) == expected_count, (
+                f"{pilot_name} must guard every post-fallback command in {naval_path}"
+            )
+
+
 def test_naval_cap_pilot_fallback_checks_the_created_object() -> None:
     for mission_root in MISSION_ROOTS:
         naval_path = mission_root / "Server/Init/Init_NavalHVT.sqf"
@@ -51,3 +64,4 @@ def test_naval_cap_pilot_fallback_checks_the_created_object() -> None:
 
 if __name__ == "__main__":
     test_naval_cap_pilot_fallback_checks_the_created_object()
+    test_naval_cap_pilot_fallback_failure_skips_follow_up_commands()

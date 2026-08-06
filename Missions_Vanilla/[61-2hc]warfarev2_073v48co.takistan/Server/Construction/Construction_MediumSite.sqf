@@ -1,7 +1,7 @@
 //*****************************************************************************************
 //Description: Creates a small construction site.
 //*****************************************************************************************
-Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_stage3Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
+Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_stage3Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type","_reqPlayer"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -11,6 +11,8 @@ _startResultKey = if ((count _this) > 5) then {_this select 5} else {""};
 if ((typeName _startResultKey) != "STRING") then {_startResultKey = ""};
 _completionResultKey = if ((count _this) > 6) then {_this select 6} else {""};
 if ((typeName _completionResultKey) != "STRING") then {_completionResultKey = ""};
+_reqPlayer = if ((count _this) > 7) then {_this select 7} else {objNull};
+if (isNil "_reqPlayer" || {typeName _reqPlayer != "OBJECT"}) then {_reqPlayer = objNull};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 
@@ -93,12 +95,54 @@ _releaseCapPending = {
 	};
 };
 
+private ["_onConstructionAbort"];
+_onConstructionAbort = {
+	Call _releasePending;
+	Call _releaseCapPending;
+	if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {
+		private ["_slot","_live","_cur","_costsArr","_refundPrice"];
+		if (_rlIdx > 0 && {!isNull _logik}) then {
+			_slot = _rlIdx - 1;
+			_live = _logik getVariable "wfbe_structures_live";
+			if (!isNil "_live" && {typeName _live == "ARRAY"} && {_slot < count _live}) then {
+				_cur = _live select _slot;
+				if (typeName _cur != "SCALAR") then {_cur = 0};
+				_live set [_slot, (_cur - 1) max 0];
+				_logik setVariable ["wfbe_structures_live", _live, true];
+			};
+		};
+		_refundPrice = 0;
+		_costsArr = missionNamespace getVariable [Format ["WFBE_%1STRUCTURECOSTS", str _side], []];
+		if (_rlIdx >= 0 && {_rlIdx < count _costsArr}) then {_refundPrice = _costsArr select _rlIdx};
+		[_reqPlayer, "LocalizeMessage", ["StructureBuildFailed", _refundPrice]] Call WFBE_CO_FNC_SendToClient;
+		diag_log Format ["CONSTRUCTION|v1|live-rollback-abort|type=%1|side=%2|index=%3|refund=%4", _rlType, str _side, _rlIdx, _refundPrice];
+	};
+};
+
+//--- r31 livecount: AI/direct Construction never went through coin_interface's optimistic +1.
+//--- Player requests already increment client-side; their server worker is identified by _reqPlayer.
+//--- Resistance FOB builds do not use the side live-count ledger.
+private ["_onConstructionSuccessLive"];
+_onConstructionSuccessLive = {
+	if (!isNull _reqPlayer && {isPlayer _reqPlayer}) exitWith {};
+	if (_side == resistance) exitWith {};
+	if (_rlIdx <= 0 || {isNull _logik}) exitWith {};
+	private ["_slot","_live","_cur"];
+	_slot = _rlIdx - 1;
+	_live = _logik getVariable "wfbe_structures_live";
+	if (isNil "_live" || {typeName _live != "ARRAY"} || {_slot >= count _live}) exitWith {};
+	_cur = _live select _slot;
+	if (typeName _cur != "SCALAR") then {_cur = 0};
+	_live set [_slot, _cur + 1];
+	_logik setVariable ["wfbe_structures_live", _live, true];
+	diag_log Format ["CONSTRUCTION|v1|live-inc-ai|type=%1|side=%2|index=%3|now=%4", _rlType, str _side, _rlIdx, (_cur + 1)];
+};
+
 _group = createGroup sideLogic;
 _nearLogic = objNull;
 if !(isNull _group) then {_nearLogic = _group createUnit ["LocationLogicStart",_position,[],0,"NONE"]};
 if (isNull _nearLogic) exitWith {
-	Call _releasePending;
-	Call _releaseCapPending;
+	Call _onConstructionAbort;
 	if (_startResultKey != "") then {missionNamespace setVariable [_startResultKey, [-1,"LocationLogicStart missing"]]};
 	if !(isNull _group) then {deleteGroup _group};
 	diag_log Format ["CONSTRUCTION|v1|reject|reason=missing-start-logic|script=MediumSite|type=%1|pos=%2", _type, _position];
@@ -172,8 +216,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 };
 
 if (_constructionLogicLost) exitWith {
-	Call _releasePending;
-	Call _releaseCapPending;
+	Call _onConstructionAbort;
 	{if !(isNull _x) then {deleteVehicle _x}} forEach _constructed;
 	if !(isNull _group) then {deleteGroup _group};
 	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"construction logic was destroyed"]]};
@@ -184,8 +227,7 @@ if (_constructionLogicLost) exitWith {
 
 _site = createVehicle [_type, _position, [], 0, "NONE"];
 if (isNull _site) exitWith {
-	Call _releasePending;
-	Call _releaseCapPending;
+	Call _onConstructionAbort;
 	if !(isNull _nearLogic) then {
 		_group = group _nearLogic;
 		deleteVehicle _nearLogic;
@@ -196,11 +238,12 @@ if (isNull _site) exitWith {
 };
 _site setDir _direction;
 _site setPos _position;
-_site setVariable ["wfbe_side", _side];
-_site setVariable ["wfbe_structure_type", _rlType];
+_site setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+_site setVariable ["wfbe_structure_type", _rlType, true]; //--- r30 getvar-jip: JIP clients need type
 //--- build/defense audit 2026-07-28: release the RequestStructure.sqf cap reservation now that the
 //--- real structure is registered (no-op for types _releaseCapPending does not recognize).
 Call _releaseCapPending;
+Call _onConstructionSuccessLive;
 
 //--- Bank: spawn composition dressing, register in per-side registry, create global marker, start income drip.
 if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
@@ -262,7 +305,7 @@ if (_rlType in ["Reserve","ArtilleryRadar"]) then {
 		if (!isNull _gGrp && {!isNil "_gCrewCls"}) then {
 			_gGuns = 0;
 			{
-				if ((_x isKindOf "StaticWeapon") && {(count crew _x) == 0}) then {
+				if (alive _x && {_x isKindOf "StaticWeapon"} && {({alive _x} count crew _x) == 0}) then {
 					_gUnit = [_gCrewCls, _gGrp, getPos _x, (_side) Call GetSideID] Call WFBE_CO_FNC_CreateUnit;
 					if (!isNull _gUnit) then {
 						_gUnit moveInGunner _x;
@@ -335,9 +378,9 @@ if (!IsNull _site) then {
 	
 	_site addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 	if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_HANDLE_FRIENDLYFIRE") > 0) then {
-		_site addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3] Call BuildingHandleDamages}];
+		_site addEventHandler ['handleDamage',{[_this select 0,_this select 2,_this select 3,_this select 4] Call BuildingHandleDamages}];
 	} else {
-		_site addEventHandler ['handleDamage',{[_this select 0, _this select 2] Call HandleBuildingDamage}];
+		_site addEventHandler ['handleDamage',{[_this select 0, _this select 2, _this select 4] Call HandleBuildingDamage}];
 	};
 	Call Compile Format ["_site AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];",_type];
 	

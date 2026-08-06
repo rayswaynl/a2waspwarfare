@@ -18,22 +18,31 @@ def test_deleted_dispatch_inputs_exit_before_dereference():
         team_assignment = text.index('_team = _this select 0;')
         town_assignment = text.index('_town_assigned = _this select 1;')
         null_guard = text.index('if (isNull _team || {isNull _town_assigned}) exitWith {')
-        leader_read = text.index('_wp_origin = getPos (leader _team);')
-        side_read = text.index('_side = (_team getVariable "wfbe_side") Call WFBE_CO_FNC_GetSideID;')
+        # r78b: an empty/culled group has a null leader - getPos on it throws and aborts path
+        # planning for the whole dispatch (no depot SAD either). The leader must be captured
+        # into a local and null-checked with its own exitWith BEFORE _wp_origin ever
+        # dereferences it via getPos - never a bare `getPos (leader _team)`.
+        leader_capture = text.index('_fallbackLeader = leader _team;', null_guard)
+        leader_guard = text.index('if (isNull _fallbackLeader) exitWith {', leader_capture)
+        wp_origin_read = text.index('_wp_origin = getPos _fallbackLeader;', leader_guard)
+        assert '_wp_origin = getPos (leader _team)' not in text
+        side_read = text.index(
+            '_side = (_team getVariable "wfbe_side") Call WFBE_CO_FNC_GetSideID;', wp_origin_read
+        )
         # RECONCILED: this test pinned #1203's original simple guard (isNil "_side" exitWith).
         # #1209 layered fallback-leader recovery on top - a nil/negative side no longer exits
         # immediately, it first tries to recover the side from the team's live leader before
         # giving up. Pin the CURRENT merged shape instead: the recovery block (isNil OR
         # negative-side -> try leader) must run between the side read and the final guard, and
         # the final guard itself now also checks the negative-side case, not just isNil.
-        recovery_guard = text.index('if (isNil "_side" || {_side < 0}) then {')
-        fallback_leader_read = text.index('_fallbackLeader = leader _team')
-        side_guard = text.index('if (isNil "_side" || {_side < 0}) exitWith {')
+        recovery_guard = text.index('if (isNil "_side" || {_side < 0}) then {', side_read)
+        side_fallback_leader_read = text.index('_fallbackLeader = leader _team', recovery_guard)
+        side_guard = text.index('if (isNil "_side" || {_side < 0}) exitWith {', side_fallback_leader_read)
         assert team_assignment < null_guard
-        assert town_assignment < null_guard < leader_read
-        assert side_read < recovery_guard < fallback_leader_read < side_guard
-        assert text.count('["WARNING", Format') >= 2
-        assert text.count('Call WFBE_CO_FNC_LogContent') >= 2
+        assert town_assignment < null_guard < leader_capture < leader_guard < wp_origin_read
+        assert side_read < recovery_guard < side_fallback_leader_read < side_guard
+        assert text.count('["WARNING", Format') >= 3
+        assert text.count('Call WFBE_CO_FNC_LogContent') >= 3
     assert source_bytes[0] == source_bytes[1] == source_bytes[2]
 
 

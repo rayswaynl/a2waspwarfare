@@ -1,4 +1,24 @@
 
+fnc_marker_removeKeyEHs =
+{
+    private ["_display"];
+    _display = _this select 0;
+
+    //--- Only remove the two handlers this helper registered on this exact marker dialog.
+    //--- displayRemoveAllEventHandlers also erased unrelated display-54 key handlers.
+    if (!isNil "WASP_MarkerKeyEHDisplay" && {WASP_MarkerKeyEHDisplay == _display}) then {
+        if (!isNil "WASP_MarkerKeyUpEH") then {
+            _display displayRemoveEventHandler ["KeyUp", WASP_MarkerKeyUpEH];
+            WASP_MarkerKeyUpEH = nil;
+        };
+        if (!isNil "WASP_MarkerKeyDownEH") then {
+            _display displayRemoveEventHandler ["KeyDown", WASP_MarkerKeyDownEH];
+            WASP_MarkerKeyDownEH = nil;
+        };
+        WASP_MarkerKeyEHDisplay = nil;
+    };
+};
+
 fnc_marker_keyUp_EH =
 {
     private["_handled","_display","_dikCode","_control","_text"];
@@ -19,8 +39,7 @@ fnc_marker_keyUp_EH =
             _text = format ["%1: %2", name player, _text];
         };
 		_control ctrlSetText _text;		
-        _display displayRemoveAllEventHandlers "keyUp";
-        _display displayRemoveAllEventHandlers "keyDown";
+        [_display] call fnc_marker_removeKeyEHs;
 
     };
 
@@ -41,8 +60,7 @@ fnc_marker_keyDown_EH =
 
     if (_dikCode == 1) then
     {
-        _display displayRemoveAllEventHandlers "keyUp";
-        _display displayRemoveAllEventHandlers "keyDown";
+        [_display] call fnc_marker_removeKeyEHs;
 
     };
 
@@ -66,8 +84,11 @@ fnc_map_mouseButtonDblClick_EH =
             if (!isNull _display) exitWith
             {
                 
-                _display displayAddEventHandler ["keyUp", "_this call fnc_marker_keyUp_EH"];
-                _display displayAddEventHandler ["keyDown", "_this call fnc_marker_keyDown_EH"];
+                //--- Repeated map double-clicks can revisit this dialog; replace only our prior pair.
+                [_display] call fnc_marker_removeKeyEHs;
+                WASP_MarkerKeyEHDisplay = _display;
+                WASP_MarkerKeyUpEH = _display displayAddEventHandler ["KeyUp", "_this call fnc_marker_keyUp_EH"];
+                WASP_MarkerKeyDownEH = _display displayAddEventHandler ["KeyDown", "_this call fnc_marker_keyDown_EH"];
 
             };
         };

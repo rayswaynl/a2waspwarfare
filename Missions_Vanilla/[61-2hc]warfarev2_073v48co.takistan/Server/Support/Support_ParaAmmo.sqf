@@ -45,7 +45,9 @@ _refundParaAmmoSetup = {
 	};
 	["WARNING", Format ["Support_ParaAmmo.sqf: setup abort refund $%1 (%2).", _cost, _reason]] Call WFBE_CO_FNC_LogContent;
 };
-_ran = round(random((count _ranPos)-1));
+//--- A2-safe uniform index draw; round can select the upper bound.
+//--- uniform; count==0 would still be bad so caller must gate.
+_ran = floor (random (count _ranPos));
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 if (isNull _grp) exitWith {
 	["WARNING", Format ["Support_ParaAmmo.sqf: [%1] group create failed.", str _side]] Call WFBE_CO_FNC_LogContent;
@@ -64,8 +66,6 @@ if (isNull _pilot) exitWith {
 	if (!isNull _grp) then {deleteGroup _grp};
 	if (!_isAI) then {[_playerTeam, 9500, "pilot create failed"] Call _refundParaAmmoSetup};
 };
-[str _side,'VehiclesCreated',1] Call UpdateStatistics;
-[str _side,'UnitsCreated',1] Call UpdateStatistics;
 _pilot moveInDriver _vehicle;
 if (driver _vehicle != _pilot) exitWith {
 	["WARNING", Format ["Support_ParaAmmo.sqf: [%1] pilot seat failed; torn down.", str _side]] Call WFBE_CO_FNC_LogContent;
@@ -74,6 +74,9 @@ if (driver _vehicle != _pilot) exitWith {
 	if (!isNull _grp) then {deleteGroup _grp};
 	if (!_isAI) then {[_playerTeam, 9500, "pilot seat failed"] Call _refundParaAmmoSetup};
 };
+//--- Stats only after a seated pilot exists; failed setup produces no phantom counts.
+[str _side,'VehiclesCreated',1] Call UpdateStatistics;
+[str _side,'UnitsCreated',1] Call UpdateStatistics;
 _grp setBehaviour 'CARELESS';
 _grp setCombatMode 'STEALTH';
 _pilot disableAI 'AUTOTARGET';
@@ -89,7 +92,13 @@ _dropReady = false;
 while {true} do {
 	sleep 1;
 	if (!alive _pilot || !alive _vehicle || isNull _vehicle || isNull _pilot) exitWith {};
-	if (!(isPlayer (leader _playerTeam)) || time - _timeStart > 500) exitWith {{_x setDammage 1} forEach (_cargo+[_pilot,_vehicle]);deleteGroup _grp};
+	//--- Abort is null-safe: engine deletion can race the cleanup path.
+	if (!(isPlayer (leader _playerTeam)) || time - _timeStart > 500) exitWith {
+		{
+			if (!isNull _x) then {_x setDammage 1};
+		} forEach (_cargo + [_pilot, _vehicle]);
+		if (!isNull _grp) then {deleteGroup _grp};
+	};
 	_vehicleCoord = [getPos _pilot select 0,getpos _pilot select 1];
 	_positionCoord = [(_args select 2) select 0,(_args select 2) select 1];
 	if (_vehicleCoord distance _positionCoord < 100) exitWith {_dropReady = true};
@@ -106,8 +115,11 @@ if (_dropReady) then {
 	if (typeName _ammos != 'ARRAY') exitWith {["WARNING", Format ["Server_HandleSpecial.sqf: Expected array, given [%1] for ammunitions", typeName _ammos]] Call WFBE_CO_FNC_LogContent};
 	
 	{
+		//--- Crate creation can fail under a bad classname or object saturation.
 		_ammo = _x createVehicle [0,0,0];
-		
+		if (isNull _ammo) then {
+			["WARNING", Format ["Support_ParaAmmo.sqf: ammo crate createVehicle failed for class [%1].", _x]] Call WFBE_CO_FNC_LogContent;
+		} else {
 		[_chopper,_ammo,_side,_sideID] Spawn {
 			Private ['_ammo','_chopper','_chute','_dropStart','_pos','_side','_sideID','_type'];
 			_chopper = _this select 0;
@@ -119,6 +131,10 @@ if (_dropReady) then {
 			if (isNull _chopper || {!alive _chopper}) exitWith {if (!isNull _ammo) then {deleteVehicle _ammo}};
 			
 			_chute = (missionNamespace getVariable Format['WFBE_%1PARACHUTE',str _side]) createVehicle [0,0,20];
+			if (isNull _chute) exitWith {
+				if (!isNull _ammo) then {deleteVehicle _ammo};
+				["WARNING", "Support_ParaAmmo.sqf: parachute createVehicle failed - crate discarded."] Call WFBE_CO_FNC_LogContent;
+			};
 			_chute setPos [getPos _chopper select 0, getPos _chopper select 1, (getPos _chopper select 2) - 11];
 			_chute setDir (getDir _chopper);
 			
@@ -126,19 +142,24 @@ if (_dropReady) then {
 			_ammo attachTo [_chute,[0,0,0]];
 			_dropStart = time;
 			while {!isNull _ammo && ((getPos _ammo select 2) >= 3) && ((time - _dropStart) < 120)} do {sleep 1};
-			if (isNull _ammo) exitWith {deleteVehicle _chute};
+			if (isNull _ammo) exitWith {if (!isNull _chute) then {deleteVehicle _chute}};
 			detach _ammo;
 			
 			_type = typeOf _ammo;
 			_pos = getPos _ammo;
 			deleteVehicle _ammo;
 			_ammo = _type createVehicle _pos;
+			if (isNull _ammo) exitWith {
+				if (!isNull _chute) then {deleteVehicle _chute};
+				["WARNING", Format ["Support_ParaAmmo.sqf: grounded ammo recreate failed for [%1].", _type]] Call WFBE_CO_FNC_LogContent;
+			};
 			
 			Call Compile Format ["_ammo addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]",_sideID];
 			
 			sleep 5;
 			
-					deleteVehicle _chute;
+			if (!isNull _chute) then {deleteVehicle _chute};
+		};
 		};
 		
 		sleep 0.8;
@@ -158,6 +179,7 @@ while {true} do {
 	};
 };
 
-deleteVehicle _pilot;
-deleteVehicle _vehicle;
-deleteGroup _grp;
+//--- Null-safe teardown: death/engine cleanup may have invalidated any reference.
+if (!isNull _pilot) then {deleteVehicle _pilot};
+if (!isNull _vehicle) then {deleteVehicle _vehicle};
+if (!isNull _grp) then {deleteGroup _grp};

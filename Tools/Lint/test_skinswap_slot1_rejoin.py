@@ -43,6 +43,35 @@ class SkinswapRejoinTests(unittest.TestCase):
         self.assertLess(swap.rindex("WFBE_SkinSelector_InProgress = false"), rejoin)
         self.assertLess(rejoin, swap.index("B6 COMPLETE"))
 
+    def test_skinswap_pings_server_heal_after_client_rejoin(self) -> None:
+        # The client-side rejoin filters local AI, while mission-start/HC-owned AI is server-local.
+        # The wave tip already carries the ping as a separate multiplayer-safe call; the new server
+        # helper gates the actual reorder on WFBE_C_PLAYER_TEAMBAR_FIRST.
+        swap = code("WASP/actions/SkinSelector/SkinSelector_Apply.sqf")
+        ping = '["RequestSpecial", ["update-teamleader", WFBE_Client_Team, player]] Call WFBE_CO_FNC_SendToServer'
+        gate = swap.index('if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {')
+        rejoin = swap.index("SkinSelector_Apply slot1-rejoin", gate)
+        self.assertIn(ping, swap)
+        self.assertLess(rejoin, swap.index(ping))
+        self.assertLess(swap.index(ping), swap.index("B6 COMPLETE"))
+        self.assertEqual(swap.count(ping), 1)
+
+    def test_server_heal_asserts_leader_first_and_is_wired_to_both_call_sites(self) -> None:
+        fn = code("Server/Functions/Server_TeambarSlot1Rejoin.sqf")
+        self.assertNotIn('"not-leader"', fn)
+        self.assertIn("(leader _tbTeam) != _tbHuman) then {_tbTeam selectLeader _tbHuman}", fn)
+        self.assertIn('_tbSkip = "team-null"', fn)
+        self.assertIn('_tbSkip = "human-null"', fn)
+        self.assertIn('!(_tbHuman in (units _tbTeam))}) then {_tbSkip = "not-member"}', fn)
+        self.assertIn("((units _tbTeam) select 0) == _tbHuman) exitWith", fn)
+
+        self.assertIn("WFBE_SE_FNC_TeambarSlot1Rejoin = Compile preprocessFileLineNumbers",
+                      code("Server/Init/Init_Server.sqf"))
+        self.assertIn('"connect"] Call WFBE_SE_FNC_TeambarSlot1Rejoin',
+                      code("Server/Functions/Server_OnPlayerConnected.sqf"))
+        self.assertIn('"teamleader-update"] Call WFBE_SE_FNC_TeambarSlot1Rejoin',
+                      code("Server/Functions/Server_HandleSpecial.sqf"))
+
     def test_reference_implementations_unchanged(self) -> None:
         for rel, marker in (("Client/Init/Init_Client.sqf", "Init_Client slot1-rejoin"),
                             ("Client/Functions/Client_OnKilled.sqf", "slot1-rejoin")):

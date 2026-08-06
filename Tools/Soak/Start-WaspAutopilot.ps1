@@ -106,8 +106,10 @@ try {
         try {
             $res = & $runScen @sp
             if ($res -and $res.verdict -like 'SKIP_*') { $skipped++ } elseif ($res -and $res.verdict -like 'FAIL_*') { $skipped++ } else { $graded++ }
+            # Only an explicit Run-Scenario result is terminal. A thrown grader is
+            # transient/unknown and must remain eligible for the next pass.
+            $processed[$r.Name] = (Now).ToString('o')
         } catch { Write-Host "  grade error on $($r.Name): $_"; $skipped++ }
-        $processed[$r.Name] = (Now).ToString('o')
     }
     Save-Json $processed $processedF
 

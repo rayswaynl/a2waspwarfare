@@ -91,6 +91,25 @@ try { $null = Get-WindowedRpt -RptPath $p -WindowMarker '' } catch { $threw = $t
 Assert ($threw) "T7 throws on empty WindowMarker"
 Remove-Item $p -Force
 
+Write-Host "TEST 8: RequireWindowMarker fails closed when the marker is absent"
+$p = New-RptFile @('old boot line', 'ERROR stale-session')
+$threw = $false
+$r = @()
+try { $r = @(Get-WindowedRpt -RptPath $p -RequireWindowMarker -WarningAction SilentlyContinue) } catch { $threw = $true }
+Assert (-not $threw -and $r.Count -eq 0) "T8 missing required marker returns an empty window"
+Remove-Item $p -Force
+
+Write-Host "TEST 9: default missing-marker fallback remains compatible"
+$p = New-RptFile @('early boot line', 'early boot warning')
+$r = @(Get-WindowedRpt -RptPath $p -WarningAction SilentlyContinue)
+Assert ($r.Count -eq 2) "T9 default mode retains the legacy whole-file fallback"
+Remove-Item $p -Force
+
+Write-Host "TEST 10: boot-smoke uses the fail-closed window mode"
+$smokePath = Join-Path $PSScriptRoot '..\Smoke\Test-WaspBootSmoke.ps1'
+$smokeText = Get-Content -LiteralPath $smokePath -Raw
+Assert ($smokeText -match 'Get-WindowedRpt\s+-RptPath\s+\$ServerRpt\s+-RequireWindowMarker') "T10 boot-smoke requires a current window marker"
+
 Write-Host ""
 if ($script:fails -eq 0) { Write-Host "ALL TESTS PASSED" -ForegroundColor Green; exit 0 }
 else { Write-Host "$($script:fails) TEST(S) FAILED" -ForegroundColor Red; exit 1 }

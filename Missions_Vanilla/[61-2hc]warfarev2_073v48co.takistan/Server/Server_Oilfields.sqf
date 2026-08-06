@@ -576,7 +576,7 @@ WFBE_FNC_OilfieldApplyPull = {
 //--- units/waypoints (no HC delegation needed; this whole file is server-side).
 //------------------------------------------------------------------------------------
 WFBE_FNC_OilfieldTryGuerRaid = {
-	private ["_last","_interval","_grpCap","_gcnt","_grp","_size","_cls","_created","_i","_sp","_u"];
+	private ["_last","_interval","_grpCap","_gcnt","_grp","_size","_cls","_created","_i","_sp","_u","_playerRadius","_playerDist","_playerNear","_hcNames","_dx","_dy","_denyLogInterval","_denyLogLast"];
 	if ((missionNamespace getVariable ["WFBE_C_OILFIELD_GUER_RAID", 0]) != 1) exitWith {};
 	_last     = missionNamespace getVariable ["WFBE_OILFIELD_GUER_LAST", -1e9];
 	_interval = missionNamespace getVariable ["WFBE_C_OILFIELD_GUER_RAID_INTERVAL", 1500];
@@ -587,10 +587,6 @@ WFBE_FNC_OilfieldTryGuerRaid = {
 	if (_gcnt >= _grpCap) exitWith {
 		["INFORMATION", Format ["Server_Oilfields.sqf: GUER raid skipped - resistance groups %1 >= cap %2.", _gcnt, _grpCap]] Call WFBE_CO_FNC_LogContent;
 	};
-	_grp = [resistance, "oilfield-guer-raid"] Call WFBE_CO_FNC_CreateGroup;
-	if (isNull _grp) exitWith {
-		["WARNING", "Server_Oilfields.sqf: GUER raid - CreateGroup returned grpNull, aborting raid."] Call WFBE_CO_FNC_LogContent;
-	};
 	_size = missionNamespace getVariable ["WFBE_C_OILFIELD_GUER_RAID_SIZE", 4];
 	if (_size < 1) then {_size = 1};
 	_cls = missionNamespace getVariable ["WFBE_GUERRESSOLDIER", "GUE_Soldier_1"];
@@ -598,6 +594,39 @@ WFBE_FNC_OilfieldTryGuerRaid = {
 	private ["_ang","_r","_ringPos"];
 	_ang = random 360; _r = 180 + random 80;
 	_ringPos = [(_nodePos select 0) + _r * sin _ang, (_nodePos select 1) + _r * cos _ang, 0];
+	//--- Visibility suppression: the old gate only knew that the field was paying. That state is
+	//--- compatible with a player still standing at the node, so the random raid ring itself must
+	//--- be checked immediately before materialisation. HCs are not human observers.
+	_playerRadius = missionNamespace getVariable ["WFBE_C_OILFIELD_GUER_RAID_PLAYER_RADIUS", 400];
+	if (_playerRadius < 0) then {_playerRadius = 0};
+	//--- Units scatter up to 10m on each horizontal axis around the ring center; include that
+	//--- worst-case diagonal in the suppression radius. Use explicit X/Y math so airborne player
+	//--- altitude cannot make a human observer look farther away than their ground position.
+	_playerDist = _playerRadius + 15;
+	_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]];
+	if (typeName _hcNames != "ARRAY") then {_hcNames = ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]};
+	_denyLogInterval = missionNamespace getVariable ["WFBE_C_OILFIELD_GUER_RAID_DENY_LOG_INTERVAL", 300];
+	if (_denyLogInterval < 60) then {_denyLogInterval = 60};
+	_denyLogLast = missionNamespace getVariable ["WFBE_OILFIELD_GUER_DENY_LOG_LAST", -1e9];
+	_playerNear = false;
+	{
+		if (isPlayer _x && {alive _x} && {!((name _x) in _hcNames)}) then {
+			_dx = ((getPos _x) select 0) - (_ringPos select 0);
+			_dy = ((getPos _x) select 1) - (_ringPos select 1);
+			if ((sqrt ((_dx * _dx) + (_dy * _dy))) < _playerDist) then {_playerNear = true};
+		};
+	} forEach playableUnits;
+	if (_playerNear) exitWith {
+		if ((time - _denyLogLast) >= _denyLogInterval) then {
+			missionNamespace setVariable ["WFBE_OILFIELD_GUER_DENY_LOG_LAST", time];
+			diag_log Format ["OILFIELD|v2|GUERRAID|t=%1|requested=%2|created=0|from=%3|deny=player_near", round time, _size, _ringPos];
+			["INFORMATION", Format ["Server_Oilfields.sqf: GUER raid deferred - real player is within %1m of ring position %2.", _playerDist, _ringPos]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+	_grp = [resistance, "oilfield-guer-raid"] Call WFBE_CO_FNC_CreateGroup;
+	if (isNull _grp) exitWith {
+		["WARNING", "Server_Oilfields.sqf: GUER raid - CreateGroup returned grpNull, aborting raid."] Call WFBE_CO_FNC_LogContent;
+	};
 	_created = 0;
 	for "_i" from 1 to _size do {
 		_sp = [(_ringPos select 0) + (random 20) - 10, (_ringPos select 1) + (random 20) - 10, 0];

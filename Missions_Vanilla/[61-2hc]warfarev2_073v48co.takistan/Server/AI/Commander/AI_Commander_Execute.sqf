@@ -65,7 +65,7 @@ if (isNil "_teams") exitWith {};
 						//--- committed direct order (the war-room's per-team task path). Previously the direct path was
 						//--- invisible to ORDERS telemetry, so a working order looked identical to a dropped one in logs
 						//--- (part of why ORDERS(war-room) read 0 even when teams were tasked). Count these to see the path bite.
-						diag_log ("AICOM2|v1|ORDER|war-room-task|" + str _side + "|" + str (round (time / 60)) + "|mode=" + _modeL + "|goto=" + str [round (_goto select 0), round (_goto select 1)]);
+						diag_log ("AICOM2|v1|ORDER|war-room-task|" + str _side + "|" + str (round (time / 60)) + "|team=" + (str _team) + "|mode=" + _modeL + "|goto=" + str [round (_goto select 0), round (_goto select 1)]);
 						//--- B67 HC-ORDER PATH (full-send hybrid commander, item #5 / part 3): an HC-delegated team's units
 						//--- are LOCAL to the headless client, so server-side AIMoveTo/waypoint commands on them are
 						//--- unreliable - the HC driver (Common_RunCommanderTeam) acts ONLY on the public wfbe_aicom_order
@@ -108,6 +108,7 @@ if (isNil "_teams") exitWith {};
 							//--- A2: groups do not support the [name,default] getVariable form - plain get + isNil for the seq read.
 							_hcSeq = _team getVariable "wfbe_aicom_order";
 							_hcSeq = if (isNil "_hcSeq" || {count _hcSeq < 1}) then {0} else {(_hcSeq select 0) + 1};
+							_team setVariable ["wfbe_aicom_route_seq", _hcSeq, true]; //--- r85: bind the route above to THIS order's seq (driver stale-chain guard).
 							_team setVariable ["wfbe_aicom_order", [_hcSeq, _hcMode, _goto], true];
 							_team setVariable ["wfbe_exec_lastmode", _modeL];
 							_team setVariable ["wfbe_exec_lastgoto", _goto];
@@ -120,7 +121,7 @@ if (isNil "_teams") exitWith {};
 							//--- build83 fold (console road-route, agent 06190dac): a SERVER-LOCAL ground-vehicle team on a long leg (>700m) gets a road-node-snapped MOVE chain (same builder the AI-strategy town path uses) instead of a single cross-country AIMoveTo that A2 pathfinding stutters through; pure-infantry/short legs keep the direct AIMoveTo (driver does not road-lock foot squads).
 							_slOrigin = getPos (leader _team);
 							_slHasVeh = false;
-							{ if (vehicle _x != _x && {alive (vehicle _x)} && {!((vehicle _x) isKindOf "Air")} && {canMove (vehicle _x)}) exitWith {_slHasVeh = true} } forEach (units _team);
+							{ if (vehicle _x != _x && {alive (vehicle _x)} && {!((vehicle _x) isKindOf "Air")} && {!((vehicle _x) isKindOf "Ship")} && {canMove (vehicle _x)}) exitWith {_slHasVeh = true} } forEach (units _team);
 							if (_slHasVeh && {(_slOrigin distance _goto) > 700}) then {
 								_laneJit = _team getVariable "wfbe_aicom_lanejit";
 								if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};

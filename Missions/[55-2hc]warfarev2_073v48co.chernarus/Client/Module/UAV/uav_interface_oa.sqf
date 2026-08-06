@@ -1,5 +1,5 @@
 disableSerialization;
-Private ['_action_leave','_defaultTeamswitch','_displayEH_keydown','_displayEH_mousebuttondown','_locked','_logic','_mapEH_mousebttondown','_ppColor','_uav'];
+Private ['_action_leave','_defaultTeamswitch','_displayEH_keydown','_displayEH_mousebuttondown','_driver','_locked','_logic','_mapEH_mousebttondown','_ppColor','_uav'];
 _defaultTeamswitch = teamswitchenabled;
 
 startLoadingScreen ["UAV","RscDisplayLoadMission"];
@@ -8,14 +8,21 @@ _uav = playerUAV;
 
 //--- UAV destroyed
 if (isnull _uav) exitwith {endLoadingScreen;hint format [localize "strwfbasestructuredestroyed",localize "str_uav_action"]};
+_driver = driver _uav;
 
 //--- Switch view
-gunner _uav removeweapon "nvgoggles";
+//--- r78 handover: OPFOR UAV has no gunner slot (uav.sqf) - remoteControl gunner was a no-op and
+//--- exit always released gunner even when driver was possessed. Pick a live control unit once.
+Private ["_rcUnit","_weps"];
+_rcUnit = gunner _uav;
+if (isNull _rcUnit) then {_rcUnit = driver _uav};
+if (!isNull _rcUnit) then {_rcUnit removeweapon "nvgoggles"};
 _uav switchcamera "internal";
-player remoteControl gunner _uav;
+if (!isNull _rcUnit) then {player remoteControl _rcUnit};
 _locked = locked _uav;
 _uav lock true;
-_uav selectweapon (weapons _uav select 0);
+_weps = weapons _uav;
+if (count _weps > 0) then {_uav selectweapon (_weps select 0)};
 enableteamswitch false;
 titletext ["","black in"];
 BIS_UAV_TIME = 0;
@@ -125,26 +132,48 @@ endLoadingScreen;
 
 //--- TERMINATE
 waituntil {!isnil "bis_uav_terminate" || !alive _uav || !alive player};
+Private ["_playerDied","_mkId","_mkName"];
+_playerDied = !alive player;
 if (!alive _uav) then {
 	hint format [localize "strwfbasestructuredestroyed",localize "str_uav_action"];
-} else {
-	//--- Reenable targetting.
-	{(driver playerUAV) enableAI _x} forEach ["TARGET","AUTOTARGET"];
 };
+//--- Restore the originally disabled pilot even if the UAV hull was destroyed first.
+if (!isNull _driver && {alive _driver}) then {{_driver enableAI _x} forEach ["TARGET","AUTOTARGET"]};
 
 if (!isNull _uav) then {_uav lock _locked};
 titletext ["","black in"];
 bis_uav_terminate = nil;
 BIS_UAV_TIME = nil;
 BIS_UAV_PLANE = nil;
-objnull remoteControl gunner _uav;
+//--- Release the same unit we possessed (not hard-coded gunner).
+if (!isNull _rcUnit) then {objnull remoteControl _rcUnit};
 player switchcamera "internal";
 enableteamswitch _defaultTeamswitch;
 
-_uav removeaction _action_leave;
+if (!isNull _uav) then {_uav removeaction _action_leave};
 
-setGroupIconsVisible BIS_UAV_visible;
-BIS_UAV_visible = nil;
+//--- Clear operator-placed UAV map markers so a later session does not inherit overlays.
+_mkId = 1;
+_mkName = format ['_user_defined_UAV_MARKER_%1',_mkId];
+while {markerType _mkName != ''} do {
+	deleteMarker _mkName;
+	_mkId = _mkId + 1;
+	_mkName = format ['_user_defined_UAV_MARKER_%1',_mkId];
+};
+
+//--- Death: drop operator binding so respawn cannot re-open the terminal on a ghost session.
+if (_playerDied) then {
+	if (!isNil "playerUAV" && {playerUAV == _uav}) then {playerUAV = objNull};
+};
+//--- Destroyed hull: also drop binding (alive check in uav.sqf is a second line of defence).
+if (!alive _uav || {isNull _uav}) then {
+	if (!isNil "playerUAV" && {playerUAV == _uav}) then {playerUAV = objNull};
+};
+
+if (!isNil "BIS_UAV_visible") then {
+	setGroupIconsVisible BIS_UAV_visible;
+	BIS_UAV_visible = nil;
+};
 
 ppEffectDestroy _ppColor;
 

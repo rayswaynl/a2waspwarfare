@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince","_sortieDefR","_sortiePatR"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
@@ -87,6 +87,15 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	//--- leg (WFBE_C_TOWNS_SORTIES_RTB); seeded here purely for clarity - the manager already defaults
 	//--- this to false via getVariable, so flag-off behaviour is unaffected either way.
 	_town setVariable ["wfbe_sortie_rtb", false];
+	//--- Terrain sector classifier (WFBE_C_TERRAIN_CLASSIFY_SECTORS, default 0 = INERT): once per town at
+	//--- boot, averages 5 jittered selectBestPlaces samples per axis (Houses/Trees/Forest/Hills) via
+	//--- Common_TerrainClassifySector.sqf and caches garrison/bush-camp/open-maneuver on the town object
+	//--- (wfbe_sector_class / wfbe_sector_classified) for the AICOM composition nudge in
+	//--- Server_GetTownGroups.sqf / _Defender.sqf (gated separately on WFBE_C_TERRAIN_SECTOR_COMPOSITION).
+	//--- Classify-only: flag-off leaves wfbe_sector_classified unset and the mission byte-identical to HEAD.
+	if ((missionNamespace getVariable ["WFBE_C_TERRAIN_CLASSIFY_SECTORS", 0]) > 0) then {
+		[_town] Call WFBE_CO_FNC_TerrainClassifySector;
+	};
 	sleep _townInitSleep;
 };
 
@@ -231,7 +240,23 @@ while {!WFBE_GameOver} do {
 		_enemies = 0; //--- perf-dice fix (livetest 2026-07-06): must exist in TOWN-LOOP scope - assigned inside the _doScan block, and SQF inner-block assignments do not escape unless the var pre-exists in an outer scope (RPT: 'Undefined variable _enemies' at the deactivation check).
 
 		_town = towns select _i;
-		_town_teams = _town getVariable "wfbe_town_teams";
+		//--- Late-registration seed: towns that self-register into `towns` after this script's one-shot seed loop
+		//--- can reach the sweep without any wfbe_* defaults. Seed the same defaults as the init loop
+		//--- once, the first time the sweep sees such a town; the isNil guard never clobbers live state.
+		if (isNil {_town getVariable "wfbe_active"}) then {
+			_town setVariable ["wfbe_active", false];
+			_town setVariable ["wfbe_active_air", false];
+			_town setVariable ["wfbe_inactivity", 0];
+			_town setVariable ["wfbe_active_override", false];
+			_town setVariable ['wfbe_active_vehicles', []];
+			_town setVariable ['wfbe_town_teams', []];
+			_town setVariable ["wfbe_episode_spawned", false];
+			_town setVariable ["wfbe_sortie_grp", grpNull, true];
+			_town setVariable ["wfbe_sortie_started", 0];
+			_town setVariable ["wfbe_sortie_rtb", false];
+		};
+		_town_teams = _town getVariable ["wfbe_town_teams", []];
+		if (typeName _town_teams != "ARRAY") then {_town_teams = []};
 		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
 
 		//--- Nil-safe sideID (parity with server_town_camp N9 / capture ownership bughunt): 1-arg
@@ -264,14 +289,15 @@ while {!WFBE_GameOver} do {
 						WFBE_TownScanDiceAnnounced = true;
 						["INFORMATION", "server_town_ai.sqf: dormant-town scan dice enabled (WFBE_C_TOWN_SCAN_DICE=1)."] Call WFBE_CO_FNC_AICOMLog;
 					};
-					if (!(_town getVariable "wfbe_active") && {!(_town getVariable "wfbe_active_air")} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_GRACE", 30])}) then {
+					if (!(_town getVariable ["wfbe_active", false]) && {!(_town getVariable ["wfbe_active_air", false])} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_GRACE", 30])}) then {
 						if ((random 1) >= (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_P", 0.5])) then {_doScan = false};
 					};
 				};
 				//--- TOWNSCAN TELEMETRY: the dice skipped this dormant town's scan this sweep.
 				if (_tstOn && {!_doScan}) then {_tstScansSkipped = _tstScansSkipped + 1};
 				if (_doScan) then {
-				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
+				//--- Hysteresis: active towns use the WIDER ACTIVE_COEF ring (see Init_CommonConstants); idle uses DETECT COEF.
+				_dynRange = if ((_town getVariable ["wfbe_active", false]) || {(_town getVariable ["wfbe_active_air", false])}) then {_range_detect_active} else {_range_detect}; //--- D6c follow-up: late-registering towns reach this scan before their worker stamps wfbe_active* - nil condition silently killed the assignment (a2-failed-statement-continues), leaving _dynRange undefined and the :278 nearEntities scan dead for that town (55x on the wave0803a boot). Defaulted reads make the scan nil-safe.
 				_scanStart = diag_tickTime;
 								//--- A2 air-tier (lane 800): scan includes all Air; split into ground vs air lists.
 				private ["_detectedAll","_detectedGround","_detectedAir"];
@@ -462,6 +488,31 @@ while {!WFBE_GameOver} do {
 							_enemies = 0;
 						};
 
+						//--- Population/group caps must defer BEFORE the active latch.  An empty active town
+						//--- monopolizes the limited active-town budget while enemies keep its inactivity timer alive.
+						if (!_activationDeferred && {_enemies_ground > 0} && {(_side == west || {_side == east})}) then {
+							private ["_garrisonCapOnPre", "_garrisonCapTiersPre", "_garrisonCapIdxPre", "_garrisonCapPre", "_garrisonSideAIPre"];
+							_garrisonCapOnPre = (missionNamespace getVariable ["WFBE_C_GARRISON_CAP_GATE", 1]) > 0;
+							_garrisonCapTiersPre = missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140, 130, 100, 80]];
+							if ((count _garrisonCapTiersPre) < 1) then {_garrisonCapTiersPre = [missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", 140]]};
+							_garrisonCapIdxPre = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
+							if (_garrisonCapIdxPre > ((count _garrisonCapTiersPre) - 1)) then {_garrisonCapIdxPre = (count _garrisonCapTiersPre) - 1};
+							_garrisonCapPre = _garrisonCapTiersPre select _garrisonCapIdxPre;
+							_garrisonSideAIPre = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
+							if (_garrisonCapOnPre && {_garrisonSideAIPre >= _garrisonCapPre}) then {
+								_activationDeferred = true;
+								_enemies_ground = 0;
+								_enemies = 0;
+								diag_log Format ["GARRISON_CAP_DEFER|town=%1|side=%2|sideAI=%3|tierCap=%4", _town getVariable ["name", "?"], _side, _garrisonSideAIPre, _garrisonCapPre];
+							};
+						};
+						if (!_activationDeferred && {_enemies_ground > 0} && {{side _x == _side} count allGroups >= 144}) then {
+							_activationDeferred = true;
+							_enemies_ground = 0;
+							_enemies = 0;
+							diag_log Format ["TOWN_AI_GROUP_CAP_DEFER|town=%1|side=%2|groups=%3|cap=144", _town getVariable ["name", "?"], _side, {side _x == _side} count allGroups];
+						};
+
 						if(_enemies_ground > 0) then {
 							////
 							_town setVariable ["wfbe_active", true];
@@ -562,26 +613,7 @@ while {!WFBE_GameOver} do {
 						//--- Budget/GUER-cap deferrals must not fall through into creation side effects.
 						if (!_activationDeferred) then {
 						//// start of creation
-						private ["_garrisonCapOn", "_garrisonSideAI", "_garrisonCapTiers", "_garrisonCapTier", "_garrisonCapIdx", "_garrisonKeep", "_garrisonScaled", "_garrisonGi"];
-						_garrisonCapOn = (missionNamespace getVariable ["WFBE_C_GARRISON_CAP_GATE", 1]) > 0;
-						if (_garrisonCapOn && {(_side == west || {_side == east})} && {count _groups > 0}) then {
-							_garrisonCapTiers = missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140, 130, 100, 80]];
-							if ((count _garrisonCapTiers) < 1) then {_garrisonCapTiers = [missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", 140]]};
-							_garrisonCapIdx = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
-							if (_garrisonCapIdx > ((count _garrisonCapTiers) - 1)) then {_garrisonCapIdx = (count _garrisonCapTiers) - 1};
-							_garrisonCapTier = _garrisonCapTiers select _garrisonCapIdx;
-							_garrisonSideAI = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
-							if (_garrisonSideAI >= _garrisonCapTier) then {
-								_garrisonKeep = ceil ((count _groups) / 2);
-								if (_garrisonKeep < 1) then {_garrisonKeep = 1};
-								if (_garrisonKeep < count _groups) then {
-									_garrisonScaled = [];
-									for "_garrisonGi" from 0 to (_garrisonKeep - 1) do {[_garrisonScaled, (_groups select _garrisonGi)] call WFBE_CO_FNC_ArrayPush};
-									_groups = _garrisonScaled;
-									diag_log Format ["GARRISON_CAP_GATE|town=%1|side=%2|sideAI=%3|tierCap=%4|scaledTo=%5", _town getVariable ["name", "?"], _side, _garrisonSideAI, _garrisonCapTier, count _groups];
-								};
-							};
-						};
+						//--- Full-cap refusal was handled before the active latch above; do not downscale into an over-cap wave.
 						["INFORMATION", Format ["server_town_ai.sqf: Town [%1] ACTIVATED for [%2] (episode_spawned latch set, groups=%3).", _town getVariable "name", _side, count _groups]] Call WFBE_CO_FNC_AICOMLog;
 						//--- fix(tonight-20260717): mirror the _activeTownCount live-increment pattern above (~line 279)
 						//--- for the GUER group-cap counter. _guerGroupCount was read once per sweep (top of loop) and
@@ -600,14 +632,17 @@ while {!WFBE_GameOver} do {
 						_camps = +(_town getVariable "camps");
 						_positions = [];
 						_teams = [];
+						private ["_plannedGroups"];
+						_plannedGroups = +_groups;
+						_groups = [];
 						//--- fable/garrison-tonight (owner 2026-07-07): PERIMETER spread - ring the defenders around the
 						//--- town EDGE by bearing instead of clustering at camps/center. WFBE_C_TOWNS_PERIMETER 0 = legacy.
 						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP","_ctlNewGrp","_wtryP"];
 						_perimeterOn = (missionNamespace getVariable ["WFBE_C_TOWNS_PERIMETER", 0]) > 0;
-						_grpTotalP   = count _groups; if (_grpTotalP < 1) then {_grpTotalP = 1};
+						_grpTotalP   = count _plannedGroups; if (_grpTotalP < 1) then {_grpTotalP = 1};
 						_townRangeP  = _town getVariable ["range", 300]; if (_townRangeP < 120) then {_townRangeP = 120};
 						_townCenP    = getPos _town;
-						for "_groupIndex" from 0 to count(_groups)-1 do {
+						for "_groupIndex" from 0 to count(_plannedGroups)-1 do {
 							_position = [];
 							if (_perimeterOn) then {
 								_bearingP = (360 / _grpTotalP) * _groupIndex + (random 40) - 20;
@@ -636,14 +671,18 @@ while {!WFBE_GameOver} do {
 									_position = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
 								};
 							};
-							_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
-							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
+							//--- Town-AI slots are already bounded by the wave/group loop. Keep the
+							//--- empty-position probe bounded too; a crowded activation can otherwise
+							//--- spend 1000 isFlatEmpty checks before accepting the widened fallback.
+							_position = [_position, 50, 256] call WFBE_CO_FNC_GetEmptyPosition;
 							_ctlNewGrp = ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup);
-							//--- r50 fail-clean: CreateGroup returns grpNull at side group-cap; setVariable on null
-							//--- and pushing grpNull into _teams poisons the later CreateTownUnits batch for the wave.
+							//--- r50 fail-clean: preserve only successful template/position/group tuples. A failed
+							//--- CreateGroup must never shift later work or reach client delegation as an untracked grpNull.
 							if (isNull _ctlNewGrp) then {
-								["WARNING", Format ["server_town_ai.sqf: town-ai CreateGroup failed for side [%1] town [%2] - slot dropped.", _side, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+								["WARNING", Format ["server_town_ai.sqf: town-ai CreateGroup failed for side [%1] town [%2] - slot dropped before creation/delegation.", _side, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 							} else {
+								[_groups, _plannedGroups select _groupIndex] call WFBE_CO_FNC_ArrayPush;
+								[_positions, _position] call WFBE_CO_FNC_ArrayPush;
 							//--- New-Bug-A fix (fable/ctl-survivor-bugs): stamp each freshly created group with the SAME
 							//--- per-town wfbe_ctl_ground_wave state just set above for this wave (line ~287/~309), so
 							//--- the survivor-tally numerator below (deactivation block) can tell ground-wave groups
@@ -737,7 +776,19 @@ while {!WFBE_GameOver} do {
 								//--- existing server CreateTownUnits fallback instead of dispatching a dropped wave.
 								_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 								if (_liveHCs > 0) then {
-									[_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_DelegateAITownHeadless;
+									//--- DESPAWN-BUDGET INTEGRITY: free server-side empty shells before HC dispatch.
+									//--- Client_DelegateTownAI.sqf recreates a LOCAL group when the received team is
+									//--- null/empty (A2 group objects do not transfer locality). Leaving the server
+									//--- CreateGroup shells alive leaks empty groups against the ~144/side engine cap
+									//--- and the GUER/side group budget until GC eventually reaps them.
+									private ["_hcTeams","_shell"];
+									_hcTeams = [];
+									{
+										_shell = _x;
+										if (!isNull _shell && {(count (units _shell)) == 0}) then {deleteGroup _shell};
+										[_hcTeams, grpNull] call WFBE_CO_FNC_ArrayPush;
+									} forEach _teams;
+									[_town, _side, _groups, _positions, _hcTeams] Call WFBE_CO_FNC_DelegateAITownHeadless;
 									// Marty: HC-local groups are reported back by update-town-delegation after creation.
 									//--- fable/townteams-queue-singlewriter: NO write-back here. This branch never modifies
 									//--- _town_teams locally (unchanged since the read at wave start), so re-writing the stale
@@ -857,7 +908,12 @@ while {!WFBE_GameOver} do {
 						//--- CONTESTED: recall the sortie for defense immediately (tight move back onto the town),
 						//--- then clear the slot so no new sortie launches while the town is under attack.
 						if (_sortieValid) then {
-							[_sortieGrp, _townPos, "MOVE", 40] Call AIMoveTo;
+							//--- Wakeup fidelity: contested recall restores a town defense order and posture.
+							//--- Bare MOVE arrived and then idled; AIPatrol can also select an inter-town road corridor.
+							_sortieDefR = missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_RANGE", 30];
+							[_sortieGrp, _townPos, "SAD", _sortieDefR] Call WFBE_CO_FNC_WaypointSimple;
+							_sortieGrp setBehaviour "AWARE";
+							_sortieGrp setCombatMode "RED";
 							["INFORMATION", Format ["server_town_ai.sqf: sortie RECALLED (contested) for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 						};
 						_town setVariable ["wfbe_sortie_grp", grpNull, true];
@@ -882,6 +938,11 @@ while {!WFBE_GameOver} do {
 								_sortieRtbCap = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIE_RTB_TIMEOUT", 180];
 								if (_sortieRtbCap < 15) then {_sortieRtbCap = 15};
 								if (((leader _sortieGrp) distance _townPos) <= 60 || {(time - _sortieStarted) >= _sortieRtbCap}) then {
+									//--- Wakeup fidelity: the completed return leg resumes the town-ring patrol.
+									if (count units _sortieGrp > 0 && {local (leader _sortieGrp)}) then {
+										_sortiePatR = missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_RANGE", 500];
+										[_sortieGrp, _town, _sortiePatR] Call WFBE_CO_FNC_WaypointPatrolTown;
+									};
 									_town setVariable ["wfbe_sortie_grp", grpNull, true];
 									_town setVariable ["wfbe_sortie_started", 0];
 									_town setVariable ["wfbe_sortie_rtb", false];
@@ -891,8 +952,8 @@ while {!WFBE_GameOver} do {
 								//--- Rotation: after WFBE_C_TOWNS_SORTIE_MINS, bring this group home and free the slot
 								//--- so a different group takes the next turn on the following eligible sweep.
 								if ((time - _sortieStarted) >= (_sortieMins * 60)) then {
-									[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
 									if (_sortieRtbOn) then {
+										[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
 										//--- Return leg armed: keep the group tracked (so no new sortie launches while
 										//--- it walks home, and so the RTB poll above picks it up next sweep). Reuse
 										//--- wfbe_sortie_started as the return-leg clock (its rotation-timer job for
@@ -901,6 +962,9 @@ while {!WFBE_GameOver} do {
 										_town setVariable ["wfbe_sortie_rtb", true];
 										["INFORMATION", Format ["server_town_ai.sqf: sortie RTB started for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 									} else {
+										//--- Wakeup fidelity: flag-off rotation ends directly on a town-ring patrol.
+										_sortiePatR = missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_RANGE", 500];
+										[_sortieGrp, _town, _sortiePatR] Call WFBE_CO_FNC_WaypointPatrolTown;
 										_town setVariable ["wfbe_sortie_grp", grpNull, true];
 										_town setVariable ["wfbe_sortie_started", 0];
 										["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
@@ -919,7 +983,7 @@ while {!WFBE_GameOver} do {
 								_sortieProximityRange = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES_PROXIMITY_RANGE", 1500];
 								_sortieProximityOk = false;
 								{
-									if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _town) < _sortieProximityRange}) exitWith { _sortieProximityOk = true; };
+									if (isPlayer _x && {alive _x} && {!(captive _x)} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _town) < _sortieProximityRange}) exitWith { _sortieProximityOk = true; };
 								} forEach playableUnits;
 							};
 
@@ -964,6 +1028,13 @@ while {!WFBE_GameOver} do {
 					//--- wfbe_active towns are counted (matching the seed), so decrement only when this
 					//--- town was wfbe_active before we clear the flags.
 					if (_town getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount - 1 };
+					//--- DESPAWN-BUDGET INTEGRITY: mirror the active-town mid-sweep reclaim for the GUER
+					//--- group cap. Spawn bumps _guerGroupCount by planned group count; without a matching
+					//--- deactivation reclaim, a resistance town that despawns early in THIS sweep still
+					//--- blocks later GUER activations until the next sweep's allGroups recount.
+					if (_side == resistance) then {
+						_guerGroupCount = (_guerGroupCount - (count _town_teams)) max 0;
+					};
 					_town setVariable ["wfbe_active", false];
 					_town setVariable ["wfbe_active_air", false];
 
@@ -1054,13 +1125,46 @@ while {!WFBE_GameOver} do {
 					};
 
 					//--- Teams vehicles.
-					//--- Marty: same locality rule as above - HC-local vehicles die via cleanup-townai.
+					//--- fable/hull-leak-sources-20260802 SOURCE 2 fix: the "HC-local vehicles die via
+					//--- cleanup-townai" claim below was WRONG - verified against the cleanup-townai channel
+					//--- executor (Client_CleanupDelegatedTownAI.sqf): it only ever deletes UNITS from its
+					//--- own WFBE_CL_TownAI_Groups registry, which never stored a vehicle reference at all
+					//--- (Client_DelegateTownAI.sqf captures _town_vehicles from CreateTownUnits but never
+					//--- registers it anywhere for later cleanup). Common_CreateTownUnits.sqf also never
+					//--- wires a GetIn/GetOut pair to enroll these hulls in the passive emptyVehicles
+					//--- collector the way Common_CreateVehicle.sqf does for player purchases - so an
+					//--- HC-owned town vehicle had NO cleanup path at all: `local _x` is false on the
+					//--- server for an HC-delegated hull, the delete below silently no-oped, and this
+					//--- entire array is then unconditionally WIPED a few lines below
+					//--- (wfbe_active_vehicles = []), permanently losing the only reference to it - left
+					//--- alive+crewless forever, the primary "dead-but-empty hull" map-litter source
+					//--- alongside the AICOM cull (Source 1). Route the non-local case through the SAME
+					//--- server husk-collector pipeline the AICOM abandon sites use ("aicom-vehicle-
+					//--- abandoned" -> WF_Logic "emptyVehicles" -> emptyvehiclescollector.sqf ->
+					//--- Server_HandleEmptyVehicle.sqf), which already resolves locality correctly
+					//--- (direct deleteVehicle once local, HandleSpecial "cleanup-empty-vehicle" remote-
+					//--- delete dispatch via WFBE_CO_FNC_SendToClient while still HC-owned). This file
+					//--- (Server\FSM\server_town_ai.sqf, execVM'd only from Init_Server.sqf) is
+					//--- server-exclusive, so HandleSpecial is called directly - no isServer branch needed.
 					{
-						if (alive _x && {local _x}) then {
+						if (alive _x) then {
 							//--- B67 [wiki-wins]: the old check tested only the group leader; a player
 							//--- riding as a non-leader passenger/gunner would have their vehicle deleted
-							//--- out from under them. Scan the whole crew: delete only if zero players aboard.
-							if (({isPlayer _x} count crew _x) == 0) then {["town-sweep-hull", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x};
+							//--- out from under them. Scan the whole crew: act only if zero players aboard.
+							//--- (crew _x == 0 here structurally guarantees the count above never iterates,
+							//--- so _x is never rebound by it - safe to keep using _x as the vehicle below.)
+							if (({isPlayer _x} count crew _x) == 0) then {
+								if (local _x) then {
+									["town-sweep-hull", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete;
+									deleteVehicle _x;
+								} else {
+									if !(_x getVariable ["wfbe_aicom_abandoned", false]) then {
+										_x setVariable ["wfbe_aicom_abandoned", true];
+										["aicom-vehicle-abandoned", _x] Call HandleSpecial;
+										["INFORMATION", Format ["HULLGC|v1|townai-remote town=%1 hull=%2", _town getVariable ["name","?"], typeOf _x]] Call WFBE_CO_FNC_AICOMLog;
+									};
+								};
+							};
 						};
 					} forEach (_town getVariable 'wfbe_active_vehicles');
 

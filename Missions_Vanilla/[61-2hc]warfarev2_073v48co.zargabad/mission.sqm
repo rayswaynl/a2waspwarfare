@@ -37,7 +37,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=66;
+		items=67;
 		class Item0
 		{
 			side="LOGIC";
@@ -59,7 +59,7 @@ class Mission
 				};
 				class Item1
 				{
-					position[]={3842,0,4390};
+					position[]={3746,0,4477};
 					special="NONE";
 					id=1;
 					side="LOGIC";
@@ -1553,7 +1553,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WF_Logic";
-					init="this setVariable [""totalTowns"",10];this setVariable [""Towns_RemovedXSmall"",[""Nango"",""Azizayt"",""HazarBagh"",""MilitaryBase"",""Shahbaz"",""FiruzBaharv"",""ShurDam""]];this setVariable [""Towns_RemovedSmall"",[""Azizayt"",""HazarBagh"",""Shahbaz"",""FiruzBaharv"",""ShurDam""]];this setVariable [""Towns_RemovedMedium"",[""Azizayt"",""Shahbaz"",""FiruzBaharv""]];this setVariable [""Towns_RemovedLarge"",[]];this setVariable [""Towns_RemovedBigTowns"",[]];this setVariable [""Towns_RemovedCentralLine"",[]];this setVariable [""Towns_RemovedSmallTowns"",[]];this enableSimulation false; nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
+					init="this setVariable [""totalTowns"",10];this setVariable [""Towns_RemovedXSmall"",[""Nango"",""Azizayt"",""Hazar Bagh"",""Military Base"",""Shahbaz"",""Firuz Baharv"",""Shur Dam""]];this setVariable [""Towns_RemovedSmall"",[""Azizayt"",""Hazar Bagh"",""Shahbaz"",""Firuz Baharv"",""Shur Dam""]];this setVariable [""Towns_RemovedMedium"",[""Azizayt"",""Shahbaz"",""Firuz Baharv""]];this setVariable [""Towns_RemovedLarge"",[]];this setVariable [""Towns_RemovedBigTowns"",[]];this setVariable [""Towns_RemovedCentralLine"",[]];this setVariable [""Towns_RemovedSmallTowns"",[]];this enableSimulation false; nullReturn = [this] ExecVM ""Common\Init\Init_TownMode.sqf""";
 					synchronizations[]={};
 				};
 			};
@@ -1694,6 +1694,28 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this allowdamage false; this setVariable [""wfbe_caster_slot"", true];";
 					description="Caster 2";
+				};
+			};
+		};
+		class Item66
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={20.8459,5.660299999999999,852.3643};
+					id=118;
+					side="EAST";
+					vehicle="TK_Soldier_EP1";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={49};
 				};
 			};
 		};

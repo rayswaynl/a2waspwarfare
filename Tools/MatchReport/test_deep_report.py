@@ -148,6 +148,37 @@ class DeepMatchTests(unittest.TestCase):
 
 
 class CoverageHonestyTests(unittest.TestCase):
+    def test_extended_waspstat_records_are_not_counted_as_playerstats(self):
+        dm = parse_deep([
+            _w(1, "CAMP|Berezino|0|1|t=120|by=player|pN=1|aiN=0|who=Ghost"),
+            _w(2, "BUILDINGKILL|76561190000000011|WEST|EAST|Base_WarfareBHeavyFactory|FACTORY"),
+            _w(3, "ROUNDEND|WEST|600|chernarus"),
+        ])
+
+        self.assertEqual(dm.coverage["records"].get("CAMP"), 1)
+        self.assertEqual(dm.coverage["records"].get("BUILDINGKILL"), 1)
+        self.assertEqual(dm.coverage["records"].get("PLAYERSTATS", 0), 0)
+        self.assertIn("not included in event tables", " ".join(dm.warnings))
+        self.assertIn("CAMP / BUILDINGKILL", deep_report.render_html(dm))
+
+    def test_live_camp_timestamp_keeps_report_clock_at_latest_observed_event(self):
+        dm = parse_deep([
+            _w(1, "CAMP|Berezino|0|1|t=120|by=player|pN=1|aiN=0|who=Ghost"),
+        ])
+
+        self.assertTrue(dm.in_progress)
+        self.assertEqual(dm.duration, 120)
+
+    def test_unrecognized_waspstat_record_is_reported_as_unknown(self):
+        dm = parse_deep([
+            _w(1, "FUTURE_EVENT:field=value"),
+            _w(2, "ROUNDEND|WEST|600|chernarus"),
+        ])
+
+        self.assertEqual(dm.coverage["records"].get("UNKNOWN"), 1)
+        self.assertEqual(dm.coverage["records"].get("PLAYERSTATS", 0), 0)
+        self.assertIn("unrecognized", " ".join(dm.warnings))
+
     def test_missing_match_family_and_timestamps_raise_warnings(self):
         dm = parse_deep([
             _w(1, "CAPTURE|Msta|4|0"),

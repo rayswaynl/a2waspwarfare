@@ -1,6 +1,6 @@
 disableSerialization;
 
-private ["_display","_units","_upgLevel","_presets","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer","_udTemplates","_udActive","_udSlotIdx","_udTemplate","_udWList","_udMList","_udBpCls","_udBpCnt","_udWpCombined","_udCleanWeps","_udCleanMags","_udCleanBp","_udCleanBpCnt","_udCost","_udItem","_udNameIDCs","_udActiveIDCs","_udPresetIDCs","_udUDIDCs","_udSN","_udSW","_udSWItem"];
+private ["_display","_units","_upgLevel","_presets","_presetIndex","_udTemplateIndex","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer","_udTemplates","_udActive","_udSlotIdx","_udTemplate","_udWList","_udMList","_udBpCls","_udBpCnt","_udWpCombined","_udCleanWeps","_udCleanMags","_udCleanBp","_udCleanBpCnt","_udCost","_udItem","_udNameIDCs","_udActiveIDCs","_udPresetIDCs","_udUDIDCs","_udSN","_udSW","_udSWItem","_loadTgt","_loadCount","_unlUnit","_unlVeh"];
 
 _display = _this select 0;
 MenuAction = -1;
@@ -67,7 +67,8 @@ private ["_badgeIDCs"];
 _badgeIDCs = [13051, 13055, 13059, 13063];
 
 {
-	_slot = _presets select _forEachIndex;
+	_presetIndex = _forEachIndex;
+	_slot = _presets select _presetIndex;
 	_badge = "---";
 	if (count _slot > 0) then {
 		_topTier = 0;
@@ -91,7 +92,7 @@ _badgeIDCs = [13051, 13055, 13059, 13063];
 		};
 		_badge = "[T" + str _topTier + "]";
 	};
-	ctrlSetText [_badgeIDCs select _forEachIndex, _badge];
+	ctrlSetText [_badgeIDCs select _presetIndex, _badge];
 } forEach _presets;
 
 //--- Helper macro: apply/rebuy button grey-out based on tier gate + slot content.
@@ -101,7 +102,8 @@ _applyIDCs = [13053, 13057, 13061, 13065];
 _rebuyIDCs = [13054, 13058, 13062, 13066];
 
 {
-	_slot = _presets select _forEachIndex;
+	_presetIndex = _forEachIndex;
+	_slot = _presets select _presetIndex;
 	private ["_isEmpty","_topTier2","_canApply"];
 	_isEmpty = (count _slot == 0);
 	_topTier2 = 0;
@@ -125,8 +127,8 @@ _rebuyIDCs = [13054, 13058, 13062, 13066];
 		};
 	};
 	_canApply = (!_isEmpty) && {_topTier2 <= _upgLevel};
-	ctrlEnable [_applyIDCs select _forEachIndex, _canApply];
-	ctrlEnable [_rebuyIDCs select _forEachIndex, _canApply];
+	ctrlEnable [_applyIDCs select _presetIndex, _canApply];
+	ctrlEnable [_rebuyIDCs select _presetIndex, _canApply];
 } forEach _presets;
 
 //--- ============================================================
@@ -135,19 +137,21 @@ _rebuyIDCs = [13054, 13058, 13062, 13066];
 //--- ── UNIT DESIGNER init (WFBE_C_UNIT_DESIGNER, default 1) ────────────────
 //--- Tab buttons (IDC 13080-13081) + UD controls (IDC 13100-13117) hidden on open.
 //--- Presets tab is shown by default.
+//--- A2-OA createDialog menus require the global ctrlShow [idc,bool] form.
 _udPresetIDCs = [13049,13051,13052,13053,13054,13055,13056,13057,13058,13059,13060,13061,13062,13063,13064,13065,13066];
 _udUDIDCs     = [13100,13101,13102,13103,13104,13105,13106,13107,13108,13109,13110,13111,13112,13113,13114,13115,13116,13117];
-{(_display displayCtrl _x) ctrlShow false} forEach ([13080,13081] + _udUDIDCs);
+{ctrlShow [_x, false]} forEach ([13080,13081] + _udUDIDCs);
 if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
-	(_display displayCtrl 13080) ctrlShow true;
-	(_display displayCtrl 13081) ctrlShow true;
+	ctrlShow [13080, true];
+	ctrlShow [13081, true];
 	_udTemplates = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
 	_udActive    = missionNamespace getVariable ["WFBE_UD_Active", -1];
 	_udNameIDCs   = [13102,13106,13110,13114];
 	_udActiveIDCs = [13104,13108,13112,13116];
 	{
-		_udTemplate = _udTemplates select _forEachIndex;
-		_udSN = "--- Slot " + str (_forEachIndex + 1) + " empty ---";
+		_udTemplateIndex = _forEachIndex;
+		_udTemplate = _udTemplates select _udTemplateIndex;
+		_udSN = "--- Slot " + str (_udTemplateIndex + 1) + " empty ---";
 		if (count _udTemplate > 0) then {
 			_udSW = _udTemplate select 0;
 			//--- UD tier badge (reuses the Presets tier-badge lookup, see :78-91): forEach over
@@ -172,17 +176,17 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 			if (count _udSW > 0) then {
 				_udSWItem = missionNamespace getVariable (_udSW select 0);
 				if !(isNil "_udSWItem") then {
-					_udSN = "Slot " + str (_forEachIndex + 1) + ": " + (_udSWItem select 1) + " [T" + str _topTier + "]";
+					_udSN = "Slot " + str (_udTemplateIndex + 1) + ": " + (_udSWItem select 1) + " [T" + str _topTier + "]";
 				} else {
-					_udSN = "Slot " + str (_forEachIndex + 1) + ": (custom) [T" + str _topTier + "]";
+					_udSN = "Slot " + str (_udTemplateIndex + 1) + ": (custom) [T" + str _topTier + "]";
 				};
 			};
 		};
-		ctrlSetText [_udNameIDCs select _forEachIndex, _udSN];
-		if (_forEachIndex == _udActive) then {
-			ctrlSetText [_udActiveIDCs select _forEachIndex, "* Active " + str (_forEachIndex + 1)];
+		ctrlSetText [_udNameIDCs select _udTemplateIndex, _udSN];
+		if (_udTemplateIndex == _udActive) then {
+			ctrlSetText [_udActiveIDCs select _udTemplateIndex, "* Active " + str (_udTemplateIndex + 1)];
 		} else {
-			ctrlSetText [_udActiveIDCs select _forEachIndex, "Activate " + str (_forEachIndex + 1)];
+			ctrlSetText [_udActiveIDCs select _udTemplateIndex, "Activate " + str (_udTemplateIndex + 1)];
 		};
 	} forEach _udTemplates;
 	if (_udActive >= 0 && {_udActive <= 3}) then {
@@ -197,9 +201,16 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 	//--- way (WFBE_TM2_OpenToUD stays nil).
 	if (!(isNil "WFBE_TM2_OpenToUD") && {WFBE_TM2_OpenToUD}) then {
 		WFBE_TM2_OpenToUD = nil;
-		{(_display displayCtrl _x) ctrlShow false} forEach _udPresetIDCs;
-		{(_display displayCtrl _x) ctrlShow true } forEach _udUDIDCs;
+		{ctrlShow [_x, false]} forEach _udPresetIDCs;
+		{ctrlShow [_x, true]} forEach _udUDIDCs;
 	};
+};
+
+//--- Squad bulk mount/dismount buttons (IDC 13075-13076; WFBE_C_SQUAD_BULK_MOUNT, default 0).
+//--- Hidden unless armed so flag-off stays byte-identical to legacy Team Menu V2 behavior.
+{(_display displayCtrl _x) ctrlShow false} forEach [13075, 13076];
+if ((missionNamespace getVariable ["WFBE_C_SQUAD_BULK_MOUNT", 0]) > 0) then {
+	{(_display displayCtrl _x) ctrlShow true} forEach [13075, 13076];
 };
 
 _repairTimer = 0; //--- used to pace the "repair in progress" hint.
@@ -245,7 +256,8 @@ while {alive player && dialog} do {
 			//--- Refresh badges and button state.
 			{
 				private ["_s2","_b2","_t2","_sw2","_sb2","_id2","_it2","_ca2"];
-				_s2 = _presets select _forEachIndex;
+				_presetIndex = _forEachIndex;
+				_s2 = _presets select _presetIndex;
 				_b2 = "---";
 				if (count _s2 > 0) then {
 					_t2 = 0;
@@ -255,13 +267,13 @@ while {alive player && dialog} do {
 					if (_sb2 != "") then {_id2 = missionNamespace getVariable _sb2; if !(isNil "_id2") then {_it2 = _id2 select 3; if (_it2 > _t2) then {_t2 = _it2}}};
 					_b2 = "[T" + str _t2 + "]";
 					_ca2 = (_t2 <= _upgLevel);
-					ctrlEnable [_applyIDCs select _forEachIndex, _ca2];
-					ctrlEnable [_rebuyIDCs select _forEachIndex, _ca2];
+					ctrlEnable [_applyIDCs select _presetIndex, _ca2];
+					ctrlEnable [_rebuyIDCs select _presetIndex, _ca2];
 				} else {
-					ctrlEnable [_applyIDCs select _forEachIndex, false];
-					ctrlEnable [_rebuyIDCs select _forEachIndex, false];
+					ctrlEnable [_applyIDCs select _presetIndex, false];
+					ctrlEnable [_rebuyIDCs select _presetIndex, false];
 				};
-				ctrlSetText [_badgeIDCs select _forEachIndex, _b2];
+				ctrlSetText [_badgeIDCs select _presetIndex, _b2];
 			} forEach _presets;
 			hint Format ["Preset %1 saved.", _slotIdx + 1];
 		};
@@ -269,6 +281,8 @@ while {alive player && dialog} do {
 
 	//--- ── GEAR PRESET APPLY (slots 1-4 = MenuAction 1011-1014) ─────────────────
 	if (MenuAction >= 1011 && {MenuAction <= 1014}) then {
+		//--- r95: call-scope wrap - validation exitWith below must skip this handler only, not kill the dialog loop (zombie menu).
+		call {
 		private ["_slotIdx2","_gear2","_upgNow","_topT","_sw3","_sb3","_id3","_it3"];
 		_slotIdx2 = MenuAction - 1011;
 		MenuAction = -1;
@@ -389,10 +403,13 @@ while {alive player && dialog} do {
 		player setVariable ["wfbe_custom_gear", [_cleanWeps, _cleanMags, _cleanBp, _cleanBpCnt, _wpCombined]];
 		player setVariable ["wfbe_custom_gear_cost", _presetCost];
 		hint Format ["Preset %1 applied ($%2 charged).", _slotIdx2 + 1, _presetCost];
+		};
 	};
 
 	//--- ── GEAR PRESET REBUY (set as rebuy-on-death kit: 1021-1024) ─────────────
 	if (MenuAction >= 1021 && {MenuAction <= 1024}) then {
+		//--- r95: call-scope wrap - validation exitWith below must skip this handler only, not kill the dialog loop (zombie menu).
+		call {
 		private ["_slotIdx3","_gear3","_upgNow3","_topT3","_sw4","_sb4","_id4","_it4"];
 		_slotIdx3 = MenuAction - 1021;
 		MenuAction = -1;
@@ -489,6 +506,7 @@ while {alive player && dialog} do {
 		player setVariable ["wfbe_custom_gear", [_rCleanWeps, _rCleanMags, _rCleanBp, _rCleanBpCnt, _rbpWpCombined]];
 		player setVariable ["wfbe_custom_gear_cost", _rebuyCost];
 		hint Format ["Preset %1 set as rebuy-on-death kit (cost: $%2).", _slotIdx3 + 1, _rebuyCost];
+		};
 	};
 
 	//--- ── SQUAD: DISBAND (MenuAction 3 — reuses existing disband logic from V1) ──
@@ -561,6 +579,8 @@ while {alive player && dialog} do {
 	//--- INTENTIONALLY FREE: field-recovery QoL, not a purchase (no WFBE_CL_FNC_ChangeClientFunds call).
 	if (MenuAction == 2002) then {
 		MenuAction = -1;
+		//--- r95: call-scope wrap - validation exitWith below must skip this handler only, not kill the dialog loop (zombie menu).
+		call {
 		_curUnitSel = lbCurSel 13071;
 		if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
 			private ["_repUnit","_repVeh"];
@@ -572,7 +592,39 @@ while {alive player && dialog} do {
 			closeDialog 0;
 			//--- Spawn so the dialog can close cleanly before the sleep-loop runs.
 			[_repVeh, _units] Spawn {
-				private ["_rv","_sqUnits","_crewList","_cu","_hp","_hpCfg","_hn","_repTime","_j"];
+				private ["_rv","_sqUnits","_crewList","_cu","_hp","_hpCfg","_hn","_repTime","_j","_containsAny"];
+				//--- A2-safe substring matcher: string find is A3-only and throws "Type String, expected Array"
+				//--- on A2 OA 1.64 (same class as the Client_BuildUnit "TKV_" burn). Sliding-window toArray compare,
+				//--- haystack case-folded, needles lowercase (Server_SiteClearance.sqf _matchAny idiom).
+				_containsAny = {
+					private ["_hayA","_hl","_found","_nA","_nl","_i","_j","_ok"];
+					_hayA = toArray (toLower (_this select 0));
+					_hl = count _hayA;
+					_found = false;
+					{
+						if (!_found) then {
+							_nA = toArray _x;
+							_nl = count _nA;
+							if (_nl > 0 && _nl <= _hl) then {
+								for "_i" from 0 to (_hl - _nl) do {
+									if (!_found) then {
+										_ok = true;
+										//--- 2026-08-04: boolean sentinel, not exitWith - exitWith inside a for-body block does
+										//--- not do what it looks like on A2 OA (CLAUDE.md hard-stop rule). Same pattern as the
+										//--- MenuAction 2003 fix above.
+										for "_j" from 0 to (_nl - 1) do {
+											if (_ok) then {
+												if ((_hayA select (_i + _j)) != (_nA select _j)) then {_ok = false};
+											};
+										};
+										if (_ok) then {_found = true};
+									};
+								};
+							};
+						};
+					} forEach (_this select 1);
+					_found
+				};
 				_rv       = _this select 0;
 				_sqUnits  = _this select 1;
 				_crewList = crew _rv;
@@ -597,7 +649,7 @@ while {alive player && dialog} do {
 						_hpCfg = _hp select _hi;
 						_hn = getText (_hpCfg >> "name");
 						//--- Only fix mobility hitpoints: wheel/track/engine/motor.
-						if ((_hn != "") && {((_hn find "wheel") >= 0) || {((_hn find "track") >= 0) || {((_hn find "engine") >= 0) || {(_hn find "motor") >= 0}}}}) then {
+						if ((_hn != "") && {[_hn, ["wheel","track","engine","motor"]] call _containsAny}) then {
 							_rv setHit [_hn, 0];
 						};
 					};
@@ -639,6 +691,61 @@ while {alive player && dialog} do {
 				if (!isNull _rv) then {_rv setVariable ["wfbe_tm2_repair_lock", false, true]};
 			};
 		};
+		};
+	};
+
+	//--- ── SQUAD: BULK LOAD/UNLOAD (WFBE_C_SQUAD_BULK_MOUNT) ─────────
+	//--- Pattern studied from the rhs_cargosystem whole-squad bulk-load/staggered-dismount
+	//--- idiom, remade as two Team Menu actions in vanilla A2 SQF.
+	if ((missionNamespace getVariable ["WFBE_C_SQUAD_BULK_MOUNT", 0]) > 0) then {
+
+		//--- LOAD ALL (MenuAction 2003): mounts squad AI already within boarding range of the
+		//--- vehicle under the player's cursor. v1 does not path-walk distant units - only units
+		//--- already in range are moved (owner-recommended scope).
+		if (MenuAction == 2003) then {
+			MenuAction = -1;
+			_loadTgt = cursorTarget;
+			//--- 2026-08-03: these validation guards were `exitWith` inside the menu loop - a rejected click
+			//--- ended the WHOLE loop, leaving the dialog open but dead (zombie menu). Nested if/else instead:
+			//--- hint and keep the menu alive. (Reachable only with WFBE_C_SQUAD_BULK_MOUNT armed.)
+			if (isNull _loadTgt || {!(_loadTgt isKindOf "AllVehicles")}) then {
+				hint "No vehicle targeted. Look at a vehicle first.";
+			} else {
+				if (!(alive _loadTgt)) then {
+					hint "Target vehicle is destroyed.";
+				} else {
+					_loadCount = [group player, _loadTgt] Call WFBE_CO_FNC_SquadLoadAll;
+					if (_loadCount > 0) then {
+						hint Format ["Loaded %1 squad member(s) into %2.", _loadCount, [typeOf _loadTgt, 'displayName'] Call GetConfigInfo];
+					} else {
+						hint "No squad members in boarding range to load.";
+					};
+				};
+			};
+		};
+
+		//--- UNLOAD ALL (MenuAction 2004): staggers AI crew dismount across frames (Common_SquadUnloadAll.sqf)
+		//--- so a full vehicle does not all GetOut on the same tick.
+		if (MenuAction == 2004) then {
+			MenuAction = -1;
+			_curUnitSel = lbCurSel 13071;
+			if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
+				_unlUnit = _units select _curUnitSel;
+				_unlVeh  = vehicle _unlUnit;
+				//--- 2026-08-03: same zombie-menu fix as MenuAction 2003 above - nested if/else, never exitWith.
+				if (_unlVeh == _unlUnit) then {
+					hint "Unit is not in a vehicle.";
+				} else {
+					if (_unlVeh getVariable ["wfbe_tm2_unload_lock", false]) then {
+						hint "Unload already in progress on this vehicle.";
+					} else {
+						_unlVeh setVariable ["wfbe_tm2_unload_lock", true, true]; //--- broadcast so other clients see the lock (mirrors the repair-lock idiom above).
+						[_unlVeh, group player] Spawn WFBE_CO_FNC_SquadUnloadAll;
+					};
+				};
+			};
+		};
+
 	};
 
 	//--- ── FX / vote / high-climb (same as V1) ─────────────────────────────────
@@ -694,16 +801,16 @@ while {alive player && dialog} do {
 	//--- ── UNIT DESIGNER handlers (WFBE_C_UNIT_DESIGNER) ──────────────────────
 	if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 
-		//--- Tab switch: Presets (1100) / Units (1200).
+		//--- Tab switch: Presets (1100) / Units (1200), using global ctrlShow.
 		if (MenuAction == 1100) then {
 			MenuAction = -1;
-			{(_display displayCtrl _x) ctrlShow true } forEach _udPresetIDCs;
-			{(_display displayCtrl _x) ctrlShow false} forEach _udUDIDCs;
+			{ctrlShow [_x, true]} forEach _udPresetIDCs;
+			{ctrlShow [_x, false]} forEach _udUDIDCs;
 		};
 		if (MenuAction == 1200) then {
 			MenuAction = -1;
-			{(_display displayCtrl _x) ctrlShow false} forEach _udPresetIDCs;
-			{(_display displayCtrl _x) ctrlShow true } forEach _udUDIDCs;
+			{ctrlShow [_x, false]} forEach _udPresetIDCs;
+			{ctrlShow [_x, true]} forEach _udUDIDCs;
 		};
 
 		//--- UD Save (2101-2104): capture player loadout into template slot.
@@ -743,6 +850,8 @@ while {alive player && dialog} do {
 
 		//--- UD Activate/toggle (2111-2114): set or clear active template slot.
 		if (MenuAction >= 2111 && {MenuAction <= 2114}) then {
+			//--- r95: call-scope wrap - validation exitWith below must skip this handler only, not kill the dialog loop (zombie menu).
+			call {
 			_udSlotIdx = MenuAction - 2111;
 			MenuAction = -1;
 			_udTemplates = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
@@ -769,6 +878,7 @@ while {alive player && dialog} do {
 			} else {
 				(_display displayCtrl 13101) ctrlSetText "Active: None  (no template applied on AI buys)";
 				hint "UD: Template deactivated.";
+			};
 			};
 		};
 

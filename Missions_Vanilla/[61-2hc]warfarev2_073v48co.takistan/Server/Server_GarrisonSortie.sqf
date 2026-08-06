@@ -100,8 +100,9 @@ while {!WFBE_GameOver} do {
 		if (_drop) then {
 			//--- Player-safe teardown: never deleteVehicle a player-occupied body.
 			if (!isNull _eGrp) then {
-				{ if (!(isPlayer _x)) then { ["garrisonsortie-cleanup", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; }; } forEach (units _eGrp);
-				if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
+				//--- r55 fail-clean: skip null units (stale units array after concurrent cleanup).
+				{ if (!isNull _x && {!(isPlayer _x)}) then { ["garrisonsortie-cleanup", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; }; } forEach (units _eGrp);
+				if (({!isNull _x && {isPlayer _x}} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 			};
 			diag_log format ["GARSORTIE|DESPAWN|town=%1|reason=%2|remaining=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
 		} else {
@@ -128,7 +129,7 @@ while {!WFBE_GameOver} do {
 			if (!_hasSortie) then {
 				//--- Proximity gate: at least one human player within range of the town.
 				_hasPlayerNear = false;
-				{ if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _town) < _playerRange}) exitWith { _hasPlayerNear = true; }; } forEach playableUnits;
+				{ if (isPlayer _x && {alive _x} && {!(captive _x)} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _town) < _playerRange}) exitWith { _hasPlayerNear = true; }; } forEach playableUnits;
 
 				if (_hasPlayerNear) then {
 					_sideID = _town getVariable ["sideID", -1];
@@ -138,7 +139,19 @@ while {!WFBE_GameOver} do {
 					_ang      = random 360;
 					_townPos  = getPos _town;
 					_spawnPos = [(_townPos select 0) + _radius * sin _ang, (_townPos select 1) + _radius * cos _ang, 0];
+					//--- Coastal towns can resolve a sortie-ring offset over the sea. Re-roll the same
+					//--- configured band, then skip this tick rather than creating infantry that immediately drowns.
+					Private ["_waterTry","_waterRetryCap"];
+					_waterTry = 0;
+					_waterRetryCap = 20;
+					while {surfaceIsWater _spawnPos && {_waterTry < _waterRetryCap}} do {
+						_radius = _patrolMin + random (_patrolMax - _patrolMin);
+						_ang = random 360;
+						_spawnPos = [(_townPos select 0) + _radius * sin _ang, (_townPos select 1) + _radius * cos _ang, 0];
+						_waterTry = _waterTry + 1;
+					};
 
+					if (!(surfaceIsWater _spawnPos)) then {
 					_fallbackClass = switch (_sideID) do {
 						case WFBE_C_WEST_ID: {"US_Soldier_EP1"};
 						case WFBE_C_EAST_ID: {"RU_Soldier"};
@@ -175,6 +188,9 @@ while {!WFBE_GameOver} do {
 							deleteGroup _grp;
 							diag_log format ["GARSORTIE|SPAWNFAIL|town=%1|reason=no_units", (_town getVariable ["name","?"])];
 						};
+					};
+					} else {
+						diag_log format ["GARSORTIE|SPAWNSKIP|town=%1|reason=water", (_town getVariable ["name","?"])];
 					};
 				};
 			};

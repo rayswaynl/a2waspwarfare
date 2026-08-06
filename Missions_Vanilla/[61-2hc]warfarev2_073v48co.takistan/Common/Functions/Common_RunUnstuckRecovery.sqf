@@ -76,7 +76,14 @@ if (_uTier >= 3) then {
 					if (!isNull _uHull && {_uHull != _x} && {alive _uHull} && {!(_uHull in _uHulls)}) then {_uHulls set [count _uHulls, _uHull]};
 				};
 			} forEach _uGroupUnits;
-			{if (!isNull _x && {alive _x} && {!isPlayer _x}) then {deleteVehicle _x}} forEach _uGroupUnits;
+			//--- crash 014EFCF4: a terminal recycle can include a Man still seated in a hull.
+			//--- Yield between unit deletes before the hull pass so the engine can settle seat state.
+			{
+				if (!isNull _x && {alive _x} && {!isPlayer _x}) then {
+					deleteVehicle _x;
+					sleep 0;
+				};
+			} forEach _uGroupUnits;
 			{
 				_uHull = _x;
 				if (!isNull _uHull && {alive _uHull} && {({isPlayer _x} count (crew _uHull)) == 0}) then {deleteVehicle _uHull};

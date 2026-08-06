@@ -20,10 +20,10 @@ class AicapMidHighTrimTests(unittest.TestCase):
         self.constants = code("Common/Init/Init_CommonConstants.sqf")
         self.server_init = code("Server/Init/Init_Server.sqf")
 
-    def test_default_off_gate_keeps_legacy_and_applies_only_mid_high_trim(self) -> None:
+    def test_default_off_gate_keeps_owner_baseline_and_applies_only_mid_high_trim(self) -> None:
         flag = 'if (isNil "WFBE_C_AICAP_MIDHIGH_TRIM") then {WFBE_C_AICAP_MIDHIGH_TRIM = 0}'
         self.assertIn(flag, self.constants)
-        self.assertIn('WFBE_C_TOTAL_AI_MAX_BY_TIER       = [140,130,100,80]', self.constants)
+        self.assertIn('WFBE_C_TOTAL_AI_MAX_BY_TIER       = [180,170,150,120]', self.constants)
         gate = self.constants.index('if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {')
         block = self.constants[gate : gate + 500]
         self.assertIn('worldName != "Zargabad"', block)

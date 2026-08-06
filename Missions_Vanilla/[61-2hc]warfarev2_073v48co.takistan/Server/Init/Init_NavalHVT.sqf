@@ -459,37 +459,42 @@ _scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [_scudXY select 0, _scudXY se
 //--- hull clears the deck surface. Owner will eyeball and adjust the constant in-engine.
 private ["_scudSpawnZ"];
 _scudSpawnZ = _scudDeckZ + (missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 2.4]);
-_scudModel setPosASL [_scudXY select 0, _scudXY select 1, _scudSpawnZ];
-_scudModel setDir 90;
-_scudModel allowDamage false;
-//--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): store the deck SCUD launcher on the platform logic so
-//--- Support_ScudStrike.sqf can find the firing carrier's launcher and play the erect/backblast at launch. The
-//--- platform logic == the single entry stored in WFBE_NAVAL_HVT_PLATFORMS above (the object ScudStrike validates
-//--- ownership on), so a strike resolves its launcher with one getVariable. Broadcast so any locality can read it.
-//--- fable/naval-camps-on-deck: also store wfbe_scud_model_ref so the addAction proximity gate (below)
-//--- can test distance to the VISUAL launcher, not the invisible pad anchor (50m apart).
-_scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
-_scudLogic setVariable ["wfbe_scud_model_ref", _scudModel, true];
-diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 2.4]];
-[_scudModel, _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckPart] spawn {
-	private ["_s","_px","_py","_dz","_deckPart","_off"];
-	_s        = _this select 0;
-	_px       = _this select 1;
-	_py       = _this select 2;
-	_dz       = _this select 3;
-	_deckPart = _this select 4;
-	_s action ["scudLaunch", _s];		//--- raise the missile to vertical
-	sleep 6;							//--- let the erect animation finish
-	_s setPosASL [_px, _py, _dz];		//--- correct any physics drift during the erect (TRUE deck height)
-	_s setVectorUp [0,0,1];				//--- re-level the launcher
-	//--- Pin it to the carrier so no residual physics can slide it off the deck. attachTo keeps the child at
-	//--- a fixed model-space offset from the (static) parent; worldToModel converts the corrected world pos.
-	if (!isNull _deckPart) then {
-		_off = _deckPart worldToModel (getPosASL _s);
-		_s attachTo [_deckPart, _off];
-		_s setVectorUp [0,0,1];			//--- re-level after the attach re-orients relative to parent
+//--- FAIL-CLEAN (r40): primary SCUD create null must not setPosASL/setDir/stamp logic refs or spawn erect.
+if (isNull _scudModel) then {
+	diag_log Format ["NAVALHVT-SCUD: primary SCUD createVehicle FAILED at [%1,%2] - no model ref stamped.", _scudXY select 0, _scudXY select 1];
+} else {
+	_scudModel setPosASL [_scudXY select 0, _scudXY select 1, _scudSpawnZ];
+	_scudModel setDir 90;
+	_scudModel allowDamage false;
+	//--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): store the deck SCUD launcher on the platform logic so
+	//--- Support_ScudStrike.sqf can find the firing carrier's launcher and play the erect/backblast at launch. The
+	//--- platform logic == the single entry stored in WFBE_NAVAL_HVT_PLATFORMS above (the object ScudStrike validates
+	//--- ownership on), so a strike resolves its launcher with one getVariable. Broadcast so any locality can read it.
+	//--- fable/naval-camps-on-deck: also store wfbe_scud_model_ref so the addAction proximity gate (below)
+	//--- can test distance to the VISUAL launcher, not the invisible pad anchor (50m apart).
+	_scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
+	_scudLogic setVariable ["wfbe_scud_model_ref", _scudModel, true];
+	diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 2.4]];
+	[_scudModel, _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckPart] spawn {
+		private ["_s","_px","_py","_dz","_deckPart","_off"];
+		_s        = _this select 0;
+		_px       = _this select 1;
+		_py       = _this select 2;
+		_dz       = _this select 3;
+		_deckPart = _this select 4;
+		_s action ["scudLaunch", _s];		//--- raise the missile to vertical
+		sleep 6;							//--- let the erect animation finish
+		_s setPosASL [_px, _py, _dz];		//--- correct any physics drift during the erect (TRUE deck height)
+		_s setVectorUp [0,0,1];				//--- re-level the launcher
+		//--- Pin it to the carrier so no residual physics can slide it off the deck. attachTo keeps the child at
+		//--- a fixed model-space offset from the (static) parent; worldToModel converts the corrected world pos.
+		if (!isNull _deckPart) then {
+			_off = _deckPart worldToModel (getPosASL _s);
+			_s attachTo [_deckPart, _off];
+			_s setVectorUp [0,0,1];			//--- re-level after the attach re-orients relative to parent
+		};
+		_s enableSimulation false;			//--- freeze it static (erect)
 	};
-	_s enableSimulation false;			//--- freeze it static (erect)
 };
 
 //--- fable/scud-showpiece (owner 2026-07-07): the SCUD deck is a SHOWPIECE - a second erect launcher
@@ -611,7 +616,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 			//---   That is perpendicular to heading-90 — correct for lateral.
 			//---   Same rotation identity (cos/sin of the same _dir); only the axis changes.
 			//=============================================================================
-			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
+			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seamMid","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
 			_inlineGap = abs (missionNamespace getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265]);
 			//--- Tuner guard: a gap of 0 would place Hull B exactly on Hull A (silent overlap). Self-heal to the
 			//--- design default and warn in RPT so a bad lobby/constants value is diagnosable, not invisible.
@@ -629,9 +634,9 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 			//--- Seam-bridge piers (only when WFBE_C_NAVAL_SEAM_BRIDGE > 0).
 			//--- 4x Land_nav_pier_m_1 across the Hull A stern / Hull B bow join.
 			//--- Z = average of Hull A and Hull B deck heights (conservative floor to avoid float).
-			//--- Body-space Y offsets from Hull A anchor: nominally -131,-134,-137,-140
-			//--- (i.e. 131-140m aft of the Hull A anchor, inside the seam zone).
-			//--- VERIFY in-editor: adjust these Y values until piers land in the gap centre.
+			//--- Body-space Y offsets from Hull A anchor are DERIVED from the live inline gap
+			//--- (see below), so they follow WFBE_C_NAVAL_INLINE_GAP tunes instead of drifting
+			//--- away from the seam every time the hulls are moved closer together.
 			if ((missionNamespace getVariable ["WFBE_C_NAVAL_SEAM_BRIDGE", 0]) > 0) then {
 				//--- Probe Hull B deckZ from part[3] (same pattern as Hull A above).
 				_deckZB = _ocDeckZ;
@@ -644,7 +649,14 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 					};
 				};
 				_bridgeZ = (_ocDeckZ + _deckZB) / 2;
-				_seam_Y_offsets = [-131, -134, -137, -140];
+				//--- Seam mid-point sits at half the hull-to-hull offset, aft of the Hull A anchor.
+				//--- The four piers keep the original straddle pattern about it: 1.5m fore, then
+				//--- 1.5 / 4.5 / 7.5m aft.  Written as (literal - _seamMid) rather than -(...) so
+				//--- every minus sign is a negative numeric literal, never a unary operator.
+				//--- Identity check: at the original gap 265, _seamMid = 132.5 and this yields
+				//--- exactly [-131, -134, -137, -140] - the literals it replaces.
+				_seamMid = _inlineGap / 2;
+				_seam_Y_offsets = [(1.5 - _seamMid), (-1.5 - _seamMid), (-4.5 - _seamMid), (-7.5 - _seamMid)];
 				{
 					_bY  = _x;
 					//--- Convert body-space Y offset to world coords using the ship heading.
@@ -801,6 +813,36 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 			_sideID = _loc getVariable ["sideID", WFBE_C_GUER_ID];
 			_pos    = getPosASL _loc;
 
+			//--- fix/naval-cap-capture-teardown: the arm gate below only checks GUER ownership when ARMING.
+			//--- Once airborne, the orbit branch never re-checks sideID, so a GUER carrier captured by another
+			//--- side while a player stays inside the 1800m radius keeps its resistance CAP orbiting and engaging
+			//--- the new owner forever (only the player-inactivity path far below despawns it), and no CAP for the
+			//--- new owner can ever arm. Mirror the SCUD action loop in this file (~L399), which re-derives the
+			//--- owning side every iteration. Reuse the exact inactivity teardown so a captured site sheds its
+			//--- bound air population immediately instead of at the next empty-radius timeout.
+			if (_armed && {_sideID != WFBE_C_GUER_ID}) then {
+				_armed = false;
+				_inactiveTime = 0;
+				if (_capMode == "L39" || _capMode == "SUX") then {
+					if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x} forEach (crew _jet1); deleteVehicle _jet1 };
+					if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x} forEach (crew _jet2); deleteVehicle _jet2 };
+				} else {
+					if (_capMode == "MI24") then {
+						if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
+						if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
+						if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+					} else {
+						if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
+						if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+					};
+				};
+				if (!isNull _capGrp) then {
+					{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _capGrp;
+					deleteGroup _capGrp;
+				};
+				["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP torn down at %1 (carrier captured, sideID=%2).", _loc getVariable "name", _sideID]] Call WFBE_CO_FNC_LogContent;
+			};
+
 			//--- Check for any HUMAN player within arming radius (1800m).
 			//--- wasp-navalcap-playableunits (owner review note 19:2x): playableUnits INCLUDES the two
 			//--- headless-client CIV bodies - isPlayer is TRUE for an HC on A2 OA - and ParkSeaHC
@@ -831,7 +873,18 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_rumorLast = time;
 							};
 						};
-						_capGrp = createGroup resistance;
+						_capGrp = [resistance, "naval-cap"] Call WFBE_CO_FNC_CreateGroup;
+						//--- r89 fail-clean (bughunt group-cap/budget): the raw createGroup bypassed the
+						//--- WFBE_CO_FNC_CreateGroup wrapper - no 140-cap emergency GC, no wfbe_group_src tag
+						//--- (the group audited as "untagged"), and no grpNull path. At the 144/side engine cap
+						//--- the pilots' createUnit fallbacks retried into the same grpNull and the CAP hulls
+						//--- flew pilotless while tagged anti-reap (wfbe_naval_cap). Abort this arm cleanly:
+						//--- _armed=false makes the next 10s tick retry once the side is under the cap; the
+						//--- post-roll override below forces _capMode="NONE" so no spawn branch runs.
+						if (isNull _capGrp) then {
+							_armed = false;
+							["WARNING", Format ["Init_NavalHVT.sqf: CAP arm aborted at %1 - resistance group cap (createGroup grpNull).", _loc getVariable ["name", "?"]]] Call WFBE_CO_FNC_LogContent;
+						};
 
 						_navMode = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_MODE", 1]; //--- fable/naval-cap-variety: 0=legacy CAP_L39/THREE_HINDS chain, >0=weighted roll (default).
 						if (_navMode > 0) then {
@@ -859,6 +912,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						//--- self-clean sub-thread (own group, own registry, own cooldown - WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE)
 						//--- only while a mission-wide slot is free, so a saturated cap falls back to the base CAP silently
 						//--- instead of dropping the arm event.
+						if (isNull _capGrp) then {_capMode = "NONE"}; //--- r89: re-apply AFTER the mode roll above -
+						//--- a grpNull arm-abort must match no spawn branch (SKIRMISH/L39/MI24/SUX; legacy else is guarded).
 						if (_capMode == "SKIRMISH") then {
 							_navSkirmishBase = missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_BASE_MODE", "MI24"];
 							if !(_navSkirmishBase in ["MI24","L39","SUX"]) then {_navSkirmishBase = "MI24"};
@@ -886,26 +941,58 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							//---   line 185835  class L39_TK_EP1 : L39_base
 							_jetDir = random 360;
 
+							//--- FAIL-CLEAN (r40): L39 CAP hull/pilot/seat - null hull skips pilot; seat fail tears down pilot+hull (not AICOM AirResp).
 							_jet1 = createVehicle ["L39_TK_EP1", [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600], [], 0, "FLY"];
-							_jet1 setPosASL [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600];
-							_jet1 setDir _jetDir;
-							_jet1 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
-							_jet1 flyInHeight 550;
-							_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							if (isNull _jetPilot1) then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-							_jetPilot1 moveInDriver _jet1;
-							_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+							if (isNull _jet1) then {
+								diag_log "NAVALCAP|CREATEFAIL|L39|jet1";
+							} else {
+								_jet1 setPosASL [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600];
+								_jet1 setDir _jetDir;
+								_jet1 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+								_jet1 flyInHeight 550;
+								_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNull _jetPilot1) then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+								if (isNull _jetPilot1) then {
+									deleteVehicle _jet1;
+									diag_log "NAVALCAP|PILOTFAIL|L39|jet1";
+								};
+								if (!(isNull _jetPilot1)) then {
+									_jetPilot1 moveInDriver _jet1;
+									if (driver _jet1 != _jetPilot1) then {
+										deleteVehicle _jetPilot1;
+										deleteVehicle _jet1;
+										diag_log "NAVALCAP|SEATFAIL|L39|jet1";
+									} else {
+										_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+									};
+								};
+							};
 
 							_jet2 = createVehicle ["L39_TK_EP1", [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650], [], 0, "FLY"];
-							_jet2 setPosASL [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650];
-							_jet2 setDir _jetDir;
-							_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
-							_jet2 flyInHeight 600;
-							_jetPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							if (isNull _jetPilot2) then {_jetPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
-							_jetPilot2 moveInDriver _jet2;
-							_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
-
+							if (isNull _jet2) then {
+								diag_log "NAVALCAP|CREATEFAIL|L39|jet2";
+							} else {
+								_jet2 setPosASL [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650];
+								_jet2 setDir _jetDir;
+								_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+								_jet2 flyInHeight 600;
+								_jetPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNull _jetPilot2) then {_jetPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
+								if (isNull _jetPilot2) then {
+									deleteVehicle _jet2;
+									diag_log "NAVALCAP|PILOTFAIL|L39|jet2";
+								};
+								if (!(isNull _jetPilot2)) then {
+									_jetPilot2 moveInDriver _jet2;
+									if (driver _jet2 != _jetPilot2) then {
+										deleteVehicle _jetPilot2;
+										deleteVehicle _jet2;
+										diag_log "NAVALCAP|SEATFAIL|L39|jet2";
+									} else {
+										_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
+									};
+								};
+							};
 							_capGrp setBehaviour "AWARE";
 							//--- fable/inland-sweep: YELLOW, not RED - the circuit overflies towns and a RED jet strafes
 							//--- infantry (owner: HVT only, never free-fire on men). Engagement is FORCED per tick on
@@ -922,15 +1009,15 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								if (_easaIdx >= 0) then {
 									_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
 									_easaRandIdx = floor (random (count _easaLoadouts));
-									_jet1 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
-									_jet2 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+									if (!isNull _jet1) then {_jet1 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true]};
+									if (!isNull _jet2) then {_jet2 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true]};
 								};
 							};
 
 							//--- Tag both as CAP so GC/groupsGC don't reap them.
 							_capGrp setVariable ["wfbe_naval_cap", true, true];
-							_jet1 setVariable ["wfbe_naval_cap", true, true];
-							_jet2 setVariable ["wfbe_naval_cap", true, true];
+							if (!isNull _jet1) then {_jet1 setVariable ["wfbe_naval_cap", true, true]};
+							if (!isNull _jet2) then {_jet2 setVariable ["wfbe_naval_cap", true, true]};
 
 							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (2x L39_TK_EP1, easa_random=%2).", _loc getVariable "name", (missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0])]] Call WFBE_CO_FNC_LogContent;
 						} else {
@@ -975,9 +1062,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot) then {_hindPilot = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-								_hindPilot setPosASL [(_capPad1 select 0) + 5, (_capPad1 select 1) + 5, _capDeckZ];
-								_hindPilot assignAsDriver _hind; [_hindPilot] orderGetIn true;
-								_hind flyInHeight 350;
+								if (isNull _hindPilot) then {deleteVehicle _hind; ["WARNING", "Init_NavalHVT.sqf: CAP Hind pilot fallback failed; deleted unmanned helicopter."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _hindPilot)) then {
+									_hindPilot setPosASL [(_capPad1 select 0) + 5, (_capPad1 select 1) + 5, _capDeckZ];
+									_hindPilot assignAsDriver _hind; [_hindPilot] orderGetIn true;
+									_hind flyInHeight 350;
+								};
 
 								_hind2 = createVehicle ["Mi24_P", [_capPad2 select 0, _capPad2 select 1, 0], [], 0, "NONE"];
 								_hind2 setPosASL [_capPad2 select 0, _capPad2 select 1, _capDeckZ];
@@ -997,9 +1087,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot2) then {_hindPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: mirror the _hindPilot fallback so a bad WFBE_GUER_PILOT_CLASS does not leave the Hind pilotless
-								_hindPilot2 setPosASL [(_capPad2 select 0) + 5, (_capPad2 select 1) - 5, _capDeckZ];
-								_hindPilot2 assignAsDriver _hind2; [_hindPilot2] orderGetIn true;
-								_hind2 flyInHeight 350;
+								if (isNull _hindPilot2) then {deleteVehicle _hind2; ["WARNING", "Init_NavalHVT.sqf: CAP Hind pilot fallback failed; deleted unmanned helicopter."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _hindPilot2)) then {
+									_hindPilot2 setPosASL [(_capPad2 select 0) + 5, (_capPad2 select 1) - 5, _capDeckZ];
+									_hindPilot2 assignAsDriver _hind2; [_hindPilot2] orderGetIn true;
+									_hind2 flyInHeight 350;
+								};
 
 								_hind3 = createVehicle ["Mi24_P", [_capPad3 select 0, _capPad3 select 1, 0], [], 0, "NONE"];
 								_hind3 setPosASL [_capPad3 select 0, _capPad3 select 1, _capDeckZ];
@@ -1019,9 +1112,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot3 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot3) then {_hindPilot3 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: same fallback as _hindPilot2
-								_hindPilot3 setPosASL [(_capPad3 select 0) - 5, (_capPad3 select 1) + 5, _capDeckZ];
-								_hindPilot3 assignAsDriver _hind3; [_hindPilot3] orderGetIn true;
-								_hind3 flyInHeight 350;
+								if (isNull _hindPilot3) then {deleteVehicle _hind3; ["WARNING", "Init_NavalHVT.sqf: CAP Hind pilot fallback failed; deleted unmanned helicopter."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _hindPilot3)) then {
+									_hindPilot3 setPosASL [(_capPad3 select 0) - 5, (_capPad3 select 1) + 5, _capDeckZ];
+									_hindPilot3 assignAsDriver _hind3; [_hindPilot3] orderGetIn true;
+									_hind3 flyInHeight 350;
+								};
 
 								_capGrp setBehaviour "AWARE";
 								_capGrp setCombatMode "RED";
@@ -1056,8 +1152,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 									_jet1 flyInHeight 600;
 									_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 									if (isNull _jetPilot1) then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-									_jetPilot1 moveInDriver _jet1;
-									_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 600]; //--- fable/l39-circuit idiom: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+									if (isNull _jetPilot1) then {deleteVehicle _jet1; ["WARNING", "Init_NavalHVT.sqf: CAP Su34 pilot fallback failed; deleted unmanned jet."] Call WFBE_CO_FNC_LogContent};
+									if (!(isNull _jetPilot1)) then {
+										_jetPilot1 moveInDriver _jet1;
+										_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 600]; //--- fable/l39-circuit idiom: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+									};
 
 									_capGrp setBehaviour "AWARE";
 									_capGrp setCombatMode "RED";
@@ -1081,6 +1180,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 
 									["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (1x Su34, rare).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 								} else {
+									if (!isNull _capGrp) then { //--- r89: grpNull arm-abort must not spawn the legacy CAP
 								//--- STANDARD path (WFBE_C_NAVAL_CAP_L39=0, THREE_HINDS=0): Hind + An2.
 								//--- naval-air-spawn-easa FIX: An2 is fixed-wing. createVehicle ["FLY"]
 								//---   gives zero velocity at t=0 -> stall-dive. Set forward speed.
@@ -1101,7 +1201,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot) then {_hindPilot = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-								_hindPilot moveInDriver _hind;
+								if (isNull _hindPilot) then {deleteVehicle _hind; ["WARNING", "Init_NavalHVT.sqf: CAP Hind pilot fallback failed; deleted unmanned helicopter."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _hindPilot)) then {
+									_hindPilot moveInDriver _hind;
+								};
 								_capGrp setBehaviour "AWARE";
 								_capGrp setCombatMode "RED";
 								_hind flyInHeight 350;
@@ -1116,7 +1219,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_biplane flyInHeight 550;
 								_biplPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _biplPilot) then {_biplPilot = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
-								_biplPilot moveInDriver _biplane;
+								if (isNull _biplPilot) then {deleteVehicle _biplane; ["WARNING", "Init_NavalHVT.sqf: CAP An2 pilot fallback failed; deleted unmanned aircraft."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _biplPilot)) then {
+									_biplPilot moveInDriver _biplane;
+								};
 
 								//--- Tag both as CAP so GC/groupsGC don't reap them.
 								_capGrp setVariable ["wfbe_naval_cap", true, true];
@@ -1124,6 +1230,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_biplane setVariable ["wfbe_naval_cap", true, true];
 
 								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2, velocity-fixed).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+									}; //--- r89: closes the !isNull _capGrp legacy guard
 								}; //--- closes the SUX-vs-legacy else (fable/naval-cap-variety)
 							};
 						};
@@ -1196,24 +1303,33 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 					//--- fable/inland-sweep: never quiet-despawn a circuit CAP while it is on the INLAND leg
 					//--- (>2500 m from the carrier) - the old 120 s no-player rule deleted the sweep the moment
 					//--- it left the carrier bubble. The timer holds at 0 until the flight returns seaward.
-					if ((_capMode == "L39" || _capMode == "SUX") && {!isNull _jet1} && {alive _jet1} && {(_jet1 distance _loc) > 2500}) then {
+					//--- r86: the hold must key on EITHER airframe - with the lead (jet1) dead, a live wingman
+					//--- (jet2) deep inland lost the protection and the 120s no-player rule deleted it mid-sweep.
+					if ((_capMode == "L39" || _capMode == "SUX") && {(!isNull _jet1 && {alive _jet1} && {(_jet1 distance _loc) > 2500}) || {!isNull _jet2 && {alive _jet2} && {(_jet2 distance _loc) > 2500}}}) then {
 						_inactiveTime = 0;
 					};
 					if (_inactiveTime >= 120) then {
 						//--- Despawn CAP.
 						_armed = false;
 						_inactiveTime = 0;
+						//--- r86 group-first teardown (wildcard ambient-despawn idiom): A2 deleteGroup NO-OPS while
+						//--- ANY unit remains in the group, and a crew-only delete misses a pilot still WALKING to
+						//--- board (MI24 deck-spawn: assignAsDriver/orderGetIn) or one who bailed from a damaged
+						//--- airframe - he survived the despawn and pinned the group slot forever (nothing reaps him).
+						//--- Delete every non-player unit of the group first (sleep 0 keeps the crash 014EFCF4
+						//--- seat-walk sweep between deletes; already-scheduled spawn context), then live hulls.
+						if (!isNull _capGrp) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _capGrp};
 						if (_capMode == "L39" || _capMode == "SUX") then {
-							if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x; sleep 0} forEach (crew _jet1); deleteVehicle _jet1 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-							if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x; sleep 0} forEach (crew _jet2); deleteVehicle _jet2 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+							if (!isNull _jet1 && alive _jet1) then { deleteVehicle _jet1 };
+							if (!isNull _jet2 && alive _jet2) then { deleteVehicle _jet2 };
 						} else {
 							if (_capMode == "MI24") then {
-								if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x; sleep 0} forEach (crew _hind);  deleteVehicle _hind }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x; sleep 0} forEach (crew _hind2); deleteVehicle _hind2 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x; sleep 0} forEach (crew _hind3); deleteVehicle _hind3 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _hind  && alive _hind)  then { deleteVehicle _hind };
+								if (!isNull _hind2 && alive _hind2) then { deleteVehicle _hind2 };
+								if (!isNull _hind3 && alive _hind3) then { deleteVehicle _hind3 };
 							} else {
-								if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x; sleep 0} forEach (crew _hind);   deleteVehicle _hind }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x; sleep 0} forEach (crew _biplane); deleteVehicle _biplane }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _hind   && alive _hind)   then { deleteVehicle _hind };
+								if (!isNull _biplane && alive _biplane) then { deleteVehicle _biplane };
 							};
 						};
 						if (!isNull _capGrp) then { deleteGroup _capGrp };
@@ -1322,7 +1438,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 				};
 				switch (_state) do {
 					case "cooldown": {
-						_color = "ColorGray";
+						_color = "ColorBlack";
 						_text = Format ["%1 - cooldown", _cName];
 					};
 					case "holding": {
@@ -1330,8 +1446,8 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 						_ss = _progress - (_mm * 60);
 						_ssStr = if (_ss < 10) then {Format ["0%1", _ss]} else {Format ["%1", _ss]};
 						_color = "ColorYellow";
-						if (_holderSide == _westId) then {_color = "ColorWest"};
-						if (_holderSide == _eastId) then {_color = "ColorEast"};
+						if (_holderSide == _westId) then {_color = "ColorBlue"};
+						if (_holderSide == _eastId) then {_color = "ColorRed"};
 						if (_holderSide == _guerId) then {_color = "ColorGreen"};
 						_text = Format ["%1 - CAPTURING %2:%3/%4:%5", _cName, _mm, _ssStr, _holdMM, _holdSSStr];
 					};
@@ -1345,8 +1461,8 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 					};
 					default {
 						_color = "ColorGreen";
-						if (_ownSID == _westId) then {_color = "ColorWest"};
-						if (_ownSID == _eastId) then {_color = "ColorEast"};
+						if (_ownSID == _westId) then {_color = "ColorBlue"};
+						if (_ownSID == _eastId) then {_color = "ColorRed"};
 						_text = Format ["%1 - capture zone", _cName];
 					};
 				};
@@ -1419,28 +1535,43 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 				{
 					_cOff = _x;
 					_cXY = _deckPart modelToWorld _cOff;
+					//--- FAIL-CLEAN (r40): null logic/model/flag must not setDir/setPos/setVar or pollute camps/flags arrays.
 					_cLogic = "HeliHEmpty" createVehicle [_cXY select 0, _cXY select 1, 0];
-					_cLogic setDir (getDir _deckPart);
-					_cLogic setPosASL [_cXY select 0, _cXY select 1, _deckZ];
-					_cLogic allowDamage false;
-					_cLogic setVariable ["town", _loc];
-					_cLogic setVariable ["sideID", _townSideID, true];
-					_cLogic setVariable ["supplyValue", _townSV, true];
-					_cLogic setVariable ["wfbe_camp_deckz", _deckZ]; //--- kimi/naval-deckcamp-repair (2026-07-20): server-local deck-height marker (writer here, reader Server_HandleSpecial "repair-camp") so a repaired deck-camp bunker is reseated ON the flight deck (setPosASL) instead of the ATL z=0 sea-surface bury inside the hull.
-					_cModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
-					_cModel setDir ((getDir _cLogic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
-					_cModel setPosASL [_cXY select 0, _cXY select 1, _deckZ];
-					_campHealth = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
-					if !(isNil '_campHealth') then {
-						_cModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
+					if (isNull _cLogic) then {
+						diag_log Format ["NAVALHVT-CAMP: deck camp logic createVehicle FAILED at %1 - slot skipped.", _cXY];
+					} else {
+						_cLogic setDir (getDir _deckPart);
+						_cLogic setPosASL [_cXY select 0, _cXY select 1, _deckZ];
+						_cLogic allowDamage false;
+						_cLogic setVariable ["town", _loc];
+						_cLogic setVariable ["sideID", _townSideID, true];
+						_cLogic setVariable ["supplyValue", _townSV, true];
+						_cLogic setVariable ["wfbe_camp_deckz", _deckZ]; //--- kimi/naval-deckcamp-repair (2026-07-20): server-local deck-height marker (writer here, reader Server_HandleSpecial "repair-camp") so a repaired deck-camp bunker is reseated ON the flight deck (setPosASL) instead of the ATL z=0 sea-surface bury inside the hull.
+						_cModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+						if (isNull _cModel) then {
+							diag_log Format ["NAVALHVT-CAMP: deck camp bunker createVehicle FAILED at %1 - logic deleted.", _cXY];
+							deleteVehicle _cLogic;
+						} else {
+							_cModel setDir ((getDir _cLogic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
+							_cModel setPosASL [_cXY select 0, _cXY select 1, _deckZ];
+							_campHealth = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
+							if !(isNil '_campHealth') then {
+								_cModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
+							};
+							_cFlag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+							if (isNull _cFlag) then {
+								diag_log Format ["NAVALHVT-CAMP: deck camp flag createVehicle FAILED at %1 - bunker kept without flag.", _cXY];
+								_cLogic setVariable ["wfbe_flag", objNull];
+							} else {
+								_cFlagPos = _cLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
+								_cFlag setPosASL [_cFlagPos select 0, _cFlagPos select 1, _deckZ];
+								_cLogic setVariable ["wfbe_flag", _cFlag];
+								_newFlags = _newFlags + [_cFlag];
+							};
+							_cLogic setVariable ["wfbe_camp_bunker", _cModel, true];
+							_newCamps = _newCamps + [_cLogic];
+						};
 					};
-					_cFlag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
-					_cFlagPos = _cLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
-					_cFlag setPosASL [_cFlagPos select 0, _cFlagPos select 1, _deckZ];
-					_cLogic setVariable ["wfbe_flag", _cFlag];
-					_cLogic setVariable ["wfbe_camp_bunker", _cModel, true];
-					_newCamps = _newCamps + [_cLogic];
-					_newFlags = _newFlags + [_cFlag];
 				} forEach [[-10, 18, 0], [-10, -18, 0]];
 				_loc setVariable ["camps", _newCamps, true];
 				[_newCamps, _loc, _newFlags] execVM "Server\FSM\server_town_camp.sqf";

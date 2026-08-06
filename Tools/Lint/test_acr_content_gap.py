@@ -1,4 +1,4 @@
-"""Static contract for the default-off ACR content-gap registration."""
+"""Static contract for the armed ACR content-gap registration."""
 
 from pathlib import Path
 
@@ -11,11 +11,11 @@ def read(relative_path: str) -> str:
     return (MISSION / relative_path).read_text(encoding="utf-8")
 
 
-def test_acr_content_gap_is_default_off_and_registers_verified_statics():
+def test_acr_content_gap_is_armed_and_registers_verified_statics():
     constants = read("Common/Init/Init_CommonConstants.sqf")
     core = read("Common/Config/Core/Core_ACR.sqf")
 
-    assert 'WFBE_C_ACR_CONTENT_GAP = 0' in constants
+    assert 'WFBE_C_ACR_CONTENT_GAP = 1' in constants
     assert 'WFBE_C_ACR_CONTENT_GAP", 0]) > 0' in core
     for classname in ("AGS_CZ_EP1", "2b14_82mm_CZ_EP1", "DSHKM_CZ_EP1"):
         assert classname in core

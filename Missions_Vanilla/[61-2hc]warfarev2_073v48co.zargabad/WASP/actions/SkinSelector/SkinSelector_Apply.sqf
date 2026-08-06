@@ -246,7 +246,11 @@ if (_usedSwapGrp) then {
 //--- Switch player.
 diag_log format ["[WFBE (SKIN)] B4 selectPlayer -> '%1' grp=%2 wasLeader=%3",
 	_chosenClass, group _newUnit, _wasLeader];
-selectPlayer _newUnit;
+//--- fable/teamswitch-freeze-guard: routed through the shared cross-group selectPlayer guard
+//--- (Common_SelectPlayerCrossGroup.sqf). This call is always same-group (the swap unit is
+//--- created inside the player's own slot group above), so the guard's fast path takes over
+//--- and this is a plain selectPlayer - byte-identical to the previous bare call.
+[_newUnit] call WFBE_CO_FNC_SelectPlayerCrossGroup;
 
 //--- VERIFY the transfer actually took: player must BE the new unit within ~5s. In A2 MP a
 //--- selectPlayer into a non-local group (or mid-JIP) can silently fail, leaving the player in the
@@ -325,24 +329,59 @@ player removeAllEventHandlers "Killed";
 WFBE_PLAYERKEH = player addEventHandler ["Killed", {[_this select 0, _this select 1] Spawn WFBE_CL_FNC_OnKilled; [_this select 0, _this select 1, sideID] Spawn WFBE_CO_FNC_OnUnitKilled}];
 
 //--- Re-add HandleDamage EH (uses global WFBE_CL_VAR_ReArmorCode set in Init_Client.sqf).
-player addEventHandler ["HandleDamage", format ["_this Call %1", WFBE_CL_VAR_ReArmorCode]];
+//--- fix/sqf-eh-hygiene-20260730: track handle for PreRespawn remove path.
+_rearmorEH = player addEventHandler ["HandleDamage", format ["_this Call %1", WFBE_CL_VAR_ReArmorCode]];
+player setVariable ["WFBE_PLAYERHDMEH", _rearmorEH, false];
+WFBE_PLAYERHDMEH_UNIT = player;
 
 //--- Re-add vehicle Fired EHs on the new unit (it is on foot so vehicle player == player).
 //--- DEDUPE 2026-06-16: clear any existing Fired EHs first so repeated swaps do not
-//--- stack HandleAT/HandleRocketTraccer/blink (after N swaps the unit fired N+1 instances
-//--- per shot). The ONLY Fired EHs ever attached to the on-foot player are these three
-//--- (Init_Client.sqf:34/37/302, Client_PreRespawnHandler.sqf:13) — no other system owns
-//--- one — so removeAll is safe; the bomb/missile Fired EHs live on vehicles/AI via
-//--- Init_Unit.sqf, which the _global=false swap unit deliberately skips.
+//--- stack HandleAT/HandleRocketTraccer/blink. fix/sqf-eh-hygiene-20260730: the prior
+//--- comment claimed ONLY three Fired EHs exist on the on-foot player - that was false.
+//--- DropRPG.sqf (Init_Client + PreRespawn), GUER IED anti-farm, and satchel-TK detect also
+//--- own Fired handlers. removeAll is still correct (swap body is fresh / CreateUnit-only),
+//--- but the restore list must re-arm every player Fired owner + store FEH indices for
+//--- PreRespawn descending remove, and re-call DropRPG + Bipod_AddAutoDeploy.
 player removeAllEventHandlers "Fired";
-(vehicle player) addEventHandler ["Fired", {_this Spawn HandleAT}];
-(vehicle player) addEventHandler ["Fired", {_this Spawn HandleRocketTraccer}];
+WFBE_PLAYERFEH_UNIT = vehicle player;
+WFBE_PLAYERFEH_UNIT setVariable ["WFBE_PLAYERFEH_AT", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired", {_this Spawn HandleAT}]];
+WFBE_PLAYERFEH_UNIT setVariable ["WFBE_PLAYERFEH_TRACER", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired", {_this Spawn HandleRocketTraccer}]];
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
-	(vehicle player) addEventHandler ["Fired", {
+	WFBE_PLAYERFEH_UNIT setVariable ["OriginalMarkerColor", "ColorOrange", false];
+	WFBE_PLAYERFEH_UNIT setVariable ["WFBE_BlinkFiredEH", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired", {
 		_u = _this select 0;
 		_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
-	}];
+	}], false];
+	WFBE_PLAYERFEH_UNIT setVariable ["WFBE_BlinkHitEH", WFBE_PLAYERFEH_UNIT addEventHandler ["Hit", {
+		_u = _this select 0;
+		_causedBy = _this select 1;
+		if (!isNull _causedBy && {side _causedBy != side _u}) then {
+			_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+		};
+	}], false];
 };
+//--- Satchel TK-near-structure Fired (Init_Client / OnRespawnHandler) - flag-gated.
+if ((missionNamespace getVariable ["WFBE_C_SATCHEL_TK_DETECT", 0]) > 0) then {
+	WFBE_PLAYERFEH_UNIT addEventHandler ["Fired", {if (!isNil "WFBE_CL_FNC_OnFired") then {_this Call WFBE_CL_FNC_OnFired}}];
+};
+//--- DropRPG Fired + weapon-swap action (mine TK-base delete, disposable launcher drop).
+player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
+//--- GUER IED anti-farm Fired (Init_Unit / OnRespawnHandler) - only when playable GUER.
+if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoined == resistance}) then {
+	if !(player getVariable ["wfbe_ied_eh_added", false]) then {
+		player setVariable ["wfbe_ied_eh_added", true];
+		player addEventHandler ["Fired", {
+			private ["_shooter","_mag"];
+			_shooter = _this select 0;
+			_mag = _this select 5;
+			if (!isNil "_mag" && {typeName _mag == "STRING"} && {_mag in ["BAF_ied_v1","BAF_ied_v2","BAF_ied_v3","BAF_ied_v4"]}) then {
+				_shooter setVariable ["wfbe_ied_recent", time, true];
+			};
+		}];
+	};
+};
+//--- Auto-bipod AnimChanged was on the deleted body - re-attach if bipod script loaded.
+if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 
 //--- Restore WF menu action and skill perks.
 player Call WFBE_CL_FNC_AddWFMenuAction;
@@ -449,8 +488,7 @@ if ((missionNamespace getVariable ["WFBE_C_SKINSWAP_FUNDS_CARRY", 1]) > 0) then 
 	};
 };
 
-//--- Re-add the User11 KeyDown EH — it lived on the old (deleted) unit.
-player addEventHandler ["KeyDown", WF_SkinSelector_Hotkey];
+//--- User11 lives on persistent display 46 (Init_Keybind.sqf), not the replaced player unit.
 
 //--- Restore commander HQ build action if applicable.
 if (!(isNull commanderTeam)) then {

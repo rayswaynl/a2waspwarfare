@@ -276,11 +276,25 @@ _qTailFn = {
 	if (_more > 0) then {_joined = _joined + Format [" +%1 more", _more]};
 	_joined
 };
-while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} do {
+//--- r80b barracks/factory queue: (1) empty/nil queu made `_queu select 0` throw and kill the buy
+//--- coroutine mid-wait (slot stuck until factory destroyed). (2) Action_CancelQueue removes _unique
+//--- but this wait never noticed — cancelled mid-queue tokens spun until building death, then the
+//--- post-sleep E1 exit finally bailed. Abort cleanly when our token is gone (refund already issued).
+while {alive _building && !isNull _building} do {
+	if (isNil "_queu" || {typeName _queu != "ARRAY"}) then {_queu = []};
+	//--- Our token is head → exit wait and enter build countdown.
+	if ((count _queu > 0) && {(_queu select 0) == _unique}) exitWith {};
+	//--- Cancelled (token removed) or queue wiped → leave wait; post-loop E1 handles no-spawn.
+	if ((count _queu == 0) || {!(_unique in _queu)}) exitWith {
+		_show = false;
+		WFBE_CL_QUEUE_HUD = "";
+		WFBE_CL_QUEUE_HUD_TS = time;
+	};
 	sleep 4;
 	_show = true;
 	_ret = _ret + 4;
-	_queu = _building getVariable "queu";
+	_queu = _building getVariable ["queu", []];
+	if (isNil "_queu" || {typeName _queu != "ARRAY"}) then {_queu = []};
 	if ((count _queu > 0) && {time >= _nextQueueHint}) then {
 		_nextQueueHint = time + 12;
 		_queuePos = _queu find _unique;
@@ -303,15 +317,19 @@ while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} d
 	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: empty-guard the head-compare (mirror Server_BuyUnit.sqf:201) - a bare `_queu select 0` on an emptied shared queue is undefined on A2-OA.
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
-				_queu = _building getVariable "queu";
-				_queu = _queu - [_queu select 0];
-				_building setVariable ["queu",_queu,true];
+				_queu = _building getVariable ["queu", []];
+				if (isNil "_queu" || {typeName _queu != "ARRAY"}) then {_queu = []};
+				if (count _queu > 0) then {
+					_queu = _queu - [_queu select 0];
+					_building setVariable ["queu",_queu,true];
+				};
 			};
 		};
 	};
 	if ((count _queu > 0) && {count _queu2 > 0} && {!((_queu select 0) in [_queu2 select 0])}) then {  //--- queue-fix (mirror Server_BuyUnit.sqf:210, 2026-06-14 head-based fix): reset the stuck-head purge timer ONLY when the head token actually ADVANCES, not on any shared-queue COUNT change. The old count-based reset let a busy shared factory (concurrent player/AI buys + cancels churning the count) continually zero _ret so `_ret > _longest` never fired - a dead head token (e.g. a disconnected buyer whose coroutine died) then jammed the whole factory build queue permanently for every player behind it. Head-based reset lets _ret accumulate to _longest and purge the stuck head, exactly as the AI path already does.
 		_ret = 0;
-		_queu2 = _building getVariable "queu";
+		_queu2 = _building getVariable ["queu", []];
+		if (isNil "_queu2" || {typeName _queu2 != "ARRAY"}) then {_queu2 = []};
 	};
 };
 
@@ -372,7 +390,8 @@ _myActionKey = Format ["wfbe_cancel_action_%1", getPlayerUID player];
 _myActionID = _building getVariable [_myActionKey, -1];
 if (_myActionID >= 0) then {
 	_building removeAction _myActionID;
-	_building setVariable [_myActionKey, -1];
+	//--- object-var-namespace: nil the per-UID key (was left as -1 forever on the factory object).
+	_building setVariable [_myActionKey, nil];
 };
 
 //--- E1: was this slot CANCELLED during its build? Action_CancelQueue removed _unique from the queue,
@@ -824,8 +843,6 @@ if (_isMan) then {
 		["INFORMATION", Format ["Client_BuildUnit.sqf: TK-EASA variant '%1' armed on %2 (weapons %3).", (_tkeRow select 0), typeOf _vehicle, (_tkEasaKit select 0)]] Call WFBE_CO_FNC_LogContent;
 	};
 
-	_vehicles = (WF_Logic getVariable "emptyVehicles") + [_vehicle];
-	WF_Logic setVariable ["emptyVehicles",_vehicles,true];
 
 	if (isHostedServer) then {_vehicle setVariable ["WFBE_Taxi_Prohib", true]};
 
@@ -960,8 +977,8 @@ if (_isMan) then {
 	/* Section: Local Init (Client Only) */
 
 	//--- Lock / Unlock.
-	_vehicle addAction [localize "STR_WF_Unlock","Client\Action\Action_ToggleLock.sqf", [], 95, false, true, '', 'alive _target && locked _target'];
-	_vehicle addAction [localize "STR_WF_Lock","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)'];
+	_vehicle addAction [localize "STR_WF_Unlock","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && locked _target'];
+	_vehicle addAction [localize "STR_WF_Lock","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && !(locked _target)'];
 
 	//--- Vehicle Sell (item #43): team-leader or side-commander sells an empty nearby vehicle for a partial cash refund.
 	//--- addAction is LOCAL (re-adds on rebuy) -- the buyer-owns-vehicle model; same constraint as lock/unlock.
@@ -972,6 +989,15 @@ if (_isMan) then {
 		_vehicle setVariable ["wfbe_buyteam", clientTeam, true];
 		_vehicle addAction ["<t color='#e8c84a'>Sell Vehicle</t>", "Client\Action\Action_VehicleSell.sqf", [], 93, false, true, '', 'alive _target && {count crew _target == 0} && {(missionNamespace getVariable ["WFBE_C_VEHICLE_SELL", 1]) > 0} && {lightInRange || heavyInRange || depotInRange || aircraftInRange || hangarInRange} && {player == leader clientTeam || (!isNull commanderTeam && {commanderTeam == clientTeam})}'];
 	};
+	//--- r102 empty-enroll-race fix: enroll the fresh hull with the server empty-vehicle reaper via a
+	//--- server-routed request. Was: client-side read-modify-write on the STALE "emptyVehicles" replica
+	//--- (removed above the reveal call) - two players buying within one replication window read the
+	//--- same pre-buy snapshot and the second broadcast clobbered the first, silently dropping a hull
+	//--- from the reaper (an abandoned player hull was then never reaped and leaked for the rest of
+	//--- the match). Placed AFTER the wfbe_buyteam stamp above on purpose: the server endpoint
+	//--- ("player-vehicle-enroll-empty", Server_HandleSpecial.sqf) requires that tag, and same-sender
+	//--- PV/PVF traffic arrives in order.
+	["RequestSpecial", ["player-vehicle-enroll-empty", _vehicle]] Call WFBE_CO_FNC_SendToServer;
 
 	//--- GUER PLAYER VBIED: the buyable hilux1_civil_2_covered gets a driver-detonate action (Feature B player-side).
 	//--- The action is driver-only + resistance-only (condition) and asks the server to blast (mirrors AI wildcard W21)
@@ -1264,8 +1290,8 @@ if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];
 };
 
-//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0
-if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {
+//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0. When WFBE_C_SEAD_EASA_ROW is armed the EASA row is the opt-in for PLAYER buys; this auto-attach is skipped here so picking the row is the only way to arm guidance (AI buys via Server_BuyUnit.sqf are untouched and keep the unconditional attach).
+if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]} && {!((missionNamespace getVariable ["WFBE_C_SEAD_EASA_ROW", 0]) > 0)}) then {
 	_vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];
 };
 
