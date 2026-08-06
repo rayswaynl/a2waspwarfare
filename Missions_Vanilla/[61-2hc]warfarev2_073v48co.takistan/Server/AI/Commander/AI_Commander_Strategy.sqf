@@ -958,7 +958,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 				if (!_gwExempt) then {
 					if (_gwWant) then {_gwTrigger = true};
 					private ["_gwCoolUntil"]; _gwCoolUntil = _gwTeam getVariable "wfbe_aicom_rally_cooldown_until"; if (isNil "_gwCoolUntil") then {_gwCoolUntil = 0}; //--- claude/aicom-west-stuck: rally re-arm cooldown (bug M) - group-safe 1-arg get + isNil (2-arg group default is the GROUPGETVAR trap)
-					if (!_gwTrigger && {_gwAlive > 0} && {_gwAlive < _gwMinAlive} && {!_gwRallying} && {time >= _gwCoolUntil}) then {_gwTrigger = true}; //--- claude/aicom-west-stuck: cooldown-gated (was ungated) - blocks instant re-rally of a still-understrength team; the explicit driver wantrally arm one line above stays ungated
+					if (!_gwTrigger && {_gwAlive > 0} && {_gwAlive < _gwMinAlive} && {!_gwRallying} && {time >= _gwCoolUntil} && {!([_gwTeam] Call WFBE_CO_FNC_CapLock)}) then {_gwTrigger = true}; //--- capture lock owns the automatic understrength path; explicit driver wantrally one line above stays ungated for contextual safety breakoff
 					//--- fable/aicom-disband-merge (2026-08-02, overnight telemetry): a DECIMATED team (alive <= WFBE_C_AICOM_DISBAND_ALIVE_MAX)
 					//--- that already burned a full rally cycle (cooldown stamp > 0 = a prior rally order was issued) and STILL sits at the
 					//--- floor is a proven barren loop (53x GRACEFUL-WITHDRAW/TOPUP_REQ cycles at alive=1 in the 2026-08-01 Takistan overnight;
