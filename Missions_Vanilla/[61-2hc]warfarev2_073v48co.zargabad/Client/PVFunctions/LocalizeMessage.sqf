@@ -1,4 +1,4 @@
-Private["_localize","_txt","_totalSkillBLUFOR","_totalSkillOPFOR","_attempts", "_commandChat","_object"];
+Private["_localize","_txt","_totalSkillBLUFOR","_totalSkillOPFOR","_attempts", "_commandChat","_object","_teamstackDeadline"];
 
 //--- Malformed-payload guard: ensure _this is ARRAY with >= 1 element (localize key).
 if (!((typeName _this) in ["ARRAY"]) || {count _this < 1}) exitWith {};
@@ -32,7 +32,22 @@ switch (_localize) do {
             sleep 0.5;
         };*/
 
-        waitUntil { !(isNil {missionNamespace getVariable "WFBE_BLUFOR_SCORE_JOIN"}) && !(isNil {missionNamespace getVariable "WFBE_OPFOR_SCORE_JOIN"}) };
+        _teamstackDeadline = diag_tickTime + 15;
+        waitUntil {
+            uiSleep 0.25;
+            (
+                !(isNil {missionNamespace getVariable "WFBE_BLUFOR_SCORE_JOIN"}) &&
+                !(isNil {missionNamespace getVariable "WFBE_OPFOR_SCORE_JOIN"})
+            ) || {diag_tickTime > _teamstackDeadline}
+        };
+
+        if (
+            isNil {missionNamespace getVariable "WFBE_BLUFOR_SCORE_JOIN"} ||
+            {isNil {missionNamespace getVariable "WFBE_OPFOR_SCORE_JOIN"}}
+        ) exitWith {
+            diag_log "[WFBE][TEAMSTACK] score fan-in timeout; using generic rejection message.";
+            _txt = Localize "STR_WF_CHAT_TeamstackOrTeamSwap";
+        };
 
         _totalSkillBLUFOR = missionNamespace getVariable "WFBE_BLUFOR_SCORE_JOIN";
         _totalSkillOPFOR = missionNamespace getVariable "WFBE_OPFOR_SCORE_JOIN";
