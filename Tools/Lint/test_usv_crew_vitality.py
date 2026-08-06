@@ -36,19 +36,24 @@ def _maintain_block(path: Path) -> str:
     return source[source.index("//=== (3) MAINTAIN"):]
 
 
-def _prune_decision(*, static_alive, gunner_alive, gunner_seated, boat_player, static_player):
-    """Small executable contract for the source-level invalid-slot decision."""
-    invalid = not static_alive or not gunner_alive or not gunner_seated
-    return invalid and not boat_player and not static_player
+def _crew_vitality_decision_block(path: Path) -> str:
+    """Return only the r187 invalid-slot decision, excluding earlier prune guards."""
+    block = _crew_vitality_block(path)
+    match = re.search(
+        r"if \(!_drop && \{(?P<predicate>.*?)\}\) then \{(?P<body>.*?)\n\s*\};",
+        block,
+        re.DOTALL,
+    )
+    assert match, "r187 invalid-slot decision must remain an explicit source block"
+    return match.group("body")
 
 
-def _first_missing_role(roles, entries):
-    """Model the bounded one-role refill selection in the SQF maintain block."""
-    present = {entry[0] for entry in entries}
-    for role in roles:
-        if role not in present:
-            return role
-    return roles[len(entries) % len(roles)]
+def _role_selection_block(path: Path) -> str:
+    """Return the actual maintain-loop role-selection block from the SQF source."""
+    maintain = _maintain_block(path)
+    start = maintain.index("_nextRole = \"\";")
+    end = maintain.index('_nextClass = "";', start)
+    return maintain[start:end]
 
 
 def test_usv_prune_recycles_bare_or_unseated_weapon_crew_slots():
@@ -80,42 +85,9 @@ def test_usv_prune_decision_is_player_safe_and_reaches_refillable_drop():
         prune = _prune_block(path)
         assert 'if ((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_ENABLE", 0]) != 1)' not in prune
 
-        # A broken, unoccupied slot is dropped for the next maintain pass; the same
-        # broken slot remains registered while either hull is player-occupied.
-        assert _prune_decision(
-            static_alive=True,
-            gunner_alive=False,
-            gunner_seated=False,
-            boat_player=False,
-            static_player=False,
-        )
-        assert not _prune_decision(
-            static_alive=True,
-            gunner_alive=False,
-            gunner_seated=False,
-            boat_player=True,
-            static_player=False,
-        )
-        assert not _prune_decision(
-            static_alive=True,
-            gunner_alive=False,
-            gunner_seated=False,
-            boat_player=False,
-            static_player=True,
-        )
-        assert not _prune_decision(
-            static_alive=True,
-            gunner_alive=True,
-            gunner_seated=True,
-            boat_player=False,
-            static_player=False,
-        )
-
-        invalid = re.search(
-            r"if \(!_drop && \{.*?\}\) then \{(?P<body>.*?)\n\s*\};",
-            prune,
-            re.DOTALL,
-        ).group("body")
+        # Bind the player-safe drop decision to the exact r187 crew-vitality block;
+        # searching the whole prune phase can accidentally match the older driver-loss guard.
+        invalid = _crew_vitality_decision_block(path)
         assert re.search(
             r"if \(!_boatHasPlayer && !_staticHasPlayer\) then \{\s*_drop = true;",
             invalid,
@@ -148,24 +120,37 @@ def test_usv_prune_retains_player_occupied_drop_for_later_cleanup():
 
 
 def test_usv_maintain_refills_one_missing_role_per_tick():
-    roles = ["AA", "ROCKET", "HMG"]
-    entries = [("AA", "boat-a"), ("HMG", "boat-h")]
-    selected = _first_missing_role(roles, entries)
-    assert selected == "ROCKET"
-    entries.append((selected, "replacement"))
-    assert len(entries) == 3
-    assert _first_missing_role(roles, entries) in roles
-
     for path in USV_PATHS:
         source = path.read_text(encoding="utf-8-sig")
         activation = source[:source.index("//=== (1) EVALUATE ACTIVATION GATE")]
         maintain = _maintain_block(path)
+        selection = _role_selection_block(path)
         assert 'WFBE_C_USV_FLOTILLA_ENABLE' in activation
         assert re.search(
             r"if \(_gateActive && \{count _flotilla < _count\} && \{count _route > 0\}\) then",
             maintain,
         )
-        assert "_nextRole = \"\";" in maintain
-        assert "if (!_rolePresent && {_nextRole == \"\"}) then" in maintain
-        assert "if (_nextRole == \"\") then" in maintain
-        assert maintain.count("WFBE_CO_FNC_CreateVehicle") == 1
+        assert selection.count("forEach _roles") == 1
+        assert selection.count("forEach _flotilla") == 1
+        assert selection.count("_nextRole = _candidateRole") == 1
+        assert re.search(
+            r"_rolePresent = false;.*?forEach _flotilla;.*?"
+            r"if \(!_rolePresent && \{_nextRole == \"\"\}\) then \{_nextRole = _candidateRole\};",
+            selection,
+            re.DOTALL,
+        )
+
+        class_start = maintain.index('_nextClass = "";')
+        spawn_start = maintain.index('if (_nextClass != "") then {', class_start)
+        class_lookup = maintain[class_start:spawn_start]
+        assert re.search(
+            r"if \(\(_x select 0\) == _nextRole\) exitWith \{_nextClass = _x select 1\};"
+            r"\s*\} forEach _loadouts;",
+            class_lookup,
+        )
+
+        # The actual source branch selected above creates one static role per maintain
+        # tick; no detached Python list model can pass if this call is removed or moved.
+        spawn = maintain[spawn_start:]
+        assert spawn.count("createVehicle [_nextClass") == 1
+        assert spawn.count("WFBE_CO_FNC_CreateVehicle") == 1
