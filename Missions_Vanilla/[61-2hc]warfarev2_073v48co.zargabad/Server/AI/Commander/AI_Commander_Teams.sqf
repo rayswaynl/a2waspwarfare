@@ -157,7 +157,12 @@ _censusRows = "";
 			//--- C3 husk accounting: a deleted/wiped founded group is no longer a
 			//--- live slot. Keep the HC registry untouched; only the founding census
 			//--- stops treating a null-body group as satisfying the target.
-			if (_liveCount > 0) then {
+			//--- A BASE-GC-reclaimed slot can later become a human team while retaining its founded
+			//--- stamp. Its liveCount is intentionally AI-only, so wfbe_uid is the stable live claim
+			//--- across death/respawn. Count it as founded (same gate weight as the old pending state)
+			//--- and clear any stale construction age; a later unclaimed wipe gets a fresh full window.
+			if (_liveCount > 0 || {!(isNil {_grp getVariable "wfbe_uid"})}) then {
+				if !(isNil {_grp getVariable "wfbe_aicom_construction_since"}) then {_grp setVariable ["wfbe_aicom_construction_since", nil];};
 				_foundedTeams = _foundedTeams + 1;
 			} else {
 				//--- A server-local construction group is a reservation until Produce
