@@ -10,6 +10,14 @@ SOURCE = (
     / "Client_HandleMapSingleClick.sqf"
 )
 
+MARKER_MONITOR_SOURCE = (
+    Path(__file__).resolve().parents[2]
+    / "Missions"
+    / "[55-2hc]warfarev2_073v48co.chernarus"
+    / "WASP"
+    / "global_marking_monitor.sqf"
+)
+
 SPECIAL_SOURCE = (
     Path(__file__).resolve().parents[2]
     / "Missions"
@@ -29,6 +37,17 @@ def test_map_click_rejects_non_live_or_spectating_players_before_stateful_comman
 
     assert guard in text
     assert text.index(guard) < text.index("_ctrlPressed =")
+
+
+def test_marker_dialog_input_release_uses_wall_clock_while_sim_is_paused():
+    text = MARKER_MONITOR_SOURCE.read_text(encoding="utf-8")
+    handler = text[text.index("fnc_map_mouseButtonDblClick_EH =") :]
+
+    assert "_releaseAt = diag_tickTime + 2;" in handler
+    assert "while {diag_tickTime < _releaseAt} do" in handler
+    assert "uiSleep 0.1;" in handler
+    assert "(time + 2) spawn" not in handler
+    assert "while {time < _this} do" not in handler
 
 
 def test_guer_heli_bomb_requires_a_live_requester_before_debiting_funds():

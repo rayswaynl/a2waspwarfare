@@ -73,13 +73,16 @@ fnc_map_mouseButtonDblClick_EH =
     ["_display"];
 
     disableUserInput true;
-    (time + 2) spawn
+    [] spawn
     {
+        private ["_releaseAt","_display"];
         disableSerialization;
-
-        while {time < _this} do
+        //--- Mission time and sleep can stop on the briefing/loading screen; use the diagnostic/UI clock so
+        //--- a map double-click can never leave player input disabled while the simulation is paused.
+        _releaseAt = diag_tickTime + 2;
+        while {diag_tickTime < _releaseAt} do
         {
-            sleep 0.1;
+            uiSleep 0.1;
             _display = findDisplay 54;
             if (!isNull _display) exitWith
             {
