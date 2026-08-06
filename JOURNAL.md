@@ -1,5 +1,70 @@
 # JOURNAL — a2waspwarfare-experital
 
+## Working State 2026-08-06 ~21:00 CEST — end of day: wave0806b LIVE, box repaired, board clear [master]
+
+**Task:** closed out the #2276 HC-seating program end-to-end, deployed it, and repaired two live
+ops faults found along the way. Nothing is mid-flight — this is a clean stopping point.
+
+**Current file:** none open. Last code change on master is `Server/Functions/Server_OnPlayerConnected.sqf`
+(PR #2331, merged). Last repo change is this journal.
+
+**Approach:** ship correctness fixes unflagged as PRs, deploy only on a verified-empty server, and
+verify every claim against the live RPT offset-tracked rather than against a script's own verdict.
+
+### Where things stand
+
+- **LIVE = `[55-2hc]warfarev2_073v48co_wave0806b`** (git `6fe5c5cc8c`). Carries #2312 + #2317.
+  Rollback = restore `server-pr8.cfg.bak-wave0806b` with the stack stopped, then re-run the 2HC
+  restart task; the wave0806a PBOs are still placed in `MPMissions` (verified after cleanup).
+- **master = `c8dbf0ad5b`** — ahead of the deployed build by #2331 only.
+- Merged today: **#2312** (SML terminator), **#2317** (#2276 Phase 2), **#2330** (deploy record),
+  **#2331** (`_clientBody` scope fix).
+
+### Key values needed to resume
+
+- Deployed-vs-master delta: **#2331 only**. The next cutover takes the live anchored-error count
+  from **2 to 0** (the 2 are the `_clientbody` boot burst, one-shot at `MISSINIT+341/344`).
+- Live health at checkpoint: both HCs seated (`ready=true|seated=2|expected=2`), `Message not sent = 0`,
+  SML errors **0**, `:8080` serving 200.
+- Cutover recipe, occupancy rule, and the two path traps are in the `wave0806b DEPLOYED LIVE` entry
+  above — read that before any future deploy.
+- Box state: 22 scheduled tasks, 4 staging dirs (`wave0806b`/`wave0806a`/`wave0805b` + `bikeys`),
+  no ad-hoc session scripts left. `WaspStatsWebGuard` is new and live.
+
+### What I did
+
+- Signed off #2276: shipped Phase 2 as #2317 (vote tally, 2x stats flush, caster-slot landmine,
+  2 comment corrections) — lint 168 baseline, pytest 917, bracket delta 0, 3-terrain parity.
+- **Falsified the spec's Phase 1 premise.** An unseated HC was NOT the cold-start race: there was
+  **no non-sandboxed `steam.exe`** running, because the launcher detects real Steam via
+  `CommandLine -notmatch 'Sandbox'` and a sandboxed Steam's command line is byte-identical.
+  Fixed the launcher (pid-level SbieDll discrimination + a real-Steam logon probe that fails loud).
+- **Fixed the recurring `:8080` outage at root cause:** the listener task had
+  `ExecutionTimeLimit = PT72H` on an infinite loop, so the scheduler killed it every ~72 h and, with
+  only a boot trigger, it stayed dead until a reboot. Now `PT0S` + a separate idempotent guard task.
+- Built, validated and deployed wave0806b; verified in-engine.
+- Box hygiene: removed a scheduled task whose launcher would have killed both HCs, disarmed the
+  HC1-bounce task to on-demand only, deleted 20 inert cutover one-shots and 48 stale staging dirs
+  (~1.9 GB), swept every ad-hoc script.
+
+### Next step
+
+Owner decisions only — nothing blocked on me:
+1. Arm `WFBE_C_STARFORT_ALLYMARKER`?
+2. Arm `WFBE_C_DRONE_TIERS` / ship drone tiers 2-5 (recipes verified and ready)?
+3. Ship #2276 item 2g (the 4 registry-only consumers, currently owner-gated)?
+4. When any of the above land, cut the next build — it also carries #2331.
+
+### Discovered Issues (open)
+
+- **~11 other draft PRs** (#2318-#2329) sit unreviewed on the board from the fleet lanes.
+- The restart chain's Steam sign-in probes count **historical** "Logged On" lines in a log tail, so
+  they can read PASS while an account is actually signed out. They passed legitimately today
+  (independently confirmed), but the probe shape is weak and worth tightening.
+- `WaspStatsWeb` still shows a stale `0x800710E0` last result from a heal-trigger design I replaced
+  the same day. It clears on the listener's next natural restart; `267014` is the value that means
+  real trouble.
+
 ## 2026-08-06 ~20:20 CEST - wave0806b DEPLOYED LIVE (#2312 + #2317)
 
 **LIVE = `[55-2hc]warfarev2_073v48co_wave0806b` (git `6fe5c5cc8c`)**, cut on a verified-empty server.
