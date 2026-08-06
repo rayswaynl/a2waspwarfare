@@ -720,6 +720,12 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 			};
 			//--- count LIVE structures of this type; use the already-computed _structures local (micro-opt).
 			_typeHave = {((_x getVariable ["wfbe_structure_type", ""]) == _otype) && {alive _x}} count _structures;
+			//--- fix(aicom-cap-crosscount, bughunt 2026-08-06): a FORWARD-OUTPOST build of this type inside its 5-min
+			//--- async window is not alive/registered yet, so the live count alone let main+fwd overshoot the cap by one.
+			//--- Count a FRESH fwd pending stamp as one unit. 60s window (one commander cadence) - covers the
+			//--- same-frame and last-tick gap while keeping the double-count of a now-alive structure (stamp
+			//--- not yet expired) brief; NOT the pending guards' full 300s build window.
+			if ((time - (_logik getVariable [Format ["wfbe_aicom_fwdbuilt_%1", _otype], -1e6])) < 60) then {_typeHave = _typeHave + 1};
 			if (_typeHave >= _typeLimit) then {
 				_capped = true;
 				//--- de-spam: only log when the quota-full state for this type CHANGES on the side logic.
@@ -1216,6 +1222,11 @@ if (_fwdEnable && {_dual}) then {
 										if (typeName _fwdTypeLimit != "SCALAR") then {_fwdTypeLimit = 3};
 										if (_ord == "CommandCenter" && {_basesMax > 0} && {_basesMax < _fwdTypeLimit}) then {_fwdTypeLimit = _basesMax};
 										_fwdTypeHave = {((_x getVariable ["wfbe_structure_type", ""]) == _ord) && {alive _x}} count _structures;
+										//--- fix(aicom-cap-crosscount, bughunt 2026-08-06): the main build-order loop runs in this SAME
+										//--- Call frame against the same stale _structures snapshot - a build it just paid for is not
+										//--- alive yet, so count its pending stamp too or main+fwd each add one capped type per pass.
+										//--- 60s window (one cadence), NOT 300s: briefer double-count once the build goes alive.
+										if ((time - (_logik getVariable [Format ["wfbe_aicom_built_%1", _ord], -1e6])) < 60) then {_fwdTypeHave = _fwdTypeHave + 1};
 										if (_fwdTypeHave >= _fwdTypeLimit) then {_fwdCapped = true};
 									};
 									if (!_presentF && !_fwdCapped) then {

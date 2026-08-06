@@ -46,7 +46,12 @@ if (_isHeadless) then {
 		//---   endgame                    = server_victory_threeway.sqf (nil broadcast at round end; lets the HC flip
 		//---        gameOver/WFBE_GameOver so its local A-Life loops (side patrols, AICOM teams, town-AI
 		//---        delegates, GroupsGC) tear down on their next tick instead of running to mission unload)
+		//---   action-perform             = Action_EjectCargo.sqf HC-local AI passenger eject/HALO fallback (r71b).
+		//---        NOT in the flat list: the player path broadcasts the SAME tag via SendToClients (publicVariable
+		//---        to every client), so name-alone acceptance would have every HC re-fire a global-effect eject on
+		//---        a non-local player unit. Accepted below ONLY when the named unit is local to this HC.
 		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder","endgame"]);
+		if (!_hcAllowed && {(_parameters select 0) == "action-perform"} && {(count _parameters) > 1} && {(typeName (_parameters select 1)) == "OBJECT"} && {local (_parameters select 1)}) then {_hcAllowed = true};
 	};
 	if (_hcAllowed) then {_exit = false};
 };
