@@ -3,7 +3,7 @@
 	Contributors : Marty.
 */
 
-Private ["_get","_isMan","_logik","_perfAARStarted","_perfBlinkingEH","_perfMarkerRefresh","_perfMarkerType","_perfSideMatch","_perfStart","_side","_sideID","_unit","_unit_kind","_upgrades"];
+Private ["_clientInitDeadline","_get","_isMan","_logik","_perfAARStarted","_perfBlinkingEH","_perfMarkerRefresh","_perfMarkerType","_perfSideMatch","_perfStart","_side","_sideID","_unit","_unit_kind","_upgrades"];
 
 _unit 				= _this select 0;
 _sideID 	 		= _this select 1;
@@ -39,7 +39,15 @@ if !(local player) exitWith {}; //--- We don't need the server to process it.
 //--- (actions/markers/UI). Nil-guarded: real clients + server are byte-identical.
 if (!isNil "isHeadLessClient" && {isHeadLessClient}) exitWith {};
 
-waitUntil {clientInitComplete}; //--- Wait for the client part.
+//--- Bounded client-init wait: a stalled JIP/client bootstrap must not park one scheduled script
+//--- forever for every broadcast unit.  Use diag_tickTime + uiSleep because mission time can be
+//--- paused while the client is still on the black loading screen.  The normal path releases as
+//--- soon as Init_Client.sqf publishes clientInitComplete; timeout is fail-closed for this unit.
+_clientInitDeadline = diag_tickTime + 90;
+waitUntil { uiSleep 0.25; (!isNil "clientInitComplete" && {clientInitComplete}) || {diag_tickTime > _clientInitDeadline} };
+if (isNil "clientInitComplete" || {!clientInitComplete}) exitWith {
+	["WARNING", Format ["Init_Unit.sqf: clientInitComplete timeout for [%1] side [%2] - skipping local unit setup.", _unit_kind, _sideID]] Call WFBE_CO_FNC_LogContent;
+};
 
 sleep 2; //--- Wait a bit.
 
