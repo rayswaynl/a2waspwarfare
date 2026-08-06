@@ -38,7 +38,7 @@
 private ["_side","_logik","_snap","_myEff","_enEff","_enTowns","_myTowns","_totTowns","_enHQ","_enHQPos","_enHQAlive",
 	"_domRatio","_abortRatio","_maxEnTowns","_mapRelativeFrac","_armTicks","_minCommit","_dominant","_streak","_committed",
 	"_t0","_state","_tgtTowns","_teams","_nearTown","_bestD","_d","_t","_stamped","_sideText","_elMin",
-	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding","_capLk","_capLocked","_dHQ","_decV","_stallStreak","_gateReason"];
+	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding","_rallying","_capLk","_capLocked","_dHQ","_decV","_stallStreak","_gateReason"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -105,7 +105,10 @@ if (_enHQAlive) then {
 			_holdT = _t getVariable "wfbe_aicom_holding_town";
 			_isHolding = false;
 			if (!isNil "_holdT") then {if (typeName _holdT == "OBJECT" && {!isNull _holdT}) then {_isHolding = true}};
-			if (_t != _garTeam && {!_isHolding} && {!isPlayer (leader _t)} && {({alive _x && {(vehicle _x) isKindOf "Air"}} count (units _t)) == 0}) then { //--- stack-pass: GROUND contract - a team with any live unit currently in an Air hull neither senses nor is stamped
+			//--- Strategy owns a withdrawing team for the whole rally lifecycle; DECAP runs after it.
+			_rallying = _t getVariable "wfbe_aicom_rallying";
+			if (isNil "_rallying") then {_rallying = false};
+			if (_t != _garTeam && {!_isHolding} && {!_rallying} && {!isPlayer (leader _t)} && {({alive _x && {(vehicle _x) isKindOf "Air"}} count (units _t)) == 0}) then { //--- stack-pass: GROUND contract - a team with any live unit currently in an Air hull neither senses nor is stamped
 				_ldr = leader _t;
 				if (!isNull _ldr && {alive _ldr} && {((getPos _ldr) distance _enHQPos) <= _senseRadius}) then {_inRange = _inRange + 1};
 			};
@@ -234,7 +237,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]) > 0 && {_co
 			_holdT = _t getVariable "wfbe_aicom_holding_town";
 			_isHolding = false;
 			if (!isNil "_holdT") then {if (typeName _holdT == "OBJECT" && {!isNull _holdT}) then {_isHolding = true}};
-			if (_t != _garTeam && {!_isHolding} && {!isPlayer (leader _t)} && {({alive _x && {(vehicle _x) isKindOf "Air"}} count (units _t)) == 0}) then { //--- stack-pass: GROUND contract - a team with any live unit currently in an Air hull neither senses nor is stamped
+			//--- Strategy owns a withdrawing team for the whole rally lifecycle; DECAP runs after it.
+			_rallying = _t getVariable "wfbe_aicom_rallying";
+			if (isNil "_rallying") then {_rallying = false};
+			if (_t != _garTeam && {!_isHolding} && {!_rallying} && {!isPlayer (leader _t)} && {({alive _x && {(vehicle _x) isKindOf "Air"}} count (units _t)) == 0}) then { //--- stack-pass: GROUND contract - a team with any live unit currently in an Air hull neither senses nor is stamped
 				//--- SCOPED COMMIT (owner Q1): only teams already NEAR the HQ press; the rest keep their towns.
 				//--- stack-pass MAJOR fixes: stamp must BROADCAST (teams are HC-local; the 2-arg write never
 				//--- replicated -> the press layer was dead on the live 2-HC deploy) and clears must use the
@@ -257,7 +263,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]) > 0 && {_co
 					};
 				};
 			} else {
-				//--- became garrison/hold while committed -> the press stamp no longer applies; clear it (latent-consumer guard).
+				//--- became garrison/hold/rally while committed -> the press stamp no longer applies; clear it (latent-consumer guard).
 				_decV = _t getVariable "wfbe_aicom_decap"; if (!isNil "_decV" && {typeName _decV == "ARRAY"} && {count _decV >= 2}) then {_t setVariable ["wfbe_aicom_decap", [], true]}; //--- sentinel+broadcast (stack-pass)
 			};
 		} else {
