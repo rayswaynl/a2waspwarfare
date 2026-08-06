@@ -3,9 +3,19 @@
 // confirmed the client-side cost). It is now a registrar: same parameters, same marker
 // creation, but the periodic work moved to the single consolidated loop in
 // Common_MarkerLoop.sqf. Call sites are unchanged.
-Private ["_deathMarkerColor","_deathMarkerSize","_deathMarkerType","_deletePrevious","_entry","_initialPos","_isHQ","_markerColor","_markerName","_markerSize","_markerText","_markerType","_refreshRate","_side","_trackDeath","_tracked","_trackedKind","_trackedType"];
+Private ["_deathMarkerColor","_deathMarkerSize","_deathMarkerType","_deletePrevious","_entry","_initialPos","_isHQ","_markerColor","_markerInitDeadline","_markerName","_markerSize","_markerText","_markerType","_refreshRate","_side","_trackDeath","_tracked","_trackedKind","_trackedType"];
 
-waitUntil {commonInitComplete};
+//--- Bounded registrar gate: a broken common-init path must not leave one scheduled
+//--- marker VM parked forever. This is fail-closed; no marker is registered without
+//--- the functions/variables that the registrar and consolidated loop require.
+_markerInitDeadline = diag_tickTime + 90;
+waitUntil {
+	uiSleep 0.25;
+	(!isNil "commonInitComplete" && {commonInitComplete}) || {diag_tickTime > _markerInitDeadline}
+};
+if (isNil "commonInitComplete" || {!commonInitComplete}) exitWith {
+	diag_log "[WFBE (INIT)] HANGGUARD| Common_MarkerUpdate.sqf: common initialization was not complete after 90s - skipping marker registration.";
+};
 
 _markerType = _this select 0;
 _markerColor = _this select 1;
