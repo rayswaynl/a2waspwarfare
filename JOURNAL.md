@@ -1,5 +1,124 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-06 ~17:10 - #2312 merged; #2276 signed off, Phase 2 shipped as #2317; HC seating FIXED live
+
+**#2312 MERGED** (`b82264be5c`) - the one-character `Common_SMLRetreat.sqf` statement-terminator fix.
+
+**#2276 (SPEC-HC-SEAT-FOR-GOOD) signed off and implemented.**
+
+**Phase 2 (mission-side) = draft PR #2317**, branch `fable/hc-seat-consumer-hardening-20260806`:
+- 2a `Server_VoteForCommander.sqf:29` - a mis-seated HC's magnet group has an `isPlayer`-true
+  leader, so its abstain inflated `_aiVotes` and could tip a commander vote. HC-name filter +
+  null-leader guard.
+- 2b/2c `server_victory_threeway.sqf:298,411` - no phantom ROUNDEND stats row and no
+  "has no score to be saved" ERROR for an HC.
+- 2d `Init_HcLobbyLock.sqf:58` - the derive branch counted caster slots (also CIV) toward the
+  expected-HC count. **Verified unreachable at every current default** (`WFBE_C_HC_LOBBY_EXPECTED`
+  defaults to `WFBE_C_HC_SLOTS` = 2; only `-1` opts into derivation) - landmine defusal, zero live
+  behaviour change.
+- 2e `Init_CommonConstants.sqf` comment-only - the old text claimed
+  `Default 0 = byte-identical to HEAD (the PV loop below never spawns)`. **Both halves false**: the
+  constant is 1 and `Init_Server.sqf:1724` does spawn the 5s loop. Default NOT changed.
+- 2f comment-only - stale `mission.sqm id=229` refs removed from `Init_HC.sqf:47,195` and
+  `provision/Start-Wasp-4HC.ps1:11`; grepped against the current sqm, `id=229` does not exist
+  (WEST slots are 200-204, HC CIV slots 9009/9010).
+- **2g deliberately NOT shipped** (owner-gated, spec S10 d4); **1e NOT shipped** (spec gates it on
+  Phase 1 being proven).
+- Gates: lint **168 = baseline, 0 new, 0 in edited files**; pytest **917 passed / 2 skipped**;
+  doc-sync PASS; version-templates PASS; **net bracket delta 0 across all 15 .sqf files**; mirrors
+  run + TK/ZG templates restored; **3-terrain blob parity IDENTICAL** on all five edited files.
+
+**Phase 1: the spec's premise was FALSIFIED by the live investigation, and the real cause is fixed.**
+The spec attributes an unseated HC to a cold-start connect-timing race. That is not what was wrong:
+- The box's own authoritative sandbox test (`tasklist /m SbieDll.dll`) showed **zero non-sandboxed
+  `steam.exe`** - there was no real Steam session, so the un-sandboxed HC could never authenticate.
+- The launcher detected "a real Steam" by testing the process command line for the absence of the
+  string `Sandbox`. **A sandboxed Steam's command line is byte-identical to a real one**, so every
+  sandboxed Steam counted as real, the chain logged "real Steam already up", never started one, and
+  started arma into a guaranteed 1-HC round.
+- Starting the real Steam from an interactive session and bouncing **only** that HC seated it at
+  once: a second distinct `HCSIDE|v1|connect|uid=` appeared, both `HCSTAT who=` identities now
+  heartbeat, and the HC went from a flat 64 MB to 471 MB. Held across four polls; server fps 45.
+- Launcher fixed (pid-level SbieDll discrimination + a real-Steam logon probe that fails loud
+  instead of starting arma), backed up, re-parsed, and smoke-tested via its own `-DryRun` path.
+- The full `Confirm-HCSeatOrBounce` bounce-retry machinery was **not** built: it is several hundred
+  lines aimed at a mechanism the evidence no longer supports.
+
+**Live-server repair pass (same session, after the HC fix):** full health sweep found exactly two
+faults; everything else green (860 GB free, 51 GB RAM free, no app faults, config sane, both HCs up).
+
+1. **Public stats endpoint `:8080` was DOWN - root cause finally identified.** The scheduled task runs
+   an **infinite `while ($true)` HTTP listener**, but the task carried
+   **`ExecutionTimeLimit = PT72H`**, so Task Scheduler killed it about every 72 h with
+   `LastTaskResult 267014 (SCHED_S_TASK_TERMINATED)`. Its only trigger was **At system start up**, so
+   it then stayed dead **until the next reboot**. Every previous "recovery" was a manual re-run that
+   just restarted the same 72 h clock - which is why this kept coming back.
+   **Fixed:** `ExecutionTimeLimit` -> `PT0S` (unlimited), plus an added **15-minute repeating trigger**
+   so a death self-heals without a reboot (safe: `MultipleInstances` was already `IgnoreNew`, so a heal
+   tick cannot start a second listener), plus `RestartCount 3` / `StartWhenAvailable`.
+   **Verified:** listener present, loopback `stats.json` **200 / 360 KB across 4 checks**, and
+   **externally 200 / 360 KB / 0.2 s**.
+   ⚠️ **Diagnostic rule (now with a cause):** check the **listener** or the task's **Last Result** -
+   never `stats.json`'s mtime. A separate task rewrites the JSON every minute, so the data half reads
+   fresh and green while nothing is serving it.
+   ✅ **Correction to prior notes:** the competitive-integrity leak is **gone**. `currentRound` now
+   exposes only `captures, elapsedMin, kills, lastWildcard, mhq, popTier, wildcardsDrawn` - `sides` and
+   `commanderIntel` are both absent, so the Layer-2 scrub did land. Restoring `:8080` does not
+   re-expose it. The payload also carries a deliberate `dataDelaySeconds` buffer (~13 min observed), so
+   a lagging `generatedAt` is by design, not staleness.
+
+2. **#2312's SML defect is still live in the deployed build** (the build predates the merge). It is a
+   **boot-burst, not ongoing**: both errors land within 40 lines of `MISSINIT`, and the deployed-vs-master
+   delta is exactly 3 files x 1 line. **Owner decision: bundle it with #2317 into one cutover rather than
+   cut a second same-day build for a single line.** Not deployed today.
+
+Also confirmed clean after the HC fix: `cannot find channel` occurrences **after** the HC seated = **0**
+(the 65 in-session hits all predate it), 0 anchored errors in the last 1500 lines, both `HCSTAT`
+identities heartbeating, fps 45 / hc_fps 46 / AI_TOT 341.
+
+**Scheduled-task cleanup (live box):**
+- **`WaspHC1` DELETED.** Nothing invoked it - the launch chain calls `hc_launch.cmd` directly via
+  `Start-Process`, and the only references are read-only status queries in diag/watch scripts. It was
+  also actively dangerous: `hc_launch.cmd` opens with `taskkill /f /im ArmA2OA.exe`, so if that task
+  had ever fired it would have killed **both** HCs and brought back only HC1. XML backed up first.
+- **`WaspHC1Bounce` KEPT, re-registered trigger-free.** Its `hc1_bounce.cmd` has **no** `taskkill` - it
+  is the safe HC1-only relaunch, and an interactive-token scheduled task is the only correct way to
+  start an HC (HCs register from an interactive session; sshd kills detached children). It is exactly
+  the recovery used earlier today, so it is worth keeping as a permanent on-demand tool. Now has zero
+  triggers (`Triggers is null: True`), so it can only be run deliberately, and the stale `-1` result is
+  gone (`267011` = never run).
+- **All 20 `WaspCutover*` one-shots DELETED** (owner-approved). Audited first: `ARMED COUNT = 0` (every
+  one had a blank Next Run) and **no other scheduled task invoked any of them** - both gates had to pass
+  or the script aborted without deleting. Worth the check, because a re-firing cutover stops the stack,
+  places OLD PBOs and rewrites the cfg - a silent live-build rollback, which has happened on this box
+  before. All 20 task XMLs exported to a backup dir first, and the script refused to delete unless the
+  backup count matched the target count exactly.
+  **No recovery capability was lost:** only the *tasks* were removed - every `cutover-*.ps1` and the
+  staged PBOs remain on disk, and the documented rollback is a one-line cfg `template=` change anyway,
+  not a re-run of an old cutover. Box task inventory went from 42 to 22.
+  One dead reference left behind: a `tmp\i2-go.ps1` helper from 08-01 clones `WaspCutoverM0801h`'s XML
+  into `WaspCutoverM0801hTKF` and runs it; both are now gone, so that one-shot helper would fail if
+  anyone re-ran it. It was a single-use deploy script, not part of any live path.
+
+**Two self-inflicted errors caught and corrected in the same pass** (recording the mechanisms, both are
+easy to repeat):
+- `Set-ScheduledTask -Trigger @()` **fails parameter validation and applies NOTHING** - not just the
+  triggers, the whole call is rejected, so `-Principal`/`-Settings` silently do not land either.
+  Mutating `.Triggers` on the CIM object and passing `-InputObject` does not remove them either. The
+  only reliable way is `Register-ScheduledTask` **without** `-Trigger`.
+- `@($x).Count` is **1 when `$x` is `$null`** in PowerShell, so a "triggerCount" measured that way
+  reports 1 for a genuinely trigger-free task. Verify with `$null -eq $t` or by listing class names.
+
+**Discovered issues (carded, not fixed here):**
+- HC client RPTs are unusable for diagnosis when both HCs run un-sandboxed - they share one RPT
+  path, only one holds the write lock, and a **seated, healthy** HC shows the same "frozen at
+  config-load" shape as a dead one. `Unable to initialize Steam API` appears in the seated HC's log
+  too and is benign.
+- `Get-Process -Module` is not a sandbox test (truncated WOW64 enumeration on a 32-bit process).
+- PowerShell 5.1 reads `.ps1` as ANSI: a UTF-8 em dash becomes a stray quote and throws
+  `The string is missing the terminator` pointing at the wrong line. Keep provisioning scripts
+  ASCII-only.
+
 ## 2026-08-04 — reconcile PR #2092 onto wave0805
 
 - PR #2092 was stacked on #2060. The wave tip already contains the immobile-hull
