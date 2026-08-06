@@ -68,6 +68,85 @@
             };
         };
     };
+
+
+    //--- ARTY/ICBM/RADZONE JIP marker-style replay (fix/marker-style-jip-replay, GR-2026-07-08a): WF_createMarker
+    //--- (Common_CreateMarker.sqf) creates these markers GLOBALLY so a JIP client already sees the bare dot at the
+    //--- right position, but type/text/color are only ever applied via the one-shot "MARKER_CREATION" publicVariable
+    //--- (Client_onEventHandler_MARKER_CREATION.sqf, wired at Client/FSM/updateclient.sqf:14-16) - A2 OA never
+    //--- replays an earlier publicVariable to a LATER joiner, so a joiner who connects after the marker was created
+    //--- sees it untyped/untitled/uncoloured forever. WFBE_MARKER_STYLE_LEDGER (captured passively below for the
+    //--- CLIENT-originated ARTY/ICBM families, and appended explicitly at RADZONE's own 2 call sites since that
+    //--- script runs server-side and never reaches its own PVEH) holds every live marker's original creation
+    //--- payload; replay it verbatim on the SAME "MARKER_CREATION" channel via a TARGETED publicVariableClient so
+    //--- the existing, unmodified client receiver applies it exactly as it would a live create. TTL-sweep here
+    //--- (1500s, above the 1200s max of both WFBE_ICBM_TIME_TO_IMPACT and WFBE_RADZONE_TIME, Rsc/Parameters.hpp)
+    //--- is the only prune path for ICBM, whose sole delete is client-local/silent (GUI_Menu_Tactical.sqf's
+    //--- WFBE_CL_FNC_Delete_Marker); ARTY and RADZONE prune the ledger explicitly at their own server-side deletes.
+    private ["_styleLedger","_styleKept","_styleEntry","_styleAge","_styleOwner"];
+    _styleLedger = missionNamespace getVariable ["WFBE_MARKER_STYLE_LEDGER", []];
+    if ((count _styleLedger) > 0) then {
+        _styleKept = [];
+        {
+            _styleEntry = _x;
+            _styleAge = time - (_styleEntry select 2);
+            if (_styleAge < 1500) then {_styleKept = _styleKept + [_styleEntry]};
+        } forEach _styleLedger;
+        missionNamespace setVariable ["WFBE_MARKER_STYLE_LEDGER", _styleKept];
+        if ((count _styleKept) > 0) then {
+            _styleOwner = owner _player;
+            if (_styleOwner > 0) then {
+                [_player, _styleOwner, _styleKept] Spawn {
+                    private ["_stylePlayer","_styleOwnerId","_styleEntries","_styleRow"];
+                    _stylePlayer = _this select 0;
+                    _styleOwnerId = _this select 1;
+                    _styleEntries = _this select 2;
+                    diag_log Format ["[WFBE][MARKER-STYLE-JIP] replaying %1 marker style(s) to ready joiner %2", count _styleEntries, name _stylePlayer];
+                    {
+                        _styleRow = _x;
+                        missionNamespace setVariable ["MARKER_CREATION", (_styleRow select 1)];
+                        _styleOwnerId publicVariableClient "MARKER_CREATION";
+                        sleep 0.5;
+                    } forEach _styleEntries;
+                };
+            };
+        };
+    };
+};
+
+
+//--- ARTY/ICBM marker-style capture (fix/marker-style-jip-replay, GR-2026-07-08a): Common_CreateMarker.sqf
+//--- (WF_createMarker) broadcasts "MARKER_CREATION" once so already-connected same-side clients can apply
+//--- type/text/color locally (Client_onEventHandler_MARKER_CREATION.sqf) - A2 OA never replays that publicVariable
+//--- to a LATER joiner. ARTY (Client_RequestFireMission.sqf) and ICBM (GUI_Menu_Tactical.sqf) both call
+//--- WF_createMarker from a CLIENT machine, so their broadcast lands here passively (the server is never the
+//--- originating machine, so its own PVEH still fires) - zero changes needed in either creator file. RADZONE
+//--- (Client/Module/Nuke/radzone.sqf) runs SERVER-side so its own broadcast never reaches this handler
+//--- (publicVariable does not fire the ORIGINATING machine's own PVEH) - it is appended explicitly at its own
+//--- 2 call sites instead. INSERT-IF-ABSENT (never overwrite an existing row's timestamp): this keeps a
+//--- same-name re-fire from growing a duplicate ledger row WITHOUT resetting that row's TTL clock - safest
+//--- given it is not independently confirmed here whether this server's own replay publicVariableClient below
+//--- loops back into this same handler on the sending machine; if it ever does, the row is simply left alone
+//--- instead of having its TTL silently extended forever by a steady stream of joiners. Consumed + TTL-swept
+//--- by the CLIENT_INIT_READY replay above.
+"MARKER_CREATION" addPublicVariableEventHandler {
+    private ["_capInfos","_capName","_capLedger","_capExists","_capRow"];
+    _capInfos = _this select 1;
+    if (typeName _capInfos == "ARRAY" && {count _capInfos >= 6}) then {
+        _capName = _capInfos select 0;
+        if (typeName _capName == "STRING" && {_capName != ""}) then {
+            _capLedger = missionNamespace getVariable ["WFBE_MARKER_STYLE_LEDGER", []];
+            _capExists = false;
+            {
+                _capRow = _x;
+                if ((_capRow select 0) == _capName) then {_capExists = true};
+            } forEach _capLedger;
+            if (!_capExists) then {
+                _capLedger = _capLedger + [[_capName, _capInfos, time]];
+                missionNamespace setVariable ["WFBE_MARKER_STYLE_LEDGER", _capLedger];
+            };
+        };
+    };
 };
 
 

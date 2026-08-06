@@ -628,11 +628,17 @@ if (isNull _base) exitWith {
 		_removeDelay = _args select 2;
 		if (typeName _markerNames != "ARRAY") exitWith {};
 		[_markerNames, _removeDelay] spawn {
-			Private ["_names","_delay"];
+			Private ["_names","_delay","_capKept"];
 			_names = _this select 0;
 			_delay = _this select 1;
 			sleep _delay;
 			{ if (typeName _x == "STRING") then { deleteMarker _x }; } forEach _names;
+			//--- fix/marker-style-jip-replay (GR-2026-07-08a): prune WFBE_MARKER_STYLE_LEDGER (JIP marker-style
+			//--- replay ledger, Server/PVFunctions/AttackWave.sqf) for every name just deleted above, so a joiner
+			//--- arriving after this ARTY marker is gone never gets it replayed.
+			_capKept = [];
+			{ if !((_x select 0) in _names) then {_capKept = _capKept + [_x]}; } forEach (missionNamespace getVariable ["WFBE_MARKER_STYLE_LEDGER", []]);
+			missionNamespace setVariable ["WFBE_MARKER_STYLE_LEDGER", _capKept];
 		};
 	};
 
