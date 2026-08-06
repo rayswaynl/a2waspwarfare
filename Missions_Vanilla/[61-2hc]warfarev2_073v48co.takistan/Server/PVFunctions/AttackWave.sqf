@@ -42,6 +42,32 @@
             };
         };
     };
+
+    //--- DESIGN-4 (Star Fortress ally-only marker JIP replay): same CLIENT_INIT_READY timing and
+    //--- targeted publicVariableClient idiom as the FOB-JIP replay above, but reads the Star Fortress
+    //--- registry/keepalive vars directly instead of a ledger array - RequestStarFort.sqf GATE 0 keeps
+    //--- this WEST/EAST-only and GATE 2 allows at most one live fort per side, so there is nothing to
+    //--- iterate. No-op when the flag is off or when no fort of the joiner's side is currently alive.
+    if (((side _player) in [west, east]) && {(missionNamespace getVariable ["WFBE_C_STARFORT_ALLYMARKER", 0]) > 0}) then {
+        [_player] Spawn {
+            private ["_sfPlayer","_sfSide","_sfAliveKey","_sfRegKey","_sfKeep","_sfOwner","_sfMarkerName","_sfColor"];
+            _sfPlayer = _this select 0;
+            _sfSide = side _sfPlayer;
+            _sfAliveKey = if (_sfSide == west) then {"wfbe_starfort_keepalive_west"} else {"wfbe_starfort_keepalive_east"};
+            _sfRegKey = if (_sfSide == west) then {"WFBE_STARFORT_WEST"} else {"WFBE_STARFORT_EAST"};
+            _sfKeep = missionNamespace getVariable [_sfRegKey, objNull];
+            if ((missionNamespace getVariable [_sfAliveKey, false]) && {!isNull _sfKeep} && {alive _sfKeep}) then {
+                _sfOwner = owner _sfPlayer;
+                if (_sfOwner > 0) then {
+                    _sfMarkerName = Format ["wfbe_starfort_%1", if (_sfSide == west) then {"west"} else {"east"}];
+                    _sfColor = if (_sfSide == west) then {"ColorBlue"} else {"ColorRed"};
+                    WFBE_PVF_WildcardMarker = [_sfSide, "CLTFNCWildcardMarker", ["create", _sfMarkerName, getPos _sfKeep, _sfColor, "mil_warning", "STAR FORTRESS", "forward hard-spawn - defend the keep"]];
+                    _sfOwner publicVariableClient "WFBE_PVF_WildcardMarker";
+                    diag_log Format ["[WFBE][STARFORT-JIP] replayed ally Star Fortress marker to ready joiner %1 (side %2).", name _sfPlayer, _sfSide];
+                };
+            };
+        };
+    };
 };
 
 

@@ -94,6 +94,46 @@ A2_MIL_MARKER_TYPES = frozenset((
     "mil_objective", "mil_pickup", "mil_start", "mil_triangle", "mil_unknown", "mil_warning",
 ))
 MIL_MARKER_TYPE_RE = re.compile(r"(?<![A-Za-z0-9_])[\"'](mil_[A-Za-z0-9_]+)[\"']", re.IGNORECASE)
+# Non-mil_ A2/OA CfgMarkers classes confirmed by static sweep of this mission: the classic
+# BIS Warfare-template marker vocabulary. Each is exercised on an unconditional in-mission code
+# path (town/camp markers, HQ marker, respawn selector, economy sell-mode, artillery call) with
+# no reported "No entry" incident - see Tools/Lint/README.md for the file:line evidence trail.
+# Deliberately EXCLUDES "HQUndeployed": its only occurrence in-tree (Common/Init/Init_Unit.sqf)
+# is passed as the MarkerUpdate call's _markerName argument (position 4 of the
+# Common_MarkerUpdate.sqf calling convention), not as a _markerType argument (position 0) - it
+# is a marker NAME, not a marker TYPE, so it does not belong in this allowlist.
+A2_WARFARE_MARKER_TYPES = frozenset((
+    "attack", "depot", "destroy", "destroyedvehicle", "empty", "headquarters",
+    "repairvehicle", "salvagevehicle", "select", "strongpoint", "supplyvehicle", "vehicle",
+))
+# Direct literal argument to setMarkerType(Local): `<expr> setMarkerType(Local) "<literal>"`.
+# Values reached only through a variable, array element, or getVariable default (e.g. the
+# Common_MarkerUpdate.sqf `_params` call convention) are not visible to this regex by design;
+# MARKER_TYPE_GETVAR_DEFAULT_RE / MARKER_TYPE_CONST_ASSIGN_RE below cover the one additional
+# surface this mission actually uses.
+MARKER_TYPE_ARG_RE = re.compile(r"\bsetMarkerType(?:Local)?\s+[\"']([A-Za-z][A-Za-z0-9_]*)[\"']", re.IGNORECASE)
+# A *_MARKER_TYPE-suffixed constant's value, read as a getVariable default (e.g.
+# `missionNamespace getVariable ["WFBE_C_OILFIELD_MARKER_TYPE", "mil_circle"]`) or assigned
+# directly (`WFBE_C_OILFIELD_MARKER_TYPE = "mil_circle"` in Init_CommonConstants.sqf). Mirrors
+# the existing STRING_TYPED_NUMERIC_GATE_RE convention (_TYPE/_CLASS/_LAUNCHER suffix) elsewhere
+# in this file. Narrow by construction: the suffix must be the literal characters "_MARKER_TYPE",
+# so camelCase locals like _markerType/_targetMarkerType/_deathMarkerType never match.
+MARKER_TYPE_GETVAR_DEFAULT_RE = re.compile(
+    r"\bgetVariable\s*\[\s*[\"'][A-Za-z_][A-Za-z0-9_]*_MARKER_TYPE[\"']\s*,\s*[\"']([A-Za-z][A-Za-z0-9_]*)[\"']\s*\]",
+    re.IGNORECASE,
+)
+MARKER_TYPE_CONST_ASSIGN_RE = re.compile(
+    r"\b[A-Za-z_][A-Za-z0-9_]*_MARKER_TYPE\s*=\s*[\"']([A-Za-z][A-Za-z0-9_]*)[\"']",
+    re.IGNORECASE,
+)
+# Confirmed-valid A2/OA CfgMarkerColors classes used as direct setMarkerColor(Local) arguments in
+# this mission. "colorkhaki" carries forward the same "live-exercised, not independently verified
+# against config.bin" caveat a prior classname audit already attached to it.
+A2_MARKER_COLORS = frozenset((
+    "colorblack", "colorblue", "colorbrown", "colorgreen", "colorkhaki",
+    "colororange", "colorpink", "colorred", "colorwhite", "coloryellow",
+))
+MARKER_COLOR_ARG_RE = re.compile(r"\bsetMarkerColor(?:Local)?\s+[\"']([A-Za-z][A-Za-z0-9_]*)[\"']", re.IGNORECASE)
 A3_REVEAL_ARRAY_LEFT_RE = re.compile(r"\[[^\]\n;]*\]\s+reveal\b", re.IGNORECASE)
 A3_REVEAL_ARRAY_RIGHT_RE = re.compile(r"\breveal\s+\[[^\]\n;]*\]", re.IGNORECASE)
 A3_SELECT_SLICE_RE = re.compile(r"\bselect\s*\[", re.IGNORECASE)
@@ -168,6 +208,8 @@ FINDING_CODES = (
     "DISABLESER",
     "FLAGGATE",
     "GROUPGETVAR",
+    "MARKERCOLOR",
+    "MARKERTYPE",
     "MILMARKER",
     "NSSETVAR3",
     "PUBVARSV",
@@ -554,6 +596,43 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
             continue
         line, col = line_col(comments_starts, match.start())
         findings.append(Finding(path, line, col, "MILMARKER", f"Unknown mil_* marker type '{match.group(1)}' - not an A2/OA CfgMarkers class"))
+
+    for match in MARKER_TYPE_ARG_RE.finditer(comments_masked):
+        token = match.group(1)
+        low = token.lower()
+        if low.startswith("mil_") or low[:2] in ("b_", "o_", "n_"):
+            continue  # MILMARKER / A3MARKER already own these namespaces
+        if low in A2_WARFARE_MARKER_TYPES:
+            continue
+        line, col = line_col(comments_starts, match.start())
+        findings.append(Finding(path, line, col, "MARKERTYPE", f"Unknown marker type '{token}' - not a recognized A2/OA CfgMarkers class"))
+
+    for match in MARKER_TYPE_GETVAR_DEFAULT_RE.finditer(comments_masked):
+        token = match.group(1)
+        low = token.lower()
+        if low.startswith("mil_") or low[:2] in ("b_", "o_", "n_"):
+            continue  # MILMARKER / A3MARKER already own these namespaces
+        if low in A2_WARFARE_MARKER_TYPES:
+            continue
+        line, col = line_col(comments_starts, match.start())
+        findings.append(Finding(path, line, col, "MARKERTYPE", f"Unknown marker type '{token}' - not a recognized A2/OA CfgMarkers class"))
+
+    for match in MARKER_TYPE_CONST_ASSIGN_RE.finditer(comments_masked):
+        token = match.group(1)
+        low = token.lower()
+        if low.startswith("mil_") or low[:2] in ("b_", "o_", "n_"):
+            continue  # MILMARKER / A3MARKER already own these namespaces
+        if low in A2_WARFARE_MARKER_TYPES:
+            continue
+        line, col = line_col(comments_starts, match.start())
+        findings.append(Finding(path, line, col, "MARKERTYPE", f"Unknown marker type '{token}' - not a recognized A2/OA CfgMarkers class"))
+
+    for match in MARKER_COLOR_ARG_RE.finditer(comments_masked):
+        token = match.group(1)
+        if token.lower() in A2_MARKER_COLORS:
+            continue
+        line, col = line_col(comments_starts, match.start())
+        findings.append(Finding(path, line, col, "MARKERCOLOR", f"Unknown marker color '{token}' - not a recognized A2/OA CfgMarkerColors class"))
 
     for match in A3_STRING_FIND_RE.finditer(comments_masked):
         line, col = line_col(comments_starts, match.start())
