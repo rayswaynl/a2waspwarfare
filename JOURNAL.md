@@ -44,6 +44,38 @@ The spec attributes an unseated HC to a cold-start connect-timing race. That is 
 - The full `Confirm-HCSeatOrBounce` bounce-retry machinery was **not** built: it is several hundred
   lines aimed at a mechanism the evidence no longer supports.
 
+**Live-server repair pass (same session, after the HC fix):** full health sweep found exactly two
+faults; everything else green (860 GB free, 51 GB RAM free, no app faults, config sane, both HCs up).
+
+1. **Public stats endpoint `:8080` was DOWN - root cause finally identified.** The scheduled task runs
+   an **infinite `while ($true)` HTTP listener**, but the task carried
+   **`ExecutionTimeLimit = PT72H`**, so Task Scheduler killed it about every 72 h with
+   `LastTaskResult 267014 (SCHED_S_TASK_TERMINATED)`. Its only trigger was **At system start up**, so
+   it then stayed dead **until the next reboot**. Every previous "recovery" was a manual re-run that
+   just restarted the same 72 h clock - which is why this kept coming back.
+   **Fixed:** `ExecutionTimeLimit` -> `PT0S` (unlimited), plus an added **15-minute repeating trigger**
+   so a death self-heals without a reboot (safe: `MultipleInstances` was already `IgnoreNew`, so a heal
+   tick cannot start a second listener), plus `RestartCount 3` / `StartWhenAvailable`.
+   **Verified:** listener present, loopback `stats.json` **200 / 360 KB across 4 checks**, and
+   **externally 200 / 360 KB / 0.2 s**.
+   ⚠️ **Diagnostic rule (now with a cause):** check the **listener** or the task's **Last Result** -
+   never `stats.json`'s mtime. A separate task rewrites the JSON every minute, so the data half reads
+   fresh and green while nothing is serving it.
+   ✅ **Correction to prior notes:** the competitive-integrity leak is **gone**. `currentRound` now
+   exposes only `captures, elapsedMin, kills, lastWildcard, mhq, popTier, wildcardsDrawn` - `sides` and
+   `commanderIntel` are both absent, so the Layer-2 scrub did land. Restoring `:8080` does not
+   re-expose it. The payload also carries a deliberate `dataDelaySeconds` buffer (~13 min observed), so
+   a lagging `generatedAt` is by design, not staleness.
+
+2. **#2312's SML defect is still live in the deployed build** (the build predates the merge). It is a
+   **boot-burst, not ongoing**: both errors land within 40 lines of `MISSINIT`, and the deployed-vs-master
+   delta is exactly 3 files x 1 line. **Owner decision: bundle it with #2317 into one cutover rather than
+   cut a second same-day build for a single line.** Not deployed today.
+
+Also confirmed clean after the HC fix: `cannot find channel` occurrences **after** the HC seated = **0**
+(the 65 in-session hits all predate it), 0 anchored errors in the last 1500 lines, both `HCSTAT`
+identities heartbeating, fps 45 / hc_fps 46 / AI_TOT 341.
+
 **Discovered issues (carded, not fixed here):**
 - HC client RPTs are unusable for diagnosis when both HCs run un-sandboxed - they share one RPT
   path, only one holds the write lock, and a **seated, healthy** HC shows the same "frozen at
