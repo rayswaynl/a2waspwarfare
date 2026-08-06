@@ -28,10 +28,28 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_SQUAD", 0]) <= 0) exitWi
 	["INFORMATION", "Server_AicomSupplySquad.sqf : WFBE_C_AICOM_SUPPLY_SQUAD=0 - feature OFF."] Call WFBE_CO_FNC_LogContent;
 };
 
-waitUntil { !isNil "townInit" && townInit };
-waitUntil { !isNil "towns" };
-
-Private ["_tick","_grant","_dwell","_cooldown","_aiOnly","_squads","_kept","_now"];
+//--- The worker launches before Server\Init\Init_Towns.sqf. Do not leave a scheduled VM
+//--- parked forever when town initialization fails: wait for both the startup signal and
+//--- at least one registered depot, then fail closed with a single RPT receipt.
+Private ["_supplyTownReady","_supplyTownDeadline","_supplyTownWait","_supplyTownsReady","_supplyTownInitReady","_tick","_grant","_dwell","_cooldown","_aiOnly","_squads","_kept","_now"];
+_supplyTownReady = false;
+_supplyTownDeadline = diag_tickTime + 90;
+_supplyTownWait = 0;
+_supplyTownsReady = false;
+_supplyTownInitReady = false;
+while {!_supplyTownReady && {diag_tickTime < _supplyTownDeadline} && {!(missionNamespace getVariable ["WFBE_GameOver", false])}} do {
+	_supplyTownsReady = !isNil "towns" && {count towns > 0};
+	_supplyTownInitReady = missionNamespace getVariable ["townInit", false];
+	if (_supplyTownsReady && {_supplyTownInitReady}) then {
+		_supplyTownReady = true;
+	} else {
+		sleep 0.25;
+		_supplyTownWait = _supplyTownWait + 1;
+	};
+};
+if (!_supplyTownReady) exitWith {
+	diag_log Format ["AICOMSUPPLY|STARTUP_TIMEOUT|waitTicks=%1|townsReady=%2|townInit=%3|gameOver=%4", _supplyTownWait, _supplyTownsReady, _supplyTownInitReady, missionNamespace getVariable ["WFBE_GameOver", false]];
+};
 
 //--- fable/supply-startpos-fix (LIVE RPT 2026-07-28, m0728f Zargabad): the first cut read
 //--- wfbe_startpos and indexed it as a position array. It is an OBJECT - Init_Server.sqf:735
