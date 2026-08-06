@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_epoch", "_hcUnit", "_delegated", "_groups", "_perfStart", "_positions", "_side", "_teams", "_town", "_live", "_x", "_seedIdx", "_rr", "_hcCount"];
+Private ["_epoch", "_hcUnit", "_delegated", "_groups", "_perfStart", "_positions", "_side", "_teams", "_town", "_live", "_x", "_seedIdx", "_rr", "_hcCount", "_fpsReg", "_hcKey", "_fidx", "_slot", "_fresh"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -48,12 +48,23 @@ _hcUnit = [_town] Call WFBE_CO_FNC_PickLeastLoadedHC;
 //--- picker uses). The picker already told us the LIGHTEST leader; we round-robin starting from
 //--- it so the heaviest distribution stays anchored on the lightest HC, exactly as before.
 _live = [];
+_fpsReg = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
 {
+	_fresh = false;
 	//--- BUGFIX (2026-07-17, HC-founding zombie-picker): keep this liveness test identical to
 	//--- Server_PickLeastLoadedHC.sqf's (owner<=0 = disconnected/locality-transferred zombie,
-	//--- never a routable Common_SendToClient target) - this comment block already claimed "same
-	//--- liveness test the picker uses"; it previously was not.
-	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {_live = _live + [leader _x]};
+	//--- never a routable Common_SendToClient target). A positive owner is not enough when the
+	//--- retained HC body has stopped sending HCSTAT heartbeats.
+	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {
+		_hcKey = Format ["HC-%1", netId (leader _x)];
+		_fidx = -1;
+		{ if ((_x select 0) == _hcKey) exitWith {_fidx = _forEachIndex} } forEach _fpsReg;
+		if (_fidx >= 0) then {
+			_slot = _fpsReg select _fidx;
+			if ((time - (_slot select 2)) <= 150) then {_fresh = true};
+		};
+	};
+	if (_fresh) then {_live = _live + [leader _x]};
 } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 
 _hcCount = count _live;
