@@ -149,7 +149,7 @@ if (!(_unit isKindOf "Man") && {!(_unit isKindOf "StaticWeapon")}) then {
 		false,
 		true,
 		"",
-		"(missionNamespace getVariable ['WFBE_C_GUER_LOCKPICK', 0]) > 0 && {side group player == resistance} && {locked _target} && {alive _target} && {player distance _target < 6} && {speed _target < 2} && {vehicle player == player}"
+		"(missionNamespace getVariable ['WFBE_C_GUER_LOCKPICK', 0]) > 0 && {side group player == resistance} && {(locked _target) > 0} && {alive _target} && {player distance _target < 6} && {speed _target < 2} && {vehicle player == player}"
 	];
 };
 
