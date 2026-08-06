@@ -87,10 +87,18 @@ identities heartbeating, fps 45 / hc_fps 46 / AI_TOT 341.
   the recovery used earlier today, so it is worth keeping as a permanent on-demand tool. Now has zero
   triggers (`Triggers is null: True`), so it can only be run deliberately, and the stale `-1` result is
   gone (`267011` = never run).
-- **Audited all 20 `WaspCutover*` one-shots: `ARMED COUNT = 0`.** Worth checking, because a re-firing
-  cutover stops the stack, places OLD PBOs and rewrites the cfg - a silent live-build rollback, which
-  has happened on this box before. Every one has a blank Next Run, so none can fire. Left in place as
-  inert clutter rather than deleting 20 tasks unasked.
+- **All 20 `WaspCutover*` one-shots DELETED** (owner-approved). Audited first: `ARMED COUNT = 0` (every
+  one had a blank Next Run) and **no other scheduled task invoked any of them** - both gates had to pass
+  or the script aborted without deleting. Worth the check, because a re-firing cutover stops the stack,
+  places OLD PBOs and rewrites the cfg - a silent live-build rollback, which has happened on this box
+  before. All 20 task XMLs exported to a backup dir first, and the script refused to delete unless the
+  backup count matched the target count exactly.
+  **No recovery capability was lost:** only the *tasks* were removed - every `cutover-*.ps1` and the
+  staged PBOs remain on disk, and the documented rollback is a one-line cfg `template=` change anyway,
+  not a re-run of an old cutover. Box task inventory went from 42 to 22.
+  One dead reference left behind: a `tmp\i2-go.ps1` helper from 08-01 clones `WaspCutoverM0801h`'s XML
+  into `WaspCutoverM0801hTKF` and runs it; both are now gone, so that one-shot helper would fail if
+  anyone re-ran it. It was a single-use deploy script, not part of any live path.
 
 **Two self-inflicted errors caught and corrected in the same pass** (recording the mechanisms, both are
 easy to repeat):
