@@ -73,7 +73,7 @@ if (count _detachedBySML3 > 0) then {
     diag_log Format ["SML|v1|RETREAT|side=%1 team=%2 mauled=%3 healthy=%4 ttl=%5", _side, _team, count _detachedBySML3, _healthyCount, _ttl];
 } else {
     diag_log Format ["SML|v1|RETREAT_ARM|side=%1 team=%2 healthy=%3 mauled=0 ttl=%4 (continuous scan)", _side, _team, _healthyCount, _ttl];
-}
+};
 
 //--- WATCHDOG: poll every 3s until TTL or exit condition.
 _reason = "ttl";
