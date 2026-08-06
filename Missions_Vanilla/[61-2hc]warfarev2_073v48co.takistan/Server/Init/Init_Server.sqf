@@ -294,7 +294,7 @@ if (isNil "wfbe_buildtag" || {(missionNamespace getVariable ["wfbe_buildtag", ""
 //--- is readable. Gated on WFBE_C_MATCH_TELEMETRY (default 1 = additive telemetry ON).
 if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	private ["_mtStartTowns","_mtDelegation","_mtMaxPlayers","_mtAiEnabled","_mtStatlog","_mtGuer","_mtNaval","_mtOilfield","_mtBuild"];
-	_mtStartTowns  = if (!isNil "towns") then { count towns } else { -1 };  // count actual towns after Init_Towns completes
+	_mtStartTowns  = if (!isNil "totalTowns") then { totalTowns } else { -1 }; // selected town slots are computed by Init_TownMode before townInit releases
 	_mtDelegation  = missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1];
 	_mtMaxPlayers  = getNumber (missionConfigFile >> "Header" >> "maxPlayers"); //--- A2-OA runtime read: WF_MAXPLAYERS is a preprocessor define (version.sqf) not included in Init_Server.sqf; missionConfigFile>>Header>>maxPlayers is compiled from Rsc/Header.hpp at preprocess time and yields the real slot count.
 	_mtAiEnabled   = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1];
