@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_sideJoined','_sideOrigin','_team','_uid','_units'];
+Private ['_connectKey','_funds','_get','_id','_jipLogik','_jipSupplyKey','_joinDecision','_joinDecisionKey','_joinRejected','_joinWait','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_sideJoined','_sideOrigin','_team','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -27,6 +27,47 @@ if (_name == '__SERVER__' || _uid == '' || _uid == '0') exitWith {};
 //--- below also excludes HCs because they never store a RequestJoin body.)
 if (!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil]}) exitWith {
 	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for headless client [%1] [%2].", _name, _uid];
+};
+
+//--- r182: bind the join decision to this connection before the resolver can stamp a team.
+//--- RequestJoin publishes the selected side and allow/deny result against this _id. A denied
+//--- client is returned to the lobby by failMission without a socket disconnect, so the resolver
+//--- must not enroll it first and leave wfbe_uid/wfbe_teamleader behind.
+_connectKey = Format ["WFBE_CONNECT_ID_%1", _uid];
+_joinDecisionKey = Format ["WFBE_CONNECT_JOIN_DECISION_%1", _uid];
+missionNamespace setVariable [_connectKey, _id];
+_joinDecision = missionNamespace getVariable [_joinDecisionKey, nil];
+if (isNil "_joinDecision" || {typeName _joinDecision != "ARRAY"} || {count _joinDecision < 3} || {(_joinDecision select 0) != _id}) then {
+	missionNamespace setVariable [_joinDecisionKey, nil];
+	_joinDecision = nil;
+};
+
+//--- r182: decide the join before resolving or mutating any team state.
+//--- RequestJoin publishes the selected side and allow/deny result against this _id. A denied
+//--- client is returned to the lobby by failMission without a socket disconnect, so the resolver
+//--- must not run its stamp-on-demand, roster, identity, funds, or delegation paths first.
+_joinRejected = false;
+if ((missionNamespace getVariable ["WFBE_C_GAMEPLAY_TEAMSWAP_DISABLE", 0]) > 0 && {!WF_Debug}) then {
+	_joinWait = 240;
+	while {isNil "_joinDecision" && {_joinWait > 0} && {(missionNamespace getVariable [_connectKey, -1]) == _id}} do {
+		sleep 0.5;
+		_joinWait = _joinWait - 1;
+		_joinDecision = missionNamespace getVariable [_joinDecisionKey, nil];
+	};
+	if ((missionNamespace getVariable [_connectKey, -1]) != _id) then {_joinRejected = true};
+	if (!_joinRejected && {!isNil "_joinDecision"}) then {
+		if ((typeName _joinDecision != "ARRAY") || {count _joinDecision < 3}) then {_joinRejected = true};
+		if (!_joinRejected && {(_joinDecision select 0) != _id}) then {_joinRejected = true};
+		if (!_joinRejected && {typeName (_joinDecision select 2) != "BOOL"}) then {_joinRejected = true};
+		if (!_joinRejected && {!(_joinDecision select 2)}) then {_joinRejected = true};
+	};
+	if (!_joinRejected && {!isNil "_joinDecision"}) then {missionNamespace setVariable [_joinDecisionKey, nil]};
+} else {
+	missionNamespace setVariable [_joinDecisionKey, nil];
+};
+if (_joinRejected) exitWith {
+	if ((missionNamespace getVariable [_connectKey, -1]) == _id) then {missionNamespace setVariable [_joinDecisionKey, nil]};
+	diag_log Format ["[WFBE][r182 JOIN-GATE] skipped enrollment for [%1] [%2]: join denied, stale, or superseded.", _name, _uid];
 };
 
 //--- Server-observable fallback event. No client payload or chat hook is involved.
