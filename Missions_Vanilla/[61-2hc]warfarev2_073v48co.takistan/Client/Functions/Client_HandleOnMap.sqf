@@ -3,7 +3,7 @@ Private ['_isOnMap','_timeToKill'];
 _timeToKill = missionNamespace getVariable "WFBE_C_PLAYERS_OFFMAP_TIMEOUT";
 paramBoundariesRunning = true;
 
-while {true} do {
+while {!gameOver} do {
 	sleep 1;
 	_isOnMap = Call BoundariesIsOnMap;
 	if !(_isOnMap) then {
@@ -15,3 +15,4 @@ while {true} do {
 		paramBoundariesRunning = false;
 	};
 };
+paramBoundariesRunning = false;
