@@ -53,8 +53,25 @@ if ((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_ENABLE", 0]) != 1) exitW
 
 ["INITIALIZATION", "Server_USVFlotilla.sqf : USV flotilla feature ENABLED - waiting for townInit."] Call WFBE_CO_FNC_LogContent;
 
-waitUntil { !isNil "townInit" && townInit };
-waitUntil { !isNil "towns" && {count towns > 0} };
+//--- Optional-feature containment: a broken/terminal town census must not park this worker forever.
+private ["_usvTownDeadline","_usvTownInitReady","_usvTownsReady","_usvGameOver"];
+_usvTownDeadline = diag_tickTime + 90;
+waitUntil {
+	sleep 0.25;
+	((!isNil "townInit" && {townInit}) && {!isNil "towns" && {count towns > 0}}) ||
+	{diag_tickTime >= _usvTownDeadline} ||
+	{missionNamespace getVariable ["WFBE_GameOver", false]}
+};
+_usvTownInitReady = !isNil "townInit" && {townInit};
+_usvTownsReady = !isNil "towns" && {count towns > 0};
+_usvGameOver = missionNamespace getVariable ["WFBE_GameOver", false];
+if (!_usvTownInitReady || {!_usvTownsReady}) exitWith {
+	if (_usvGameOver) then {
+		diag_log format ["USVFLOTILLA|STARTUP_ABORT|reason=gameOver|townInit=%1|townsReady=%2", _usvTownInitReady, _usvTownsReady];
+	} else {
+		diag_log format ["USVFLOTILLA|STARTUP_TIMEOUT|townInit=%1|townsReady=%2|deadline=%3", _usvTownInitReady, _usvTownsReady, _usvTownDeadline];
+	};
+};
 
 private ["_coastalRadius","_coastalSamples","_coastalCount","_tPos","_isCoastal","_s","_ang","_probe",
          "_wps","_wpIdx","_wpVar","_wpLogic","_route","_count","_side","_hull","_roles","_loadouts",
