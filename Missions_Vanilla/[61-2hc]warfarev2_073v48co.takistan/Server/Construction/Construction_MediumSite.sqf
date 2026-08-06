@@ -1,7 +1,7 @@
 //*****************************************************************************************
 //Description: Creates a small construction site.
 //*****************************************************************************************
-Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_stage3Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type","_reqPlayer"];
+Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_stage3Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type","_reqPlayer","_capToken"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -13,6 +13,8 @@ _completionResultKey = if ((count _this) > 6) then {_this select 6} else {""};
 if ((typeName _completionResultKey) != "STRING") then {_completionResultKey = ""};
 _reqPlayer = if ((count _this) > 7) then {_this select 7} else {objNull};
 if (isNil "_reqPlayer" || {typeName _reqPlayer != "OBJECT"}) then {_reqPlayer = objNull};
+_capToken = if ((count _this) > 8) then {_this select 8} else {-1};
+if (typeName _capToken != "SCALAR") then {_capToken = -1};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 
@@ -74,21 +76,25 @@ _releasePending = {
 //--- MULTI-INSTANCE structure types this script builds (Light/Heavy - Barracks/CommandCenter/
 //--- Aircraft/ServicePoint have the MediumSite-sibling of this block in Construction_SmallSite.sqf).
 //--- Kept as a SEPARATE codeblock (not folded into _releasePending) so the existing CBRadar/AARadar/
-//--- Bank release paths - including their diag_log call count - are completely unchanged. Removes
-//--- exactly ONE reservation (the oldest) from the RequestStructure.sqf pending array; see that file
-//--- for the accept-time reserve. Called from every abort exitWith below AND once on the success tail.
+//--- release only the reservation token belonging to this worker; see RequestStructure.sqf for the
+//--- accept-time reserve. AICOM's legacy direct worker call has no token and cannot consume a player slot.
 private ["_releaseCapPending"];
 _releaseCapPending = {
 	//--- build/defense audit 2026-07-28: gate on the SAME flag as the RequestStructure.sqf reserve
 	//--- side, so flag-off is truly byte-identical to HEAD (no diag_log line, no missionNamespace
 	//--- touch) - not just "no reservation was ever taken".
-	if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_CAP_SERVER", 1]) > 0 && {_rlType in ["Light","Heavy"]}) then {
-		private ["_capKey","_capArr","_capNew","_capI"];
+	if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_CAP_SERVER", 1]) > 0 && {_capToken >= 0} && {_rlType in ["Light","Heavy"]}) then {
+		private ["_capKey","_capArr","_capNew","_capI","_capEntry"];
 		_capKey = Format ["WFBE_%1_%2_PENDING", str _side, _rlType];
 		_capArr = missionNamespace getVariable [_capKey, []];
 		if (count _capArr > 0) then {
 			_capNew = [];
-			for "_capI" from 1 to (count _capArr - 1) do {_capNew set [count _capNew, _capArr select _capI]};
+			for "_capI" from 0 to (count _capArr - 1) do {
+				_capEntry = _capArr select _capI;
+				if (typeName _capEntry == "ARRAY" && {count _capEntry > 0} && {(_capEntry select 0) != _capToken}) then {
+					_capNew set [count _capNew, _capEntry];
+				};
+			};
 			missionNamespace setVariable [_capKey, _capNew];
 		};
 		diag_log Format ["CONSTRUCTION|v1|pending-released|type=%1|side=%2", _rlType, str _side];

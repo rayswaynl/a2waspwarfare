@@ -17,7 +17,7 @@ def test_request_passes_placer_and_construction_rolls_back_after_accept():
         '["StructureBuildFailed", _refundPrice]' not in request
     ), "the post-accept failure belongs to the construction worker, not the accept gate"
     assert (
-        '[_structureType,_side,_pos,_dir,_index,"","",_reqPlayer] ExecVM '
+        '[_structureType,_side,_pos,_dir,_index,"","",_reqPlayer,_capToken] ExecVM '
         '(Format["Server\\Construction\\Construction_%1.sqf",_script])'
     ) in request
 

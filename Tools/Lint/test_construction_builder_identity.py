@@ -71,7 +71,7 @@ def test_aicom_and_player_callers_preserve_distinct_identity_contracts():
         '["Server\\Construction\\Construction_%1.sqf", _fwdScript]);'
     ) in aicom
     assert (
-        '[_structureType,_side,_pos,_dir,_index,"","",_reqPlayer] ExecVM '
+        '[_structureType,_side,_pos,_dir,_index,"","",_reqPlayer,_capToken] ExecVM '
         '(Format["Server\\Construction\\Construction_%1.sqf",_script]);'
     ) in request
 
