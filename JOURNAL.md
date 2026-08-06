@@ -1,5 +1,55 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-06 ~20:20 CEST - wave0806b DEPLOYED LIVE (#2312 + #2317)
+
+**LIVE = `[55-2hc]warfarev2_073v48co_wave0806b` (git `6fe5c5cc8c`)**, cut on a verified-empty server.
+Supersedes `wave0806a`. Rollback = restore the `.bak-wave0806b` cfg with the stack stopped, then
+re-run the 2HC restart task; the wave0806a PBOs remain in place.
+
+**Payload:** #2312 (the `Common_SMLRetreat.sqf` missing statement terminator) + #2317 (#2276 Phase 2 -
+HC-blind consumer hardening, caster-slot landmine, comment corrections).
+
+**Build gates:** pre-flight asserted the payload is present in all 3 terrains before packing; packed
+with `--strict-version` and WITHOUT `--allow-debug` (the packer aborting on an active `WF_DEBUG` IS
+the proof it is off); `WF_MAXPLAYERS` 34 from the template, `WF_MISSIONNAME` from the live
+convention. Each PBO independently validated: **1004 byte-identical, 0 mismatched, 0 not found**,
+trailer checksum OK. Upload byte sizes compared on both ends.
+
+**Verified live, offset-tracked from the pre-cutover RPT baseline:**
+- `build=...wave0806b` at a line index AFTER the last `MISSINIT` (not a stale tag from a prior session).
+- **`Error position: <_reason` = 0** - the SML defect that fired twice at EVERY wave0806a boot is gone.
+- `HCLOBBY|v1|BEAT|ready=true|seated=2|expected=2`, both `HCSTAT who=` identities with equal
+  heartbeats, `Message not sent = 0`. **Both HCs seated from a cold boot** - first time today.
+- All three cfg `template=` lines on wave0806b.
+
+**Two self-inflicted cutover failures, both caught by the script's own gates before the cfg was
+touched** (recording the mechanisms - both are easy to repeat):
+1. **`MPMissions` is NOT under the ops directory.** It lives under the OA install
+   (`...\Arma 2 Operation Arrowhead\MPMissions`); the ops `staging-<tag>\` dir is only the upload
+   landing zone. The wrong path aborted attempt 1 with the stack already stopped.
+2. **Mission PBO names start with `[55-2hc]` / `[61-2hc]`, and square brackets are PowerShell
+   WILDCARDS.** `Get-Item (Join-Path $dir $name)` silently returns `$null`, so `.Length` reads 0 and a
+   byte-match check FALSE-FAILS - while `Copy-Item -Destination` works fine. The copy had actually
+   succeeded. **Always `-LiteralPath`** for Get-Item/Test-Path/Remove-Item against a mission PBO.
+
+**Process lesson:** pre-flight the restart chain's sign-in gates BEFORE stopping anything. That chain
+has three, and any failure exits before the start script and leaves the box with no server. All three
+were dry-evaluated and passed first.
+
+**Occupancy rule:** authorize a cutover from the RPT (`WASPSCALE players=` plus distinct `PLAYERSTAT`
+names), never from the public stats endpoint - it carries a deliberate `dataDelaySeconds=900` buffer
+and is far too stale to gate a deploy on.
+
+**Discovered issue (pre-existing, NOT from this build, carded):**
+`Server/Functions/Server_OnPlayerConnected.sqf:564` throws `Undefined variable in expression:
+_clientbody` on HC connect. The file is **byte-identical between wave0806a and wave0806b**, so this is
+pre-existing - it only became visible now that both HCs seat at boot. Its own comment asserts
+"`_clientBody` is still in scope here (SQF script-level scoping; the while loop above does not open a
+nested scope)"; the runtime disproves that premise. Gated behind `WFBE_C_PLAYER_TEAMBAR_FIRST > 0`
+(armed), and it degrades to the UID-scan fallback the same comment calls "known-flaky this early
+after connect" - so noisy and probably non-fatal, but it means the teambar slot-1 rejoin is running
+on the flaky path it was specifically written to avoid.
+
 ## 2026-08-06 ~17:10 - #2312 merged; #2276 signed off, Phase 2 shipped as #2317; HC seating FIXED live
 
 **#2312 MERGED** (`b82264be5c`) - the one-character `Common_SMLRetreat.sqf` statement-terminator fix.
