@@ -584,15 +584,23 @@ switch (_request) do {
 		_sideText = _args select 1;
 		if (isNull _tel) exitWith {};
 		_col = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _sideText], "ColorGreen"];
+		//--- fix(marker-audit 2026-08-06): the name is FIXED per side and TWO independent paths spawn a TEL
+		//--- (death-respawn watcher + every ICBM upgrade level-up). On the second one createMarkerLocal hit
+		//--- an existing name, returned "", the PREVIOUS marker was orphaned on the map for the rest of the
+		//--- match, and every setMarker*Local below silently no-oped on "". Drop any predecessor first, then
+		//--- guard the return exactly like the icbm-tel-recon-markers case further down this file.
+		deleteMarkerLocal (Format ["wfbe_icbmtel_mkr_%1", _sideText]);
 		_mkr = createMarkerLocal [Format ["wfbe_icbmtel_mkr_%1", _sideText], getPosATL _tel];
-		_mkr setMarkerTypeLocal "mil_triangle";
-		_mkr setMarkerColorLocal _col;
-		_mkr setMarkerTextLocal "ICBM TEL";
-		[_tel, _mkr] spawn {
-			private ["_t","_m"];
-			_t = _this select 0; _m = _this select 1;
-			waitUntil {sleep 2; isNull _t || {!alive _t}};
-			deleteMarkerLocal _m;
+		if (typeName _mkr == "STRING" && {_mkr != ""}) then {
+			_mkr setMarkerTypeLocal "mil_triangle";
+			_mkr setMarkerColorLocal _col;
+			_mkr setMarkerTextLocal "ICBM TEL";
+			[_tel, _mkr] spawn {
+				private ["_t","_m"];
+				_t = _this select 0; _m = _this select 1;
+				waitUntil {sleep 2; isNull _t || {!alive _t}};
+				deleteMarkerLocal _m;
+			};
 		};
 	};
 	//--- icbm-tel-enemy-ping: FUZZY enemy intel ping for the NUKE countdown. _args = [_pos, _secs]. Auto-deletes.

@@ -121,7 +121,11 @@ onMapSingleClick "
 		_cool = _this select 3;
 		_ready = false;
 		while {true} do {
-			if (isNull _player) exitWith {};
+			//--- fix(marker-audit 2026-08-06): _player is the caller BODY captured at click time, not the
+			//--- client. Respawn makes a fresh unit object and the corpse is reaped by the standard body
+			//--- timeout, so this exit fired on a live player mid-cooldown and left the designate marker
+			//--- on the map permanently (the only other delete below is unreachable in exactly this case).
+			if (isNull _player) exitWith {deleteMarkerLocal _marker;};
 			_currentLast = _player getVariable ['wfbe_helibomb_last', -9999];
 			if !(_currentLast >= _start) exitWith {
 				deleteMarkerLocal _marker;

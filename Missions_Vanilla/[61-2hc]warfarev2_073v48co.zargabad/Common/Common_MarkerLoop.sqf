@@ -49,7 +49,14 @@ _awacsNextCheck = 0;
 // the branch-B accumulated-state experiment in one). Threshold 0 disables the auto path.
 WFBE_CL_MarkerRebuildRequested = false;
 _actionPlayer = player;
-_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"];
+//--- fix(marker-audit 2026-08-06): the registrars respawn this whole script on every marker-loop
+//--- death (Common_MarkerUpdate.sqf:79 / Common_AARadarMarkerUpdate.sqf:58 scriptDone watchdog),
+//--- so this unguarded addAction stacked one more identical scroll entry per crash, forever.
+//--- Track the id and drop the predecessor first (removeAction with a stale/foreign id no-ops).
+private ["_prevRebuildAction"];
+_prevRebuildAction = missionNamespace getVariable ["WFBE_CL_MarkerRebuildActionId", -1];
+if (_prevRebuildAction >= 0) then {_actionPlayer removeAction _prevRebuildAction};
+missionNamespace setVariable ["WFBE_CL_MarkerRebuildActionId", (_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"])];
 _lowFpsSince = -1;
 _rebuildCooldownUntil = 0;
 _rebuildFps = missionNamespace getVariable ["WFBE_C_MARKER_REBUILD_FPS", 15];
@@ -144,7 +151,8 @@ while {true} do {
 	// skips the brief objNull/corpse window so we attach once per life, not per tick).
 	if ((player != _actionPlayer) && {alive player}) then {
 		_actionPlayer = player;
-		_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"];
+		//--- fix(marker-audit 2026-08-06): record the id so a marker-loop restart can drop it (site A).
+		missionNamespace setVariable ["WFBE_CL_MarkerRebuildActionId", (_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"])];
 	};
 
 	// ---------------------------------------------------------------- refresh lever

@@ -299,7 +299,13 @@ if (_unit isKindOf "Air") then { //--- Air units.
 	};
 
 	if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0 || (missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then { //--- AAR Tracking. fable/awacs-radar: the AWACS air picture reads the same registry, so feed it when either flag is on.
-		if (sideJoined != _side) then { //--- Track the unit via AAR System, skip if the unit side is the same as the player one.
+		//--- fix(marker-audit 2026-08-06): AAR = ANTI-AIR radar (its registrar's own header: "one scheduled
+		//--- VM per tracked enemy aircraft"), but registration had no kind gate, so EVERY enemy man and
+		//--- ground vehicle also took a permanent registry entry + hidden marker it can never display
+		//--- (Common_MarkerLoop.sqf drops entries only on null/dead, never on failing the altitude gate).
+		//--- Air-kind gate leaves the visible picture identical and stops the per-tick scan bloating with
+		//--- hundreds of ground AI. AWACS reads the same registry and also wants air only.
+		if (sideJoined != _side && {_unit isKindOf "Air"}) then { //--- Track the unit via AAR System, skip if the unit side is the same as the player one.
 			_perfAARStarted = 1;
 			[_unit, _side, _sideID] ExecVM 'Common\Common_AARadarMarkerUpdate.sqf';
 		};
