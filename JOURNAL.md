@@ -1,5 +1,59 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-06 ~17:10 - #2312 merged; #2276 signed off, Phase 2 shipped as #2317; HC seating FIXED live
+
+**#2312 MERGED** (`b82264be5c`) - the one-character `Common_SMLRetreat.sqf` statement-terminator fix.
+
+**#2276 (SPEC-HC-SEAT-FOR-GOOD) signed off and implemented.**
+
+**Phase 2 (mission-side) = draft PR #2317**, branch `fable/hc-seat-consumer-hardening-20260806`:
+- 2a `Server_VoteForCommander.sqf:29` - a mis-seated HC's magnet group has an `isPlayer`-true
+  leader, so its abstain inflated `_aiVotes` and could tip a commander vote. HC-name filter +
+  null-leader guard.
+- 2b/2c `server_victory_threeway.sqf:298,411` - no phantom ROUNDEND stats row and no
+  "has no score to be saved" ERROR for an HC.
+- 2d `Init_HcLobbyLock.sqf:58` - the derive branch counted caster slots (also CIV) toward the
+  expected-HC count. **Verified unreachable at every current default** (`WFBE_C_HC_LOBBY_EXPECTED`
+  defaults to `WFBE_C_HC_SLOTS` = 2; only `-1` opts into derivation) - landmine defusal, zero live
+  behaviour change.
+- 2e `Init_CommonConstants.sqf` comment-only - the old text claimed
+  `Default 0 = byte-identical to HEAD (the PV loop below never spawns)`. **Both halves false**: the
+  constant is 1 and `Init_Server.sqf:1724` does spawn the 5s loop. Default NOT changed.
+- 2f comment-only - stale `mission.sqm id=229` refs removed from `Init_HC.sqf:47,195` and
+  `provision/Start-Wasp-4HC.ps1:11`; grepped against the current sqm, `id=229` does not exist
+  (WEST slots are 200-204, HC CIV slots 9009/9010).
+- **2g deliberately NOT shipped** (owner-gated, spec S10 d4); **1e NOT shipped** (spec gates it on
+  Phase 1 being proven).
+- Gates: lint **168 = baseline, 0 new, 0 in edited files**; pytest **917 passed / 2 skipped**;
+  doc-sync PASS; version-templates PASS; **net bracket delta 0 across all 15 .sqf files**; mirrors
+  run + TK/ZG templates restored; **3-terrain blob parity IDENTICAL** on all five edited files.
+
+**Phase 1: the spec's premise was FALSIFIED by the live investigation, and the real cause is fixed.**
+The spec attributes an unseated HC to a cold-start connect-timing race. That is not what was wrong:
+- The box's own authoritative sandbox test (`tasklist /m SbieDll.dll`) showed **zero non-sandboxed
+  `steam.exe`** - there was no real Steam session, so the un-sandboxed HC could never authenticate.
+- The launcher detected "a real Steam" by testing the process command line for the absence of the
+  string `Sandbox`. **A sandboxed Steam's command line is byte-identical to a real one**, so every
+  sandboxed Steam counted as real, the chain logged "real Steam already up", never started one, and
+  started arma into a guaranteed 1-HC round.
+- Starting the real Steam from an interactive session and bouncing **only** that HC seated it at
+  once: a second distinct `HCSIDE|v1|connect|uid=` appeared, both `HCSTAT who=` identities now
+  heartbeat, and the HC went from a flat 64 MB to 471 MB. Held across four polls; server fps 45.
+- Launcher fixed (pid-level SbieDll discrimination + a real-Steam logon probe that fails loud
+  instead of starting arma), backed up, re-parsed, and smoke-tested via its own `-DryRun` path.
+- The full `Confirm-HCSeatOrBounce` bounce-retry machinery was **not** built: it is several hundred
+  lines aimed at a mechanism the evidence no longer supports.
+
+**Discovered issues (carded, not fixed here):**
+- HC client RPTs are unusable for diagnosis when both HCs run un-sandboxed - they share one RPT
+  path, only one holds the write lock, and a **seated, healthy** HC shows the same "frozen at
+  config-load" shape as a dead one. `Unable to initialize Steam API` appears in the seated HC's log
+  too and is benign.
+- `Get-Process -Module` is not a sandbox test (truncated WOW64 enumeration on a 32-bit process).
+- PowerShell 5.1 reads `.ps1` as ANSI: a UTF-8 em dash becomes a stray quote and throws
+  `The string is missing the terminator` pointing at the wrong line. Keep provisioning scripts
+  ASCII-only.
+
 ## 2026-08-04 — reconcile PR #2092 onto wave0805
 
 - PR #2092 was stacked on #2060. The wave tip already contains the immobile-hull
