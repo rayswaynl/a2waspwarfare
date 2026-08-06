@@ -2,7 +2,7 @@
 name: mirror-regen
 description: Run AFTER any edit inside Missions/[55-2hc]warfarev2_073v48co.chernarus and BEFORE staging — propagates Chernarus changes to the Takistan and Zargabad mirrors via LoadoutManager, restores drifted templates, and spot-checks per-map values.
 ---
-<!-- source: Agent-Guide GUIDE-REV GR-2026-07-08a -->
+<!-- source: Agent-Guide GUIDE-REV GR-2026-07-08a; per-map template values defer to Tools/Ops/Test-WaspVersionTemplates.ps1 since 2026-08-06 -->
 
 # mirror-regen
 
@@ -53,11 +53,14 @@ powershell -NoProfile -File Tools\Ops\Test-WaspVersionTemplates.ps1
 Select-String -LiteralPath 'Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template','Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/version.sqf.template' -Pattern 'WF_MAXPLAYERS|STARTING_DISTANCE'
 ```
 
-Expected: TK `WF_MAXPLAYERS 31` + `STARTING_DISTANCE 7500`; ZG `WF_MAXPLAYERS 33` +
-`STARTING_DISTANCE 5000` (the `[61-...]` folder-name prefix is a player-slot label, not
-the WF_MAXPLAYERS value; a live/generated `version.sqf` can also hold a different number
-than the tracked `.template` — always read the `.template`). Neither template has
-`IS_CHERNARUS_MAP_DEPENDENT` or `IS_NAVAL_MAP` active.
+Expected values: defer to the `Tools\Ops\Test-WaspVersionTemplates.ps1` output from
+step 3 — its PASS/FAIL lines are the authoritative per-map assertions. Do not trust
+numbers hardcoded in this file or remembered from an earlier session; this section
+previously carried stale WF_MAXPLAYERS values that contradicted the checker. Eyeball
+context only: the `[61-...]` folder-name prefix is a player-slot label, not the
+WF_MAXPLAYERS value; a live/generated `version.sqf` can also hold a different number
+than the tracked `.template` — always read the `.template`. Neither mirror template
+has `IS_CHERNARUS_MAP_DEPENDENT` or `IS_NAVAL_MAP` active (also checker-asserted).
 
 ## 5. Gotchas
 
