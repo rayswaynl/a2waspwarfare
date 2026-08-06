@@ -59,7 +59,7 @@ hint parseText(Format[localize "STR_WF_INFO_Refueling",_name,_refTime]);
 //--- Make sure that we still have something as a support.
 _cts = 0;
 _i = 0;
-while {true} do {
+while {!gameOver && {!WFBE_GameOver}} do {
 	sleep 1;
 	
 	//--- Check the distance & alive.
@@ -75,9 +75,10 @@ while {true} do {
 	if (_i >= _refTime) exitWith {hint parseText(Format[localize "STR_WF_INFO_Refueling_Success",_name])};
 };
 
+if (gameOver || {WFBE_GameOver}) then {_cts = 0};
 if (_cts == 0 && {_price > 0}) then {_price Call ChangePlayerFunds;};
 
 //--- Refuel the vehicle?
-if (_cts != 0) then {
+if (_cts != 0 && {!gameOver} && {!WFBE_GameOver}) then {
 	_veh setFuel 1;
 };
