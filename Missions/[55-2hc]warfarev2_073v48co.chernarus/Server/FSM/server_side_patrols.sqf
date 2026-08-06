@@ -269,9 +269,10 @@ while {!WFBE_GameOver} do {
 										//--- VEHDEL probe (fable/veh-delete-probe convention): every server-local
 										//--- cleanup delete call below carries a reason-coded probe, same idiom as
 										//--- server_groupsGC.sqf's zombie/wreck reapers.
+										//--- r66: remove non-player crew before hulls (014EFCF4 seated-delete race); preserve players.
+										{if (!isNull _x && {!isPlayer _x}) then {["sidepatrol-watchdog-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _pwUnits;
 										{if (!isNull _x && {({isPlayer _x} count (crew _x)) == 0}) then {["sidepatrol-watchdog-vehicle", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _pwVehicles; //--- r128: player-crew guard - a player riding a stuck patrol's hull must not be deleted with it (same guard idiom as GuerAirDef/town-sweep/BASE-GC teardowns)
-										{if (!isNull _x) then {["sidepatrol-watchdog-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _pwUnits;
-										if (!isNull _pwGrp) then {deleteGroup _pwGrp};
+										if (!isNull _pwGrp && {({isPlayer _x} count (units _pwGrp)) == 0}) then {deleteGroup _pwGrp};
 									} else {
 										//--- tier4 = recycle sentinel (not a RunUnstuckRecovery tier).
 										[_pwLdr, "HandleSpecial", ["sidepatrol-watchdog", _pwLdr, 4, _pwSideID, _pwWpPos]] Call WFBE_CO_FNC_SendToClient;

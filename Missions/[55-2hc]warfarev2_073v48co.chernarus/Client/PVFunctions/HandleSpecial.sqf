@@ -199,10 +199,10 @@ switch (_request) do {
 						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
 					};
 				} forEach _wUnits;
-				//--- r66: units before hulls (014EFCF4 seated-delete race)
-				{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;
+				//--- r66: remove non-player crew before hulls (014EFCF4 seated-delete race); preserve players.
+				{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach _wUnits;
 				{if (!isNull _x && {({isPlayer _x} count (crew _x)) == 0}) then {deleteVehicle _x}} forEach _wVehicles; //--- r128: player-crew guard (parity with the server half in server_side_patrols.sqf)
-				if (!isNull _wGrp) then {deleteGroup _wGrp};
+				if (!isNull _wGrp && {({isPlayer _x} count (units _wGrp)) == 0}) then {deleteGroup _wGrp};
 			} else {
 				diag_log Format ["WARNING sidepatrol-watchdog HandleSpecial received unknown tier %1 - no-op", _wTier];
 			};
