@@ -1,4 +1,4 @@
-private ["_canJoin","_name","_player","_side","_uid","_skillBLUFOR","_skillOPFOR","_hasConnectedAtLaunchToSide","_teamJoinedConfirmed"];
+private ["_canJoin","_name","_pendingId","_player","_side","_uid","_skillBLUFOR","_skillOPFOR","_hasConnectedAtLaunchToSide","_teamJoinedConfirmed"];
 
 _player = _this select 0;
 _side = _this select 1;
@@ -7,6 +7,8 @@ _name = name _player;
 _uid = getPlayerUID(_player);
 //--- Invalid/local-host UIDs are not identities: never allow them into shared JIP keyspace.
 if (_uid == "" || {_uid == "0"}) exitWith {};
+_pendingId = missionNamespace getVariable [Format ["WFBE_CONNECT_ID_%1", _uid], -1];
+if (_pendingId < 0) then {_pendingId = owner _player};
 _canJoin = true;
 
 _teamJoinedConfirmed = missionNamespace getVariable Format["WFBE_JIP_USER%1_TEAM_JOINED", _uid];
@@ -84,6 +86,9 @@ if (WF_A2_Vanilla) then {
 
 ["INFORMATION", Format["RequestJoin.sqf: Player [%1] [%2] can join? [%3].%4", _name, _uid, _canJoin, _reason]] Call WFBE_CO_FNC_LogContent;
 
+//--- r182: publish the decision before any accepted-body write so the parallel connect
+//--- resolver cannot stamp a denied slot that is about to failMission back to the lobby.
+missionNamespace setVariable [Format ["WFBE_CONNECT_JOIN_DECISION_%1", _uid], [_pendingId, _side, _canJoin]];
 
 if (_canJoin) then {
 
