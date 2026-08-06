@@ -25,7 +25,7 @@ missionNamespace setVariable [Format["WFBE_%1ARTYVEHICLE", _side], ['GRAD_TK_EP1
 
 // Capture-to-unlock: holding a trigger town unlocks an ACR premium unit at own factories (Chernarus only).
 // Format per entry: [classname, townName, requiredFactoryLevel]
-missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Krasnostav',4],['RM70_ACR','NWAF',4]]];
+missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72_ACR','Krasnostav',4],['RM70_ACR','NWAF',4]]];
 
 
 //--- Radio Announcers.

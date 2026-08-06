@@ -34,9 +34,9 @@ missionNamespace setVariable [Format["WFBE_%1ARTYVEHICLE", _side], ['MLRS_DES_EP
 // maps get a live unlock path; Takistan values are unchanged (else branch).
 // Format per entry: [classname, townName, requiredFactoryLevel]
 if (worldName == "Zargabad") then {
-	missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Military Base',4],['RM70_ACR','Zargabad AF',4]]];
+	missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72_ACR','Military Base',4],['RM70_ACR','Zargabad AF',4]]];
 } else {
-	missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72M4CZ','Loy Manara',4],['RM70_ACR','Rasman AF',4]]];
+	missionNamespace setVariable [Format["WFBE_%1_CAPTURE_UNLOCKS", _side], [['T72_ACR','Loy Manara',4],['RM70_ACR','Rasman AF',4]]];
 };
 
 //--- Radio Announcers.
