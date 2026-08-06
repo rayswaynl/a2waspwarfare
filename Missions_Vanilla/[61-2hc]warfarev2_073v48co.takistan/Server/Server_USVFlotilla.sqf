@@ -293,6 +293,10 @@ if (!isNull _eGrp) then {
 {if (!isNull _x && {!isPlayer _x}) then {["usv-group-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _eGrp);
 if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 };
+			} else {
+				//--- Keep player-occupied invalid slots registered so maintain does not spawn a replacement;
+				//--- the next prune tick retries cleanup after the player leaves.
+				_kept = _kept + [_entry];
 			};
 			diag_log format ["USVFLOTILLA|DESPAWN|role=%1|reason=%2|playerAboard=%3", _eRole, _reason, (_boatHasPlayer || _staticHasPlayer)];
 		} else {
