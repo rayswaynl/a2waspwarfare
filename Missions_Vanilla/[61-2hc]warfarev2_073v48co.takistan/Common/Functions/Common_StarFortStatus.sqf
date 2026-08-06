@@ -84,7 +84,13 @@ if (!WFBE_GameOver) then {
 	publicVariable _aliveKey;
 	missionNamespace setVariable [_regKey, objNull];
 	publicVariable _regKey;
-	deleteMarker _markerName;
+	if ((missionNamespace getVariable ["WFBE_C_STARFORT_ALLYMARKER", 0]) > 0) then {
+		//--- DESIGN-4: an ally-only marker was never global (createMarkerLocal on ally clients only);
+		//--- drop it the same way it was raised, via the WildcardMarker side-scoped delete op.
+		[_side, "WildcardMarker", ["delete", _markerName]] Call WFBE_CO_FNC_SendToClients;
+	} else {
+		deleteMarker _markerName;
+	};
 	[nil, "DashboardAnnounce", [Format ["%1 STAR FORTRESS HAS FALLEN - the keep is destroyed!", _sideText]]] Call WFBE_CO_FNC_SendToClients;
 	["WARNING", Format ["Common_StarFortStatus.sqf: [%1] keep destroyed - fort razed, rebuild allowed.", str _side]] Call WFBE_CO_FNC_LogContent;
 };

@@ -243,10 +243,19 @@ missionNamespace setVariable [_pendKey, -1e11];
 //--- Reset the latched breach flag for THIS fort (a razed predecessor leaves it true).
 missionNamespace setVariable [_breachKey, false];
 publicVariable _breachKey;
-createMarker [_markerName, _pos];   //--- global on server: visible to all players AND JIP-durable.
-_markerName setMarkerType "mil_warning";
-_markerName setMarkerColor _markerColor;
-_markerName setMarkerText "STAR FORTRESS";
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ALLYMARKER", 0]) > 0) then {
+	//--- DESIGN-4: allies-only marker. Reuses the proven WildcardMarker side-scoped createMarkerLocal
+	//--- idiom (RequestFOBStructure.sqf / AI_Commander_Wildcard.sqf precedent) instead of a global
+	//--- createMarker, so the enemy side's client never receives a create instruction for this marker.
+	//--- JIP replay for allies lives in AttackWave.sqf's CLIENT_INIT_READY handler (reads the SAME
+	//--- _regKey/_aliveKey this script sets above - no separate ledger needed).
+	[_side, "WildcardMarker", ["create", _markerName, _pos, _markerColor, "mil_warning", "STAR FORTRESS", "forward hard-spawn - defend the keep"]] Call WFBE_CO_FNC_SendToClients;
+} else {
+	createMarker [_markerName, _pos];   //--- global on server: visible to all players AND JIP-durable.
+	_markerName setMarkerType "mil_warning";
+	_markerName setMarkerColor _markerColor;
+	_markerName setMarkerText "STAR FORTRESS";
+};
 "STAR FORTRESS foundation laid - the keep is live (respawn active). Walls and bastions await funding." Call _announce;
 ["INFORMATION", Format ["Construction_StarFortSite.sqf: [%1] keep spawned (%2 objects), site committed, marker [%3] placed (placement %4).", str _side, count _spawned, _markerName, _placementID]] Call WFBE_CO_FNC_LogContent;
 
@@ -325,7 +334,13 @@ if (_lost) exitWith {
 	missionNamespace setVariable [_aliveKey, false];
 	publicVariable _aliveKey;
 	missionNamespace setVariable [_pendKey, -1e11];
-	deleteMarker _markerName;
+	if ((missionNamespace getVariable ["WFBE_C_STARFORT_ALLYMARKER", 0]) > 0) then {
+		//--- DESIGN-4: an ally-only marker was never global (createMarkerLocal on ally clients only);
+		//--- drop it the same way it was raised, via the WildcardMarker side-scoped delete op.
+		[_side, "WildcardMarker", ["delete", _markerName]] Call WFBE_CO_FNC_SendToClients;
+	} else {
+		deleteMarker _markerName;
+	};
 	"STAR FORTRESS construction was destroyed before completion." Call _announce;
 	diag_log Format ["CONSTRUCTION|v1|reject|reason=construction-logic-destroyed|script=StarFortSite|pos=%1", _pos];
 };

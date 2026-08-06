@@ -381,6 +381,12 @@ Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_Special.sqf'
 //--- QoL trio feat.3: advisor nudge function.
 WFBE_CL_FNC_QOL_Advisor = Compile preprocessFileLineNumbers 'Client\Functions\Client_QOL_Advisor.sqf';
 WFBE_CL_FNC_AutoRunAttach = Compile preprocessFileLineNumbers "Client\Functions\Client_AutoRun.sqf";
+//--- fix/marker-loop-siblings-watchdog: central supervisor for the 8 one-shot client marker/HUD
+//--- loops that have no per-event registrar to piggyback a respawn check on (unlike
+//--- Common_MarkerLoop.sqf, which the Common_MarkerUpdate/Common_AARadarMarkerUpdate registrars
+//--- already re-arm). Registered here per repo convention; actually spawned once, after every
+//--- watched loop's own launch site, near the end of this file.
+WFBE_CL_FNC_MarkerLoopsWatchdog = Compile preprocessFileLineNumbers "Client\Functions\Client_MarkerLoopsWatchdog.sqf";
 
 
 
@@ -913,12 +919,12 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 };
 
 /* Exec SQF|FSM Misc stuff. */
-if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
+if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {WFBE_CL_TeamsMarkersHandle = [] execVM "Client\FSM\updateteamsmarkers.sqf"};
 if ((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) > 0) then {[] execVM "Client\Functions\Client_GuerLockout.sqf"}; //--- fable/guer-lockout: resistance activation delay
-if ((missionNamespace getVariable ["WFBE_C_GUER_PATROL_MARKERS", 1]) > 0) then {[] execVM "Client\Functions\Client_GuerPatrolMarkers.sqf"}; //--- fable/guer-patrol-markers: resistance-only friendly AI map dots
+if ((missionNamespace getVariable ["WFBE_C_GUER_PATROL_MARKERS", 1]) > 0) then {WFBE_CL_GuerPatrolMarkersHandle = [] execVM "Client\Functions\Client_GuerPatrolMarkers.sqf"}; //--- fable/guer-patrol-markers: resistance-only friendly AI map dots
 if ((missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE", 0]) > 0) then {[] execVM "Client\Functions\Client_CampRepairReadout.sqf"}; //--- KA-01/camp-repair-readout: ambient %-progress feedback while a dead camp's presence-repair timer is accumulating
-[] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
-[] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
+WFBE_CL_PatrolMarkersHandle = [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
+WFBE_CL_AicomMarkersHandle = [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
 if ((missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then {[] execVM "Client\Module\AWACS\awacs_pilot_watch.sqf"}; //--- fable/awacs-radar: AWACS pilot watch (ground MTI sweep). Flag default 0 = never launched.
 if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0) then {[] spawn WFBE_CL_FNC_SpectatorAttach}; //--- fable/spectator-v1: UID-allowlisted free-camera spectator overlay; inert for everyone not on WFBE_C_SPECTATOR_UIDS.
 //--- CASTER SLOTS (feat 2026-08-01): an allowlisted caster seated in a "Caster N" slot auto-enters the
@@ -1236,7 +1242,7 @@ missionNamespace setVariable ["WFBE_CL_UpdateActionsEpoch", (missionNamespace ge
 	[] execVM "Client\FSM\client_title_capture.sqf";
 	/* Handle the map town markers */
 	["INITIALIZATION", "Init_Client.sqf: Initializing the Towns Marker FSM"] Call WFBE_CO_FNC_LogContent;
-	[] execVM "Client\FSM\updatetownmarkers.sqf";
+	WFBE_CL_TownMarkersHandle = [] execVM "Client\FSM\updatetownmarkers.sqf";
 	if (sideJoined != resistance) then {
 waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "wfbe_structures"}}}; //--- B76: || civilian so a CIV client (objNull logic) never hangs here
 	if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
@@ -1983,7 +1989,7 @@ player setVariable ["score", 0];
 
 // Marty: Do not start the blinking marker bookkeeping loop unless the global mission parameter enables it.
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
-	[] execVM "Client\Functions\Client_BookkeepBlinkingIcons.sqf";
+	WFBE_CL_BlinkingIconsHandle = [] execVM "Client\Functions\Client_BookkeepBlinkingIcons.sqf";
 };
 
 //--- B745 (Ray 2026-06-24): intro video removed (Videos\intro720p.ogv deleted, ~2.3MB mission shrink). Playback line disabled.
@@ -2245,10 +2251,10 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FRAME_TELEMETRY", 0]) > 0) the
 
 //--- Ambulance / medic-redeploy range circles (Trello #76). Local map Ellipses around friendly
 //--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.
-[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
+WFBE_CL_AmbulanceCirclesHandle = [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
 //--- Artillery range rings (Trello #90). Client-local orange Ellipses around friendly arty pieces
 //--- showing their WFBE_%1_ARTILLERY_RANGES_MAX firing radius. Self-gates on WFBE_C_ARTY_RING.
-[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_ArtyRangeRings.sqf";
+WFBE_CL_ArtyRingsHandle = [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_ArtyRangeRings.sqf";
 
 //--- New-player onboarding cards (claude-gaming 2026-06-29). Once-per-session, skippable structuredText
 //--- hint sequence (what WASP is + win goal + 3 core actions + scroll-menu + JIP cue + respawn legend).
@@ -2267,5 +2273,11 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FRAME_TELEMETRY", 0]) > 0) the
 
 //--- Late-join catch-up card. Self-gates on WFBE_C_JIP_CATCHUP_BRIEFING and reads only local or join-seeded state.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_JIPCatchupBriefing.sqf";
+
+//--- fix/marker-loop-siblings-watchdog: spawn the marker/HUD-loop supervisor last, after every
+//--- watched loop's own launch site above has had the chance to fire (the town-marker branch is
+//--- gated behind an async waitUntil {townInit} and may still be nil here - the watchdog's own
+//--- isNil guard treats that as "not started yet" and simply picks it up on a later tick).
+[] spawn WFBE_CL_FNC_MarkerLoopsWatchdog;
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;

@@ -3910,6 +3910,7 @@ if (isNil "WFBE_C_STARFORT_BUILD_TIME") then {WFBE_C_STARFORT_BUILD_TIME = 300};
 if (isNil "WFBE_C_STARFORT_RADIUS") then {WFBE_C_STARFORT_RADIUS = 25};
 if (isNil "WFBE_C_STARFORT_SLOPE_MAX") then {WFBE_C_STARFORT_SLOPE_MAX = 0.97};
 if (isNil "WFBE_C_STARFORT_PENDING_WINDOW") then {WFBE_C_STARFORT_PENDING_WINDOW = 180};
+if (isNil "WFBE_C_STARFORT_ALLYMARKER") then {WFBE_C_STARFORT_ALLYMARKER = 0}; //--- DESIGN-4: 0 = today's global enemy-visible marker (byte-identical); 1 = allies-only WildcardMarker + JIP replay.
 
 //--- PR #1464 reconcile: late-game teleport for fully-AI, base-idle WEST/EAST teams.
 //--- Decision runs after relief/withdrawal and before HQ hunt; execution stays on the

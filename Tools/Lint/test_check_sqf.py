@@ -153,6 +153,81 @@ class CheckSqfTests(unittest.TestCase):
         codes = lint_codes(source)
         self.assertNotIn("MILMARKER", codes)
 
+    # ── MARKERTYPE ──────────────────────────────────────────
+    def test_markertype_unknown_type_is_flagged(self) -> None:
+        codes = lint_codes('_m setMarkerTypeLocal "Depoot";')
+        self.assertIn("MARKERTYPE", codes)
+
+    def test_markertype_valid_type_not_flagged(self) -> None:
+        codes = lint_codes('_m setMarkerTypeLocal "Depot";')
+        self.assertNotIn("MARKERTYPE", codes)
+
+    def test_markertype_case_insensitive_valid(self) -> None:
+        codes = lint_codes('_m setMarkerTypeLocal "STRONGPOINT";')
+        self.assertNotIn("MARKERTYPE", codes)
+
+    def test_markertype_defers_to_milmarker_for_mil_prefix(self) -> None:
+        # An invalid mil_ type is MILMARKER's job; MARKERTYPE must not double-report it.
+        codes = lint_codes('_m setMarkerType "mil_air";')
+        self.assertIn("MILMARKER", codes)
+        self.assertNotIn("MARKERTYPE", codes)
+
+    def test_markertype_defers_to_a3marker_for_nato_prefix(self) -> None:
+        # b_/o_/n_ NATO markers are A3MARKER's job; MARKERTYPE must not double-report them.
+        codes = lint_codes('_m setMarkerTypeLocal "b_inf";')
+        self.assertIn("A3MARKER", codes)
+        self.assertNotIn("MARKERTYPE", codes)
+
+    def test_markertype_getvariable_default_typo_is_flagged(self) -> None:
+        codes = lint_codes(
+            '_x setMarkerType (missionNamespace getVariable ["WFBE_C_OILFIELD_MARKER_TYPE", "mil_circlee"]);'
+        )
+        # The typo is mil_-prefixed, so MILMARKER's own bare-literal scan catches it too;
+        # MARKERTYPE must defer rather than double-report.
+        self.assertIn("MILMARKER", codes)
+        self.assertNotIn("MARKERTYPE", codes)
+
+    def test_markertype_getvariable_default_non_mil_typo_is_flagged(self) -> None:
+        codes = lint_codes(
+            '_x setMarkerType (missionNamespace getVariable ["WFBE_C_TEST_MARKER_TYPE", "Depoot"]);'
+        )
+        self.assertIn("MARKERTYPE", codes)
+
+    def test_markertype_const_assignment_typo_is_flagged(self) -> None:
+        codes = lint_codes('WFBE_C_TEST_MARKER_TYPE = "Depoot";')
+        self.assertIn("MARKERTYPE", codes)
+
+    def test_markertype_variable_indirection_is_out_of_reach(self) -> None:
+        # Documents a known, accepted limitation: a literal assigned to a plain local
+        # variable before use is not visible to this rule (see Tools/Lint/README.md).
+        codes = lint_codes('_type = "NotARealMarkerType"; _m setMarkerTypeLocal _type;')
+        self.assertNotIn("MARKERTYPE", codes)
+
+    def test_markertype_in_comment_not_flagged(self) -> None:
+        source = '// the old "Depoot" bug' + chr(10) + '_m setMarkerTypeLocal "Depot";'
+        codes = lint_codes(source)
+        self.assertNotIn("MARKERTYPE", codes)
+
+    # ── MARKERCOLOR ─────────────────────────────────────────
+    def test_markercolor_unknown_color_is_flagged(self) -> None:
+        codes = lint_codes('_m setMarkerColorLocal "ColorKhakiy";')
+        self.assertIn("MARKERCOLOR", codes)
+
+    def test_markercolor_valid_color_not_flagged(self) -> None:
+        codes = lint_codes('_m setMarkerColorLocal "ColorRed";')
+        self.assertNotIn("MARKERCOLOR", codes)
+
+    def test_markercolor_khaki_is_allowlisted(self) -> None:
+        # Carried forward from a prior classname audit's unconfirmed flag - see Tools/Lint/README.md.
+        codes = lint_codes('_m setMarkerColorLocal "ColorKhaki";')
+        self.assertNotIn("MARKERCOLOR", codes)
+
+    def test_markercolor_unrelated_ppeffect_not_flagged(self) -> None:
+        # ppEffectCreate ["ColorCorrections", ...] is a post-process effect, not a marker
+        # color, and is never a direct setMarkerColor(Local) argument - must stay silent.
+        codes = lint_codes('_ppColor = ppEffectCreate ["ColorCorrections", 1999];')
+        self.assertNotIn("MARKERCOLOR", codes)
+
     # ── A3PRIVATE ─────────────────────────────────────────────────────────────
     def test_a3private_inline_is_flagged(self) -> None:
         codes = lint_codes('private _myVar = 0;\n')
