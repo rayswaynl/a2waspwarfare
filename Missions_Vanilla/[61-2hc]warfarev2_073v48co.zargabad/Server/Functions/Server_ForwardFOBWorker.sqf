@@ -17,7 +17,7 @@
 	      scripted here instead: friendly, stationary, damaged vehicles in range lose WFBE_C_FOB_SERVICE_STEP
 	      damage per poll. Repair only - no rearm or refuel, neither of which the owner ruled on.
 
-	The loop exits as soon as the tent dies; Server_ForwardFOBKilled.sqf owns the teardown.
+	The loop exits as soon as the round ends or the tent dies; Server_ForwardFOBKilled.sqf owns the teardown.
 
 	A2 OA 1.64 safe: array-form private only, no params/pushBack/isEqualType, getDammage/setDammage (double-m
 	is the correct OA spelling), outer _x captured into a named local, no exitWith inside forEach.
@@ -44,7 +44,7 @@ _enemySides = if (WFBE_ISTHREEWAY) then {[west, east, resistance] - [_side]} els
 _mk = Format ["wfbe_fob_ping_%1_%2", floor ((getPos _tent) select 0), floor ((getPos _tent) select 1)];
 _shown = false;
 
-while {!isNull _tent && {alive _tent}} do {
+while {!WFBE_GameOver && {!isNull _tent} && {alive _tent}} do {
 	sleep _interval;
 
 	if (!isNull _tent && {alive _tent}) then {
