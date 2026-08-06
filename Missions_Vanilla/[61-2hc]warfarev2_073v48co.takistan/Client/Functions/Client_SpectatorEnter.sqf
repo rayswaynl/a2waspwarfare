@@ -364,18 +364,19 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				systemChat Format ["[WASP] Orbit reveals: %1", if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorOrbit", true]) then {"ON"} else {"OFF (all static)"}];
 			} else {_handled = false};
 		};
-		case 26: { //--- [: legacy dwell trim (v8 auto paces itself; kept for the streamer menu readout)
+		case 26: { //--- [: idle-glance dwell shorter. fix(bughunt 2026-08-06): the old WFBE_C_VAR_SpectatorDirectorDwell
+			//--- target was a v3-v7 leftover read by nothing; write the GLANCE constant the v8 director reads.
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
-				_d = ((WFBE_C_VAR_SpectatorDirectorDwell - _step) max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN", 5]));
-				WFBE_C_VAR_SpectatorDirectorDwell = _d;
+				_d = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC", 3]) - 1) max 2;
+				missionNamespace setVariable ["WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC", _d];
+				systemChat Format ["[WASP] Idle-glance dwell: %1s", _d];
 			} else {_handled = false};
 		};
-		case 27: { //--- ]: legacy dwell trim
+		case 27: { //--- ]: idle-glance dwell longer
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
-				_d = ((WFBE_C_VAR_SpectatorDirectorDwell + _step) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MAX", 120]));
-				WFBE_C_VAR_SpectatorDirectorDwell = _d;
+				_d = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC", 3]) + 1) min 10;
+				missionNamespace setVariable ["WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC", _d];
+				systemChat Format ["[WASP] Idle-glance dwell: %1s", _d];
 			} else {_handled = false};
 		};
 		case 33: { //--- F: toggle follow-cam on the armed target

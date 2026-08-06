@@ -36,7 +36,7 @@ while {alive player && dialog} do {
 	};
 	ctrlSetText [102646, Format ["GUER Targets: %1", if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_TARGET_GUER", 1]) > 0) then {"ON"} else {"OFF"}]];
 	ctrlSetText [102647, Format ["Arty Rings: %1", if ((missionNamespace getVariable ["WFBE_C_ARTY_RING", 1]) > 0) then {"ON"} else {"OFF"}]];
-	ctrlSetText [102648, Format ["Idle Dwell: %1s", missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", 3]]];
+	ctrlSetText [102648, Format ["Idle Dwell: %1s", missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC", 3]]];
 	ctrlSetText [102650, Format ["Cam Speed: %1 m/s", missionNamespace getVariable ["WFBE_C_SPECTATOR_SPEED", 15]]];
 	_v = missionNamespace getVariable ["WFBE_C_SPECTATOR_HUD_FADE_SEC", 6];
 	ctrlSetText [102651, Format ["HUD Fade: %1", if (_v >= 9999) then {"NEVER"} else {Format ["%1s", _v]}]];
@@ -114,12 +114,14 @@ while {alive player && dialog} do {
 		diag_log Format ["SPECTATE|v5|menu|hud-fade=%1", _v];
 	};
 
-	//--- Idle-shot dwell cycle 3s -> 5s -> 2s -> 3s.
+	//--- Idle-shot dwell cycle 3s -> 5s -> 2s -> 3s. fix(bughunt 2026-08-06): write the GLANCE constant the
+	//--- v8 director actually reads each pass (Client_SpectatorDirector.sqf ~:793); the old target
+	//--- WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC is read by nothing (registration kept per flag policy).
 	if (WFBE_StreamerMenuAction == 6) then {
 		WFBE_StreamerMenuAction = -1;
-		_v = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", 3];
+		_v = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC", 3];
 		_v = switch (_v) do {case 2: {3}; case 3: {5}; default {2}};
-		missionNamespace setVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", _v];
+		missionNamespace setVariable ["WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC", _v];
 		diag_log Format ["SPECTATE|v5|menu|idle-dwell=%1", _v];
 	};
 
