@@ -370,6 +370,7 @@ if (_qIdx >= 0) then {
 private ["_myActionKey","_myActionID"];
 _myActionKey = Format ["wfbe_cancel_action_%1", getPlayerUID player];
 _myActionID = _building getVariable [_myActionKey, -1];
+if (isNil "_myActionID" || {typeName _myActionID != "SCALAR"}) then {_myActionID = -1};
 if (_myActionID >= 0) then {
 	_building removeAction _myActionID;
 	_building setVariable [_myActionKey, -1];
