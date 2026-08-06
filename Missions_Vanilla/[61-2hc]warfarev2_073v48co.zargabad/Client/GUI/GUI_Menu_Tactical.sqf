@@ -135,7 +135,9 @@ _addToListInterval = [0,1000,800,600,_pard,0,0,0,0];	//--- QoL fix: paratrooper 
 //--- row loop above). Single registration point - not re-added here to avoid double-registering the action.
 //--- fable/fpv-strike-drone: player-piloted kamikaze mini-UAV. Row appended only when
 //--- WFBE_C_FPV_DRONE > 0 (flag-gated at BUILD time, same idiom as the SCUD rows above).
-if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0) then {
+//--- fable/uav-tier1-fob: under WFBE_C_DRONE_TIERS the FPV drone is GUER-exclusive (owner ruling
+//--- 2026-08-04) - this generic all-sides row is retired; Support_FPV.sqf enforces server-side.
+if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_DRONE_TIERS", 0]) <= 0}) then {
 	_addToList = _addToList + ["FPV STRIKE DRONE"];
 	_addToListID = _addToListID + ["FPV_Strike"];
 	_addToListFee = _addToListFee + [(missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500])];

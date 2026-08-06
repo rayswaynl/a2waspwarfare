@@ -86,6 +86,22 @@ while {alive player && dialog} do {
 		ctrlEnable  [32013, false];
 	};
 
+	//--- fable/uav-tier1-fob (WFBE_C_DRONE_TIERS): FOB-proximity hint - ADVISORY only, Support_FPV.sqf
+	//--- is the authority. Placed AFTER the three state blocks so it only overrides the READY enable
+	//--- and never fights the IN-FLIGHT/REARMING writes (they already disable the button).
+	if ((missionNamespace getVariable ["WFBE_C_DRONE_TIERS", 0]) > 0 && {_fpvState == 0}) then {
+		private ["_fobEntry","_fobNear"];
+		_fobNear = false;
+		{
+			_fobEntry = _x;
+			if (!isNil "_fobEntry" && {(typeName _fobEntry) == "ARRAY"} && {(count _fobEntry) > 1} && {player distance (_fobEntry select 1) < (missionNamespace getVariable ["WFBE_C_DRONE_FOB_RANGE", 40])}) then {_fobNear = true};
+		} forEach (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]);
+		if (!_fobNear) then {
+			ctrlEnable [32013, false];
+			ctrlSetText [32014, "NO LIVE FOB IN RANGE - deploy a field factory first"];
+		};
+	};
+
 	//--- SCUD card (Phase-2; hidden when WFBE_C_GUER_DRONE_SCUD <= 0, default 0).
 	if ((missionNamespace getVariable ["WFBE_C_GUER_DRONE_SCUD", 0]) > 0) then {
 		//--- Carrier check.
