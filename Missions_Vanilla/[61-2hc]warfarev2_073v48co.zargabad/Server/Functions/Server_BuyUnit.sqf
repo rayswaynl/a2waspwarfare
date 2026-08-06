@@ -303,6 +303,11 @@ _queu = _building getVariable "queu";
 _queu = _queu - [_id select 0];
 _building setVariable ["queu",_queu,true];
 
+//--- Re-read the authoritative side registry after the build wait. A factory can remain alive
+//--- while its side ownership/registry entry changes; liveness alone must not authorize delivery.
+_sideStructs = _side Call WFBE_CO_FNC_GetSideStructures;
+if (isNil "_sideStructs" || {typeName _sideStructs != "ARRAY"}) then {_sideStructs = []};
+
 //--- fable/aicom-refund-then-build-fix (adversarial review catch, 2026-07-21): isPlayer(leader _team) is
 //--- NOT monotonic like alive _building - a human can take over the squad (triggering the mid-loop refund
 //--- above), then leave/die during the sleep _waitTime gap, letting an AI leader reclaim it. Without
@@ -311,7 +316,7 @@ _building setVariable ["queu",_queu,true];
 //--- double-value; for a vehicle that then hits the objNull guard below, a second full refund on top of
 //--- that). Once ANY earlier abort has paid a refund, this exitWith is now TERMINAL regardless of whether
 //--- the original abort condition still holds - the build must never happen after a refund fired.
-if (_refunded || {!(alive _building)} || {isNull _team} || {[_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC_GroupGetBool} || {count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0} || {isPlayer (leader _team)}) exitWith {
+if (_refunded || {!(alive _building)} || {!(_building in _sideStructs)} || {isNull _team} || {[_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC_GroupGetBool} || {count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0} || {isPlayer (leader _team)}) exitWith {
 	if (!isNull _team) then {
 		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 	};
@@ -319,6 +324,7 @@ if (_refunded || {!(alive _building)} || {isNull _team} || {[_team, "wfbe_aicom_
 	//--- earlier mid-loop abort fired) - the flag guard is a no-op if the block above already refunded.
 	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted post-wait - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
+	if (alive _building && {!(_building in _sideStructs)}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction stopped because factory ownership changed before delivery; refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	//--- fable/aicom-refund-then-build-fix: reached solely because _refunded was already true (the abort
 	//--- condition itself reverted during the sleep) - neither log line above fired, so make the RPT read
