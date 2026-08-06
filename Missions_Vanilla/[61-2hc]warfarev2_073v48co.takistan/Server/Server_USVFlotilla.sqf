@@ -249,6 +249,21 @@ while {!WFBE_GameOver} do {
 		//--- Spawn-time driver fail is open #1687; this is mid-life driver death.
 		if (!_drop && {(isNull _eDriver) || {!alive _eDriver}}) then { _drop = true; _reason = "driver_lost"; };
 
+		//--- r187 crew-vitality: a living hull without a mounted static/gunner is not a valid slot.
+		//--- Keep player-occupied hulls until they leave; the next prune tick frees the role for
+		//--- the existing exactly-one maintain/refill path.
+		if (!_drop && {
+			(isNull _eStatic) || {!(alive _eStatic)} ||
+			(isNull _eGunner) || {!(alive _eGunner)} ||
+			{(gunner _eStatic) != _eGunner}
+		}) then {
+			_boatHasPlayer = if (isNull _eBoat) then {false} else {({isPlayer _x} count (crew _eBoat)) > 0};
+			_staticHasPlayer = if (isNull _eStatic) then {false} else {({isPlayer _x} count (crew _eStatic)) > 0};
+			if (!_boatHasPlayer && !_staticHasPlayer) then {
+				_drop = true; _reason = "weapon_crew_lost";
+			};
+		};
+
 		//--- Gate closed -> count down the FLOTILLA-WIDE quiet-despawn timer (shared across all
 		//--- boats, since the gate itself is a flotilla-wide condition, not per-boat).
 		if (!_drop && !_gateActive) then {
@@ -278,6 +293,10 @@ if (!isNull _eGrp) then {
 {if (!isNull _x && {!isPlayer _x}) then {["usv-group-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _eGrp);
 if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 };
+			} else {
+				//--- Keep player-occupied invalid slots registered so maintain does not spawn a replacement;
+				//--- the next prune tick retries cleanup after the player leaves.
+				_kept = _kept + [_entry];
 			};
 			diag_log format ["USVFLOTILLA|DESPAWN|role=%1|reason=%2|playerAboard=%3", _eRole, _reason, (_boatHasPlayer || _staticHasPlayer)];
 		} else {
