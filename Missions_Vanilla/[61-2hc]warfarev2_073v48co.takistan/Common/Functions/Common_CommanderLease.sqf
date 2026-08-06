@@ -105,14 +105,30 @@ WFBE_CO_FNC_CommanderLeaseRequestGrant = {
 
 WFBE_CO_FNC_CommanderLeaseRequestReclaim = {
     //--- params: [side, uid, team]. Re-validated fully (uid+group+eligibility) at exec time.
-    Private ["_side","_uid","_team","_logic"];
+    Private ["_side","_uid","_team","_logic","_lease","_member"];
     _side = _this select 0;
     _uid = _this select 1;
     _team = _this select 2;
     if (_side == civilian) exitWith {};
+    if (isNull _team) exitWith {};
     _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
     if (isNull _logic) exitWith {};
-    _logic setVariable ["wfbe_commander_lease_cmd_reclaim", [_uid, _team, time]];
+    _lease = _logic getVariable "wfbe_commander_lease"; if (isNil "_lease") then {_lease = []};
+
+    //--- Same-side re-slot repair (r182): the lease is deliberately group-bound. A returning
+    //--- holder in a different group must not inherit authority, but leaving the old group
+    //--- published until grace expiry blocks all empty-seat claims. A real UID member of the
+    //--- new group may therefore relinquish the exact old generation; forged UID/group pairs
+    //--- remain inert. Same-group respawn/JIP continues through the normal reclaim command.
+    if (typeName _lease == "ARRAY" && {count _lease >= 6} && {(_lease select 0) == _uid} && {(_lease select 2) != (str _team)}) then {
+        _member = false;
+        {if (!isNull _x && {isPlayer _x} && {(getPlayerUID _x) == _uid}) then {_member = true};} forEach units _team;
+        if (_member) then {
+            [_side, (_lease select 5)] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;
+        };
+    } else {
+        _logic setVariable ["wfbe_commander_lease_cmd_reclaim", [_uid, _team, time]];
+    };
 };
 
 WFBE_CO_FNC_CommanderLeaseRequestStandDown = {
