@@ -56,7 +56,7 @@ while {!WFBE_GameOver} do {
 	missionNamespace setVariable ["wfbe_coreloop_supervisor_hb", time]; //--- external soak canary: proves the SCANNER itself is alive.
 
 	{
-		private ["_id","_scriptPath","_ownerKey","_hbKey","_handleKey","_restartKey","_giveupKey","_lastRKey","_cadence","_thresh","_hb","_age","_mode","_restarts","_lastR","_ownerSeq","_newOwnerSeq","_oldHandle","_newHandle"];
+		private ["_id","_scriptPath","_ownerKey","_hbKey","_handleKey","_restartKey","_giveupKey","_lastRKey","_cadence","_thresh","_hb","_age","_mode","_restarts","_lastR","_ownerSeq","_newOwnerSeq","_oldHandle","_newHandle","_deadBeforeFirstBeat","_failureReason","_failureText"];
 		_id         = _x select 0;
 		_scriptPath = _x select 1;
 		_ownerKey   = Format ["wfbe_coreloop_owner_%1", _id];
@@ -79,12 +79,25 @@ while {!WFBE_GameOver} do {
 		//--- never false-trips on a normal slow tick.
 		_thresh = (3 * _cadence) + 30;
 		_hb     = missionNamespace getVariable [_hbKey, -1];
+		_deadBeforeFirstBeat = false;
 
-		//--- _hb > 0 means the loop has stamped at least once: never fire during boot / before
-		//--- this loop's first tick.
-		if (_hb > 0) then {
-			_age = time - _hb;
-			if (_age > _thresh) then {
+		//--- A missing heartbeat is normally just "not launched yet" (economy/upgrade wait for
+		//--- townInit; oilfield is TK-only). Once a handle has actually been registered, however,
+		//--- scriptDone proves that the worker ended before it could stamp its first heartbeat.
+		//--- Feed that state through the same bounded mode/cooldown path as a stale heartbeat.
+		if (_hb <= 0) then {
+			_oldHandle = missionNamespace getVariable _handleKey;
+			if (!isNil "_oldHandle") then {
+				_deadBeforeFirstBeat = scriptDone _oldHandle;
+			};
+		};
+
+		//--- Never fire for a loop that has neither stamped nor registered a handle.
+		if ((_hb > 0) || {_deadBeforeFirstBeat}) then {
+			_age = if (_hb > 0) then {time - _hb} else {0};
+			if (_deadBeforeFirstBeat || {_age > _thresh}) then {
+				_failureReason = if (_deadBeforeFirstBeat) then {"ended-before-first-heartbeat"} else {"stale-heartbeat"};
+				_failureText = if (_deadBeforeFirstBeat) then {"ended before first heartbeat"} else {Format ["heartbeat stale (%1s)", round _age]};
 				_mode     = missionNamespace getVariable [Format ["WFBE_C_CORELOOP_RESTART_%1", toUpper _id], (_x select 3)];
 				_restarts = missionNamespace getVariable [_restartKey, 0];
 				_lastR    = missionNamespace getVariable [_lastRKey, -1e9];
@@ -95,16 +108,16 @@ while {!WFBE_GameOver} do {
 						//--- leave it alone - never busy-loop retrying a loop that keeps dying.
 						if ((missionNamespace getVariable [_giveupKey, 0]) < 1) then {
 							missionNamespace setVariable [_giveupKey, 1];
-							diag_log ("CORELOOP|v1|GIVEUP|id=" + _id + "|attempts=" + str _restarts + "|age=" + str (round _age));
-							["WARNING", Format ["Server_coreloop_supervisor.sqf: %1 exhausted %2 restarts - giving up (loop stays down until mission restart).", _id, _restarts]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log ("CORELOOP|v1|GIVEUP|id=" + _id + "|attempts=" + str _restarts + "|age=" + str (round _age) + "|reason=" + _failureReason);
+							["WARNING", Format ["Server_coreloop_supervisor.sqf: %1 %2 and exhausted %3 restarts - giving up (loop stays down until mission restart).", _id, _failureText, _restarts]] Call WFBE_CO_FNC_AICOMLog;
 						};
 					} else {
 						if ((time - _lastR) > _cool) then {
 							missionNamespace setVariable [_lastRKey, time];
 							if (_mode == 1) then {
 								//--- OBSERVE: alert only, no restart. Debounced by the same cooldown window.
-								diag_log ("CORELOOP|v1|ALERT|id=" + _id + "|age=" + str (round _age) + "|mode=observe");
-								["WARNING", Format ["Server_coreloop_supervisor.sqf: %1 heartbeat stale (%2s) - OBSERVE mode, not restarting.", _id, round _age]] Call WFBE_CO_FNC_AICOMLog;
+								diag_log ("CORELOOP|v1|ALERT|id=" + _id + "|age=" + str (round _age) + "|mode=observe|reason=" + _failureReason);
+								["WARNING", Format ["Server_coreloop_supervisor.sqf: %1 %2 - OBSERVE mode, not restarting.", _id, _failureText]] Call WFBE_CO_FNC_AICOMLog;
 							} else {
 								//--- RESTART (mode >= 2): bump owner generation first (so a stale instance
 								//--- that somehow resumes sees the newer owner and exits before its next
@@ -120,8 +133,8 @@ while {!WFBE_GameOver} do {
 								_newHandle = [_newOwnerSeq] execVM _scriptPath;
 								missionNamespace setVariable [_handleKey, _newHandle];
 								missionNamespace setVariable [_restartKey, _restarts + 1];
-								diag_log ("CORELOOP|v1|RESTART|id=" + _id + "|attempt=" + str (_restarts + 1) + "|age=" + str (round _age) + "|oldGen=" + str _ownerSeq + "|newGen=" + str _newOwnerSeq);
-								["WARNING", Format ["Server_coreloop_supervisor.sqf: %1 heartbeat stale (%2s) - restarting (attempt %3/%4, owner generation %5).", _id, round _age, _restarts + 1, _maxRestarts, _newOwnerSeq]] Call WFBE_CO_FNC_AICOMLog;
+								diag_log ("CORELOOP|v1|RESTART|id=" + _id + "|attempt=" + str (_restarts + 1) + "|age=" + str (round _age) + "|oldGen=" + str _ownerSeq + "|newGen=" + str _newOwnerSeq + "|reason=" + _failureReason);
+								["WARNING", Format ["Server_coreloop_supervisor.sqf: %1 %2 - restarting (attempt %3/%4, owner generation %5).", _id, _failureText, _restarts + 1, _maxRestarts, _newOwnerSeq]] Call WFBE_CO_FNC_AICOMLog;
 							};
 						};
 					};
