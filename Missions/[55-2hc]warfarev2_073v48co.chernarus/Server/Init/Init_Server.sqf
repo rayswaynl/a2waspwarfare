@@ -1523,7 +1523,7 @@ if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {[] execVM "Serv
 // Execute the server fps script on a seperate thread
 [] ExecVM "Server\GUI\serverFpsGUI.sqf";
 
-["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
+["INITIALIZATION", Format ["Init_Server.sqf: Core server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
 //--- Waiting until that the game is launched.
 waitUntil {time > 0};
