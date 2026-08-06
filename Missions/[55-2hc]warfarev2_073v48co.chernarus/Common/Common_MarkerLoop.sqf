@@ -49,7 +49,18 @@ _awacsNextCheck = 0;
 // the branch-B accumulated-state experiment in one). Threshold 0 disables the auto path.
 WFBE_CL_MarkerRebuildRequested = false;
 _actionPlayer = player;
-_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"];
+//--- fix(marker-audit 2026-08-06): the registrars respawn this whole script on every marker-loop
+//--- death (Common_MarkerUpdate.sqf:79 / Common_AARadarMarkerUpdate.sqf:58 scriptDone watchdog),
+//--- so this unguarded addAction stacked one more identical scroll entry per crash, forever.
+//--- Store [owner, id] and only remove when the stored OWNER is still the current body: addAction
+//--- ids are a per-object sequential counter, so replaying an old body's id on a NEW body would
+//--- strip whatever different action already took that index (respawn during a loop outage).
+private ["_prevRebuild"];
+_prevRebuild = missionNamespace getVariable ["WFBE_CL_MarkerRebuildAction", []];
+if ((typeName _prevRebuild) == "ARRAY" && {(count _prevRebuild) > 1} && {(_prevRebuild select 0) == _actionPlayer}) then {
+	_actionPlayer removeAction (_prevRebuild select 1);
+};
+missionNamespace setVariable ["WFBE_CL_MarkerRebuildAction", [_actionPlayer, (_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"])]];
 _lowFpsSince = -1;
 _rebuildCooldownUntil = 0;
 _rebuildFps = missionNamespace getVariable ["WFBE_C_MARKER_REBUILD_FPS", 15];
@@ -144,7 +155,8 @@ while {true} do {
 	// skips the brief objNull/corpse window so we attach once per life, not per tick).
 	if ((player != _actionPlayer) && {alive player}) then {
 		_actionPlayer = player;
-		_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"];
+		//--- fix(marker-audit 2026-08-06): record [owner, id] so a marker-loop restart can drop it (site A).
+		missionNamespace setVariable ["WFBE_CL_MarkerRebuildAction", [_actionPlayer, (_actionPlayer addAction ["Rebuild Map Markers", "Common\Common_MarkerRebuildRequest.sqf", [], 0, false, true, "", "true"])]];
 	};
 
 	// ---------------------------------------------------------------- refresh lever

@@ -584,15 +584,31 @@ switch (_request) do {
 		_sideText = _args select 1;
 		if (isNull _tel) exitWith {};
 		_col = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _sideText], "ColorGreen"];
+		//--- fix(marker-audit 2026-08-06): the name is FIXED per side and TWO independent paths spawn a TEL
+		//--- (death-respawn watcher + every ICBM upgrade level-up). On the second one createMarkerLocal hit
+		//--- an existing name, returned "", the PREVIOUS marker was orphaned on the map for the rest of the
+		//--- match, and every setMarker*Local below silently no-oped on "". Drop any predecessor first, then
+		//--- guard the return exactly like the icbm-tel-recon-markers case further down this file.
+		deleteMarkerLocal (Format ["wfbe_icbmtel_mkr_%1", _sideText]);
+		//--- Stamp the current owner of this shared per-side marker name: the PREVIOUS TEL's death
+		//--- watcher is still asleep in its waitUntil and would otherwise delete THIS marker when it
+		//--- wakes (TEL death racing an upgrade-triggered respawn). It checks ownership before deleting.
+		missionNamespace setVariable [Format ["wfbe_icbmtel_mkrowner_%1", _sideText], _tel];
 		_mkr = createMarkerLocal [Format ["wfbe_icbmtel_mkr_%1", _sideText], getPosATL _tel];
-		_mkr setMarkerTypeLocal "mil_triangle";
-		_mkr setMarkerColorLocal _col;
-		_mkr setMarkerTextLocal "ICBM TEL";
-		[_tel, _mkr] spawn {
-			private ["_t","_m"];
-			_t = _this select 0; _m = _this select 1;
-			waitUntil {sleep 2; isNull _t || {!alive _t}};
-			deleteMarkerLocal _m;
+		if (typeName _mkr == "STRING" && {_mkr != ""}) then {
+			_mkr setMarkerTypeLocal "mil_triangle";
+			_mkr setMarkerColorLocal _col;
+			_mkr setMarkerTextLocal "ICBM TEL";
+			[_tel, _mkr, _sideText] spawn {
+				private ["_t","_m","_s","_owner"];
+				_t = _this select 0; _m = _this select 1; _s = _this select 2;
+				waitUntil {sleep 2; isNull _t || {!alive _t}};
+				//--- Only clear the shared name while THIS TEL still owns it - a replacement TEL spawned in
+				//--- the meantime re-stamped the owner and its fresh marker must survive. isNull tested
+				//--- first because objNull == objNull is not a reliable comparison on this engine.
+				_owner = missionNamespace getVariable [Format ["wfbe_icbmtel_mkrowner_%1", _s], objNull];
+				if (isNull _owner || {_owner == _t}) then {deleteMarkerLocal _m};
+			};
 		};
 	};
 	//--- icbm-tel-enemy-ping: FUZZY enemy intel ping for the NUKE countdown. _args = [_pos, _secs]. Auto-deletes.
