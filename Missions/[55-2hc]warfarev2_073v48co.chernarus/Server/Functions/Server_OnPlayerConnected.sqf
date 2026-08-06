@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_dcKey','_dcSeq','_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_scudJipKey','_sideJoined','_sideOrigin','_team','_telJipKey','_uid','_units'];
+Private ['_clientBody','_dcKey','_dcSeq','_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_scudJipKey','_sideJoined','_sideOrigin','_team','_telJipKey','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -68,12 +68,23 @@ if (!isNull _casterBody && {_casterBody getVariable ["wfbe_caster_slot", false]}
 //--- disconnect sequence moves (player quit mid-window) - no point resolving a seat whose owner left.
 _max = 240;
 _team = grpNull;
+//--- SCOPE (2026-08-06, live RPT fix): _clientBody MUST be declared and initialised HERE, at
+//--- script scope beside _team, not inside the loop below. The B748.1 primary tier used to
+//--- declare it with a `private` INSIDE the while body - a while-do body IS its own scope in
+//--- SQF, so the name died with that block on loop exit and the TEAMBAR-FIRST block near the
+//--- end of this file threw "Undefined variable in expression: _clientbody" on every connect.
+//--- Same shape as _team above: declared once at script scope, assigned inside the loop, read
+//--- after it. objNull seed keeps the later isNull read safe even if the loop body never runs.
+_clientBody = objNull;
 
 while {_max > 0 && isNull _team && {(missionNamespace getVariable [_dcKey, 0]) == _dcSeq}} do {
 	//--- B748.1 PRIMARY (Ray 2026-06-24, the 6th-time fix): use the body the CLIENT handed us via RequestJoin
 	//--- (Init_Client sends [player, side]; RequestJoin stores WFBE_JIP_BODY_<uid> = the real networked unit).
 	//--- This ELIMINATES the playableUnits/wfbe_teams find-race that intermittently bailed "unresolved" -> no team/markers.
-	private "_clientBody"; _clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+	//--- NO `private` here on purpose: re-declaring inside this while body would re-scope the name
+	//--- to the loop and destroy it on exit (see the SCOPE note above _max/_team). Plain assignment
+	//--- writes the script-scope variable, so the TEAMBAR-FIRST block below can still read it.
+	_clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
 	if (!isNull _clientBody && {alive _clientBody} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {_team = group _clientBody};
 
 	//--- Fallback A: find the seat in playableUnits by UID.
@@ -550,14 +561,21 @@ if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_JIP_PRESERVE") == 0) then {
 //--- where every unit of _team is guaranteed local, and only after the AI-preserve-or-remove block
 //--- above has settled the team's final membership for this connect. Gated on the SAME
 //--- WFBE_C_PLAYER_TEAMBAR_FIRST flag so it respects the existing toggle.
-//--- IDENTITY (round-2 review): a getPlayerUID scan alone silently misses THIS FILE'S OWN primary
-//--- connect path - _clientBody (set above at ~line 48 from WFBE_JIP_BODY_<uid>) is the exact reason
-//--- that path exists: getPlayerUID is known-flaky this early after connect. _clientBody is still in
-//--- scope here (SQF script-level scoping; the while loop above does not open a nested scope), so
-//--- prefer it - guarded by membership in _team's own units so a stale value from an earlier loop
-//--- iteration/fallback tier is never trusted blindly - and only fall back to the UID scan if it is
-//--- null or not actually in this team. A2-OA-1.64-safe: array-form Private, no inline private,
-//--- no pushBack/findIf/params, no array-form select/sort/reveal.
+//--- IDENTITY (round-2 review; scoping claim DISPROVEN and fixed 2026-08-06): a getPlayerUID scan
+//--- alone silently misses THIS FILE'S OWN primary connect path - _clientBody (the resolver's
+//--- B748.1 tier, read from WFBE_JIP_BODY_<uid>) is the exact reason that path exists:
+//--- getPlayerUID is known-flaky this early after connect. The note that used to sit here asserted
+//--- _clientBody was "still in scope; the while loop above does not open a nested scope". That was
+//--- FALSE, and the live wave0806b RPT proved it: the resolver declared the name with a `private`
+//--- INSIDE the while body, so it died with that block and THIS line threw "Undefined variable in
+//--- expression: _clientbody" on every connect - _tbHuman stayed objNull and the slot-1 rejoin ran
+//--- on exactly the flaky UID scan _clientBody exists to avoid. A while-do body IS its own scope in
+//--- SQF; only a script-scope declaration outlives it, so _clientBody is now declared beside _team
+//--- above the resolver loop and merely ASSIGNED (never re-declared) inside it. Still guarded by
+//--- membership in _team's own units so a stale value from an earlier loop iteration/fallback tier
+//--- is never trusted blindly, and it still falls back to the UID scan if it is null or not
+//--- actually in this team. A2-OA-1.64-safe: array-form Private, no inline private, no
+//--- pushBack/findIf/params, no array-form select/sort/reveal.
 if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
 	private ["_tbHuman"];
 	_tbHuman = objNull;
