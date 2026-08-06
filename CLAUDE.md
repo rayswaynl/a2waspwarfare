@@ -142,7 +142,7 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
    ```
    Per-line suppression: `// noqa: CODE` (e.g. `// noqa: A3CMD`) silences that code on the line;
    bare `// noqa` silences all. Stale suppressions where no finding fires are reported as `DEADNOQA`.
-   The gate currently reports ~447 pre-existing findings across the tree; only NEW findings
+   The gate currently reports ~168 pre-existing findings across the tree; only NEW findings
    in files you edited matter. Check your files, ignore the global count.
 2. Verify net bracket delta is zero per edited file (count `{` and `}`, count `[` and `]`).
 3. Confirm flag-off leaves the mission byte-identical to HEAD.
