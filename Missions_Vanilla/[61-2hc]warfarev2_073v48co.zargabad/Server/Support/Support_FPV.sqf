@@ -287,6 +287,25 @@ if (_deny == "") then {
 };
 if (_deny == "" && {!(_side in [west,east,resistance])}) then {_deny = "FPV player side is not playable."};
 if (_deny == "" && {!((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0)}) then {_deny = "FPV strike drones are disabled."};
+//--- fable/uav-tier1-fob (WFBE_C_DRONE_TIERS, owner rulings 2026-08-04): tier-1 gate. GUER-exclusive
+//--- + must be bought near a live GUER FOB. SOFT-FAIL into this file's single deny funnel (the
+//--- centralized _deny != "" block below is the only writer of _resultKey / _inflightKey teardown -
+//--- a direct exitWith here would soft-lock the buyer's capability token forever). Distance is
+//--- re-derived server-side from the ledger + the payload's own player object - client never trusted.
+if (_deny == "" && {(missionNamespace getVariable ["WFBE_C_DRONE_TIERS", 0]) > 0}) then {
+	if (_side != resistance) then {
+		_deny = "FPV strike drones are GUER-exclusive.";
+	} else {
+		private ["_fobEntry","_fobNear","_fobRange"];
+		_fobNear = false;
+		_fobRange = missionNamespace getVariable ["WFBE_C_DRONE_FOB_RANGE", 40];
+		{
+			_fobEntry = _x;
+			if (!isNil "_fobEntry" && {(typeName _fobEntry) == "ARRAY"} && {(count _fobEntry) > 1} && {_player distance (_fobEntry select 1) < _fobRange}) then {_fobNear = true};
+		} forEach (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]);
+		if (!_fobNear) then {_deny = "No live GUER FOB in range."};
+	};
+};
 
 _expectedClass = "";
 _expectedPilot = "";
