@@ -2,7 +2,7 @@
 	A client request an upgrade
 */
 
-Private ["_args","_clink","_cmdTeam","_cost","_costs","_current","_dual","_enabled","_funds","_i","_levels","_linkNeeded","_links","_linksForLevel","_logic","_requester","_requestTeam","_side","_supply","_target","_times","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrades"];
+Private ["_args","_clink","_cmdTeam","_cost","_costs","_current","_dual","_enabled","_funds","_i","_levels","_linkNeeded","_links","_linksForLevel","_logic","_requester","_requestTeam","_side","_supply","_target","_times","_upgradeAcquired","_upgrade_id","_upgrade_isplayer","_upgrade_level","_upgrades"];
 
 if (typeName _this != "ARRAY") exitWith {
 	["WARNING", Format ["RequestUpgrade.sqf: rejected malformed payload type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
@@ -142,9 +142,20 @@ if (_dual && {_supply < (_cost select 0)}) exitWith {
 	["WARNING", Format ["RequestUpgrade.sqf: rejected unaffordable supply side %1 id %2 need %3 have %4.", _side, _upgrade_id, _cost select 0, _supply]] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- Commit server-owned payment and running state only after every acceptance gate passes.
-_logic setVariable ["wfbe_upgrading", true, true];
-_logic setVariable ["wfbe_upgrading_id", _upgrade_id, true];
+//--- Commit the running state with one unscheduled check-and-set. Public-variable requests are
+//--- handled by sibling spawned scripts, so two identical clicks can both pass the fast gate
+//--- above before either reaches this point. Only the handler that acquires the latch may pay.
+_upgradeAcquired = false;
+isNil {
+	if !(_logic getVariable ["wfbe_upgrading", false]) then {
+		_logic setVariable ["wfbe_upgrading", true, true];
+		_logic setVariable ["wfbe_upgrading_id", _upgrade_id, true];
+		_upgradeAcquired = true;
+	};
+};
+if (!_upgradeAcquired) exitWith {
+	["WARNING", Format ["RequestUpgrade.sqf: rejected duplicate/in-flight upgrade side %1 id %2.", _side, _upgrade_id]] Call WFBE_CO_FNC_LogContent;
+};
 if (_dual) then {
 	[_side, -(_cost select 0), "Player commander tech upgrade.", false] Call ChangeSideSupply;
 };
