@@ -3495,7 +3495,7 @@ class Mission
 				class Item0
 				{
 					position[]={2260.5251,512.80225,15297.613};
-					id=231;
+					id=9009;
 					side="WEST";
 					vehicle="FR_TL";
 					player="PLAY CDG";
@@ -3517,7 +3517,7 @@ class Mission
 				class Item0
 				{
 					position[]={2260.6396,512.65131,15296.375};
-					id=232;
+					id=9010;
 					side="WEST";
 					vehicle="FR_TL";
 					player="PLAY CDG";
@@ -3871,7 +3871,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={239,231,240,241,232,233,242,234,235,236,237,259,268,9007,9008};
+					synchronizations[]={239,9009,240,241,9010,233,242,234,235,236,237,259,268,9007,9008};
 				};
 			};
 		};
@@ -5250,11 +5250,10 @@ class Mission
 				class Item0
 				{
 					position[]={10.0,0,10.0};
-					id=9009;
+					id=231;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
@@ -5271,11 +5270,10 @@ class Mission
 				class Item0
 				{
 					position[]={20.0,0,10.0};
-					id=9010;
+					id=232;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
