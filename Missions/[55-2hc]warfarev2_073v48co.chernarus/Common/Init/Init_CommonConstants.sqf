@@ -3432,6 +3432,13 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN") then {WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN = 1800};
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_COST = 60000};
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX = 2};
+//--- w807-L8 AICOM HELI SLING-LIFT (owner 2026-08-07: "helicopter or plane lifting of vehicle" - owner wants to SEE
+//--- AI airlifting vehicles): dedicated support call, registered ARMED by default (owner asked to see it live).
+if (isNil "WFBE_C_AICOM_HELILIFT_ENABLE") then {WFBE_C_AICOM_HELILIFT_ENABLE = 1};
+if (isNil "WFBE_C_AICOM_HELILIFT_COOLDOWN") then {WFBE_C_AICOM_HELILIFT_COOLDOWN = 1500}; //--- s: per-side cooldown between heli-lift calls.
+if (isNil "WFBE_C_AICOM_HELILIFT_COST") then {WFBE_C_AICOM_HELILIFT_COST = 40000}; //--- AICOM-treasury $ debited atomically at dispatch; covers BOTH the transport heli and the slung vehicle (no refund on delivery - the heli is expendable-by-design; a pre-delivery setup abort still refunds in full, mirroring CargoAirdrop).
+if (isNil "WFBE_C_AICOM_HELILIFT_MAX_CONCURRENT") then {WFBE_C_AICOM_HELILIFT_MAX_CONCURRENT = 1}; //--- max simultaneous in-flight heli-lifts per side.
+if (isNil "WFBE_C_AICOM_HELILIFT_MIN_DIST") then {WFBE_C_AICOM_HELILIFT_MIN_DIST = 2000}; //--- m: the assault target must be at least this far from base/factory for the lift to fire (a near target is faster/cheaper by ground convoy).
 //--- CONVOY COHESION (Grok #5, update wave 2026-07-25): Common_RunCommanderTeam.sqf ground road-march.
 //--- 0 (default) = ORIGINAL behaviour, byte-identical to HEAD - every road-march node keeps FULL speed
 //--- and WFBE_C_AICOM_ROUTE_COMPLETION's completionRadius exactly as today. 1 = when a road-marching

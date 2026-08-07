@@ -66,6 +66,7 @@ KAT_Paratroopers = Compile preprocessFile "Server\Support\Support_Paratroopers.s
 KAT_GuerHeliDrop = Compile preprocessFile "Server\Support\Support_GuerHeliDrop.sqf";	//--- fable/guer-barrelbomb
 KAT_ParaVehicles = Compile preprocessFile "Server\Support\Support_ParaVehicles.sqf";
 KAT_CargoAirdrop = Compile preprocessFile "Server\Support\Support_CargoAirdrop.sqf";
+KAT_HeliLift = Compile preprocessFile "Server\Support\Support_HeliLift.sqf"; //--- w807-L8 AICOM HELI SLING-LIFT executor (flag WFBE_C_AICOM_HELILIFT_ENABLE, default 1).
 KAT_UAV = Compile preprocessFile "Server\Support\Support_UAV.sqf";
 KAT_FPV = Compile preprocessFile "Server\Support\Support_FPV.sqf";
 KAT_FPVDetonate = Compile preprocessFile "Server\Support\Support_FPV_Detonate.sqf";
@@ -106,6 +107,7 @@ WFBE_SE_FNC_AI_Com_MHQReloc = Compile preprocessFileLineNumbers "Server\AI\Comma
 WFBE_SE_FNC_AI_Com_PlayerArty = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_PlayerArty.sqf"; //--- COMMAND CONSOLE: assist-mode resolver for a player war-room ARTILLERY-HERE request (runs every tick, even under a human commander; fires only existing friendly guns).
 WFBE_SE_FNC_AI_Com_Paratroops = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Paratroops.sqf"; //--- AICOM PARATROOPS: tier+structure-gated AI paratroop reinforcement drop, reuses the player KAT_Paratroopers support fn (flag WFBE_C_AICOM_PARATROOPS_ENABLE, default 0 = inert).
 WFBE_SE_FNC_AI_Com_CargoAirdrop = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_CargoAirdrop.sqf"; //--- AICOM CARGO AIRDROP Stage A: aircraft-factory/tier/funds/air-cap gated infantry + vehicle drop (flag default 0).
+WFBE_SE_FNC_AI_Com_HeliLift = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_HeliLift.sqf"; //--- w807-L8 AICOM HELI SLING-LIFT: aircraft-factory/airlift-tier/funds/air-cap gated heli vehicle-sling delivery to the assault target (flag WFBE_C_AICOM_HELILIFT_ENABLE, default 1).
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard_GUER = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard_GUER.sqf";
