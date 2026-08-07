@@ -85,7 +85,13 @@ PUBVARSV_RE = re.compile(r"\bpublicVariableServer\b")
 QUOTED_TOKEN_RE = re.compile(r'"([A-Za-z][A-Za-z0-9_]{2,})"|\'([A-Za-z][A-Za-z0-9_]{2,})\'')
 CLASSNAME_HINT_RE = re.compile(r"^(?:[A-Z][A-Za-z0-9]*_|[A-Z]+_|[a-z]+_[A-Za-z0-9_]*|[A-Z][A-Za-z0-9]+[A-Z][A-Za-z0-9]*)")
 DISPLAY_TOKEN_RE = re.compile(r"\b(displayCtrl|ctrlSetText|ctrlSetTextColor|ctrlShow|ctrlEnable|lb[A-Z]|lnb[A-Z])\b")
-A3_MARKER_TYPE_RE = re.compile(r"(?<![A-Za-z0-9_])[\"']([bon]_[A-Za-z0-9_]+)[\"']", re.IGNORECASE)
+# Marker type strings are only engine-facing marker types when passed to the
+# setMarkerType command family.  A broad quoted-token scan also matches A2
+# ammo/class names such as "B_20mm_AA" in switch cases.
+A3_MARKER_COMMAND_RE = re.compile(
+    r"\bsetMarkerType(?:Local)?\s+[\"']([bon]_[A-Za-z0-9_]+)[\"']",
+    re.IGNORECASE,
+)
 # Valid A2/OA 1.64 CfgMarkers mil_* classes; anything else (e.g. "mil_air") throws
 # "No entry ...CfgMarkers.<type>" on every client that renders the marker.
 A2_MIL_MARKER_TYPES = frozenset((
@@ -587,7 +593,7 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
                 )
             )
 
-    for match in A3_MARKER_TYPE_RE.finditer(comments_masked):
+    for match in A3_MARKER_COMMAND_RE.finditer(comments_masked):
         line, col = line_col(comments_starts, match.start())
         findings.append(Finding(path, line, col, "A3MARKER", "A3 NATO marker type; use an A2/OA marker type instead"))
 
