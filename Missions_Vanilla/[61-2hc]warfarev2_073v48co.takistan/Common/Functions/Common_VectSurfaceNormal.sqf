@@ -4,9 +4,9 @@
 
 	Terrain surface normal estimator, part of the SQF utility library (card #25). A2 OA has no
 	native `surfaceNormal` command (that is an Arma 3 addition), so this samples ground height
-	at two offset points around the queried position with the already-in-tree
-	`getTerrainHeightASL` command (see e.g. Common_AICOM_HeliTerrainGuard.sqf / Init_Town.sqf /
-	Server_Oilfields.sqf for existing usage in this repo) and derives the normal from two
+	at two offset points around the queried position with the already-in-tree local-probe pattern
+	(`setPos [x,y,0]`, then `getPosASL`; see Common_AICOM_HeliTerrainGuard.sqf /
+	server_heli_terrain_guard.sqf) and derives the normal from two
 	tangent vectors via WFBE_CO_FNC_VectCross. No gameplay consumer in this PR - cited by future
 	card #12/#14 work and any future roof/slope placement logic.
 
@@ -22,19 +22,29 @@
 	         computed magnitude is ~0 (degenerate sample).
 */
 
-private ["_pos","_radius","_center","_east","_north","_h0","_hE","_hN","_tE","_tN","_normal","_mag"];
+private ["_pos","_radius","_center","_east","_north","_probe","_h0","_hE","_hN","_tE","_tN","_normal","_mag"];
 
 _pos = _this select 0;
 _radius = if (count _this > 1) then {_this select 1} else {2};
 
+//--- A2 OA has no getTerrainHeightASL. Ground a local invisible probe at each XY sample and
+//--- read its ASL Z, matching the terrain-sampling pattern used by the helicopter guard.
+_probe = "Sign_sphere10cm_EP1" createVehicleLocal [0, 0, 0];
+if (isNull _probe) exitWith {[0, 0, 1]};
+_probe hideObject true;
+
 _center = [_pos select 0, _pos select 1];
-_h0 = getTerrainHeightASL _center;
+_probe setPos [_center select 0, _center select 1, 0];
+_h0 = (getPosASL _probe) select 2;
 
 _east = [(_pos select 0) + _radius, _pos select 1];
-_hE = getTerrainHeightASL _east;
+_probe setPos [_east select 0, _east select 1, 0];
+_hE = (getPosASL _probe) select 2;
 
 _north = [_pos select 0, (_pos select 1) + _radius];
-_hN = getTerrainHeightASL _north;
+_probe setPos [_north select 0, _north select 1, 0];
+_hN = (getPosASL _probe) select 2;
+deleteVehicle _probe;
 
 //--- tangent vectors from the center sample toward the east/north samples.
 _tE = [_radius, 0, _hE - _h0];
