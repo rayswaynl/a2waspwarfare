@@ -17,6 +17,12 @@ _vehicle = _this select 0;
 if (isNil "_vehicle") exitWith {};
 if (isNull _vehicle) exitWith {emptyQueu = emptyQueu - [_vehicle];};
 
+//--- A vehicle can enter this function from both a direct producer and the shared emptyVehicles collector.
+//--- Claim the object before the first sleep so those paths cannot run overlapping retry workers for one hull.
+//--- The direct producers do not all populate emptyQueu, so the queue alone is not a complete worker guard.
+if (_vehicle getVariable ["wfbe_empty_vehicle_worker", false]) exitWith {};
+_vehicle setVariable ["wfbe_empty_vehicle_worker", true];
+
 _delay = if (count _this > 1) then {_this select 1} else {if (typeOf _vehicle in ['HMMWV_Ambulance','HMMWV_Ambulance_DES_EP1','UH60M_MEV_EP1','M1133_MEV_EP1','GAZ_Vodnik_MedEvac','Mi17_medevac_RU','M113Ambul_TK_EP1','V3S_Gue','V3S_TK_GUE_EP1']) then {(missionNamespace getVariable "WFBE_C_UNITS_EMPTY_TIMEOUT")*2} else {missionNamespace getVariable "WFBE_C_UNITS_EMPTY_TIMEOUT"};};
 
 _timer = 0;
@@ -87,6 +93,7 @@ while {alive _vehicle && {_reapRounds < _maxReapRounds}} do {
 //--- code, so a future soak can see it was abandoned rather than mistaking it for a normal successful reap.
 if (alive _vehicle) then {
 	["empty-timeout-hull-abandoned", _vehicle, Format ["delay=%1 rounds=%2/%3", _delay, _reapRounds, _maxReapRounds]] Call WFBE_CO_FNC_LogVehDelete;
+	_vehicle setVariable ["wfbe_empty_vehicle_worker", false];
 };
 
 emptyQueu = emptyQueu - [_vehicle];
