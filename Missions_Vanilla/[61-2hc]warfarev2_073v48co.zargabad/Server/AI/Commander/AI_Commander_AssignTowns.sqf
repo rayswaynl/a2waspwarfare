@@ -456,6 +456,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						if (_htSide != _sideID) then {
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HOLD_TOWN_LOST|team=" + (str _team) + "|town=" + (_ht getVariable ["name","town"]) + "|townSide=" + str _htSide + "|remaining=" + str (round (_htUntil - time)));
 						};
+						if ((_ht getVariable ["wfbe_aicom_hold_team", grpNull]) == _team) then {
+							_ht setVariable ["wfbe_aicom_hold_team", grpNull, true];
+						};
 					};
 				};
 				_team setVariable ["wfbe_aicom_holding_town", objNull, true];
