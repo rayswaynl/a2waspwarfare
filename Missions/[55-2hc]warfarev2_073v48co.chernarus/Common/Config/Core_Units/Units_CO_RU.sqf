@@ -32,6 +32,7 @@ if (IS_chernarus_map_dependent) then {
     _u = _u		+ ['RUS_Soldier_Marksman'];
     _u = _u		+ ['RUS_Soldier3'];
     _u = _u		+ ['RUS_Soldier_TL'];
+    _u = _u		+ ['RUS_Soldier_Medic'];
     _u = _u		+ ['MVD_Soldier_GL'];
     _u = _u		+ ['MVD_Soldier_MG'];
     _u = _u		+ ['MVD_Soldier_Marksman'];
