@@ -23,7 +23,7 @@
 	A2-OA 1.64 ONLY: no isEqualType/isEqualTo/findIf/selectRandom/pushBack/worldSize.
 */
 
-private ["_side","_sideText","_logik","_enabled","_hq","_deployed","_targets","_front","_frontPos","_myID","_enemyID","_enemySideObj","_guerID","_hqPos","_frontDist","_standoff","_enemyClear","_arriveDist","_deadline","_stuckSecs","_destPos","_dx","_dy","_d","_back","_eNear","_busy","_townBuffer","_ringClear","_ownTowns","_t","_tD","_i","_j","_tmp","_cand","_clear","_etPos","_etD","_hfDist","_hNear"];  //--- cmdcon41-w2: +_hfDist,_hNear (human-front defer gate).
+private ["_side","_sideText","_logik","_enabled","_hq","_deployed","_targets","_front","_frontPos","_myID","_enemyID","_enemySideObj","_guerID","_hqPos","_frontDist","_standoff","_enemyClear","_arriveDist","_deadline","_stuckSecs","_destPos","_dx","_dy","_d","_back","_eNear","_busy","_townBuffer","_ringClear","_ownTowns","_t","_tD","_i","_j","_tmp","_cand","_clear","_etPos","_etD","_hfDist","_hNear","_advanceBelowMin","_minAdv","_advD"];  //--- cmdcon41-w2: +_hfDist,_hNear (human-front defer gate).
 
 _side = _this;
 _sideText = str _side;
@@ -196,17 +196,21 @@ if (count _destPos > 0 && {_usedRing < (600 + _townBuffer)}) then {
 //--- B74 MIN-ADVANCE (Ray 2026-06-22): reject a relocation that is not a real forward leap - the new base
 //--- must be at least MHQ_MIN_ADVANCE metres from the OLD HQ, else keep the current base. Ray saw the HQ
 //--- move ~800m and stack on the old base; a relocation should only fire when the front has genuinely run away.
+_advanceBelowMin = false;
 if (count _destPos > 0) then {
-	private ["_minAdv","_advDX","_advDY","_advD","_relaxSkip"];
+	private ["_advDX","_advDY","_relaxSkip"];
 	_relaxSkip = (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_MINADV_RELAX_SKIP", 1]) > 0;
 	_minAdv = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_MIN_ADVANCE", 3000];
 	_advDX = (_destPos select 0) - (_hqPos select 0);
 	_advDY = (_destPos select 1) - (_hqPos select 1);
 	_advD  = sqrt (_advDX*_advDX + _advDY*_advDY);
-	if ((_advD < _minAdv) && ((!_relaxSkip) || (_usedRing >= (600 + _townBuffer)))) exitWith {
-		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|advance-below-min|adv=" + str (round _advD) + "|min=" + str (round _minAdv));
-		_logik setVariable ["wfbe_mhqreloc_abort_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0])]; //--- B74.2 anti-thrash: back off re-eval (no-op when cooldown=0).
-	};
+	_advanceBelowMin = ((_advD < _minAdv) && ((!_relaxSkip) || (_usedRing >= (600 + _townBuffer))));
+};
+//--- The minimum-advance guard must exit the SCRIPT, not only the enclosing then{} block: in A2 SQF,
+//--- exitWith inside that block returns to the script after the block and otherwise falls through to TRIGGER.
+if (_advanceBelowMin) exitWith {
+	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|advance-below-min|adv=" + str (round _advD) + "|min=" + str (round _minAdv));
+	_logik setVariable ["wfbe_mhqreloc_abort_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0.0])]; //--- B74.2 anti-thrash: back off re-eval (no-op when cooldown=0).
 };
 
 //--- No friendly town yields a buffer-clear standoff even at the RELAXED floor -> ABORT (never deploy into a
