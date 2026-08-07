@@ -62,7 +62,7 @@ hint parseText(Format[localize "STR_WF_INFO_Repairing",_name,_repTime]);
 //--- Make sure that we still have something as a support.
 _cts = 0;
 _i = 0;
-while {true} do {
+while {!gameOver && {!WFBE_GameOver}} do {
 	sleep 1;
 	
 	//--- Check the distance & alive.
@@ -78,10 +78,11 @@ while {true} do {
 	if (_i >= _repTime) exitWith {hint parseText(Format[localize "STR_WF_INFO_Repair_Success",_name])};
 };
 
+if (gameOver || {WFBE_GameOver}) then {_cts = 0};
 if (_cts == 0 && {_price > 0}) then {_price Call ChangePlayerFunds;};
 
 //--- Fix the damages?
-if (_cts != 0) then {
+if (_cts != 0 && {!gameOver} && {!WFBE_GameOver}) then {
 	_veh setDammage 0;
 	//--- setDammage clears the global scalar; clear config hitpoints too so wheels/engine do not stay broken.
 	_hitPoints = configFile >> "CfgVehicles" >> (typeOf _veh) >> "HitPoints";
@@ -99,4 +100,4 @@ if (_cts != 0) then {
 		_veh setVariable ["wfbe_jet_aa_lasthit", -100, true];
 	};
 };
-_veh setVariable ["wfbe_repair_inProgress", false];
+if (!isNull _veh) then {_veh setVariable ["wfbe_repair_inProgress", false];};
