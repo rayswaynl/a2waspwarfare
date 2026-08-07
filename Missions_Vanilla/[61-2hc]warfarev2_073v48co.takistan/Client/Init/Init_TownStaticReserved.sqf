@@ -13,4 +13,4 @@ _entitie = _this;
 if (isServer && !hasInterface) exitWith {}; //--- dedicated server has no action menu to populate.
 if (!isNil "isHeadLessClient" && {isHeadLessClient}) exitWith {}; //--- HC has no player watching either.
 
-_entitie addAction ["Reserved (AI-Manned)", "Client\Action\Action_LockedStaticHint.sqf", [], 0, false, true, '', 'locked _target'];
+_entitie addAction ["Reserved (AI-Manned)", "Client\Action\Action_LockedStaticHint.sqf", [], 0, false, true, '', '(locked _target) > 0'];

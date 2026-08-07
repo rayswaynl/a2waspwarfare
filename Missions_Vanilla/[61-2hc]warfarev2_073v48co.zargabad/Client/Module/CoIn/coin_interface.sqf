@@ -616,8 +616,8 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 							sleep 2;
 							_mhq = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
 							if (alive _mhq) then {
-								_mhq addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && locked _target'];
-								_mhq addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && !(locked _target)'];
+								_mhq addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && {(locked _target) > 0}'];
+								_mhq addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && {(locked _target) == 0}'];
 							};
 						};
 					};

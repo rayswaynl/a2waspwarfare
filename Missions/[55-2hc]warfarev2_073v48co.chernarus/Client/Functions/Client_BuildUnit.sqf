@@ -978,8 +978,8 @@ if (_isMan) then {
 	/* Section: Local Init (Client Only) */
 
 	//--- Lock / Unlock.
-	_vehicle addAction [localize "STR_WF_Unlock","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && locked _target'];
-	_vehicle addAction [localize "STR_WF_Lock","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && !(locked _target)'];
+	_vehicle addAction [localize "STR_WF_Unlock","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && {!isNil {_target getVariable "wfbe_buyteam"}} && {(_target getVariable "wfbe_buyteam") == group player} && {(locked _target) > 0}'];
+	_vehicle addAction [localize "STR_WF_Lock","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && {!isNil {_target getVariable "wfbe_buyteam"}} && {(_target getVariable "wfbe_buyteam") == group player} && {(locked _target) == 0}'];
 
 	//--- Vehicle Sell (item #43): team-leader or side-commander sells an empty nearby vehicle for a partial cash refund.
 	//--- addAction is LOCAL (re-adds on rebuy) -- the buyer-owns-vehicle model; same constraint as lock/unlock.
