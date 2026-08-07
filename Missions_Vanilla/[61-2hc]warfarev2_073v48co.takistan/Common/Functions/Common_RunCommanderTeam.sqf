@@ -3636,7 +3636,7 @@ while {!WFBE_GameOver && _alive} do {
 	//--- AI_Commander_Teams.sqf already latches wfbe_aicom_arty_surged so it never re-stamps this team; the request is
 	//--- cleared immediately after consuming (A2: [] sentinel, not nil - same idiom as the TOP-UP request above).
 	if (_alive && {!isNull _team}) then {
-		private ["_esReq","_esCls","_esPos","_esSpawnPos"];
+		private ["_esReq","_esCls","_esPos","_esSpawnPos","_esRet","_esNewUnits","_esNewVehicles"];
 		_esReq = _team getVariable "wfbe_aicom_arty_surge_req";
 		if (!isNil "_esReq" && {(typeName _esReq) == "ARRAY"} && {count _esReq >= 2}) then {
 			_esCls = _esReq select 0;
@@ -3644,9 +3644,24 @@ while {!WFBE_GameOver && _alive} do {
 			if ((typeName _esCls) == "STRING" && {_esCls != ""} && {(typeName _esPos) == "ARRAY"} && {count _esPos >= 2}) then {
 				_esSpawnPos = [_esPos, 20, 60] Call WFBE_CO_FNC_GetRandomPosition;
 				_esSpawnPos = [_esSpawnPos, 30] Call WFBE_CO_FNC_GetEmptyPosition;
-				[[_esCls], _esSpawnPos, _side, true, _team, true] Call WFBE_CO_FNC_CreateTeam;
-				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|ARTY_SURGE_DONE|team=" + (str _team) + "|class=" + _esCls);
-				["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] ECON-SURGE +1 gun (%3) added to existing artillery group.", _side, _team, _esCls]] Call WFBE_CO_FNC_AICOMLog;
+				_esRet = [[_esCls], _esSpawnPos, _side, true, _team, true] Call WFBE_CO_FNC_CreateTeam;
+				_esNewUnits = [];
+				_esNewVehicles = [];
+				if (typeName _esRet == "ARRAY" && {count _esRet >= 2}) then {
+					_esNewUnits = _esRet select 0;
+					_esNewVehicles = _esRet select 1;
+				};
+				if (typeName _esNewUnits != "ARRAY") then {_esNewUnits = []};
+				if (typeName _esNewVehicles != "ARRAY") then {_esNewVehicles = []};
+				if ((count _esNewUnits) + (count _esNewVehicles) > 0) then {
+					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|ARTY_SURGE_DONE|team=" + (str _team) + "|class=" + _esCls);
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] ECON-SURGE +1 gun (%3) added to existing artillery group.", _side, _team, _esCls]] Call WFBE_CO_FNC_AICOMLog;
+				} else {
+					//--- A refused hull/crew must not consume the one-shot latch while claiming a gun was added.
+					_team setVariable ["wfbe_aicom_arty_surged", false, true];
+					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|ARTY_SURGE_FAIL|team=" + (str _team) + "|class=" + _esCls + "|reason=create-empty");
+					["WARNING", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] ECON-SURGE +1 gun (%3) was refused by CreateTeam; cleared the one-shot latch for retry.", _side, _team, _esCls]] Call WFBE_CO_FNC_AICOMLog;
+				};
 			};
 			_team setVariable ["wfbe_aicom_arty_surge_req", [], true];
 		};
