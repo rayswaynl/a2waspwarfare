@@ -26,7 +26,8 @@ def test_supply_startup_gate_is_bounded_and_fail_closed() -> None:
 
         assert 'waitUntil { !isNil "townInit" && townInit };' not in text
         assert 'waitUntil { !isNil "towns" };' not in text
-        assert "_supplyTownDeadline = diag_tickTime + 90;" in text
+        assert "_supplyTownDeadline = diag_tickTime + 420;" in text
+        assert "diag_tickTime + 90;" not in text
         assert "while {!_supplyTownReady && {diag_tickTime < _supplyTownDeadline}" in text
         assert 'missionNamespace getVariable ["townInit", false]' in text
         assert "_supplyTownsReady = !isNil \"towns\" && {count towns > 0};" in text

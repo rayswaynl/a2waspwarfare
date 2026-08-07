@@ -31,9 +31,14 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_SQUAD", 0]) <= 0) exitWi
 //--- The worker launches before Server\Init\Init_Towns.sqf. Do not leave a scheduled VM
 //--- parked forever when town initialization fails: wait for both the startup signal and
 //--- at least one registered depot, then fail closed with a single RPT receipt.
+//--- DEADLINE (w807-L2, 2026-08-07): 420s, not 90s. Common/Init/Init_Towns.sqf:35-40 (D6c
+//--- REVISED, 2026-08-03) documents a PROVEN dev-box case where all 46 depot workers parked
+//--- on their game-time-gated registration sleep for 300s+ before landing - same async
+//--- registration pipeline this loop polls. 420s covers that observed worst case with margin
+//--- while still failing closed (not hanging forever) on a genuinely broken mission.sqm.
 Private ["_supplyTownReady","_supplyTownDeadline","_supplyTownWait","_supplyTownsReady","_supplyTownInitReady","_tick","_grant","_dwell","_cooldown","_aiOnly","_squads","_kept","_now"];
 _supplyTownReady = false;
-_supplyTownDeadline = diag_tickTime + 90;
+_supplyTownDeadline = diag_tickTime + 420;
 _supplyTownWait = 0;
 _supplyTownsReady = false;
 _supplyTownInitReady = false;
