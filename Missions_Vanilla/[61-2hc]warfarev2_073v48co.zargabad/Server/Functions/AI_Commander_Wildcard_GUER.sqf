@@ -732,7 +732,7 @@ while {!gameOver} do {
 							//--- WATCHER: iterate wrecks, scav each, pay reward, delete; TTL or wipe -> cleanup.
 							[_scavGrp, _abandVehs, _spawnPos, _scavReward, _scavBonus, _scavTTL, _sideID] spawn {
 								private ["_sg","_vehs","_base","_rew","_bonus","_ttl","_sID",
-								         "_el","_alive","_v","_nearD","_bestV","_dd","_ldr"];
+								         "_el","_alive","_v","_nearD","_bestV","_bestVType","_dd","_ldr"];
 								_sg    = _this select 0; _vehs  = _this select 1; _base  = _this select 2;
 								_rew   = _this select 3; _bonus = _this select 4; _ttl   = _this select 5;
 								_sID   = _this select 6;
@@ -765,15 +765,22 @@ while {!gameOver} do {
 									sleep 30; _el = _el + 30;
 									if (({alive _x} count (units _sg)) == 0) then {_alive = false; _el = _ttl};
 
-									if (_alive && {_el < _ttl}) then {
+									//--- Revalidate after the scheduled scavenge delay. The hull may have been destroyed,
+									//--- deleted by another cleanup path, or had its abandoned tag cleared while the
+									//--- scavenger was walking to it; none of those states earns a bounty.
+									if (_alive && {_el < _ttl} && {!isNull _bestV} && {alive _bestV} && {_bestV getVariable ["wfbe_aicom_abandoned", false]}) then {
 										//--- Reward + delete wreck.
+										_bestVType = typeOf _bestV;
 										[resistance, "GuerVbiedBounty", _rew] Call WFBE_CO_FNC_SendToClients;
 										[resistance, _rew] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (the client handler no longer writes the wallet).
 										if (!isNull _bestV) then {deleteVehicle _bestV};
 										_vehs = _vehs - [_bestV];
-										diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERSCAV_WRECK|reward=" + str _rew + "|type=" + typeOf _bestV + "|remaining=" + str (count _vehs));
+										diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERSCAV_WRECK|reward=" + str _rew + "|type=" + _bestVType + "|remaining=" + str (count _vehs));
+									} else {
+										//--- Drop a stale handle and continue without paying for a missing wreck.
+										_vehs = _vehs - [_bestV];
 									};
-								};
+									};
 
 								//--- Cleanup: units -> group.
 								{deleteVehicle _x} forEach (units _sg);
