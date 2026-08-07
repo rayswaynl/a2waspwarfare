@@ -110,7 +110,16 @@ for [{_z=0},{_z<=_maxWaypoints},{_z=_z+1}] do {
 	_rand2 = random _radius - random _radius;
 	_pos = [(_destination select 0)+_rand1,(_destination select 1)+_rand2,0];
 	_wtr = 0;
-	while {surfaceIsWater _pos && _wtr < 20} do {
+	//--- FOREST-GUARD (w807-L4, live garrison-wedge fix): legacy ring only rejected water, so
+	//--- WFBE_TownAI_Group ring patrols (:54-55) could land MOVE/CYCLE waypoints deep in tree
+	//--- cover and wedge A2 pathing. isFlatEmpty is the SAME empty/flat-ground probe already
+	//--- proven live via WFBE_CO_FNC_GetEmptyPosition (Common_GetEmptyPosition.sqf,
+	//--- checkWater=false so it only screens objects/slope - water stays this loop's own job);
+	//--- count>0 means the spot is clear. Bounded at 8 (was 20 for water-only) since this now
+	//--- costs one native probe per retry, but the whole block runs once per patrol dispatch on
+	//--- town/AI activation, not per-frame; on repeated failure this falls through unchanged to
+	//--- the existing town-center fallback below (never-idle guarantee preserved).
+	while {(_wtr < 8) && {surfaceIsWater _pos || {(count (_pos isFlatEmpty [15, 0, 2, 10, 0, false, objNull])) == 0}}} do {
 		_rand1 = random _radius - random _radius;
 		_rand2 = random _radius - random _radius;
 		_pos = [(_destination select 0)+_rand1,(_destination select 1)+_rand2,0];
