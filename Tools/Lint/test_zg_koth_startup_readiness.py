@@ -17,13 +17,13 @@ def test_koth_startup_gate_is_bounded_and_fail_closed() -> None:
 
     for path, source in zip(KOTH_FILES, sources):
         assert "waitUntil {townInit};" not in source, f"{path}: unbounded town wait remains"
-        assert "_townInitDeadline = diag_tickTime + 90;" in source
+        assert "_townInitDeadline = diag_tickTime + 420;" in source
         assert "sleep 0.25;" in source
         assert 'missionNamespace getVariable ["townInit", false]' in source
         assert 'missionNamespace getVariable ["WFBE_GameOver", false]' in source
         assert "ZGKOTH|STARTUP_TIMEOUT|" in source
 
-        gate = source.index("_townInitDeadline = diag_tickTime + 90;")
+        gate = source.index("_townInitDeadline = diag_tickTime + 420;")
         registration = source.index("] call WFBE_CO_FNC_RadiusHold_Register;")
         assert gate < registration
         assert source.index("ZGKOTH|STARTUP_TIMEOUT|", gate) < registration

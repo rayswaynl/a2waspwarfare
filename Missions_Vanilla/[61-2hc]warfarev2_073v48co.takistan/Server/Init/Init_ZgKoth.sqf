@@ -35,7 +35,12 @@ if ((missionNamespace getVariable ["WFBE_C_ZG_KOTH_ENABLE", 0]) != 1) exitWith {
 //--- A zero-depot census intentionally leaves townInit=false. Do not leave the armed
 //--- Zargabad consumer parked forever in that terminal state; this is a feature-local
 //--- fail-closed guard and does not alter the match-start town gate.
-_townInitDeadline = diag_tickTime + 90;
+//--- DEADLINE (w807-L2, 2026-08-07): 420s, not 90s. Common/Init/Init_Towns.sqf:35-40 (D6c
+//--- REVISED, 2026-08-03) documents a PROVEN dev-box case where all 46 depot workers parked
+//--- on their game-time-gated registration sleep for 300s+ before landing - same Init_Towns.sqf
+//--- census subsystem this gate polls via townInit. 420s covers that observed worst case with
+//--- margin while still failing closed (not hanging forever) on a genuinely broken mission.sqm.
+_townInitDeadline = diag_tickTime + 420;
 waitUntil {
 	sleep 0.25;
 	_townReady = missionNamespace getVariable ["townInit", false];
