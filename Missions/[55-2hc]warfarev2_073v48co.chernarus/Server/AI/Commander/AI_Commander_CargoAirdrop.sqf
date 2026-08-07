@@ -9,7 +9,7 @@
     are deliberately not part of this worker.
 */
 
-private ["_side","_logik","_sideID","_now","_cool","_last","_humanCmd","_cmdTeam","_upgrades","_paraLvl","_factoryNames","_factoryTypes","_factoryIdx","_factoryClass","_structures","_hasAirFactory","_target","_attacked","_atkTown","_targets","_reliefDist","_sideText","_airMax","_airAlive","_airSideOK","_funds","_cost","_grp","_objName","_escortEnable","_escortCost","_spawnEscort"];
+private ["_side","_logik","_sideID","_now","_cool","_last","_humanCmd","_cmdTeam","_upgrades","_paraLvl","_factoryNames","_factoryTypes","_factoryIdx","_factoryClass","_structures","_hasAirFactory","_target","_attacked","_atkTown","_cargoCursor","_targets","_reliefDist","_sideText","_airMax","_airAlive","_airSideOK","_funds","_cost","_grp","_objName","_escortEnable","_escortCost","_spawnEscort"];
 
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_ENABLE", 0]) <= 0) exitWith {};
@@ -64,7 +64,11 @@ _reliefDist = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 50
 	};
 } forEach towns;
 if (count _attacked > 0) then {
-	_target = _attacked select 0;
+	// Town order is stable, so persist the next slot rather than starving the tail every cooldown.
+	_cargoCursor = _logik getVariable "wfbe_aicom_cargo_cursor";
+	if (isNil "_cargoCursor") then {_cargoCursor = 0};
+	_cargoCursor = _cargoCursor mod (count _attacked);
+	_target = _attacked select _cargoCursor;
 } else {
 	_targets = _logik getVariable "wfbe_aicom_targets";
 	if (!isNil "_targets" && {typeName _targets == "ARRAY"} && {count _targets > 0}) then {
@@ -148,6 +152,10 @@ if (isNull _grp) then {
 	["WARNING", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop aborted because the infantry group could not be created; funds refunded.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 } else {
 	_objName = _target getVariable ["name", "?"];
+	if (count _attacked > 0) then {
+		// Advance only after a viable dispatch exists; failed group creation retries this town.
+		_logik setVariable ["wfbe_aicom_cargo_cursor", (_cargoCursor + 1) mod (count _attacked)];
+	};
 	//--- Flag-off (no escort this call) keeps the EXACT Stage A log text; the extended escort/air
 	//--- fields only appear on a call that actually spawns one, so a Stage-B-armed-but-escort-off
 	//--- run stays byte-identical in its RPT/AICOMLog output as well as its gameplay effect.

@@ -28,7 +28,7 @@
 	use plain getVariable + isNil (no 2-arg getVariable on a GROUP); 2-arg getVariable only on OBJECTS/namespaces.
 */
 
-private ["_side","_logik","_sideID","_now","_cool","_last","_upgrades","_paraLvl","_structs","_ccType","_cc","_hasCC","_humanCmd","_cmdTeam","_attacked","_atkTown","_target","_targets","_grp","_objName"];
+private ["_side","_logik","_sideID","_now","_cool","_last","_upgrades","_paraLvl","_structs","_ccType","_cc","_hasCC","_humanCmd","_cmdTeam","_attacked","_atkTown","_paraCursor","_target","_targets","_grp","_objName"];
 
 _side = _this;
 
@@ -93,7 +93,11 @@ _attacked = [];
 	};
 } forEach towns;
 if (count _attacked > 0) then {
-	_target = _attacked select 0;
+	// Town order is stable, so persist the next slot rather than starving the tail every cooldown.
+	_paraCursor = _logik getVariable "wfbe_aicom_para_cursor";
+	if (isNil "_paraCursor") then {_paraCursor = 0};
+	_paraCursor = _paraCursor mod (count _attacked);
+	_target = _attacked select _paraCursor;
 } else {
 	_targets = _logik getVariable "wfbe_aicom_targets";
 	if (!isNil "_targets" && {typeName _targets == "ARRAY"} && {count _targets > 0}) then {
@@ -130,6 +134,10 @@ if (isNull _grp) exitWith {
 //--- Stamp the cooldown AFTER group create so a long in-flight drop can never double-fire on the next tick,
 //--- but a group-cap refusal does not burn the window.
 _logik setVariable ["wfbe_aicom_para_last", _now];
+if (count _attacked > 0) then {
+	// Advance only after a viable dispatch exists; failed group creation retries this town.
+	_logik setVariable ["wfbe_aicom_para_cursor", (_paraCursor + 1) mod (count _attacked)];
+};
 
 ["Paratroops", _side, getPos _target, _grp] Spawn KAT_Paratroopers;
 
