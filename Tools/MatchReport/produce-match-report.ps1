@@ -19,23 +19,25 @@
 [CmdletBinding()]
 param(
   [string]$RptFile,                                   # local RPT/log; if omitted, SSH-pull from Hetzner
-  [string]$OutDir   = 'C:\Users\Game\wasp-match-reports',
+  [string]$OutDir   = (Join-Path $env:USERPROFILE 'wasp-match-reports'),
   [string]$NamesTsv,                                  # optional uid<TAB>name map (else Op-XXXX)
   [string]$ChannelId = '1510573856275038228',         # Warfare Discord #media channel (in guild 1510513623800221857)
   [switch]$SkipDiscord,                               # don't post to Discord (render only)
   [switch]$Notify                                     # also Peach DM Ray with the result
 )
 $ErrorActionPreference = 'Stop'
-$ToolDir   = 'C:\Users\Game\a2waspwarfare-report\Tools\MatchReport'
+$ToolDir   = $PSScriptRoot
 $Py        = Join-Path $ToolDir '.venv\Scripts\python.exe'
-$Hetzner   = 'Administrator@78.46.107.142'
-$RemoteRpt = 'C:\Users\Administrator\AppData\Local\ArmA 2 OA\arma2oaserver.RPT'  # backslashes: remote `type` (cmd) rejects forward slashes
+$Hetzner   = $env:WASP_REMOTE_SSH_TARGET   # user@host for the RPT SSH pull (see Get-RptText)
+$RemoteRpt = $env:WASP_REMOTE_RPT          # remote RPT file path (see Get-RptText)
 $StateFile = Join-Path $OutDir '.last-rendered-seq.txt'
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 function Get-RptText {
   if ($RptFile) { return Get-Content -LiteralPath $RptFile -Raw }
   # SSH pull. `type` on the remote Windows box streams the whole RPT; cheap enough at ~10-min cadence.
+  if (-not $Hetzner)   { throw 'WASP_REMOTE_SSH_TARGET is not set (expected user@host for the RPT SSH pull).' }
+  if (-not $RemoteRpt) { throw 'WASP_REMOTE_RPT is not set (expected the remote RPT file path; use backslashes -- remote `type` (cmd) rejects forward slashes).' }
   return (ssh $Hetzner "type `"$RemoteRpt`"")
 }
 function Get-Seq([string]$line) { if ($line -match 'WASPSTAT\|v1\|(\d+)\|') { [int]$Matches[1] } else { -1 } }
@@ -87,7 +89,7 @@ if (-not $SkipDiscord) {
   try {
     $capFile = "$out.caption.txt"
     $caption = if (Test-Path $capFile) { (Get-Content -LiteralPath $capFile -Raw).Trim() } else { "$winner victory on $map." }
-    $tokLine = Get-Content 'C:\Users\Game\miksuus-warfare\bot\.env' | Where-Object { $_ -match '^\s*DISCORD_TOKEN\s*=' } | Select-Object -First 1
+    $tokLine = Get-Content (Join-Path $env:USERPROFILE 'miksuus-warfare\bot\.env') | Where-Object { $_ -match '^\s*DISCORD_TOKEN\s*=' } | Select-Object -First 1
     $token   = ($tokLine -split '=',2)[1].Trim().Trim('"')
     if ($sizeMB -ge 9.5) { Write-Warning "Clip $sizeMB MB is near/over the non-boosted Discord limit (~10 MB); post may 413." }
     $form = @{ 'payload_json' = (@{ content = $caption } | ConvertTo-Json -Compress); 'files[0]' = Get-Item -LiteralPath $out }
@@ -112,7 +114,7 @@ else { Write-Host "De-dupe state stays at $prevSeq (seq $lastSeq will retry)." }
 # 7. optional Peach DM to Ray with the path (so it pings your phone)
 if ($Notify) {
   try {
-    $keyLine = Get-Content 'C:\Users\Game\Complete-discord-bot\.env' | Where-Object { $_ -match '^\s*PEACH_OPS_API_KEY\s*=' } | Select-Object -First 1
+    $keyLine = Get-Content (Join-Path $env:USERPROFILE 'Complete-discord-bot\.env') | Where-Object { $_ -match '^\s*PEACH_OPS_API_KEY\s*=' } | Select-Object -First 1
     $key = ($keyLine -split '=',2)[1].Trim()
     $msg = "**WASP Match Report** ready: $winner victory on $map. File: $out ($sizeMB MB). Post to TikTok when you like."
     Invoke-WebRequest -Uri 'http://127.0.0.1:5001/api/peach/admin/dm' -Method POST `
