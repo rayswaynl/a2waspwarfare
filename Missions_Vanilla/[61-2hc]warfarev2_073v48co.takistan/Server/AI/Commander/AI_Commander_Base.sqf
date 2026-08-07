@@ -795,7 +795,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				private ["_facDir","_facTgt","_facP"];
 				_facTgt = (_logik getVariable ["wfbe_aicom_targets", []]);
 				_facDir = if (count _facTgt > 0 && {!isNull (_facTgt select 0)}) then {_facP = getPos (_facTgt select 0); ((_facP select 0) - (_hqPos select 0)) atan2 ((_facP select 1) - (_hqPos select 1))} else {random 360};
-				[_class, _side, _pos, _facDir, _idx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
+				[_class, _side, _pos, _facDir, _idx, "", "", objNull, -1, true, true] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]); //--- _aicomCommitCheck: revalidate delayed AICOM placement against the live HQ before final create.
 				//--- FACTORY RALLY (task #25 / bug a). Warfare has no rally MARKER: "rally" = the
 				//--- destination spawned units inherit. Players set it (shift-click); the AI never
 				//--- did, so AI factory output (troop trucks, combat teams) spawned at the in-base
@@ -1217,7 +1217,7 @@ if (_fwdEnable && {_dual}) then {
 												_logik setVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], time];
 												_fwdScript = _scripts select _fwdIdx;
 												_fwdDir = if (_haveFront) then {((_frontPosF select 0) - (_fwdPos select 0)) atan2 ((_frontPosF select 1) - (_fwdPos select 1))} else {random 360};
-												[_fwdClass, _side, _fwdFacP, _fwdDir, _fwdIdx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _fwdScript]);
+												[_fwdClass, _side, _fwdFacP, _fwdDir, _fwdIdx, "", "", objNull, -1, true, false] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _fwdScript]); //--- _aicomCommitCheck: revalidate terrain/occupancy; forward anchors intentionally do not leash to rear HQ.
 												["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST building %2 at %3 (town %4, cost %5, distRear %6).", _sideText, _ord, _fwdFacP, (_bestFwdT getVariable ["name","?"]), _fwdCost, round (_fwdPos distance _rearHQpos)]] Call WFBE_CO_FNC_AICOMLog;
 												diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_BUILD|struct=" + _ord + "|cost=" + str _fwdCost + "|town=" + (_bestFwdT getVariable ["name","?"]) + "|distRear=" + str (round (_fwdPos distance _rearHQpos)));
 											} else {
