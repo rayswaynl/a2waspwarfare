@@ -1509,6 +1509,15 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_SVC_TIMEOUT") then {WFBE_C_AICOM_SVC_TIMEOUT = 300};         //--- s: max EN-ROUTE drive time before the detour aborts + the team retargets the front.
 	if (isNil "WFBE_C_AICOM_SVC_ARMOUR_ONLY") then {WFBE_C_AICOM_SVC_ARMOUR_ONLY = 0};   //--- B66: 1->0 - any team may self-service (was armour/air-only). 1 = only teams with a Tank/APC/Air detour (costly to replace); 0 = any team.
 if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST = 300}; //--- B49: relaxed START gate (m). A disengaged team detours to service if NO enemy within this (was the full SAFE_DIST=600, which blocked every grinding team so the feature never fired). The hard en-route abort still uses SAFE_DIST; COMBAT teams are still never pulled out.
+	//--- LATCH-RECLAIM WATCHDOG (w807-L7, fable, idle-latch audit): svcstate=="enroute" self-heals only from
+	//--- WITHIN the same per-team spawned thread that set it (Common_AICOMServiceTick.sqf, called from
+	//--- Common_RunCommanderTeam.sqf's HC-local 20s order loop); if that owner machine disconnects/dies before
+	//--- its own WFBE_C_AICOM_SVC_TIMEOUT deadline re-check runs, the latch never clears and the team is skipped
+	//--- by every order issuer forever. AI_Commander_Allocate.sqf's watchdog only reclaims once the latch is
+	//--- independently proven stale by its OWN wfbe_aicom_svcdeadline field for this many CONSECUTIVE allocate
+	//--- ticks (never touches a live/legit enroute team).
+	if (isNil "WFBE_C_AICOM_SVC_RECLAIM_ENABLE") then {WFBE_C_AICOM_SVC_RECLAIM_ENABLE = 1}; //--- 1 = watchdog armed (default, correctness fix); 0 = kill-switch (legacy stuck-forever behaviour).
+	if (isNil "WFBE_C_AICOM_SVC_RECLAIM_TICKS")  then {WFBE_C_AICOM_SVC_RECLAIM_TICKS  = 10};  //--- consecutive allocate ticks (~10min at the default 60s Strategy/Allocate cadence) the latch must be proven stale before reclaim.
 	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AICOM_FWD_REINFORCE_RANGE = 900;       //--- FILL-FIX 2026-06-18: 500->900 (rollback 500) - forward spearheads 500-900m out of the rear base couldn't refill and bled toward ~4 units; widen so front-line teams top up from the nearest forward factory. Still requires an OWNED town within range (never resupplies on enemy ground). --- FORWARD-REINFORCE (claude-gaming 2026-06-13): deep teams beyond REINFORCE_RANGE may still refill if their leader hugs an owned town within this radius (fixes the deep-spearhead bleed-out / EAST snowball). Refill spawns at the factory nearest the team, so a captured forward town resupplies its own front instead of a lone unit trekking from the rear base.
 	if (isNil "WFBE_C_AICOM_FACTORY_TARGET_ENABLE") then {WFBE_C_AICOM_FACTORY_TARGET_ENABLE = 0}; //--- owner bug 07-24: 1 = refill from the eligible side-owned factory closest to the team's assigned AICOM objective, including player-built additional factories; 0 = legacy closest-to-leader selection.

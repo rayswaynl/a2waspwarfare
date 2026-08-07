@@ -570,6 +570,53 @@ _tierCapOn = (missionNamespace getVariable ["WFBE_C_AICOM_SPREAD_TIERCAP", 0]) >
 	_fistCounts set [_forEachIndex, 0];
 	_fistCaps set [_forEachIndex, _ftCap];
 } forEach _fist;
+//--- LATCH-RECLAIM WATCHDOG (w807-L7, fable, idle-latch audit): wfbe_aicom_svcstate=="enroute" is the ONE
+//--- eligibility latch in this ASSIGN loop with NO independent server-side release path - relief/strike are
+//--- both released every Strategy.sqf tick regardless of which machine owns the team (Strategy.sqf ~L668-671,
+//--- ~L1329-1346), but svcstate is only ever cleared FROM WITHIN Common_AICOMServiceTick.sqf, which only runs
+//--- inside the SAME per-team spawned thread (Common_RunCommanderTeam.sqf's HC-local 20s order loop, see that
+//--- file's header) that stamped it "enroute" in the first place. If the team's owner machine (delegated HC,
+//--- or the server fallback thread) disconnects/dies before its own WFBE_C_AICOM_SVC_TIMEOUT deadline re-check
+//--- runs, svcstate stays "enroute" forever and this team is skipped by EVERY order issuer (this ASSIGN loop,
+//--- AssignTowns.sqf, Strategy.sqf's relief picker, EndgameTeleport.sqf) - silently idle forever (owner report,
+//--- wave0806b). Server-side only, self-contained: count consecutive Allocate ticks the latch is PROVEN stale
+//--- by ITS OWN deadline field (time > wfbe_aicom_svcdeadline, i.e. the self-heal in Common_AICOMServiceTick.sqf
+//--- SHOULD already have fired), then broadcast-clear it plus the exact fields that self-heal itself would have
+//--- cleared (mirrors Common_AICOMServiceTick.sqf's own abort idiom, r80 broadcast pattern). Never touches a
+//--- live/legit enroute team (deadline not yet elapsed) or any other latch (relief/strike/CapLock/feint/teammode
+//--- are excluded here by design - all four either self-clear every tick server-side or self-expire via a TTL
+//--- already, per the w807-L7 audit table).
+if ((missionNamespace getVariable ["WFBE_C_AICOM_SVC_RECLAIM_ENABLE", 1]) > 0) then {
+	private ["_lrTicks","_lrGrp","_lrState","_lrDeadline","_lrStale","_lrStreak"];
+	_lrTicks = missionNamespace getVariable ["WFBE_C_AICOM_SVC_RECLAIM_TICKS", 10];
+	{
+		_lrGrp = _x;
+		if (!isNull _lrGrp) then {
+			_lrState = _lrGrp getVariable "wfbe_aicom_svcstate"; //--- A2 G1: plain get + isNil (no [name,default] on a GROUP)
+			if (!isNil "_lrState" && {_lrState == "enroute"}) then {
+				_lrDeadline = _lrGrp getVariable "wfbe_aicom_svcdeadline";
+				_lrStale = !isNil "_lrDeadline" && {typeName _lrDeadline == "SCALAR"} && {time > _lrDeadline};
+				_lrStreak = _lrGrp getVariable "wfbe_aicom_svc_stale_ticks"; if (isNil "_lrStreak") then {_lrStreak = 0};
+				if (_lrStale) then {_lrStreak = _lrStreak + 1} else {_lrStreak = 0};
+				_lrGrp setVariable ["wfbe_aicom_svc_stale_ticks", _lrStreak];
+				if (_lrStreak >= _lrTicks) then {
+					//--- Mirror Common_AICOMServiceTick.sqf's own abort/done clear exactly (r80 broadcast idiom) so every
+					//--- machine + every reader (Allocate/AssignTowns/Strategy/EndgameTeleport) agrees on release at once.
+					_lrGrp setVariable ["wfbe_aicom_svcstate", "", true];
+					_lrGrp setVariable ["wfbe_teamgoto", objNull, true];
+					_lrGrp setVariable ["wfbe_aicom_townorder", [], true];
+					_lrGrp setVariable ["wfbe_aicom_dispatch_open", false, true];
+					_lrGrp setVariable ["wfbe_teammode", "towns", true];
+					_lrGrp setVariable ["wfbe_aicom_svc_stale_ticks", 0];
+					diag_log ("AICOMSTAT|v1|EVENT|" + str _side + "|" + str (round (time / 60)) + "|LATCH_RECLAIM|team=" + (str _lrGrp) + "|latch=svcstate");
+					["WARNING", Format ["AI_Commander_Allocate.sqf: [%1] team [%2] LATCH_RECLAIM - svcstate stuck 'enroute' past its own deadline for %3 ticks (owner machine likely gone) - released back to offense.", _side, _lrGrp, _lrStreak]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			} else {
+				_lrGrp setVariable ["wfbe_aicom_svc_stale_ticks", 0];
+			};
+		};
+	} forEach _teams;
+};
 _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 {
 	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_rallying","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
