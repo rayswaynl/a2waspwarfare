@@ -265,12 +265,12 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 				//--- normal cycles: the infantry bucket is virtually always populated, so _chosen >= 0 and this never fires.
 				if (_chosen < 0) exitWith {};
 				_pick = -1;
-					//--- B74 COST/TIER-WEIGHTED DRAW (Ray 2026-06-22): mirror of the founding picker in AI_Commander_Teams.sqf -
-					//--- weight the chosen bucket by (summed unit price)^EXP so server-local teams field their expensive unlocked
-					//--- units too (EXP=0 or a single candidate reproduces the old uniform draw). A2-OA-safe (^ op, manual counter, _x captured).
+					//--- ACTIVE-BIAS DRAW: mirror the HC founding path's live EFF_BIAS_EXP knob so server-local teams
+					//--- follow the same retune. This legacy path retains its local price source; EXP=0 or one candidate is uniform.
+					//--- A2-OA-safe (^ op, manual counter, _x captured).
 					private ["_cwBucket","_cwExp","_cwWeights","_cwSum","_cwIdx","_cwTmpl","_cwPrice","_cwW","_cwRoll","_cwAcc","_cwI","_cwUd"];
 					_cwBucket = _buckets select _chosen;
-					_cwExp = missionNamespace getVariable ["WFBE_C_AICOM_TIER_BIAS_EXP", 1.5];
+					_cwExp = missionNamespace getVariable ["WFBE_C_AICOM_EFF_BIAS_EXP", 0.5];
 					//--- ECON SINK heavy bias (cmdcon41-w2, Ray-approved): while the commander is pinned rich
 					//--- (AI_Commander.sqf set wfbe_aicom_econ_surge on _logik), richen the price-weighted draw by
 					//--- +0.5 on the exponent so the fatter war chest buys pricier (heavier) templates more often.
