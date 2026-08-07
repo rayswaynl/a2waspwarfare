@@ -1181,6 +1181,10 @@ while {!WFBE_GameOver} do {
 										["INFORMATION", Format ["HULLGC|v1|townai-remote town=%1 hull=%2", _town getVariable ["name","?"], typeOf _x]] Call WFBE_CO_FNC_AICOMLog;
 									};
 								};
+							} else {
+								//--- Player-owned while occupied: retire the town reference, but enroll the hull now so the
+								//--- locality-aware collector can reap it only after the player dismounts.
+								["aicom-vehicle-abandoned", _x] Call HandleSpecial;
 							};
 						};
 					} forEach (_town getVariable 'wfbe_active_vehicles');
