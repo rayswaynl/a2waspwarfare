@@ -1089,6 +1089,23 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_ORPHAN_HEAL", 0]) > 0) then {
 
 while {!WFBE_GameOver && _alive} do {
 
+	//--- r204 LEADER REPAIR: this driver owns the HC-local group.  A2 can leave a live
+	//--- AI group with a dead/null leader after a casualty or locality transition; every
+	//--- order, service, and retirement path below resolves leader _team.  Select only an
+	//--- alive, non-player member that is local to this driver, never a remote/player unit.
+	private ["_r204Leader","_r204Candidate"];
+	_r204Leader = leader _team;
+	if (isNull _r204Leader || {!alive _r204Leader}) then {
+		_r204Candidate = objNull;
+		{
+			if (isNull _r204Candidate && {!isNull _x} && {alive _x} && {!isPlayer _x} && {local _x}) then {_r204Candidate = _x};
+		} forEach (units _team);
+		if (!isNull _r204Candidate) then {
+			_team selectLeader _r204Candidate;
+			diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|LEADER_REPAIRED|team=" + str _team);
+		};
+	};
+
 	//--- REFILL-VEHICLE TRIAGE: AIBuyUnit can append a crewed hull after this long-lived worker captured its founding array.
 	//--- Fold current group hulls in before mounted, abandon, and service decisions so a later refill is not invisible.
 	{if (!isNull _x && {!(_x in _vehicles)}) then {_vehicles = _vehicles + [_x]}} forEach ([_team, false] Call GetTeamVehicles);
