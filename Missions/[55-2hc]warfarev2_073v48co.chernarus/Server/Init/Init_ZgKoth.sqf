@@ -16,11 +16,11 @@
 	Launch pattern mirrors Init_Server.sqf's existing WFBE_C_NAVAL_HVT / WFBE_C_ICBM_TEL blocks
 	(flag-gated execVM, called after the DeadspawnWall/NavalHVT/IcbmTel block).
 
-	Guard chain: !isServer -> map-gate (worldName) -> flag-gate (WFBE_C_ZG_KOTH_ENABLE) -> waitUntil
-	{townInit} -> register.
+	Guard chain: !isServer -> map-gate (worldName) -> flag-gate (WFBE_C_ZG_KOTH_ENABLE) -> bounded
+	townInit readiness gate -> register or fail closed with a tagged startup timeout.
 */
 
-private ["_anchorPos","_koth","_probe","_terrainZ"];
+private ["_anchorPos","_koth","_probe","_terrainZ","_townInitDeadline","_townReady"];
 
 if (!isServer) exitWith {};
 
@@ -32,7 +32,23 @@ if ((missionNamespace getVariable ["WFBE_C_ZG_KOTH_ENABLE", 0]) != 1) exitWith {
 	["ZGKOTH", "Init_ZgKoth.sqf: exiting, WFBE_C_ZG_KOTH_ENABLE=0."] Call WFBE_CO_FNC_LogContent;
 };
 
-waitUntil {townInit};
+//--- A zero-depot census intentionally leaves townInit=false. Do not leave the armed
+//--- Zargabad consumer parked forever in that terminal state; this is a feature-local
+//--- fail-closed guard and does not alter the match-start town gate.
+//--- DEADLINE (w807-L2, 2026-08-07): 420s, not 90s. Common/Init/Init_Towns.sqf:35-40 (D6c
+//--- REVISED, 2026-08-03) documents a PROVEN dev-box case where all 46 depot workers parked
+//--- on their game-time-gated registration sleep for 300s+ before landing - same Init_Towns.sqf
+//--- census subsystem this gate polls via townInit. 420s covers that observed worst case with
+//--- margin while still failing closed (not hanging forever) on a genuinely broken mission.sqm.
+_townInitDeadline = diag_tickTime + 420;
+waitUntil {
+	sleep 0.25;
+	_townReady = missionNamespace getVariable ["townInit", false];
+	_townReady || (missionNamespace getVariable ["WFBE_GameOver", false]) || (diag_tickTime >= _townInitDeadline)
+};
+if (!_townReady) exitWith {
+	["ZGKOTH", Format ["ZGKOTH|STARTUP_TIMEOUT|townInit=%1|gameOver=%2", (missionNamespace getVariable ["townInit", false]), (missionNamespace getVariable ["WFBE_GameOver", false])]] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- City-core anchor. A2 OA has NO getTerrainHeightASL (Arma-3-only command - see
 //--- server_heli_terrain_guard.sqf / Common_AICOM_HeliTerrainGuard.sqf headers). Ground a throwaway
