@@ -216,6 +216,21 @@ if (_constructionLogicLost) exitWith {
 	
 {if !(isNull _x) then {DeleteVehicle _x}} ForEach _constructed;
 
+//--- The validated request can wait through several construction stages. Re-check the live
+//--- world immediately before its permanent structure is created so an enabled footprint gate
+//--- cannot be bypassed by a concurrent placement during that wait. AI/FOB direct workers
+//--- have no verified player requester and retain their existing placement contracts.
+if (!isNull _reqPlayer && {isPlayer _reqPlayer} && {!([_side, _type, _position] Call WFBE_SE_FNC_ValidatePlayerStructurePlacement)}) exitWith {
+	Call _onConstructionAbort;
+	if !(isNull _nearLogic) then {
+		_group = group _nearLogic;
+		deleteVehicle _nearLogic;
+	};
+	if !(isNull _group) then {deleteGroup _group};
+	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"post-wait player placement invalid"]]};
+	diag_log Format ["CONSTRUCTION|v1|reject|reason=post-wait-player-placement-invalid|script=%1|type=%2|pos=%3", _script, _type, _position];
+};
+
 _site = createVehicle [_type, _position, [], 0, "NONE"];
 if (isNull _site) exitWith {
 	Call _onConstructionAbort;

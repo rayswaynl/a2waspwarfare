@@ -29,7 +29,7 @@ def test_request_passes_placer_and_construction_rolls_back_after_accept():
         assert '_reqPlayer = if ((count _this) > 7) then {_this select 7} else {objNull};' in source
         assert "_onConstructionAbort = {" in source
         assert "_onConstructionSuccessLive = {" in source
-        assert source.count("Call _onConstructionAbort;") == 3
+        assert source.count("Call _onConstructionAbort;") == 4
         assert source.count("Call _onConstructionSuccessLive;") == 1
 
         abort = source[source.index("_onConstructionAbort = {") : source.index("_onConstructionSuccessLive = {")]

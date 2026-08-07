@@ -80,6 +80,13 @@ if (!_reject) then {
 	};
 };
 
+//--- A forged PV can bypass the client pre-check. Reject water before the cash debit so a
+//--- Forward FOB never becomes a permanently unusable floating respawn/repair camp.
+if (!_reject && {surfaceIsWater _pos}) then {
+	_reject = true;
+	["WARNING", Format ["RequestForwardFOB.sqf: [%1] Forward FOB water placement rejected at %2.", str _side, _pos]] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- (3) authoritative funds. wfbe_funds on the group is the single funds choke-point
 //--- (Common\Functions\Common_ChangeTeamFunds.sqf) - read it here, never trust a client number.
 if (!_reject) then {
