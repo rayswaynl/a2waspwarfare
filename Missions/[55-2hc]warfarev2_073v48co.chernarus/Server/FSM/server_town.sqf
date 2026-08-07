@@ -838,8 +838,8 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 				if (_town_occupation_enabled) then {
 					[_location, _newSide, _newSID] spawn {
 						Private ["_loc","_side","_newSIDAtCapture","_squadGrp","_squadUnits","_squadVehicles",
-						         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
-						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd","_squadRoster","_tplRosters","_squadFormed"];
+							         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
+							         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd","_squadRoster","_tplRosters","_squadFormed","_squadCrews"];
 						_loc             = _this select 0;
 						_side            = _this select 1;
 						_newSIDAtCapture = _this select 2;
@@ -878,6 +878,7 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 						_squadUnits    = _retVal select 0;
 						_squadVehicles = _retVal select 1;
 						_squadGrp      = _retVal select 2;
+						_squadCrews    = if (count _retVal > 3) then {_retVal select 3} else {[]};
 
 						if (isNull _squadGrp || {(count _squadUnits + count _squadVehicles) == 0}) exitWith {
 							["INFORMATION", Format ["server_town.sqf: mop-up squad for %1 (%2) failed to create - template %3 unavailable.", _loc getVariable ["name","unknown"], _side, _tplName]] Call WFBE_CO_FNC_LogContent;
@@ -894,7 +895,7 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 						};
 
 						//--- Tag squad units as town defender AI so they don't re-trigger activation scans.
-						{if (!isNull _x) then {_x setVariable ["WFBE_IsTownDefenderAI", true, true]}} forEach (_squadUnits + _squadVehicles);
+						{if (!isNull _x) then {_x setVariable ["WFBE_IsTownDefenderAI", true, true]}} forEach (_squadUnits + _squadCrews + _squadVehicles);
 						_squadGrp allowFleeing 0;
 
 						//--- Store reference on location so deactivation cleanup can hard-despawn it.
