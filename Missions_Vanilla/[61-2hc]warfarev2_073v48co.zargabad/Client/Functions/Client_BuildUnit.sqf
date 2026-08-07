@@ -1,4 +1,4 @@
-Private ["_building","_buyFailed","_cpt","_commander","_crew","_crewCostPerHead","_crewCreated","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_picture","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken","_scudProof"];
+Private ["_building","_buyFailed","_cpt","_commander","_crew","_crewCostPerHead","_crewFailed","_crewCreated","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_picture","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken","_scudProof"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -409,6 +409,7 @@ _spawnedUnits = [];
 //--- the tail always runs and releases them exactly once. They set _buyFailed instead (refund + RPT
 //--- warning stay inline; the tail gates the success-only steps on it).
 _buyFailed = false;
+_crewFailed = 0;
 //--- TOP-SCOPE exitWith: verified to abort the whole spawned script (the shared tail below never runs),
 //--- so THIS exit must keep releasing the counters inline - unlike the block-level exits further down.
 if (!alive _building || isNull _building) exitWith {
@@ -1397,6 +1398,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		_soldier = [_crew,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
 		if (isNull _soldier) then {
 			if (_crewCostPerHead > 0) then {_crewCostPerHead Call ChangePlayerFunds};
+			_crewFailed = _crewFailed + 1;
 			diag_log Format ["BUYFAIL|v1|crew|side=%1|factory=%2|class=%3|seat=driver|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _crewCostPerHead, _position];
 		} else {
 			[_soldier] allowGetIn true;
@@ -1413,6 +1415,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		_soldier = [_crew,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
 		if (isNull _soldier) then {
 			if (_crewCostPerHead > 0) then {_crewCostPerHead Call ChangePlayerFunds};
+			_crewFailed = _crewFailed + 1;
 			diag_log Format ["BUYFAIL|v1|crew|side=%1|factory=%2|class=%3|seat=gunner|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _crewCostPerHead, _position];
 		} else {
 			_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
@@ -1429,6 +1432,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		_soldier = [_crew,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
 		if (isNull _soldier) then {
 			if (_crewCostPerHead > 0) then {_crewCostPerHead Call ChangePlayerFunds};
+			_crewFailed = _crewFailed + 1;
 			diag_log Format ["BUYFAIL|v1|crew|side=%1|factory=%2|class=%3|seat=commander|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _crewCostPerHead, _position];
 		} else {
 			_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
@@ -1450,6 +1454,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 				_soldier = [_crew,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
 				if (isNull _soldier) then {
 					if (_crewCostPerHead > 0) then {_crewCostPerHead Call ChangePlayerFunds};
+					_crewFailed = _crewFailed + 1;
 					diag_log Format ["BUYFAIL|v1|crew|side=%1|factory=%2|class=%3|seat=turret|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _crewCostPerHead, _position];
 				} else {
 					_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
@@ -1484,8 +1489,13 @@ if (_buyFailed) then {
 	//--- failed buy: the player already got the refund (guard above); tell them instead of "complete".
 	hint parseText(Format ["<t color='#ff9060'>%1 could not be built - price refunded.</t>", _description]);
 } else {
-	//--- STRINGTABLE-R30: STR_WF_INFO_Build_Complete needs %1=label and %2=picture path (parseText img). Pass QUERYUNITPICTURE when the unit tuple exists; empty string otherwise so the img tag does not render a literal %2.
-_picture = "";
-if !(isNil "_currentUnit") then { _picture = _currentUnit select QUERYUNITPICTURE; };
-hint parseText(Format [localize "STR_WF_INFO_Build_Complete",_description,_picture]);
+	if (_crewFailed > 0) then {
+		//--- The hull and successful seats remain delivered; surface the partial result and exact refunded crew receipt.
+		hint parseText(Format ["<t color='#ffb050'>%1 built with partial crew: %2/%3 delivered; $%4 refunded.</t>", _description, _crewCreated, _crewCreated + _crewFailed, _crewCostPerHead * _crewFailed]);
+	} else {
+		//--- STRINGTABLE-R30: STR_WF_INFO_Build_Complete needs %1=label and %2=picture path (parseText img). Pass QUERYUNITPICTURE when the unit tuple exists; empty string otherwise so the img tag does not render a literal %2.
+		_picture = "";
+		if !(isNil "_currentUnit") then { _picture = _currentUnit select QUERYUNITPICTURE; };
+		hint parseText(Format [localize "STR_WF_INFO_Build_Complete",_description,_picture]);
+	};
 };
