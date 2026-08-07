@@ -219,7 +219,7 @@ if ((fuel _x) < _fuelT) then {_needs = true};
 	_svcPos = getPos _best;
 	_team setVariable ["wfbe_aicom_svcstate", "enroute", true]; //--- r80 FIX: broadcast (see abort path note) so the server-side commander workers honour the r27 ownership claim
 	_team setVariable ["wfbe_aicom_svcpos", _svcPos];
-	_team setVariable ["wfbe_aicom_svcdeadline", time + (missionNamespace getVariable ["WFBE_C_AICOM_SVC_TIMEOUT", 300])];
+	_team setVariable ["wfbe_aicom_svcdeadline", time + (missionNamespace getVariable ["WFBE_C_AICOM_SVC_TIMEOUT", 300]), true];
 	//--- r27 ownership: retire the OPEN offensive dispatch when claiming this group for logistics
 	//--- (same contract as Strategy RELIEF ~L752-753). Without this AssignTowns/Allocate keep rewriting
 	//--- assault waypoints every tick while ServiceTick holds a MOVE to the depot -> oscillation.
