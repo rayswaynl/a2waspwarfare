@@ -248,6 +248,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 		_skip = false;
 		_protected = false;
 		_captured = false;
+		_gateRegenMult = 1;
 
 		if(_town_capture_mode == 1) then {
 			_resistanceDominion = if (_resistance > _east && _resistance > _west) then {true} else {false};
@@ -308,6 +309,38 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			if (_sideID == RESISTANCEID && _resistanceDominion) then {_force = _resistance;_protected = true;_skip = true;_gateReason = "self-protect";};
 			if (_sideID == EASTID && _eastDominion) then {_force = _east;_protected = true;_skip = true;_gateReason = "self-protect";};
 			if (_sideID == WESTID && _westDominion) then {_force = _west;_protected = true;_skip = true;_gateReason = "self-protect";};
+
+			//--- W807B-L14 SIEGE-DECAY (owner-ordered fix, 2026-08-07): the self-protect dominion check above
+			//--- is a raw per-tick headcount comparison with no memory - a small static garrison that stays
+			//--- narrowly ahead of a piecemeal-arriving attacker heals the town back to full every single tick
+			//--- it wins, so a genuinely sustained siege never accumulates progress (predicted as a caveat in
+			//--- docs/design/NO-TOWN-UNCAPTURABLE.md: the owner still RECOVERS supply while locally superior).
+			//--- Live RPT (wave0807b, 69min window): 134/138 mode2 gate evaluations vetoed (97%), 126 of them
+			//--- self-protect; GUER 0-for-38. Fix keeps the FIRST self-protect tick at full strength (a lone
+			//--- probe still gets repelled - the original protective purpose still holds) and only tapers the heal
+			//--- toward WFBE_C_CAPGATE_SIEGE_REGEN_FLOOR across WFBE_C_CAPGATE_SIEGE_DECAY_TICKS CONSECUTIVE
+			//--- ticks where the owner self-protects AND a non-owner side is actually present in the ring - an
+			//--- idle, uncontested garrison is never penalised. Streak resets the moment the siege breaks.
+			_gateAttackerPresent = false;
+			if (_gateReason == "self-protect") then {
+				_gateAttackerPresent = switch (_sideID) do {
+					case RESISTANCEID: {(_west > 0) || (_east > 0)};
+					case EASTID: {(_west > 0) || (_resistance > 0)};
+					case WESTID: {(_east > 0) || (_resistance > 0)};
+					default {false};
+				};
+			};
+			_gateSiegeStreak = 0;
+			if (_gateReason == "self-protect" && _gateAttackerPresent) then {
+				_gateSiegeDecayTicks = missionNamespace getVariable ["WFBE_C_CAPGATE_SIEGE_DECAY_TICKS", 24];
+				if (_gateSiegeDecayTicks > 0) then {
+					_gateSiegeStreak = (_location getVariable ["wfbe_capgate_siege_streak", 0]) + 1;
+					if (_gateSiegeStreak > _gateSiegeDecayTicks) then {_gateSiegeStreak = _gateSiegeDecayTicks};
+					_gateRegenFloor = missionNamespace getVariable ["WFBE_C_CAPGATE_SIEGE_REGEN_FLOOR", 0.15];
+					_gateRegenMult = _gateRegenFloor + ((1 - (_gateSiegeStreak / _gateSiegeDecayTicks)) * (1 - _gateRegenFloor));
+				};
+			};
+			_location setVariable ["wfbe_capgate_siege_streak", _gateSiegeStreak, false];
 
 			if (_resistanceDominion) then {
 				_resistance = if (_east > _west) then {_resistance - _east} else {_resistance - _west};
@@ -390,7 +423,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 				if (_gateShouldLog) then {
 					_location setVariable ["wfbe_capgate_last_log", time, false];
 					_location setVariable ["wfbe_aicom_capgate_last", _gateTuple, false];
-					diag_log (Format ["CAPGATE|v1|%1|mode2|side=%2|reason=%3|skip=%4|camps=%5/%6|footMen=%7", (_location getVariable ["name","?"]), str _gateSide, _gateReason, _skip, _gateCampsOnSide, _totalCamps, _gateFootMen]);
+					diag_log (Format ["CAPGATE|v1|%1|mode2|side=%2|reason=%3|skip=%4|camps=%5/%6|footMen=%7|siegeStreak=%8|regenMult=%9", (_location getVariable ["name","?"]), str _gateSide, _gateReason, _skip, _gateCampsOnSide, _totalCamps, _gateFootMen, _gateSiegeStreak, _gateRegenMult]);
 				};
 			};
 		};
@@ -435,7 +468,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 		if (_protected) then {
 			if (_supplyValue < _startingSupplyValue) then {
-				_supplyValue = _supplyValue + _force * (_town_capture_rate * _staggerN);
+				_supplyValue = _supplyValue + _force * (_town_capture_rate * _staggerN) * _gateRegenMult;
 				if (_supplyValue > _startingSupplyValue) then {_supplyValue = _startingSupplyValue};
 				_location setVariable ["supplyValue",_supplyValue,true];
 			};
