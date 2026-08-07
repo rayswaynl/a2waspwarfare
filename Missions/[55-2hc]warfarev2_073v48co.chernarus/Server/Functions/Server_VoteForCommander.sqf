@@ -26,7 +26,7 @@ _teams = _logic getVariable "wfbe_teams";
 //--- resolution script after the countdown (seat stuck at prior commander, votetime=-1).
 for '_i' from 0 to (count _teams)-1 do {[_votes, 0] Call WFBE_CO_FNC_ArrayPush};
 {
-	if ((isPlayer leader _x) && {!(isNull (leader _x))} && {!((name (leader _x)) in WFBE_C_HC_NAMES)}) then {
+	if ((isPlayer leader _x) && {!(isNull (leader _x))} && {!((name (leader _x)) call WFBE_CO_FNC_IsHcName)}) then {
 		_vote = _x getVariable "wfbe_vote";
 		if (isNil "_vote") then {_vote = -1};
 		if ((typeName _vote) != "SCALAR") then {_vote = -1};

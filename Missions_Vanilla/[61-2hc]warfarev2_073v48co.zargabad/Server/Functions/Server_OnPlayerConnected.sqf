@@ -54,8 +54,8 @@ if (_name == '__SERVER__' || _uid == '' || _uid == '0' || local player) exitWith
 //--- Server_VoteForCommander.sqf, Init_HcLobbyLock.sqf). Kept ADDITIVE to the existing UID-stamp check
 //--- (superset, not replacement) so a name that somehow doesn't match WFBE_C_HC_NAMES yet but is already
 //--- UID-stamped is still excluded.
-if ((_name in WFBE_C_HC_NAMES) || {!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil]}}) exitWith {
-	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for headless client [%1] [%2] (nameGate=%3).", _name, _uid, (_name in WFBE_C_HC_NAMES)];
+if ((_name call WFBE_CO_FNC_IsHcName) || {!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil]}}) exitWith {
+	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for headless client [%1] [%2] (nameGate=%3).", _name, _uid, (_name call WFBE_CO_FNC_IsHcName)];
 };
 
 //--- Server-observable fallback event. No client payload or chat hook is involved.
