@@ -1154,6 +1154,52 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		_arrInf = 0;
 		{ if (!isNull _x && {[_x, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool}) then {_arrInf = _arrInf + 1} } forEach (_logik getVariable ["wfbe_teams", []]);
 		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp + "|stranded=" + str _arrStr + "|retarget=" + str _arrRtg + "|died=" + str _arrDie + "|cleared=" + str _arrClr + "|inflight=" + str _arrInf);
+
+		//--- Aggregate no-progress telemetry (r189): the heartbeat proves only that this supervisor
+		//--- loop is alive. The existing per-team watchdogs can all be healthy while the side's board
+		//--- remains unchanged across successful top-level cycles. Compare the state already sampled by
+		//--- TICK/ARRIVAL_BANDS and emit a bounded, observation-only signal; recovery remains a separate,
+		//--- evidence-gated design decision. An open dispatch is intentional work in flight, and a side
+		//--- without teams/funds is not classified as a flatline.
+		private ["_npTargets","_npTargetName","_npTargetCount","_npEvents","_npPrev","_npChanged","_npEligible","_npOpen","_npWindows","_npLimit","_npT0","_npLastLog","_npFundsDelta","_npSupplyDelta"];
+		_npTargets = _logik getVariable ["wfbe_aicom_targets", []];
+		_npTargetName = "";
+		_npTargetCount = count _npTargets;
+		if (_npTargetCount > 0) then {
+			private "_npPrimary";
+			_npPrimary = _npTargets select 0;
+			if ((typeName _npPrimary) == "OBJECT" && {!isNull _npPrimary}) then {_npTargetName = _npPrimary getVariable ["name", "?"]};
+		};
+		_npEvents = _arrFast + _arrMed + _arrSlow + _arrDisp + _arrStr + _arrRtg + _arrDie + _arrClr;
+		_npOpen = _arrInf;
+		_npPrev = _logik getVariable ["wfbe_aicom_noprogress_snapshot", []];
+		_npChanged = false;
+		_npFundsDelta = 0;
+		_npSupplyDelta = 0;
+		if ((count _npPrev) >= 8) then {
+			_npFundsDelta = _funds - (_npPrev select 3);
+			_npSupplyDelta = _supply - (_npPrev select 4);
+			if ((_npPrev select 0) != _towns || {(_npPrev select 1) != _fTeams} || {(_npPrev select 2) != _eTeams} || {_npFundsDelta != 0} || {_npSupplyDelta != 0} || {(_npPrev select 5) != _npTargetName} || {(_npPrev select 6) != _npTargetCount} || {(_npPrev select 7) != _upgCsv}) then {_npChanged = true};
+		};
+		_npEligible = (_prevState == "full") && {_npTargetCount > 0} && {_npOpen == 0} && {(_fTeams > 0) || {_funds >= (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_PER_EXTRA_TEAM", 15000])}};
+		_npWindows = _logik getVariable ["wfbe_aicom_noprogress_windows", 0];
+		_npLimit = missionNamespace getVariable ["WFBE_C_AICOM_NO_PROGRESS_WINDOWS", 3];
+		if (_npLimit < 1) then {_npLimit = 1};
+		if (_npChanged || {_npEvents > 0} || {!_npEligible}) then {
+			_logik setVariable ["wfbe_aicom_noprogress_windows", 0];
+			_logik setVariable ["wfbe_aicom_noprogress_t0", -1];
+		} else {
+			_npWindows = _npWindows + 1;
+			if (_npWindows == 1) then {_logik setVariable ["wfbe_aicom_noprogress_t0", time]};
+			_logik setVariable ["wfbe_aicom_noprogress_windows", _npWindows];
+			_npT0 = _logik getVariable ["wfbe_aicom_noprogress_t0", time];
+			_npLastLog = _logik getVariable ["wfbe_aicom_noprogress_log_t", -1e10];
+			if (_npWindows >= _npLimit && {(time - _npLastLog) >= (missionNamespace getVariable ["WFBE_C_AICOM_NO_PROGRESS_LOG_COOLDOWN", 900])}) then {
+				_logik setVariable ["wfbe_aicom_noprogress_log_t", time];
+				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|NO_PROGRESS|windows=" + str _npWindows + "|age=" + str (round (time - _npT0)) + "|towns=" + str _towns + "|teams=" + str _fTeams + "|targeted=" + str _npTargetCount + "|open=" + str _npOpen + "|events=" + str _npEvents + "|funds=" + str _funds + "|supply=" + str _supply + "|fundsDelta=" + str _npFundsDelta + "|supplyDelta=" + str _npSupplyDelta + "|posture=" + (_logik getVariable ["wfbe_aicom_strat_mode", "?"]));
+			};
+		};
+		_logik setVariable ["wfbe_aicom_noprogress_snapshot", [_towns, _fTeams, _eTeams, _funds, _supply, _npTargetName, _npTargetCount, _upgCsv]];
 		_logik setVariable ["wfbe_aicom_arrival_fast", 0];
 		_logik setVariable ["wfbe_aicom_arrival_med", 0];
 		_logik setVariable ["wfbe_aicom_arrival_slow", 0];

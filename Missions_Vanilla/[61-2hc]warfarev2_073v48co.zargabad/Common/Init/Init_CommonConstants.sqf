@@ -1548,6 +1548,12 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_AICOM_WATCHDOG") then {WFBE_C_AICOM_WATCHDOG = 1};                 //--- 1 = watchdog on (default); 0 = inert (instant rollback).
 	if (isNil "WFBE_C_AICOM_WATCHDOG_SCAN") then {WFBE_C_AICOM_WATCHDOG_SCAN = 30};      //--- s between watchdog scans.
 	if (isNil "WFBE_C_AICOM_WATCHDOG_COOLDOWN") then {WFBE_C_AICOM_WATCHDOG_COOLDOWN = 120}; //--- per-side min s between two restarts (restart-storm guard).
+	//--- Aggregate no-progress telemetry: after this many consecutive 5-minute windows with
+	//--- an active AI commander, capturable targets, no open dispatch, and no observed board/economy
+	//--- activity, emit one rate-limited diagnostic. This is observation-only; it never restarts or
+	//--- retasks the commander.
+	if (isNil "WFBE_C_AICOM_NO_PROGRESS_WINDOWS") then {WFBE_C_AICOM_NO_PROGRESS_WINDOWS = 3};
+	if (isNil "WFBE_C_AICOM_NO_PROGRESS_LOG_COOLDOWN") then {WFBE_C_AICOM_NO_PROGRESS_LOG_COOLDOWN = 900};
 	//--- Patch E: supervisor spawn-phase jitter. Random 0..JITTER s stagger on supervisor (re)spawn so both
 	//--- sides' heavy worker passes don't land on the same frame (smooths the server-FPS sawtooth).
 	if (isNil "WFBE_C_AICOM_SUPERVISOR_JITTER") then {WFBE_C_AICOM_SUPERVISOR_JITTER = 7}; //--- s max random spawn-phase stagger.
