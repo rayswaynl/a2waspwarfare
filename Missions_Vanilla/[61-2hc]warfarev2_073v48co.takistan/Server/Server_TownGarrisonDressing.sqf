@@ -67,7 +67,7 @@ while {!WFBE_GameOver} do {
         };
     };
 
-    private ["_now","_kept","_townsWithGun","_dressedCount","_perfStart"];
+    private ["_now","_kept","_townsWithGun","_dressedCount","_perfStart","_spawnAttemptsThisCycle","_scanStart","_scanOffset"];
     _perfStart     = diag_tickTime;
     _now           = time;
     _kept          = [];
@@ -176,13 +176,18 @@ while {!WFBE_GameOver} do {
     _registry     = _kept;
     _dressedCount = count _registry;
 
-    //=== (2) MAINTAIN: dress one eligible active GUER town per cycle =========================
-    {
+    //=== (2) MAINTAIN: attempt at most one eligible active GUER town per cycle ================
+    //--- Randomize the scan origin so a persistently failing town cannot starve later towns.
+    _spawnAttemptsThisCycle = 0;
+    if ((count towns) > 0) then {
+        _scanStart = floor (random (count towns));
+        for "_scanOffset" from 0 to ((count towns) - 1) do {
 		private ["_town","_pos","_tRange","_enemies","_bear","_gunPos",
 		         "_tNameHash","_tIdx","_gun","_grp","_crew","_light","_isNight","_gunnerSeated","_gpTries"];
-        _town = _x;
+        _town = towns select ((_scanStart + _scanOffset) mod (count towns));
 
-        if (_dressedCount < _maxDressed
+        if (_spawnAttemptsThisCycle < 1
+            && {_dressedCount < _maxDressed}
             && {!(isNull _town)}
             && {(_town getVariable ["sideID", -1]) == WFBE_C_GUER_ID}
             && {_town getVariable ["wfbe_active", false]}
@@ -194,6 +199,8 @@ while {!WFBE_GameOver} do {
                 count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], _radius]);
 
             if (_enemies > 0) then {
+                //--- Charge before createVehicle: failed materialization still consumes this cycle's budget.
+                _spawnAttemptsThisCycle = _spawnAttemptsThisCycle + 1;
                 _pos = getPos _town;
 
                 //--- Deterministic bearing from town name to keep placement stable across ticks.
@@ -301,7 +308,8 @@ while {!WFBE_GameOver} do {
                 };
             };
         };
-    } forEach towns;
+        };
+    };
 
     //--- Re-read quiet window each cycle (allows host tuning without restart).
     _quiet = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_QUIET", 300];
