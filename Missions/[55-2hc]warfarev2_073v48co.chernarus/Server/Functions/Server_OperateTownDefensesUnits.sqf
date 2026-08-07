@@ -6,11 +6,13 @@
 		- Action ("spawn"/"remove").
 */
 
-Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_op","_opPrev","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
+Private ["_action","_activationContacts","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_op","_opPrev","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
 
 _town = _this select 0;
 _side = _this select 1;
 _action = _this select 2;
+_activationContacts = if (count _this > 3) then {_this select 3} else {[]};
+if (typeName _activationContacts != "ARRAY") then {_activationContacts = []};
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 
 
@@ -152,7 +154,7 @@ if (isNull _team) then {
 
 		//--- Reveal the town area to the statics.
 		if (count (_town getVariable "wfbe_town_defenses") > 0) then {
-			[_team, _town getVariable "range", _town] Call RevealArea;
+			[_team, _town getVariable "range", _town, _activationContacts] Call RevealArea;
 		};
 
 		["INFORMATION", Format ["Server_OperateTownDefensesUnits.sqf : Town [%1] defenses were manned for [%2] defenses on [%3].", _town getVariable "name", count (_town getVariable "wfbe_town_defenses"),_side]] Call WFBE_CO_FNC_LogContent;

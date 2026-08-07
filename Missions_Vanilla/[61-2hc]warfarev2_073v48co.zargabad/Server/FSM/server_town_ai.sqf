@@ -738,7 +738,7 @@ while {!WFBE_GameOver} do {
 									_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
 									_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
 									_town setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", [_gdirVehOrderId, _gdirVehTier, "inflight"]];
-									_gdirVehResult = [_town, _side, [], [], [], [_gdirVehOrderId, _gdirVehTier, _gdirVehClass]] Call WFBE_CO_FNC_CreateTownUnits;
+									_gdirVehResult = [_town, _side, [], [], [], [_gdirVehOrderId, _gdirVehTier, _gdirVehClass], _detectedFiltered] Call WFBE_CO_FNC_CreateTownUnits;
 									_gdirVehDelivery = if (count _gdirVehResult > 2) then {_gdirVehResult select 2} else {[]};
 									if (typeName _gdirVehDelivery == "ARRAY" && {count _gdirVehDelivery >= 2} && {(_gdirVehDelivery select 0) > 0} && {(_gdirVehDelivery select 1) == _gdirVehOrderId}) then {
 										_town_teams = _town_teams + (_gdirVehResult select 0);
@@ -763,7 +763,7 @@ while {!WFBE_GameOver} do {
 
 						switch (_ai_delegation_enabled) do {
 							case 1: { //--- Client side delegation.
-								_retVal = [_town, _side, _groups, _positions, _teams] Call WFBE_SE_FNC_DelegateAITown;
+								_retVal = [_town, _side, _groups, _positions, _teams, _detectedFiltered] Call WFBE_SE_FNC_DelegateAITown;
 								// Marty: Only store server-created fallback groups; delegated clients report their own local groups back.
 								_town_teams = _town_teams + (_retVal select 0);
 								_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
@@ -788,7 +788,7 @@ while {!WFBE_GameOver} do {
 										if (!isNull _shell && {(count (units _shell)) == 0}) then {deleteGroup _shell};
 										[_hcTeams, grpNull] call WFBE_CO_FNC_ArrayPush;
 									} forEach _teams;
-									[_town, _side, _groups, _positions, _hcTeams] Call WFBE_CO_FNC_DelegateAITownHeadless;
+									[_town, _side, _groups, _positions, _hcTeams, _detectedFiltered] Call WFBE_CO_FNC_DelegateAITownHeadless;
 									// Marty: HC-local groups are reported back by update-town-delegation after creation.
 									//--- fable/townteams-queue-singlewriter: NO write-back here. This branch never modifies
 									//--- _town_teams locally (unchanged since the read at wave start), so re-writing the stale
@@ -803,7 +803,7 @@ while {!WFBE_GameOver} do {
 
 						//--- Use Server AI.
 						if (_use_server) then {
-							_retVal = [_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_CreateTownUnits;
+							_retVal = [_town, _side, _groups, _positions, _teams, [], _detectedFiltered] Call WFBE_CO_FNC_CreateTownUnits;
 							// Marty: Store the real groups returned by CreateTownUnits, not the preallocated input groups.
 							_town_teams = _town_teams + (_retVal select 0);
 							_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
@@ -830,7 +830,7 @@ while {!WFBE_GameOver} do {
 						//--- A2 air-only activation creates an AA picket but does not man statics or
 						//--- emit full-garrison cosmetics; those remain ground-contact effects only.
 						if (_enemies_ground > 0) then {
-							[_town, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+							[_town, _side, "spawn", _detectedFiltered] Call WFBE_SE_FNC_OperateTownDefensesUnits;
 							[getPos _town, _side] Call WFBE_CO_FNC_SpawnFactionSmoke;
 						};
 
