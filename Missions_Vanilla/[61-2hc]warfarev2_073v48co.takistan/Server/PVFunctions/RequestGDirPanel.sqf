@@ -38,7 +38,9 @@ if (!((missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0)) exitWith {
 };
 
 //--- Gate 2: sender must be a live resistance player in a registered GUER team.
-if (isNull _player || {!alive _player}) exitWith {};
+//--- FUNDS-AUTH 20260730: require live PLAYER body. Without isPlayer a forged non-player
+//--- resistance unit could pass Gate 2 and debit the team wallet (donate/buy/qrf paths).
+if (isNull _player || {!alive _player} || {!isPlayer _player}) exitWith {};
 
 private ["_senderSide"];
 _senderSide = side _player;
