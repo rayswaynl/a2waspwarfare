@@ -2,11 +2,11 @@
     AI commander HQ recovery after a genuine HQ destruction.
     The HQ-loss handler starts this worker only for a side that was under full AI command.
     After the configured grace, the nearest currently owned town centre to the wreck is used.
-    The numeric price mirrors the human HQ deploy lobby parameter, but the debit is from the
-    separate AI-commander treasury. No town or insufficient funds abandons recovery so the
-    normal HQ-loss victory condition resumes.
+    The numeric price mirrors the human HQ deploy lobby parameter. Dual economy uses side
+    supply, while single-currency economy uses the separate AI-commander treasury. No town or
+    insufficient funds abandons recovery so the normal HQ-loss victory condition resumes.
 */
-private ["_side","_logik","_destroyedAt","_delay","_hq","_origin","_sideID","_town","_nearest","_distance","_funds","_price","_recoveryEpoch"];
+private ["_side","_logik","_destroyedAt","_delay","_hq","_origin","_sideID","_town","_nearest","_distance","_currency","_currencyName","_price","_dual","_recoveryEpoch"];
 
 _side = _this select 0;
 _recoveryEpoch = _this select 1;
@@ -61,20 +61,31 @@ if (isNull _town) exitWith {
 };
 
 _price = missionNamespace getVariable ["WFBE_C_STRUCTURES_HQ_COST_DEPLOY", 500];
-_funds = (_side) Call GetAICommanderFunds;
-if (_funds < _price) exitWith {
+_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
+_currencyName = if (_dual) then {"side supply"} else {"AI treasury"};
+_currency = if (_dual) then {(_side) Call WFBE_CO_FNC_GetSideSupply} else {(_side) Call GetAICommanderFunds};
+if (_currency < _price) exitWith {
     _logik setVariable ["wfbe_aicom_hq_recovery_pending", false];
-    ["INFORMATION", Format ["AI_Commander_HQRecovery.sqf: [%1] HQ recovery expired - AI treasury has %2, needs %3.", str _side, _funds, _price]] Call WFBE_CO_FNC_LogContent;
+    ["INFORMATION", Format ["AI_Commander_HQRecovery.sqf: [%1] HQ recovery expired - %2 has %3, needs %4.", str _side, _currencyName, _currency, _price]] Call WFBE_CO_FNC_LogContent;
 };
 
-[_side, -_price] Call ChangeAICommanderFunds;
+if (_dual) then {
+    [_side, -_price, "AI commander HQ recovery.", false] Call ChangeSideSupply;
+} else {
+    [_side, -_price] Call ChangeAICommanderFunds;
+};
 [_side, objNull, getPos _town] Call MHQRepair;
 _hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 if (!isNull _hq && {alive _hq}) then {
     _logik setVariable ["wfbe_aicom_hq_recovery_pending", false];
-    ["INFORMATION", Format ["AI_Commander_HQRecovery.sqf: [%1] AI repurchased HQ at town centre [%2] for %3 (treasury now %4).", str _side, _town getVariable ["name", "?"], _price, (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_LogContent;
+    _currency = if (_dual) then {(_side) Call WFBE_CO_FNC_GetSideSupply} else {(_side) Call GetAICommanderFunds};
+    ["INFORMATION", Format ["AI_Commander_HQRecovery.sqf: [%1] AI repurchased HQ at town centre [%2] for %3 (%4 now %5).", str _side, _town getVariable ["name", "?"], _price, _currencyName, _currency]] Call WFBE_CO_FNC_LogContent;
 } else {
-    [_side, _price] Call ChangeAICommanderFunds;
+    if (_dual) then {
+        [_side, _price, "AI commander HQ recovery refund.", false] Call ChangeSideSupply;
+    } else {
+        [_side, _price] Call ChangeAICommanderFunds;
+    };
     _logik setVariable ["wfbe_aicom_hq_recovery_pending", false];
-    ["WARNING", Format ["AI_Commander_HQRecovery.sqf: [%1] HQ replacement failed at town centre [%2]; refunded %3 to AI treasury.", str _side, _town getVariable ["name", "?"], _price]] Call WFBE_CO_FNC_LogContent;
+    ["WARNING", Format ["AI_Commander_HQRecovery.sqf: [%1] HQ replacement failed at town centre [%2]; refunded %3 to %4.", str _side, _town getVariable ["name", "?"], _price, _currencyName]] Call WFBE_CO_FNC_LogContent;
 };
