@@ -173,7 +173,11 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					//--- deleteVehicle + most setVariable retasking are locality-sensitive in A2 OA, and an
 					//--- HC-owned patrol/team re-adopted here would be mis-counted and its units orphaned.
 					//--- Gate the whole re-adopt block on the group's leader being SERVER-LOCAL.
-					if (!isNull _baseG && {(side _baseG) == _baseSide} && {(count (units _baseG)) > 0} && {local (leader _baseG)}) then {
+					//--- PROVENANCE GUARD: Common_CreateGroup stamps every code-owned group with
+					//--- wfbe_group_src (supply, patrol, town, etc.). BASE-GC must not steal a
+					//--- source-owned group into the commander registry; the legacy untagged
+					//--- fallback remains available for genuinely unattributed mission groups.
+					if (!isNull _baseG && {(side _baseG) == _baseSide} && {(count (units _baseG)) > 0} && {local (leader _baseG)} && {isNil {_baseG getVariable "wfbe_group_src"}}) then {
 						_baseLdr = leader _baseG;
 						if (!isNull _baseLdr && {alive _baseLdr} && {!isPlayer _baseLdr}) then {
 							//--- within range of own HQ?
