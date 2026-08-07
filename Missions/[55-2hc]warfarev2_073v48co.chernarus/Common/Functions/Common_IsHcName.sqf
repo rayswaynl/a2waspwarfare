@@ -11,7 +11,7 @@
 	Init_CommonConstants.sqf's WFBE_C_HC_NAMES registry was widened (the BELT) to carry both the
 	bare and the quoted variant of every registered HC name, which alone fixes every EXISTING raw
 	`in WFBE_C_HC_NAMES` call site with zero consumer-file changes. This helper is the second layer
-	(the BRACES): it additionally strips one leading and one trailing literal '"' (ASCII 34) off the
+	(the BRACES): it additionally strips one leading and one trailing literal double-quote (ASCII 34) off the
 	candidate before the membership test, so any OTHER future quoting/whitespace quirk (a launcher
 	change, a different OS quoting convention) is still caught here, in ONE place, without another
 	repo-wide grep. The highest-value money/enrollment consumers (connect gate, BankIncome,
