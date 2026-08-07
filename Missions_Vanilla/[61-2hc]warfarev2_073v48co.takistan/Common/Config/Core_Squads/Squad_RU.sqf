@@ -74,9 +74,9 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,true,false,false]];
 _aiTeamTypes = _aiTeamTypes + [1];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,3,0,0]];
 
-//--- (6) Motorized - Gun Truck Fire Support (UAZ_AGS30 paired with a Kamaz carrying the dismounts)
+//--- (6) Motorized - Gun Truck Fire Support (UAZ_AGS30 paired with a BTR90 carrying the dismounts)
 _u		= ["UAZ_AGS30_RU"];
-_u = _u + ["Kamaz"];
+_u = _u + ["BTR90"];
 _u = _u + ["RU_Soldier_TL"];
 _u = _u + ["RU_Soldier_MG"];
 _u = _u + ["RU_Soldier_GL"];
@@ -227,7 +227,7 @@ _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
 //--- ARCHETYPE EXPANSION 2026-06-14 (claude-gaming): +10 NEW RU archetypes with size-bump.
 //--- Every template is pure-infantry OR a cargo-carrier-with-dismounts (no pure-armor).
 //--- Cargo never overfilled (dismount count <= carrier transportSoldier). AGS/motorized gun
-//--- trucks ride a Kamaz (large cargo) NOT GAZ_Vodnik_HMG. Factory tier in _aiTeamTypes matches
+//--- trucks ride a BTR90 (armed, large cargo) NOT an unarmed Kamaz. Factory tier in _aiTeamTypes matches
 //--- the vehicle (0 inf / 1 light / 2 heavy / 3 air). Classes validated against
 //--- Core_RU + Core_INS + Core_MVD + Core_Spetsnaz (all load unconditionally on Chernarus EAST=RU).
 //--- ============================================================================
@@ -266,9 +266,9 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
 _aiTeamTypes = _aiTeamTypes + [0];
 _aiTeamUpgrades = _aiTeamUpgrades + [[1,0,0,0]];
 
-//--- (18) Motorized - AGS Gun Truck Section (UAZ AGS-30 fire-support + Kamaz carries the dismounts) [type1]
+//--- (18) Motorized - AGS Gun Truck Section (UAZ AGS-30 fire-support + BTR90 carries the dismounts) [type1]
 _u		= ["UAZ_AGS30_RU"];
-_u = _u + ["Kamaz"];
+_u = _u + ["BTR90"];
 _u = _u + ["RU_Soldier_TL"];
 _u = _u + ["RU_Soldier_MG"];
 _u = _u + ["RU_Soldier_AR"];
@@ -285,7 +285,7 @@ _aiTeamTypes = _aiTeamTypes + [1];
 _aiTeamUpgrades = _aiTeamUpgrades + [[1,1,0,0]];
 
 //--- (19) Motorized - Vodnik Mounted Rifle Squad (GAZ Vodnik transport carries the squad) [type1]
-_u		= ["GAZ_Vodnik"];
+_u		= ["GAZ_Vodnik_HMG"];
 _u = _u + ["RU_Soldier_TL"];
 _u = _u + ["RU_Soldier_AR"];
 _u = _u + ["RU_Soldier_MG"];

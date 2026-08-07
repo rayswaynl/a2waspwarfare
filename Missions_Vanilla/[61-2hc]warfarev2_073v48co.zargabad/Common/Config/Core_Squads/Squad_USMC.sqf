@@ -60,8 +60,8 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
 _aiTeamTypes = _aiTeamTypes + [0];
 _aiTeamUpgrades = _aiTeamUpgrades + [[3,0,0,0]];
 
-//--- Motorized - Rifle Squad (MTVR) [type1]
-_u		= ["MTVR_DES_EP1"];
+//--- Motorized - Rifle Squad (M2 HMMWV) [type1]
+_u		= ["HMMWV_M1151_M2_DES_EP1"];
 _u = _u + ["US_Soldier_SL_EP1"];
 _u = _u + ["US_Soldier_TL_EP1"];
 _u = _u + ["US_Soldier_AR_EP1"];
@@ -70,7 +70,7 @@ _u = _u + ["US_Soldier_LAT_EP1"];
 _u = _u + ["US_Soldier_MG_EP1"];
 _u = _u + ["US_Soldier_Medic_EP1"];
 _u = _u + ["US_Soldier_EP1"];
-_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - Rifle Squad (MTVR)"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - Rifle Squad (M2 HMMWV)"];
 _aiTeamTemplates = _aiTeamTemplates + [_u];
 _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,true,false,false]];
 _aiTeamTypes = _aiTeamTypes + [1];
@@ -196,9 +196,9 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,true]];
 _aiTeamTypes = _aiTeamTypes + [3];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
 
-//--- Motorized - Mobile AA Section (Avenger + MTVR with AA team) [type1]
+//--- Motorized - Mobile AA Section (Avenger + M2 HMMWV with AA team) [type1]
 _u		= ["HMMWV_Avenger_DES_EP1"];
-_u = _u + ["MTVR_DES_EP1"];
+_u = _u + ["HMMWV_M1151_M2_DES_EP1"];
 _u = _u + ["US_Soldier_TL_EP1"];
 _u = _u + ["US_Soldier_AA_EP1"];
 _u = _u + ["US_Soldier_EP1"];     //--- B74.2 (Ray 2026-06-23): 2x AA infantry -> 1x AA + rifleman (still loads of AA missile infantry; keep the Avenger + 1 manpad, halve the standalone AA bodies).
@@ -315,9 +315,9 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,true,false,false]];
 _aiTeamTypes = _aiTeamTypes + [1];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,2,0,0]];
 
-//--- Motorized - MK19 Gun Truck Section (MK19 fire-support + MTVR carries the dismounts) [type1]
+//--- Motorized - MK19 Gun Truck Section (MK19 fire-support + M2 HMMWV carries the dismounts) [type1]
 _u		= ["HMMWV_MK19_DES_EP1"];
-_u = _u + ["MTVR_DES_EP1"];
+_u = _u + ["HMMWV_M1151_M2_DES_EP1"];
 _u = _u + ["US_Soldier_TL_EP1"];
 _u = _u + ["US_Soldier_MG_EP1"];
 _u = _u + ["US_Soldier_AMG_EP1"];
