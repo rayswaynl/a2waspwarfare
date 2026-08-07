@@ -92,10 +92,10 @@ _oldGrp  = group _oldUnit;
 //--- CIV-drift swap group), the player ends up in a group with NO wfbe_funds -> GetTeamFunds returns 0
 //--- -> wallet reads $0 AND every purchase/refund charges an empty wallet. LIVE-CONFIRMED (server RPT
 //--- cmdcon42b: a WEST player's own group resolved side=CIV, funds=0, RequestFundsResend stamped
-//--- START funds=0 because no WFBE_C_ECONOMY_FUNDS_START_CIVILIAN constant exists). Fix: snapshot the
-//--- funded group's wfbe_funds + wfbe_side NOW, before any group juggling, and re-stamp them onto the
-//--- player's CURRENT group after selectPlayer if that group lost them. Flag-gated (default ON). A2-OA
-//--- 1.64 safe: getVariable / typeName / plain locals (no A3 commands, no isNil-less reads).
+//--- START funds=0 because no WFBE_C_ECONOMY_FUNDS_START_CIVILIAN constant exists). Fix: keep a
+//--- pre-swap wallet snapshot for diagnostics only, preserve wfbe_side on a diverted group, and let
+//--- the server's lock-step WFBE_JIP_USER<uid> record reconcile the wallet. Flag-gated (default ON).
+//--- A2-OA 1.64 safe: getVariable / typeName / plain locals (no A3 commands, no isNil-less reads).
 _carryFunds = _oldGrp getVariable "wfbe_funds";   //--- may be nil if _oldGrp was itself already unfunded
 _carrySide  = _oldGrp getVariable "wfbe_side";     //--- may be nil on a transient/civilian group
 
@@ -472,39 +472,18 @@ if ((missionNamespace getVariable ["WFBE_C_SKINSWAP_FUNDS_CARRY", 1]) > 0) then 
 			if (isNil {_curGrp getVariable "wfbe_side"} && {!isNil "_carrySide"}) then {
 				_curGrp setVariable ["wfbe_side", _carrySide, true];
 			};
-			//--- JIPCLOBBER FIX (Fable, skin<>JIP money-loss - owner live report): only carry forward the
-			//--- exact snapshot THIS client itself observed on _oldGrp a moment ago in this same script run
-			//--- (real, verified data - safe to re-stamp). The old code's fallback fabricated the side-START
-			//--- value out of thin air when even that snapshot was missing too; that path is now removed -
-			//--- see the else branch's comment below for why it was live-dangerous.
+			//--- The pre-swap snapshot is diagnostic only. A client-side setVariable would create
+			//--- a second wallet truth without updating WFBE_JIP_USER<uid>; leave the group wallet
+			//--- untouched and let the server's record-first resend reconcile it.
 			if (!isNil "_carryFunds" && {typeName _carryFunds == "SCALAR"}) then {
-				_curGrp setVariable ["wfbe_funds", _carryFunds, true];
-				diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group had no funds after swap - re-stamped wfbe_funds=%1 (carried snapshot) side=%2 grp=%3",
+				diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group had no funds after swap - carried snapshot=%1 deferred to server record reconciliation side=%2 grp=%3",
 					_carryFunds, (side player), _curGrp];
 			} else {
-				//--- Neither the pre-swap snapshot NOR the post-swap group carries a known numeric balance.
-				//--- On a genuine first-ever join this DOES mean "never funded yet" - but from this client
-				//--- ALONE it is INDISTINGUISHABLE from a JIP reconnect whose real (possibly large, persisted)
-				//--- wfbe_funds broadcast simply has not replicated here yet (A2-OA does not replay a
-				//--- setVariable-broadcast to a client that joined/reconnected after it was sent - the exact
-				//--- quirk the EARLYHEAL / B76 FUNDS-HEAL self-heal loops in Init_Client.sqf exist to work
-				//--- around). This group is LOCAL to this client (its own leader), so a client-side
-				//--- setVariable-broadcast here is AUTHORITATIVE on the network and would CLOBBER a real,
-				//--- higher, server-held balance the instant it lands: Skill_Init.sqf auto-opens the skin
-				//--- selector on first join/reconnect (show-once flag lives on the player OBJECT, so a fresh
-				//--- reconnect re-triggers it), and a reconnecting player who applies a skin before their real
-				//--- funds replay lands would have their balance silently reset to the side START value - the
-				//--- previous fabricate-and-broadcast here is exactly that live "money disappeared" report.
-				//--- DO NOT fabricate a number - leave wfbe_funds untouched locally and let the server resolve
-				//--- it (RequestFundsResend below already prefers the authoritative WFBE_JIP_USER<uid> record
-				//--- over a missing group value, and only stamps START itself when no record exists either -
-				//--- a genuine first join).
 				diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group has no funds and no carried snapshot - deferring to server RequestFundsResend instead of guessing (grp=%1 side=%2)", _curGrp, (side player)];
 			};
-			//--- Ask the server to re-broadcast the AUTHORITATIVE value onto this group (idempotent:
-			//--- it echoes an absolute stored value, never adds). This reconciles the server's own
-			//--- record with the client re-stamp and covers the case where _oldGrp's balance had
-			//--- diverged from the client snapshot. Mirrors the respawn-handler funds resend.
+			//--- Ask the server to re-broadcast the authoritative absolute value onto this group.
+			//--- The request is deliberately the only wallet reconciliation action here: it
+			//--- consults the lock-step WFBE_JIP_USER<uid> record before any START fallback.
 			if (!isNil "WFBE_Client_SideJoined") then {
 				["RequestFundsResend", [player, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
 			};
