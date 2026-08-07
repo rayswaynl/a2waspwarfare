@@ -22,14 +22,34 @@ AICOMV2_GDIR_INSTANCE = 1;
 
 //--- Wait for town initialisation.
 //--- #815 revive: the master roster global is `towns` (WFBE_SE_Towns was never assigned
-//--- anywhere - this waitUntil blocked the whole Director since ship).
-waitUntil {!isNil "towns"};
-waitUntil {count towns > 0};
-
-//--- r98: also wait for the STARTING-MODE assignment (Server\Init\Init_Towns.sqf sets
-//--- townInitServer=true when done; Init_Server launches this worker BEFORE that file runs).
-//--- Seeding off pre-assignment sideIDs would register every map-default DEFENDER town as GUER.
-waitUntil {!isNil "townInitServer"};
+//--- anywhere). Init_Server launches this worker BEFORE Server\Init\Init_Towns.sqf, so
+//--- require the TRUE starting-mode assignment before seeding; the variable itself is
+//--- initialized FALSE in initJIPCompatible.sqf. A bounded fail-closed gate prevents an
+//--- armed Director from remaining parked forever when town startup cannot complete.
+//--- DEADLINE (w807-L2, 2026-08-07): 420s, not 90s. Common/Init/Init_Towns.sqf:35-40 (D6c
+//--- REVISED, 2026-08-03) documents a PROVEN dev-box case where all 46 depot workers parked
+//--- on their game-time-gated registration sleep for 300s+ before landing - same async
+//--- registration pipeline this loop polls. 420s covers that observed worst case with margin
+//--- while still failing closed (not hanging forever) on a genuinely broken mission.sqm.
+private ["_gdirTownReady","_gdirTownInitDeadline","_gdirTownInitWait","_gdirTownsReady","_gdirTownInitServerReady"];
+_gdirTownReady = false;
+_gdirTownInitDeadline = diag_tickTime + 420;
+_gdirTownInitWait = 0;
+_gdirTownsReady = false;
+_gdirTownInitServerReady = false;
+while {!_gdirTownReady && {diag_tickTime < _gdirTownInitDeadline} && {!(missionNamespace getVariable ["WFBE_GameOver", false])}} do {
+	_gdirTownsReady = !isNil "towns" && {count towns > 0};
+	_gdirTownInitServerReady = missionNamespace getVariable ["townInitServer", false];
+	if (_gdirTownsReady && {_gdirTownInitServerReady}) then {
+		_gdirTownReady = true;
+	} else {
+		sleep 0.25;
+		_gdirTownInitWait = _gdirTownInitWait + 1;
+	};
+};
+if (!_gdirTownReady) exitWith {
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_STARTUP_TIMEOUT|waitTicks=%1|townsReady=%2|townInitServer=%3|gameOver=%4", _gdirTownInitWait, _gdirTownsReady, _gdirTownInitServerReady, missionNamespace getVariable ["WFBE_GameOver", false]];
+};
 
 //--- Short delay to let town ownership settle before seeding ledger.
 sleep 5;
