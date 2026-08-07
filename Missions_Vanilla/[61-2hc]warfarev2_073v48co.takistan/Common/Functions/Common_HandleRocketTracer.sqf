@@ -44,12 +44,21 @@ if !(isNull _fp) then {
 sleep 0.7;
 if (isNull _rocket) exitWith {};
 
+//--- The projectile can be removed during the delayed flame stage; stop the earlier local emitters cleanly.
+if (isNull _rocket) exitWith {
+	{if (!isNull _x) then {deleteVehicle _x}} forEach [_sp, _fp];
+};
+
 _fp1 = "#particlesource" createVehicleLocal getPos _rocket;
 if !(isNull _fp1) then {
 	_fp1 setParticleRandom [0.03, [0,0,0], [0.3,0.3,0.3], 0, 0, [0, 0, 0, 0], 0, 0,360];
 	_fp1 setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 4, 1,1],"", "Billboard", 1, 0.09, [-0.05+random 0.05,1.7,-0.05],[_vx*2,_vy*2,_vz*2], 0, 1, 0.80, 0.5, [0.45,0],[[1,1,1,0],[1,1,1,-0.5],[1,1,1,-0.4],[1,1,1,0]],[1000],0.1,0.1,"","",_rocket,360];
 	_fp1 setdropinterval 0.0004;
 };
+
+//--- Particle sources persist independently of their referenced projectile; stop and remove them after the short trail.
+sleep 3;
+{if (!isNull _x) then {deleteVehicle _x}} forEach [_sp, _fp, _fp1];
 
 };
 
