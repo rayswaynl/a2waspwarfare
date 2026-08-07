@@ -1,7 +1,7 @@
 //*****************************************************************************************
 //Description: Creates a small construction site.
 //*****************************************************************************************
-Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type","_reqPlayer","_capToken"];
+Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type","_reqPlayer","_capToken","_aicomCommitCheck","_aicomLiveHQCheck"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -15,6 +15,11 @@ _reqPlayer = if ((count _this) > 7) then {_this select 7} else {objNull};
 if (isNil "_reqPlayer" || {typeName _reqPlayer != "OBJECT"}) then {_reqPlayer = objNull};
 _capToken = if ((count _this) > 8) then {_this select 8} else {-1};
 if (typeName _capToken != "SCALAR") then {_capToken = -1};
+//--- AICOM alone supplies the two post-delay commit checks. Keep normal player/FOB workers on their established contract.
+_aicomCommitCheck = if ((count _this) > 9) then {_this select 9} else {false};
+if (typeName _aicomCommitCheck != "BOOL") then {_aicomCommitCheck = false};
+_aicomLiveHQCheck = if ((count _this) > 10) then {_this select 10} else {false};
+if (typeName _aicomLiveHQCheck != "BOOL") then {_aicomLiveHQCheck = false};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 
@@ -215,6 +220,46 @@ if (_constructionLogicLost) exitWith {
 };
 	
 {if !(isNull _x) then {DeleteVehicle _x}} ForEach _constructed;
+
+
+//--- AICOM candidate selection happens before the construction delay. Re-check the commit position after that
+//--- suspension: an HQ may have relocated, another build/parked hull can now occupy the footprint, or the
+//--- original terrain/road predicates can no longer hold. Abort/refund and retry next commander pass instead of
+//--- creating a permanent unusable base structure. Forward bases still validate geometry/occupancy but deliberately
+//--- keep their remote town anchor rather than comparing against the rear HQ.
+if (_aicomCommitCheck) then {
+	private ["_aicomPlacementOK","_aicomClearance","_aicomFloor","_aicomRoadBuffer","_aicomRoadClear","_aicomSlope","_aicomLiveHQ","_aicomBlocker"];
+	_aicomPlacementOK = !(surfaceIsWater _position);
+	_aicomClearance = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_CLEARANCE", 14];
+	if (_aicomPlacementOK && {_aicomClearance > 0}) then {
+		_aicomBlocker = false;
+		{if (!isNull _x) exitWith {_aicomBlocker = true}} forEach (nearestObjects [_position, ["House","Building","Wall","Fence","Car","Tank","Air","Ship","StaticWeapon"], _aicomClearance]);
+		if (_aicomBlocker) then {_aicomPlacementOK = false};
+	};
+	_aicomRoadBuffer = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_BUFFER", 14];
+	if (_aicomPlacementOK && {(missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROADCLEAR", 1]) > 0} && {_aicomRoadBuffer > 0} && {count (_position nearRoads _aicomRoadBuffer) > 0}) then {_aicomPlacementOK = false};
+	_aicomRoadClear = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_CLEAR", 0];
+	if (_aicomPlacementOK && {_aicomRoadClear > 0} && {count (_position nearRoads _aicomRoadClear) > 0}) then {_aicomPlacementOK = false};
+	_aicomSlope = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_MIN_FLAT_Z", 0];
+	if (_aicomPlacementOK && {_aicomSlope > 0} && {((surfaceNormal _position) select 2) < _aicomSlope}) then {_aicomPlacementOK = false};
+	_aicomFloor = missionNamespace getVariable ["WFBE_C_AICOM_STRUCT_SPACING_FLOOR", 30];
+	if (_aicomPlacementOK && {_aicomFloor > 0}) then {
+		{if (!isNil "_x" && {(_position distance _x) < _aicomFloor}) exitWith {_aicomPlacementOK = false}} forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+	};
+	if (_aicomPlacementOK && {_aicomLiveHQCheck}) then {
+		_aicomLiveHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+		if (isNull _aicomLiveHQ) then {_aicomPlacementOK = false} else {
+			if ((_position distance _aicomLiveHQ) > (missionNamespace getVariable ["WFBE_C_AICOM_BUILD_HQ_RANGE", 200])) then {_aicomPlacementOK = false};
+		};
+	};
+	if (!_aicomPlacementOK) exitWith {
+		Call _onConstructionAbort;
+		if !(isNull _nearLogic) then {_group = group _nearLogic; deleteVehicle _nearLogic};
+		if !(isNull _group) then {deleteGroup _group};
+		if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"AICOM commit position invalid"]]};
+		diag_log Format ["CONSTRUCTION|v1|reject|reason=aicom-commit-position-invalid|script=Construction_SmallSite|type=%1|side=%2|pos=%3", _type, str _side, _position];
+	};
+};
 
 _site = createVehicle [_type, _position, [], 0, "NONE"];
 if (isNull _site) exitWith {
