@@ -67,6 +67,23 @@ class CaptureWorkerEpochTests(unittest.TestCase):
                 worker,
             )
 
+    def test_resistance_defense_worker_is_bound_to_the_capture_epoch(self) -> None:
+        for mission in MISSIONS:
+            source = (mission / TOWN_CAPTURE).read_text(encoding="utf-8-sig")
+            start = source.index("//--- Resistance recapture")
+            end = source.index("//--- Owned (west/east)", start)
+            worker = source[start:end]
+
+            self.assertIn(
+                '[_location, _newSide, _sideID, _newSID, _captureEpoch] spawn {',
+                worker,
+            )
+            self.assertRegex(worker, r"_captureEpoch\s*=\s*_this select 4;")
+            self.assertIn(
+                'if ((_loc getVariable ["wfbe_town_ai_epoch", -1]) != _captureEpoch) exitWith {};',
+                worker,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
