@@ -44,7 +44,7 @@ you. Verify before writing; never "it's probably fine".
 Before any probe, run the lint gate — it already knows the common A3 traps:
 
 ```powershell
-python Tools/Lint/check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BAREEXIT,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index
+python Tools/Lint/check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BAREEXIT,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MARKERCOLOR,MARKERTYPE,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index
 ```
 
 The gate reports ~168 pre-existing findings; only new findings in your edited files matter.
