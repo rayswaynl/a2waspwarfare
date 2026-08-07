@@ -120,7 +120,12 @@ if (_side == resistance) then {
 	//--- living, flag-tagged GUER FOB truck (the flag keeps an AI faction's same-class truck off the list). No range
 	//--- gate (GUER towns have none either). Built FOB FACTORIES are already offered by the GetFactories block above.
 	{
-		if (alive _x && {_x getVariable ["wfbe_is_guer_fob", false]}) then {_availableSpawn = _availableSpawn + [_x]};
+		private ["_veh","_crewFriendly"];
+		_veh = _x;
+		//--- r207: donor classnames are shared across factions. Require the authoritative purchase-side stamp, and
+		//--- drop a truck while an enemy crew occupies it; an empty or GUER-crewed delivery truck remains eligible.
+		_crewFriendly = ({(side (group _x)) == resistance} count (crew _veh)) == count (crew _veh);
+		if (alive _veh && {_veh getVariable ["wfbe_is_guer_fob", false]} && {(_veh getVariable ["wfbe_side_id", -1]) == WFBE_C_GUER_ID} && {_crewFriendly}) then {_availableSpawn = _availableSpawn + [_veh]};
 	} forEach vehicles;
 };
 
