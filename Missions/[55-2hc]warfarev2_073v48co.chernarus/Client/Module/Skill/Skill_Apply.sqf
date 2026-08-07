@@ -34,7 +34,7 @@ switch (WFBE_SK_V_Type) do {
 			false,
 			true,
 			"",
-			"(time - WFBE_SK_V_LastUse_Salvage > WFBE_SK_V_Reload_Salvage) && !(({ alive _x && (side _x == side player) } count (nearestObjects [getPos player, (missionNamespace getVariable [Format ['WFBE_%1SALVAGETRUCK', sideJoinedText], []]), (missionNamespace getVariable ['WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE', 30] max 1)])) > 0)"
+			"(time - WFBE_SK_V_LastUse_Salvage > WFBE_SK_V_Reload_Salvage) && !(({ alive _x && (side _x == side player) } count (nearestObjects [getPos player, (missionNamespace getVariable [Format ['WFBE_%1SALVAGETRUCK', sideJoinedText], []]), ((missionNamespace getVariable ['WFBE_C_UNITS_SALVAGER_SCAVENGE_RANGE', 30]) max 1)])) > 0)"
 		];
 	
 	// Marty: Only show Repair Camp when the player is near a destroyed camp.
