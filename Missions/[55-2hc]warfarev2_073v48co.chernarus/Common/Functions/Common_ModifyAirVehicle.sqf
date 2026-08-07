@@ -8,6 +8,7 @@ switch (_type) do {
 
 //LoadoutManagerInsertChanges
 case "Su34":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -18,10 +19,13 @@ case "Su34":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 
 case "Su25_Ins":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -32,10 +36,13 @@ case "Su25_Ins":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 
 case "L39_TK_EP1":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -46,10 +53,13 @@ case "L39_TK_EP1":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 
 case "F35B":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -60,10 +70,13 @@ case "F35B":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 
 case "L159_ACR":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -74,10 +87,13 @@ case "L159_ACR":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 
 case "A10":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -88,10 +104,13 @@ case "A10":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 
 case "AV8B":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -102,10 +121,13 @@ case "AV8B":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 
 case "AV8B2":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -116,10 +138,13 @@ case "AV8B2":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 
 case "An2_TK_EP1":{
+    _vehicle setVariable ["wfbe_air_aa_rearmor", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -130,7 +155,9 @@ case "An2_TK_EP1":{
         };
         _result
     };
-    _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+        _vehicle addeventhandler ["HandleDamage", format["_this Call %1", _rearmor]];
+    };
 };
 //LoadoutManagerInsertChanges_END
 
@@ -145,7 +172,9 @@ case "An2_TK_EP1":{
     			};
    				_result
   			};
-			_vehicle addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+			if ((missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) <= 0) then {
+				_vehicle addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+			};
 	};
 };
 processinitcommands;

@@ -15,12 +15,13 @@
 	Arma 2 OA only — no params/pushBack/selectRandom/isEqualTo/etc.
 */
 
-private ["_unit","_dmg","_source","_ammo","_result","_isAA","_srcType","_srcVehType","_hits","_last","_newEvent"];
+private ["_unit","_dmg","_source","_ammo","_result","_isAA","_srcType","_srcVehType","_hits","_last","_newEvent","_airRearmor"];
 
 _unit   = _this select 0;
 _dmg    = _this select 2;
 _source = _this select 3;
 _ammo   = _this select 4;
+_airRearmor = _unit getVariable ["wfbe_air_aa_rearmor", false];
 
 _result = _dmg; //--- Default: pass the engine's proposed damage through unchanged.
 
@@ -54,6 +55,11 @@ if (_isAA) then {
 		//--- Second (or later) separate SPAAG engagement: always destroy.
 		_result = 1;
 	};
+};
+
+//--- Compose the generated fixed-wing air-to-air armor reduction with the central JetAA handler.
+if (_airRearmor && {_ammo in ["M_R73_AA","M_Sidewinder_AA"]}) then {
+	_result = (_result / 100) * 99;
 };
 
 _result

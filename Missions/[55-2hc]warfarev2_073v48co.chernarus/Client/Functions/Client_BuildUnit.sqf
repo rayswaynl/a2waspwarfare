@@ -1282,11 +1282,6 @@ if(typeOf _vehicle in ['F35B','AV8B','AV8B2','A10','A10_US_EP1','Su25_TK_EP1','S
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles}];
 };
 
-//--- Jets survive the first SPAAG (Tunguska/Linebacker) hit — fuel drained + slight damage to attempt a landing; a second hit explodes. Set WFBE_C_JET_AA_SURVIVE 0 to disable.
-if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) > 0) then {
-	_vehicle addEventHandler ["HandleDamage", {_this Call HandleJetAADamage}];
-};
-
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];
 };
