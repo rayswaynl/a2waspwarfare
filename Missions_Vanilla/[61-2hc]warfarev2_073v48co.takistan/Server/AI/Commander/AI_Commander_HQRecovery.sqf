@@ -6,21 +6,25 @@
     separate AI-commander treasury. No town or insufficient funds abandons recovery so the
     normal HQ-loss victory condition resumes.
 */
-private ["_side","_logik","_destroyedAt","_delay","_hq","_origin","_sideID","_town","_nearest","_distance","_funds","_price"];
+private ["_side","_logik","_destroyedAt","_delay","_hq","_origin","_sideID","_town","_nearest","_distance","_funds","_price","_recoveryEpoch"];
 
-_side = _this;
+_side = _this select 0;
+_recoveryEpoch = _this select 1;
 if ((missionNamespace getVariable ["WFBE_C_AICOM_HQ_REPURCHASE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNull _logik) exitWith {};
 if (!(_logik getVariable ["wfbe_aicom_hq_recovery_pending", false])) exitWith {};
+if ((_logik getVariable ["wfbe_aicom_hq_recovery_epoch", -1]) != _recoveryEpoch) exitWith {};
 
 _destroyedAt = _logik getVariable ["wfbe_aicom_hq_recovery_destroyed_at", -1];
 if (_destroyedAt < 0) exitWith {_logik setVariable ["wfbe_aicom_hq_recovery_pending", false]};
 _delay = missionNamespace getVariable ["WFBE_C_AICOM_HQ_REPURCHASE_DELAY", 1200];
 if (_delay < 0) then {_delay = 0};
 
-while {!gameOver && {_logik getVariable ["wfbe_aicom_hq_recovery_pending", false]} && {(time - _destroyedAt) < _delay}} do {sleep 5};
+while {!gameOver && {_logik getVariable ["wfbe_aicom_hq_recovery_pending", false]} && {(_logik getVariable ["wfbe_aicom_hq_recovery_epoch", -1]) == _recoveryEpoch} && {(time - _destroyedAt) < _delay}} do {sleep 5};
 
+//--- A later HQ loss supersedes this worker. Leave its pending flag, delay, origin, and funds alone.
+if ((_logik getVariable ["wfbe_aicom_hq_recovery_epoch", -1]) != _recoveryEpoch) exitWith {};
 if (gameOver || {(missionNamespace getVariable ["WFBE_C_AICOM_HQ_REPURCHASE_ENABLE", 0]) <= 0}) exitWith {
     _logik setVariable ["wfbe_aicom_hq_recovery_pending", false];
 };

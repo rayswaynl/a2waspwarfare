@@ -246,9 +246,24 @@ while {!gameOver} do {
 						_winSide = _x;
 						[nil, "DashboardAnnounce", [Format ["%1 has WON by SUPREMACY - captured every town on the map!", str _x]]] Call WFBE_CO_FNC_SendToClients;
 					} else {
-						//--- L194 HQ-LOSS WINNER: present sides minus defender minus loser; most towns wins.
-						private ["_candidateWinners","_bestSide","_bestCount","_candSide","_candTowns"];
-						_candidateWinners = (WFBE_PRESENTSIDES - [WFBE_DEFENDER] - [_x]);
+						//--- HQ-LOSS WINNER: select a live surviving HQ first. When both sides were
+						//--- destroyed in the same victory interval, resolve the terminal double wipe by the
+						//--- same town-count tie-break instead of whichever dead side was visited first.
+						private ["_candidateWinners","_candidatePool","_bestSide","_bestCount","_candSide","_candTowns","_candidateHQ","_doubleWipe"];
+						_candidatePool = WFBE_PRESENTSIDES - [WFBE_DEFENDER];
+						_candidateWinners = [];
+						{
+							_candSide = _x;
+							_candidateHQ = _candSide Call WFBE_CO_FNC_GetSideHQ;
+							if (!isNull _candidateHQ && {alive _candidateHQ}) then {
+								_candidateWinners set [count _candidateWinners, _candSide];
+							};
+						} forEach _candidatePool;
+						_doubleWipe = false;
+						if ((count _candidateWinners) == 0 && {count _candidatePool > 0}) then {
+							_candidateWinners = +_candidatePool;
+							_doubleWipe = true;
+						};
 						if (count _candidateWinners > 0) then {
 							_bestSide  = _candidateWinners select 0;
 							_bestCount = _bestSide Call GetTownsHeld;
@@ -261,7 +276,11 @@ while {!gameOver} do {
 								};
 							} forEach _candidateWinners;
 							_winSide = _bestSide;
-							["INFORMATION", Format ["server_victory_threeway.sqf: HQ-loss tie-break: winner %1 (%2 towns) from %3 candidates.", str _winSide, _bestCount, count _candidateWinners]] Call WFBE_CO_FNC_LogContent;
+							if (_doubleWipe) then {
+								["INFORMATION", Format ["server_victory_threeway.sqf: HQ-loss double-wipe tie-break: winner %1 (%2 towns) from %3 terminal candidates.", str _winSide, _bestCount, count _candidateWinners]] Call WFBE_CO_FNC_LogContent;
+							} else {
+								["INFORMATION", Format ["server_victory_threeway.sqf: HQ-loss tie-break: winner %1 (%2 towns) from %3 live candidates.", str _winSide, _bestCount, count _candidateWinners]] Call WFBE_CO_FNC_LogContent;
+							};
 						} else {
 							if (_x == west) then { _winSide = east } else { _winSide = west };
 						};

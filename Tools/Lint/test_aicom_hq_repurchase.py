@@ -43,3 +43,30 @@ def test_repurchase_flag_and_delay_constant_are_registered_once_in_each_mission(
 
         assert constants.count('if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE")') == 1
         assert constants.count('if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY")') == 1
+
+
+def test_repeat_hq_loss_cannot_reuse_an_older_recovery_worker() -> None:
+    for mission in MISSIONS:
+        recovery = (ROOT / mission / "Server/AI/Commander/AI_Commander_HQRecovery.sqf").read_text(
+            encoding="utf-8"
+        )
+        hq_killed = (ROOT / mission / "Server/Functions/Server_OnHQKilled.sqf").read_text(
+            encoding="utf-8"
+        )
+
+        assert 'wfbe_aicom_hq_recovery_epoch' in hq_killed
+        assert '[_side, _recoveryEpoch] Spawn WFBE_SE_FNC_AI_Com_HQRecovery' in hq_killed
+        assert '_recoveryEpoch = _this select 1;' in recovery
+        assert 'getVariable ["wfbe_aicom_hq_recovery_epoch", -1]) != _recoveryEpoch' in recovery
+
+
+def test_hq_loss_winner_must_still_have_a_live_hq() -> None:
+    for mission in MISSIONS:
+        victory = (ROOT / mission / "Server/FSM/server_victory_threeway.sqf").read_text(
+            encoding="utf-8"
+        )
+
+        assert '_candidateHQ = _candSide Call WFBE_CO_FNC_GetSideHQ;' in victory
+        assert 'if (!isNull _candidateHQ && {alive _candidateHQ}) then {' in victory
+        assert '_candidatePool = WFBE_PRESENTSIDES - [WFBE_DEFENDER];' in victory
+        assert 'HQ-loss double-wipe tie-break:' in victory
