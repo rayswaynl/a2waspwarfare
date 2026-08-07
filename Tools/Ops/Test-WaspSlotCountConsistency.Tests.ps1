@@ -20,7 +20,8 @@ function New-TerrainFixture {
         [Parameter(Mandatory)] [string]$MissionRoot,
         [Parameter(Mandatory)] [int]$MaxPlayers,
         [Parameter(Mandatory)] [int]$SlotCount,
-        [int]$HeadlessSlots = 0
+        [int]$HeadlessSlots = 0,
+        [int]$CasterSlots = 0
     )
 
     $root = Join-Path $RepoRoot $MissionRoot
@@ -52,8 +53,20 @@ function New-TerrainFixture {
         };
 "@)
     }
+    for ($i = 0; $i -lt $CasterSlots; $i++) {
+        # Caster seats are authored player slots, but their marker reserves them
+        # for the spectator/caster flow instead of the human capacity.
+        $slotBlocks.Add(@"
+        class CasterItem$i
+        {
+            init="this setVariable [""wfbe_caster_slot"", true];";
+            player="PLAY CDG";
+            description="Caster $($i + 1)";
+        };
+"@)
+    }
 
-    $totalDeclared = $SlotCount + $HeadlessSlots
+    $totalDeclared = $SlotCount + $HeadlessSlots + $CasterSlots
     $sqm = @"
 class Mission
 {
@@ -87,15 +100,18 @@ function New-SlotFixtureRepo {
         [int]$ZargabadMax,
         [int]$ChernarusHeadless = 0,
         [int]$TakistanHeadless = 0,
-        [int]$ZargabadHeadless = 0
+        [int]$ZargabadHeadless = 0,
+        [int]$ChernarusCaster = 0,
+        [int]$TakistanCaster = 0,
+        [int]$ZargabadCaster = 0
     )
 
     $repoRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("wasp-slot-fixture-" + [guid]::NewGuid().ToString("N"))
     New-Item -ItemType Directory -Force -Path $repoRoot | Out-Null
 
-    New-TerrainFixture $repoRoot "Missions\[55-2hc]warfarev2_073v48co.chernarus" $ChernarusMax $ChernarusSlots $ChernarusHeadless
-    New-TerrainFixture $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan" $TakistanMax $TakistanSlots $TakistanHeadless
-    New-TerrainFixture $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.zargabad" $ZargabadMax $ZargabadSlots $ZargabadHeadless
+    New-TerrainFixture $repoRoot "Missions\[55-2hc]warfarev2_073v48co.chernarus" $ChernarusMax $ChernarusSlots $ChernarusHeadless $ChernarusCaster
+    New-TerrainFixture $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan" $TakistanMax $TakistanSlots $TakistanHeadless $TakistanCaster
+    New-TerrainFixture $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.zargabad" $ZargabadMax $ZargabadSlots $ZargabadHeadless $ZargabadCaster
 
     return $repoRoot
 }
@@ -152,6 +168,33 @@ try {
     $result = Invoke-SlotCheck $repo
     Assert ($result.ExitCode -eq 1) "T4 exits with mismatch"
     Assert ($result.Output -match 'FAIL\s+Chernarus: WF_MAXPLAYERS=36, playable slots=37 \(39 declared - 2 headless-client slot\(s\)\)') "T4 reports Chernarus human drift"
+} finally {
+    Remove-Item -LiteralPath $repo -Recurse -Force
+}
+
+Write-Host "TEST 5: caster slots are counted separately, not as human capacity"
+# Maintained missions carry two CIV caster seats in addition to normal humans and HCs.
+$repo = New-SlotFixtureRepo 32 32 31 31 33 33 `
+    -ChernarusHeadless 2 -TakistanHeadless 2 -ZargabadHeadless 2 `
+    -ChernarusCaster 2 -TakistanCaster 2 -ZargabadCaster 2
+try {
+    $result = Invoke-SlotCheck $repo
+    Assert ($result.ExitCode -eq 0) "T5 exits successfully"
+    Assert ($result.Output -match 'PASS\s+Chernarus: WF_MAXPLAYERS=32, playable slots=32 \(36 declared - 2 headless-client slot\(s\) - 2 caster slot\(s\)\)') "T5 Chernarus reports caster reservation"
+    Assert ($result.Output -match 'PASS\s+Takistan: WF_MAXPLAYERS=31, playable slots=31 \(35 declared - 2 headless-client slot\(s\) - 2 caster slot\(s\)\)') "T5 Takistan reports caster reservation"
+    Assert ($result.Output -match 'PASS\s+Zargabad: WF_MAXPLAYERS=33, playable slots=33 \(37 declared - 2 headless-client slot\(s\) - 2 caster slot\(s\)\)') "T5 Zargabad reports caster reservation"
+} finally {
+    Remove-Item -LiteralPath $repo -Recurse -Force
+}
+
+Write-Host "TEST 6: a HUMAN slot added alongside HC and caster slots still trips the gate"
+$repo = New-SlotFixtureRepo 33 32 31 31 33 33 `
+    -ChernarusHeadless 2 -TakistanHeadless 2 -ZargabadHeadless 2 `
+    -ChernarusCaster 2 -TakistanCaster 2 -ZargabadCaster 2
+try {
+    $result = Invoke-SlotCheck $repo
+    Assert ($result.ExitCode -eq 1) "T6 exits with mismatch"
+    Assert ($result.Output -match 'FAIL\s+Chernarus: WF_MAXPLAYERS=32, playable slots=33 \(37 declared - 2 headless-client slot\(s\) - 2 caster slot\(s\)\)') "T6 reports Chernarus human drift"
 } finally {
     Remove-Item -LiteralPath $repo -Recurse -Force
 }

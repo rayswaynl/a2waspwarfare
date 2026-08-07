@@ -1,21 +1,24 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-    Validates WF_MAXPLAYERS against playable mission.sqm slots.
+    Validates WF_MAXPLAYERS against human-capacity mission.sqm slots.
 
 .DESCRIPTION
     The mission folder prefix and version.sqf.template define are easy to drift
     away from the actual playable lobby slots. This read-only check compares
     WF_MAXPLAYERS in each maintained template against player declarations in the
-    matching mission.sqm.
+    matching mission.sqm. The census separates reserved headless-client and
+    caster seats from the human capacity.
 
     WF_MAXPLAYERS reaches the engine as Rsc/Header.hpp `maxPlayers`, i.e. the
     mission's HUMAN capacity: it is what the server browser advertises and what
     Server/Init/Init_Server.sqf reads back into the MATCH|v1|START|missionSlots=
     telemetry field. Slots carrying `forceHeadlessClient=1` are reserved for
     headless clients and are not human capacity, so they are counted separately
-    and excluded from the comparison. The mission-folder prefix convention
-    ("[55-2hc]") makes the same split.
+    and excluded from the comparison. CIV caster seats are also authored player
+    declarations, but their `wfbe_caster_slot` marker (or `description="Caster
+    ..."`) reserves them for the caster flow rather than the human capacity.
+    The mission-folder prefix convention ("[55-2hc]") makes the HC split.
 #>
 [CmdletBinding()]
 param(
@@ -76,15 +79,17 @@ function Hide-QuotedStrings {
 function Get-InnermostBlock {
     param(
         [Parameter(Mandatory)] [string]$Text,
+        [Parameter(Mandatory)] [string]$MaskedText,
         [Parameter(Mandatory)] [int]$Index
     )
 
-    # Walk back to the innermost '{' enclosing $Index, then forward to its match.
-    # Entity attributes all live in that one block, so it is the exact scope of a slot.
+    # Walk the quote-masked text back to the innermost '{' enclosing $Index, then
+    # forward to its match. Return the same range from the original text so
+    # reserved-seat markers inside init="..." remain visible to the caster test.
     $depth = 0
     $open = -1
     for ($i = $Index; $i -ge 0; $i--) {
-        $c = $Text[$i]
+        $c = $MaskedText[$i]
         if ($c -eq '}') { $depth++ }
         elseif ($c -eq '{') {
             if ($depth -eq 0) { $open = $i; break }
@@ -95,7 +100,7 @@ function Get-InnermostBlock {
 
     $depth = 1
     for ($i = $open + 1; $i -lt $Text.Length; $i++) {
-        $c = $Text[$i]
+        $c = $MaskedText[$i]
         if ($c -eq '{') { $depth++ }
         elseif ($c -eq '}') {
             $depth--
@@ -108,22 +113,28 @@ function Get-InnermostBlock {
 function Get-SlotCensus {
     param([Parameter(Mandatory)] [string]$MissionSqmPath)
 
-    $text = Hide-QuotedStrings (Remove-LineComments (Read-RequiredText $MissionSqmPath))
+    $rawText = Remove-LineComments (Read-RequiredText $MissionSqmPath)
+    $text = Hide-QuotedStrings $rawText
     # NOT $matches: that is a PowerShell automatic variable, and the -match below
     # would silently overwrite it mid-loop.
     $slotMatches = [regex]::Matches($text, '(?m)^\s*player\s*=\s*"[^"]*"\s*;')
     $hcPattern = [regex]'(?m)^\s*forceHeadlessClient\s*=\s*[1-9][0-9]*\s*;'
+    $casterPattern = [regex]'(?im)^\s*description\s*=\s*"Caster\b|\bwfbe_caster_slot\b'
 
     $headless = 0
+    $caster = 0
     foreach ($m in $slotMatches) {
-        $block = Get-InnermostBlock -Text $text -Index $m.Index
-        if ($hcPattern.IsMatch($block)) { $headless++ }
+        $structuralBlock = Get-InnermostBlock -Text $text -MaskedText $text -Index $m.Index
+        $visibleBlock = Get-InnermostBlock -Text $rawText -MaskedText $text -Index $m.Index
+        if ($hcPattern.IsMatch($structuralBlock)) { $headless++ }
+        if ($casterPattern.IsMatch($visibleBlock)) { $caster++ }
     }
 
     return [pscustomobject]@{
         Total    = $slotMatches.Count
         Headless = $headless
-        Human    = $slotMatches.Count - $headless
+        Caster   = $caster
+        Human    = $slotMatches.Count - $headless - $caster
     }
 }
 
@@ -152,9 +163,16 @@ foreach ($terrain in $terrains) {
     $maxPlayers = Get-WfMaxPlayers $templatePath
     $census = Get-SlotCensus $missionSqmPath
 
-    $suffix = ""
+    $reserved = @()
     if ($census.Headless -gt 0) {
-        $suffix = " ({0} declared - {1} headless-client slot(s))" -f $census.Total, $census.Headless
+        $reserved += "{0} headless-client slot(s)" -f $census.Headless
+    }
+    if ($census.Caster -gt 0) {
+        $reserved += "{0} caster slot(s)" -f $census.Caster
+    }
+    $suffix = ""
+    if ($reserved.Count -gt 0) {
+        $suffix = " ({0} declared - {1})" -f $census.Total, ($reserved -join " - ")
     }
 
     if ($maxPlayers -eq $census.Human) {
