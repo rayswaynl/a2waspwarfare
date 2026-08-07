@@ -335,7 +335,13 @@ while {!WFBE_GameOver} do {
 					if (_x getVariable ["WFBE_IsTownDefenderAI", false]) then {
 						_defendersIgnored = _defendersIgnored + 1;
 					} else {
-						_detectedFiltered = _detectedFiltered + [_x];
+						//--- Observer contract: only living men and live-crewed hulls can wake or hold a town.
+						//--- A corpse or empty hull retains a side and otherwise keeps the inactivity clock alive.
+						if (_x isKindOf "Man") then {
+							if (alive _x) then {_detectedFiltered = _detectedFiltered + [_x]};
+						} else {
+							if (alive _x && {({alive _x} count (crew _x)) > 0}) then {_detectedFiltered = _detectedFiltered + [_x]};
+						};
 					};
 				} forEach _detected;
 
