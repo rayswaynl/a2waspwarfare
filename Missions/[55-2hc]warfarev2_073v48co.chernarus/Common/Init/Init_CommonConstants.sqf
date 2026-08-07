@@ -265,6 +265,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24") then {WFBE_C_GUER_AIRDEF_CLASS_MI24 = "Mi24_P"};   //--- heavy gunship for large contested towns.
 	if (isNil "WFBE_C_GUER_AIRDEF_LIFETIME") then {WFBE_C_GUER_AIRDEF_LIFETIME = 900};  //--- max seconds a defender lives before forced recycle (anti-accumulation).
 	if (isNil "WFBE_C_GUER_AIRDEF_QUIET_DESPAWN") then {WFBE_C_GUER_AIRDEF_QUIET_DESPAWN = 300}; //--- despawn after this many seconds with no enemies near the town.
+	if (isNil "WFBE_C_GUER_AIRDEF_DESTROYED_COOLDOWN") then {WFBE_C_GUER_AIRDEF_DESTROYED_COOLDOWN = 240}; //--- fix0807b (churn, 2026-08-07): per-town no-spawn window armed after a COMBAT loss (destroyed/crew_dead). Live-measured (61-min wave0807a3 window): 23 destroyed + 28 spawned in one hour, mean survival ~1 maintain sweep (~145s, well under the 300s quiet-despawn grace period), most refilled the SAME sweep the death was noticed - the town-side half of the fix in Server_GuerAirDef.sqf. Default ~2x interval so a killed town forgoes one extra sweep before refilling. Rollback: 0 (legacy immediate-refill).
 	if (isNil "WFBE_C_GUER_AIRDEF_LARGE_SV") then {WFBE_C_GUER_AIRDEF_LARGE_SV = 2500}; //--- maxSupplyValue at/above which a town counts as LARGE (Mi-24 eligible); town_type Large/Huge also qualifies.
 	if (isNil "WFBE_C_GUER_AIRDEF_HEIGHT") then {WFBE_C_GUER_AIRDEF_HEIGHT = 120};      //--- flyInHeight for spawned GUER air.
 	if (isNil "WFBE_C_GUER_AIRDEF_FLYAWAY") then {WFBE_C_GUER_AIRDEF_FLYAWAY = 1};      //--- NEW (Grok idea #12, default 0): on a "quiet" recall, fly the defender ~2km away from the town + climb, THEN despawn, instead of an instant mid-skyline delete. Bounded by FLYAWAY_TIMEOUT.
@@ -1688,6 +1689,15 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- abandon, or strike-ladder decision -- read-only in AI_Commander_AssignTowns.sqf.
 	//--- Codex review MEDIUM fix: CAPGATE (server_town.sqf) throttle interval - see the diag_log call there.
 	if (isNil 'WFBE_C_CAPGATE_LOG_INTERVAL') then {WFBE_C_CAPGATE_LOG_INTERVAL = 30};
+	//--- W807B-L14 (owner-ordered fix, 2026-08-07): CAPGATE self-protect dominion gate (server_town.sqf)
+	//--- lets a town's owner heal supply back to full every tick they hold local numeric dominance, even
+	//--- under a genuinely sustained siege - predicted as a caveat in docs/design/NO-TOWN-UNCAPTURABLE.md
+	//--- and confirmed live (wave0807b RPT: 97% of mode2 gate checks vetoed, GUER 0-for-38 in 69min).
+	//--- Tapers the self-protect heal toward SIEGE_REGEN_FLOOR across SIEGE_DECAY_TICKS consecutive ticks
+	//--- of self-protect WHILE a non-owner side is present; resets the instant the siege breaks. 0
+	//--- disables it (instant rollback to pre-fix behaviour, byte-identical decision math).
+	if (isNil "WFBE_C_CAPGATE_SIEGE_DECAY_TICKS") then {WFBE_C_CAPGATE_SIEGE_DECAY_TICKS = 24};
+	if (isNil "WFBE_C_CAPGATE_SIEGE_REGEN_FLOOR") then {WFBE_C_CAPGATE_SIEGE_REGEN_FLOOR = 0.15};
 	//--- P0 STRANDED FIX (task #48, claude-gaming 2026-06-15): foot/under-equipped ongoing teams were
 	//--- dispatched at far spearhead towns 6-12km away (256 DISPATCH vs 13 ARRIVED, 63% >6km) - they
 	//--- march cross-country and die. REACH_FOOT = max metres a non-mounted team is sent on the ONGOING

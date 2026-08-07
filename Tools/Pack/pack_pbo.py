@@ -50,10 +50,11 @@ Where this diverges from a hypothetical "by the book" packer:
     is effectively case-sensitive against whatever got stored. The fix landed
     in `pack_release_ch.py` (the newest script recovered) and is preserved
     here as the default, correct behaviour.
-  - No compression is ever attempted (mimetype always 0). This matches every
+  - No compression by default (mimetype always 0). This matches every
     recovered script; real BI tools can also emit LZSS-compressed entries
-    (mimetype 0x43707273), but nothing in this project's build lineage ever
-    used that, so it is intentionally not implemented.
+    (mimetype 0x43707273, "Cprs"), but nothing in this project's build
+    lineage ever used that, and it stays off unless `--compress` is passed
+    (see "Cprs text compression" in `Tools/Pack/PBO-PACKING.md`).
   - File bytes are read/written exactly as-is (`open(..., 'rb')` /
     concatenation of raw bytes) — no CRLF normalisation of any kind. This
     matches every recovered script; PBO entries are opaque byte blobs.
@@ -73,9 +74,35 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+import cprs
+
 MAGIC_VERS = 0x56657273  # ASCII "Vers" (big-endian reading) - properties-follow signal
 EXCLUDED_SUFFIXES = (".template", ".bak", ".orig")
 STRUCT5I = struct.Struct("<5I")
+
+# --- Cprs text compression (opt-in via --compress / --cprs) ----------------
+# OFF by default: with --compress omitted, every byte this module writes is
+# identical to before this block existed (mimetype=0 for every entry, no
+# cprs.py import side effects beyond the import itself). See "Cprs text
+# compression" in Tools/Pack/PBO-PACKING.md for the full writeup, the boot-test
+# evidence trail (TEST box 78.46.107.142, wave-independent of this PR), and the
+# still-open client-join gate.
+#
+# Real BIS packer/reader convention (see cprs.py's provenance docstring,
+# BIS.Core.Compression.BinaryReaderEx/WriterEx.ReadLZSS/WriteLZSS): an entry
+# below this size is never actually run through LZSS, regardless of mimetype
+# tag - a real reader reads it raw either way. Getting this wrong would
+# silently desync from a real engine, so the writer honours the same
+# threshold read_pbo.py's decompressor already enforces.
+REAL_LZSS_MIN_SIZE = 1024
+
+# Text/config formats worth compressing - the mission-pbo-bloat program's own
+# corpus definition (test_cprs.py's TEXT_SUFFIXES, the same set the boot-test
+# PBO on the TEST box used). .paa/.ogg/.wss and other already-compressed
+# binary formats are deliberately never included - LZSS would only grow them.
+TEXT_COMPRESS_SUFFIXES = (
+    ".sqf", ".hpp", ".ext", ".sqm", ".fsm", ".html", ".bikb", ".xml",
+)
 
 # The canonical, proven-live mission tree never carries a mission-root `init.sqf`.
 # Structural extraction of the live wave0720b deploy PBO (938 entries) confirms this:
@@ -422,26 +449,89 @@ def derive_prefix(folder_name: str, build_tag: str | None) -> str:
     return f"{folder_name}_{build_tag}"
 
 
-def build_pbo_bytes(files: List[Tuple[str, bytes]], prefix: str) -> bytes:
+def compress_entries(
+    files: List[Tuple[str, bytes]], compress: bool
+) -> List[Tuple[str, bytes, int, int, bytes]]:
+    """Return (path, stored_bytes, mimetype, original_size, original_bytes) for
+    every file, deciding per-entry whether to Cprs-compress it.
+
+    `compress=False` (the default) always returns mimetype=0, stored_bytes ==
+    original_bytes, byte-for-byte what `build_pbo_bytes` wrote before this
+    function existed.
+
+    `compress=True` compresses an entry only if ALL of:
+      - its extension is in TEXT_COMPRESS_SUFFIXES (already-compressed binary
+        formats like .paa/.ogg would only grow under LZSS, so are never
+        attempted);
+      - its size is >= REAL_LZSS_MIN_SIZE (matches the real BIS packer/reader
+        convention - see module-level comment);
+      - the compressed result is actually SMALLER than the original (LZSS
+        overhead can make already-dense text not worth it in rare cases).
+    Any entry that doesn't compress smaller, or fails either gate, is stored
+    uncompressed exactly as before.
+
+    Every entry that IS compressed is immediately round-tripped through
+    `cprs.decompress()` and compared byte-for-byte against the original before
+    being accepted - a codec regression or a distance/length encoding bug
+    aborts the pack right here instead of silently shipping a corrupt entry
+    (see `self_check()`, which re-verifies this from the final assembled
+    bytes as a second, independent pass)."""
+    out: List[Tuple[str, bytes, int, int, bytes]] = []
+    for path, data in files:
+        if (
+            compress
+            and path.endswith(TEXT_COMPRESS_SUFFIXES)
+            and len(data) >= REAL_LZSS_MIN_SIZE
+        ):
+            comp = cprs.compress(data)
+            if len(comp) < len(data):
+                back = cprs.decompress(comp, len(data))
+                if back != data:
+                    raise PackError(
+                        f"internal error: Cprs round-trip mismatch compressing "
+                        f"'{path}' - refusing to write a corrupt entry"
+                    )
+                out.append((path, comp, cprs.MAGIC_CPRS, len(data), data))
+                continue
+        out.append((path, data, 0, len(data), data))
+    return out
+
+
+def build_pbo_bytes(
+    files: List[Tuple[str, bytes]], prefix: str, compress: bool = False
+) -> bytes:
     """Assemble the full PBO byte stream (header + properties + file table +
     terminator + concatenated data + checksum) for an already-collected,
-    already-sorted file list."""
+    already-sorted file list.
+
+    `compress=True` runs eligible text/config entries through
+    `compress_entries()` first (see its docstring); default False preserves
+    the exact byte-for-byte output this function always produced."""
+    stored = compress_entries(files, compress)
+
     hdr = bytearray()
     hdr += b"\x00" + STRUCT5I.pack(MAGIC_VERS, 0, 0, 0, 0)
     hdr += az("prefix") + az(prefix) + b"\x00"
-    for path, data in files:
-        hdr += az(path) + STRUCT5I.pack(0, len(data), 0, 0, len(data))
+    for path, entry_bytes, mimetype, original_size, _orig in stored:
+        hdr += az(path) + STRUCT5I.pack(mimetype, original_size, 0, 0, len(entry_bytes))
     hdr += b"\x00" + STRUCT5I.pack(0, 0, 0, 0, 0)
 
-    body = bytes(hdr) + b"".join(data for _, data in files)
+    body = bytes(hdr) + b"".join(entry_bytes for _, entry_bytes, _, _, _ in stored)
     checksum = hashlib.sha1(body).digest()
     return body + b"\x00" + checksum
 
 
 def self_check(pbo_bytes: bytes, expected_entry_count: int) -> None:
-    """Minimal sanity check on our own freshly-built bytes (NOT the
-    independent validation - see Tools/Pack/read_pbo.py and PBO-PACKING.md for
-    that). This only confirms we wrote what we meant to write."""
+    """Sanity check on our own freshly-built bytes (NOT the independent
+    validation - see Tools/Pack/read_pbo.py and PBO-PACKING.md for that, which
+    is a from-scratch second parser implementation). Confirms we wrote what we
+    meant to write, AND - for any Cprs-tagged entry - that read_pbo.py's own
+    decompressor (imported here as `cprs` directly, the same codec module)
+    recovers exactly `original_size` bytes matching the stored checksum
+    contract. This is the "extend the self-check to validate compressed
+    entries" gate: a header/table bug that ships a Cprs entry no real reader
+    could decode is caught here, not just in build_pbo_bytes's narrower
+    same-call round-trip check."""
 
     def raz(buf: bytes, o: int) -> Tuple[str, int]:
         e = buf.index(b"\x00", o)
@@ -463,6 +553,7 @@ def self_check(pbo_bytes: bytes, expected_entry_count: int) -> None:
     if props[:1] != ["prefix"]:
         raise PackError("internal error: prefix property missing (self-check failed)")
 
+    entries: List[Tuple[str, int, int, int]] = []  # (name, mimetype, original_size, data_size)
     count = 0
     while True:
         nm, o = raz(pbo_bytes, o)
@@ -470,12 +561,51 @@ def self_check(pbo_bytes: bytes, expected_entry_count: int) -> None:
         o += 20
         if nm == "" and mi == 0 and osz == 0 and ds == 0:
             break
+        entries.append((nm, mi, osz, ds))
         count += 1
     if count != expected_entry_count:
         raise PackError(
             f"internal error: wrote {count} entries, expected {expected_entry_count} "
             "(self-check failed)"
         )
+
+    data_start = o
+    off = data_start
+    for nm, mi, osz, ds in entries:
+        entry_bytes = pbo_bytes[off : off + ds]
+        if mi == 0:
+            if osz != ds:
+                raise PackError(
+                    f"internal error: '{nm}' mimetype=0 but original_size={osz} != "
+                    f"data_size={ds} (self-check failed)"
+                )
+        elif mi == cprs.MAGIC_CPRS:
+            if osz < REAL_LZSS_MIN_SIZE:
+                raise PackError(
+                    f"internal error: '{nm}' tagged Cprs but original_size={osz} < "
+                    f"{REAL_LZSS_MIN_SIZE} - real engine never LZSS's below this "
+                    "threshold; this writer must not emit such an entry "
+                    "(self-check failed)"
+                )
+            try:
+                back = cprs.decompress(entry_bytes, osz)
+            except cprs.CprsError as exc:
+                raise PackError(
+                    f"internal error: '{nm}' tagged Cprs but failed to decompress "
+                    f"({exc}) - would corrupt against a real engine "
+                    "(self-check failed)"
+                )
+            if len(back) != osz:
+                raise PackError(
+                    f"internal error: '{nm}' Cprs decompressed to {len(back)} bytes, "
+                    f"expected original_size={osz} (self-check failed)"
+                )
+        else:
+            raise PackError(
+                f"internal error: '{nm}' has unexpected mimetype=0x{mi:08x} - this "
+                "writer only ever emits 0 (uncompressed) or Cprs (self-check failed)"
+            )
+        off += ds
 
 
 def pack(
@@ -487,6 +617,7 @@ def pack(
     strict_version: bool,
     force: bool,
     quiet: bool,
+    compress: bool = False,
 ) -> None:
     if not source.is_dir():
         raise PackError(f"Source mission folder not found or not a directory: {source}")
@@ -507,7 +638,7 @@ def pack(
 
     final_prefix = prefix if prefix else derive_prefix(source.name, build_tag)
 
-    pbo_bytes = build_pbo_bytes(files, final_prefix)
+    pbo_bytes = build_pbo_bytes(files, final_prefix, compress=compress)
     self_check(pbo_bytes, expected_entry_count=len(files))
 
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -519,6 +650,13 @@ def pack(
         quiet,
     )
     log(f"  build_tag={build_tag!r}", quiet)
+    if compress:
+        log(
+            "  compress=True: Cprs-compressed eligible "
+            f"{TEXT_COMPRESS_SUFFIXES} entries >= {REAL_LZSS_MIN_SIZE} bytes "
+            "(see Tools/Pack/PBO-PACKING.md, 'Cprs text compression')",
+            quiet,
+        )
     log(
         "self-check OK. For independent validation run: "
         f"python Tools/Pack/read_pbo.py \"{output}\"",
@@ -565,6 +703,19 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
     )
     p.add_argument("--force", action="store_true", help="Overwrite an existing --output file.")
     p.add_argument("--quiet", action="store_true", help="Only print warnings/errors.")
+    p.add_argument(
+        "--compress",
+        "--cprs",
+        dest="compress",
+        action="store_true",
+        help="Opt-in: Cprs-compress (BIS LZSS, Tools/Pack/cprs.py) entries whose "
+        f"extension is in {TEXT_COMPRESS_SUFFIXES} and whose size is >= "
+        f"{REAL_LZSS_MIN_SIZE} bytes, when doing so actually shrinks the entry. "
+        ".paa/.ogg/.wss and other already-compressed formats are never touched. "
+        "Default: off (byte-for-byte identical to every prior build). See "
+        "'Cprs text compression' in Tools/Pack/PBO-PACKING.md before shipping "
+        "this to a real deploy - client-side load is not yet proven.",
+    )
     return p.parse_args(argv)
 
 
@@ -580,6 +731,7 @@ def main(argv: List[str] | None = None) -> int:
             strict_version=args.strict_version,
             force=args.force,
             quiet=args.quiet,
+            compress=args.compress,
         )
     except PackError as exc:
         print(f"error: {exc}", file=sys.stderr)
