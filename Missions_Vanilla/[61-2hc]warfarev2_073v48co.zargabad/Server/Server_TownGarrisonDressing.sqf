@@ -77,7 +77,7 @@ while {!WFBE_GameOver} do {
     {
         private ["_entry","_eTown","_eGun","_eLight","_eGrp","_eCrew",
                  "_eSpawn","_eLastEnemy","_drop","_reason",
-                 "_townSide","_townActive","_enemiesNow"];
+                 "_townSide","_townActive","_enemiesNow","_isNight","_lightPos","_gunDir"];
         _entry      = _x;
         _eTown      = _entry select 0;
         _eGun       = _entry select 1;
@@ -122,6 +122,37 @@ while {!WFBE_GameOver} do {
 
         //--- Lifetime exceeded.
         if (!_drop && {(_now - _eSpawn) > _lifetime}) then { _drop = true; _reason = "lifetime"; };
+
+        if (!_drop) then {
+            //--- Reconcile the optional searchlight with current mission time. Placement-only
+            //            evaluation left lights stale across day/night transitions.
+            _isNight = ((date select 3) < 6) || {(date select 3) >= 20};
+            if (_searchlightOn >= 1 && {_isNight}) then {
+                if (isNull _eLight || {!(alive _eLight)}) then {
+                    _gunDir = getDir _eGun;
+                    _lightPos = getPos _eGun;
+                    _lightPos = [
+                        (_lightPos select 0) + 10 * (sin (_gunDir - 90)),
+                        (_lightPos select 1) + 10 * (cos (_gunDir - 90)),
+                        0
+                    ];
+                    _eLight = _lightClass createVehicle _lightPos;
+                    if (isNull _eLight) then {
+                        ["WARNING", Format ["Server_TownGarrisonDressing.sqf: searchlight refresh createVehicle null class=%1 town=%2.", _lightClass, (_eTown getVariable ["name","?"])]] Call WFBE_CO_FNC_LogContent;
+                    } else {
+                        _eLight setDir _gunDir;
+                        diag_log format ["GARNDRESS|LIGHT|town=%1|state=ON|night=%2", (_eTown getVariable ["name","?"]), _isNight];
+                    };
+                };
+            } else {
+                if (!isNull _eLight && {alive _eLight}) then {
+                    ["garrison-night-transition", _eLight, ""] Call WFBE_CO_FNC_LogVehDelete;
+                    deleteVehicle _eLight;
+                    diag_log format ["GARNDRESS|LIGHT|town=%1|state=OFF|night=%2", (_eTown getVariable ["name","?"]), _isNight];
+                };
+                _eLight = objNull;
+            };
+        };
 
         if (_drop) then {
             //--- Player-safe teardown (GUER is playable): never delete a player-occupied hull.
