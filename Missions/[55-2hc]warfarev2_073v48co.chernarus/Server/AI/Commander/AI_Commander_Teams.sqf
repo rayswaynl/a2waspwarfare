@@ -1247,13 +1247,19 @@ if (count _live > 0) then {
 	//--- raw MIN floor. HC-founded teams are never refilled, so founding at the floor lets the live
 	//--- average dribble below the 8-12 band (soak measured 4.2-5.1). FOUND_SIZE defaults to MIN if unset
 	//--- and is clamped into [MIN,MAX]; behaviour is identical to before when FOUND_SIZE == MIN.
-	private ["_sizeMin","_sizeMax","_foundSize","_isBigVeh","_padClass"];
+	private ["_sizeMin","_sizeMax","_foundSize","_isBigVeh","_padClass","_aiMax"];
 	_sizeMin   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
 	_sizeMax   = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 8]; //--- Build84 (Ray 2026-07-01): cap MAX infantry team size at 8 (was 12). MBT/attack-heli single-vehicle teams are exempt (the _isBigVeh skip below never pads them up). If MIN ever exceeds MAX (mis-set consts), clamp MIN down so the [MIN,MAX] clamp stays valid.
 	if (_sizeMin > _sizeMax) then {_sizeMin = _sizeMax}; //--- Build84 guard: keep MIN <= MAX so the _foundSize clamp below can't invert.
 	_foundSize = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_FOUND_SIZE", _sizeMin];
 	if (_foundSize < _sizeMin) then {_foundSize = _sizeMin};
 	if (_foundSize > _sizeMax) then {_foundSize = _sizeMax};
+	//--- AICOM TUNABLE GUARD (r180): B57 padding is an additive founding step, so it must honor the live
+	//--- positive AI Group Size lobby cap too. Zero/negative values are not lobby-reachable and leave the
+	//--- established found-size fallback untouched; already-composed vehicle templates are not trimmed here,
+	//--- because removing a hull or its crew token would change composition and can make the spawn unsafe.
+	_aiMax = missionNamespace getVariable ["WFBE_C_AI_MAX", _foundSize];
+	if (_aiMax > 0 && {_foundSize > _aiMax}) then {_foundSize = _aiMax};
 	_isBigVeh = false;
 	{
 		if (_x isKindOf "Tank") exitWith {_isBigVeh = true};
