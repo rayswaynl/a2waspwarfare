@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_built", "_builtveh", "_cacheTier", "_crews", "_gdirDelivery", "_gdirDeliveryActive", "_gdirDeliveryClass", "_gdirDeliveryDriver", "_gdirDeliveryIndex", "_gdirDeliveryOrderId", "_gdirDeliveryPos", "_gdirDeliveryResult", "_gdirDeliveryTeam", "_gdirDeliveryTier", "_gdirDeliveryVehicle", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
+Private ["_activationContacts", "_built", "_builtveh", "_cacheTier", "_crews", "_gdirDelivery", "_gdirDeliveryActive", "_gdirDeliveryClass", "_gdirDeliveryDriver", "_gdirDeliveryIndex", "_gdirDeliveryOrderId", "_gdirDeliveryPos", "_gdirDeliveryResult", "_gdirDeliveryTeam", "_gdirDeliveryTier", "_gdirDeliveryVehicle", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -22,6 +22,8 @@ _builtveh = 0;
 _town_teams = [];
 _town_vehicles = [];
 _gdirDelivery = if (count _this > 5) then {_this select 5} else {[]};
+_activationContacts = if (count _this > 6) then {_this select 6} else {[]};
+if (typeName _activationContacts != "ARRAY") then {_activationContacts = []};
 _gdirDeliveryActive = false;
 _gdirDeliveryClass = "";
 _gdirDeliveryIndex = -1;
@@ -282,21 +284,15 @@ if (_gdirDeliveryActive && {count _gdirDeliveryResult >= 2} && {(_gdirDeliveryRe
 	_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", _gdirDeliveryTeam];
 };
 
-//--- B5: coalesced reveal — ONE nearEntities scan per activation episode (was one per
-//--- garrison group). Reveal the nearby entities to every town team created this episode.
-//--- Scan is town-centred with a radius that covers the union of the old per-group 400m
-//--- circles (groups spawn up to ~300m from the town, so 700m envelops them). The crew of
-//--- each revealed vehicle is revealed too, matching Common_RevealArea's behaviour.
+//--- Seed only the hostile contact snapshot that caused this activation. A fresh group
+//--- starts with no engine knowledge, but a second 700m all-entity scan made every garrison
+//--- omniscient about unseen players and vehicles. Contacts are supplied by server_town_ai
+//--- through every local/remote creation path after final group assembly.
 if (count _town_teams > 0) then {
-	[_town_teams, _town] spawn {
-		Private ["_teams","_town","_revealPos","_revealRange","_near","_reveal","_ent","_grp"];
-		_teams = _this select 0;
-		_town  = _this select 1;
-		_revealPos = getPos _town;
-		_revealRange = 700;
-		_near = _revealPos nearEntities _revealRange;
-		{
-			_ent = _x;
+	{
+		Private ["_reveal", "_ent", "_grp"];
+		_ent = _x;
+		if (!isNull _ent && {alive _ent}) then {
 			_reveal = [_ent];
 			if !(_ent isKindOf "Man") then {
 				_reveal = _reveal + (crew _ent);
@@ -305,10 +301,10 @@ if (count _town_teams > 0) then {
 			};
 			{
 				_grp = _x;
-				{_grp reveal _x} forEach _reveal;
-			} forEach _teams;
-		} forEach _near;
-	};
+				if !(isNull _grp) then {{_grp reveal _x} forEach _reveal};
+			} forEach _town_teams;
+		};
+	} forEach _activationContacts;
 };
 
 if (_built > 0) then {[str _side,'UnitsCreated',_built] call UpdateStatistics};

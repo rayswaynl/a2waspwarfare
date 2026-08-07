@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_epoch", "_groups", "_i", "_perfStart", "_positions", "_registry", "_retVal", "_side", "_team", "_teams", "_town", "_town_teams", "_town_vehicles"];
+Private ["_contacts", "_epoch", "_groups", "_i", "_perfStart", "_positions", "_registry", "_retVal", "_side", "_team", "_teams", "_town", "_town_teams", "_town_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -20,6 +20,8 @@ _teams = _this select 4;
 //--- Older senders that predate this field omit it; treat that as epoch -1 (never matches a real
 //--- town epoch, which starts at 0) so legacy payloads don't silently pass validation.
 _epoch = if (count _this > 5) then {_this select 5} else {-1};
+_contacts = if (count _this > 6) then {_this select 6} else {[]};
+if (typeName _contacts != "ARRAY") then {_contacts = []};
 
 ["INFORMATION", Format["Client_DelegateTownAI.sqf: Received a town delegation request from the server for [%1] [%2].", _side, _town]] Call WFBE_CO_FNC_LogContent;
 
@@ -46,7 +48,7 @@ for "_i" from 0 to ((count _teams) - 1) do {
 	_teams set [_i, _team];
 };
 
-_retVal = [_town, _side, _groups, _positions, _teams] call WFBE_CO_FNC_CreateTownUnits;
+_retVal = [_town, _side, _groups, _positions, _teams, [], _contacts] call WFBE_CO_FNC_CreateTownUnits;
 // Marty: Register the actual local groups created by the HC/client so cleanup runs where deleteGroup is effective.
 _town_teams = _retVal select 0;
 _town_vehicles = _retVal select 1;

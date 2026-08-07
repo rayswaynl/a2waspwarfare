@@ -8,13 +8,15 @@
 		- Teams
 */
 
-Private ["_epoch", "_hcUnit", "_delegated", "_groups", "_perfStart", "_positions", "_side", "_teams", "_town", "_live", "_x", "_seedIdx", "_rr", "_hcCount"];
+Private ["_contacts", "_epoch", "_hcUnit", "_delegated", "_groups", "_perfStart", "_positions", "_side", "_teams", "_town", "_live", "_x", "_seedIdx", "_rr", "_hcCount"];
 
 _town = _this select 0;
 _side = _this select 1;
 _groups = +(_this select 2);
 _positions = +(_this select 3);
 _teams = +(_this select 4);
+_contacts = if (count _this > 5) then {_this select 5} else {[]};
+if (typeName _contacts != "ARRAY") then {_contacts = []};
 //--- r40 handoff: null town (deactivated/deleted mid-call) must not getVariable/setVariable.
 if (isNil "_town" || {isNull _town}) exitWith {
 	["WARNING", "Server_DelegateAITownHeadless.sqf: null town — delegation aborted."] Call WFBE_CO_FNC_LogContent;
@@ -75,7 +77,7 @@ for '_i' from 0 to count(_groups) -1 do {
 		if (isNull _hcUnit) then {
 			["WARNING", Format["Server_DelegateAITownHeadless.sqf: HC unit null for town [%1] group %2 - skip.", _town getVariable "name", _i]] Call WFBE_CO_FNC_LogContent;
 		} else {
-			[_hcUnit, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch]] Call WFBE_CO_FNC_SendToClient;
+			[_hcUnit, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch, _contacts]] Call WFBE_CO_FNC_SendToClient;
 			_delegated = _delegated + 1;
 		};
 	};

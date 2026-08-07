@@ -13,13 +13,15 @@
 		- Groups
 */
 WFBE_SE_FNC_DelegateAITown = {
-	Private ["_epoch", "_groups", "_positions", "_side", "_teams", "_town", "_town_teams", "_town_vehicles"];
+	Private ["_contacts", "_epoch", "_groups", "_positions", "_side", "_teams", "_town", "_town_teams", "_town_vehicles"];
 
 	_town = _this select 0;
 	_side = _this select 1;
 	_groups = +(_this select 2);
 	_positions = +(_this select 3);
 	_teams = +(_this select 4);
+	_contacts = if (count _this > 5) then {_this select 5} else {[]};
+	if (typeName _contacts != "ARRAY") then {_contacts = []};
 	//--- fix-1342-1343 (reconciles #1342+#1343): this is the WFBE_C_AI_DELEGATION=1 (client, non-HC)
 	//--- delegation sender. Both PRs added the epoch-guard contract to the mode-2 (Headless Client)
 	//--- path - Server_DelegateAITownHeadless.sqf - and to Client_DelegateTownAI.sqf's receive side,
@@ -49,9 +51,9 @@ WFBE_SE_FNC_DelegateAITown = {
 			Private ["_uid"];
 			_uid = getPlayerUID(_delegators select _i);
 			if !(WF_A2_Vanilla) then {
-			[_delegators select _i, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch]] Call WFBE_CO_FNC_SendToClient;
+			[_delegators select _i, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch, _contacts]] Call WFBE_CO_FNC_SendToClient;
 			} else {
-				[_uid, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch]] Call WFBE_CO_FNC_SendToClients;
+				[_uid, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch, _contacts]] Call WFBE_CO_FNC_SendToClients;
 			};
 			[_uid, "increment"] Call WFBE_SE_FNC_DelegationOperate; //--- Increment the group count for that client.
 			[_uid, _teams select _i] Spawn WFBE_SE_FNC_DelegationTracker; //--- Track a group until it's nullification.
@@ -68,7 +70,7 @@ WFBE_SE_FNC_DelegateAITown = {
 	_teams = _teams - ["**NIL**"];
 
 	if (count _groups > 0) then { //--- Some units left for the server to create?
-		_retVal = [_town, _side, _groups, _positions, _teams] call WFBE_CO_FNC_CreateTownUnits;
+		_retVal = [_town, _side, _groups, _positions, _teams, [], _contacts] call WFBE_CO_FNC_CreateTownUnits;
 		_town_teams = _town_teams + (_retVal select 0);
 		_town_vehicles = _town_vehicles + (_retVal select 1);
 	};
