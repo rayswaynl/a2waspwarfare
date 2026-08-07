@@ -35,6 +35,11 @@ COMMON_INIT = CHERNARUS / "Common" / "Init" / "Init_Common.sqf"
 ANCHOR = CHERNARUS / "Common" / "Functions" / "Common_AICOMArtySafeAnchor.sqf"
 BASE = CHERNARUS / "Server" / "AI" / "Commander" / "AI_Commander_Base.sqf"
 STRATEGY = CHERNARUS / "Server" / "AI" / "Commander" / "AI_Commander_Strategy.sqf"
+RUNNERS = [
+    CHERNARUS / "Common" / "Functions" / "Common_RunCommanderTeam.sqf",
+    ROOT / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.takistan" / "Common" / "Functions" / "Common_RunCommanderTeam.sqf",
+    ROOT / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.zargabad" / "Common" / "Functions" / "Common_RunCommanderTeam.sqf",
+]
 
 
 def code(path: Path) -> str:
@@ -287,6 +292,34 @@ class ArtilleryEchelonFixtures(unittest.TestCase):
         self.assertIn("side _x != _side", enemy_near_line)
         self.assertIn("side _x != civilian", enemy_near_line)
         self.assertNotIn("_enemySide", anchor)
+
+    def test_12_arty_surge_acknowledges_only_a_nonempty_create_result(self) -> None:
+        """A refused surge must not be logged as delivered or latch the battery forever."""
+        for runner in RUNNERS:
+            source = code(runner)
+            start = source.index("wfbe_aicom_arty_surge_req")
+            end = source.index("sleep 8;", start)
+            block = source[start:end]
+
+            self.assertIn("_esRet =", block, runner)
+            self.assertIn("_esNewUnits", block, runner)
+            self.assertIn("_esNewVehicles", block, runner)
+            self.assertIn("ARTY_SURGE_FAIL", block, runner)
+            self.assertIn(
+                'setVariable ["wfbe_aicom_arty_surged", false, true]',
+                block,
+                runner,
+            )
+            self.assertLess(
+                block.index("count _esNewUnits"),
+                block.index("ARTY_SURGE_DONE"),
+                runner,
+            )
+            self.assertLess(
+                block.index("count _esNewVehicles"),
+                block.index("ARTY_SURGE_DONE"),
+                runner,
+            )
 
 
 if __name__ == "__main__":
