@@ -570,7 +570,7 @@ _tierCapOn = (missionNamespace getVariable ["WFBE_C_AICOM_SPREAD_TIERCAP", 0]) >
 } forEach _fist;
 _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 {
-	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
+	private ["_grp","_ldr","_alive","_mode","_relief","_strike","_rallying","_hasVeh","_reach","_tgt","_tgtD","_ldrPos","_v"];
 	_grp = _x;
 	if (!isNull _grp) then {
 		_alive  = {alive _x} count (units _grp);
@@ -578,6 +578,7 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 		_mode   = toLower ([_grp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool); //--- fix(hunt): G1-safe - nil reads here nil-poisoned the eligibility chain so EVERY unstamped team failed eligibility every tick
 		_relief = [_grp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 		_strike = [_grp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
+		_rallying = [_grp, "wfbe_aicom_rallying", false] Call WFBE_CO_FNC_GroupGetBool;
 		//--- r27 ownership: skip logistics self-service detour (Common_AICOMServiceTick stamps enroute).
 		//--- A2 group vars: plain get + isNil (no [name,default] G1 trap).
 		private "_svcState";
@@ -585,7 +586,7 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 		//--- ELIGIBILITY: an offensive founded/HC team Strategy hasn't claimed (relief/strike), not the base
 		//--- garrison, not player-led, not under an explicit human order (move/patrol/defense).
 		if (_alive > 0 && {!isNull _ldr} && {!isPlayer _ldr} && {_grp != _garGrp}
-		    && {isNull _relief} && {!_strike} && {!(_mode in ["move","patrol","defense"])}
+		    && {isNull _relief} && {!_strike} && {!_rallying} && {!(_mode in ["move","patrol","defense"])}
 		    && {isNil "_svcState" || {_svcState != "enroute"}}
 		    && {!([_grp] Call WFBE_CO_FNC_CapLock)}   //--- CAPTURE LOCK (GR-2026-07-03a): skip a mid-capture-drain team so the Allocator does not re-aim it off a near-complete drain (plain BOOL, self-clears on captured/dead/TTL/town-ours).
 		    && {([_grp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool) <= 0}   //--- FIX(review CRITICAL): skip feint-tagged teams so the feint alloc_target survives across ticks
@@ -600,8 +601,27 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 			_hasVeh = [_grp] Call WFBE_CO_FNC_AICOMTeamMounted;
 			_reach = if (_hasVeh) then {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000]} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500]};
 			//--- r26 topology / B756: transport-heli teams may still take naval-HVTs.
-			private "_teamAir"; _teamAir = false;
+			private ["_teamAir","_teamAmphib","_waterBlocks","_waterBlocked"]; _teamAir = false;
 			{ if (!_teamAir && {alive _x} && {(vehicle _x) isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0}) then {_teamAir = true} } forEach (units _grp);
+			//--- r181 terrain contract: the consumer already rejects straight-line water legs, so do not publish
+			//--- one from the producer and force AssignTowns to discard it every worker pass.
+			_teamAmphib = false;
+			{ if (!_teamAmphib && {alive _x}) then { private "_wv"; _wv = vehicle _x; if (_wv != _x && {alive _wv} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _wv) >> "canFloat")) > 0}) then {_teamAmphib = true} } } forEach (units _grp);
+			_waterBlocks = {
+				private ["_from","_to","_air","_amphib","_hits","_i","_frac","_px","_py"];
+				_from = _this select 0; _to = _this select 1; _air = _this select 2; _amphib = _this select 3;
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_WATER_LEG_GATE", 1]) <= 0) exitWith {false};
+				if (_air || {_amphib}) exitWith {false};
+				if ((typeName _from) != "ARRAY" || {(typeName _to) != "ARRAY"} || {(count _from) < 2} || {(count _to) < 2}) exitWith {false};
+				_hits = 0;
+				for "_i" from 1 to 4 do {
+					_frac = _i / 5;
+					_px = (_from select 0) + (((_to select 0) - (_from select 0)) * _frac);
+					_py = (_from select 1) + (((_to select 1) - (_from select 1)) * _frac);
+					if (surfaceIsWater [_px, _py, 0]) then {_hits = _hits + 1};
+				};
+				(_hits >= 2)
+			};
 			private "_navalOk";
 			_navalOk = {
 				private "_tn";
@@ -683,10 +703,16 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 					diag_log ("AICOM2|v1|ORDER|TOWN_NUDGE|team|" + str _side + "|" + str (round (time / 60)) + "|town=" + (_tnBestT getVariable ["name", "?"]) + "|w=" + str _tnBestW);
 				};
 			};
-			if (!isNull _tgt && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_hasVeh} || {(_ldrPos distance _tgt) <= _reach}} && {_tgt Call _navalOk}) then {
+			_waterBlocked = if (!isNull _tgt) then {[_ldrPos, getPos _tgt, _teamAir, _teamAmphib] Call _waterBlocks} else {false};
+			if (!isNull _tgt && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_hasVeh} || {(_ldrPos distance _tgt) <= _reach}} && {_tgt Call _navalOk} && {!_waterBlocked}) then {
 				_grp setVariable ["wfbe_aicom_alloc_target", _tgt];
 				_grp setVariable ["wfbe_aicom_alloc_tick", time];
 				_assigned = _assigned + 1;
+			} else {
+				if (_waterBlocked) then {
+					_grp setVariable ["wfbe_aicom_alloc_target", nil];
+					_grp setVariable ["wfbe_aicom_alloc_tick", nil];
+				};
 			};
 		};
 	};
@@ -707,7 +733,7 @@ if (_expandN > 0 && {_expandCount == 0} && {(count _neutTowns) > 0} && {!isNull 
 //--- HARD-COLLISION NOTE: this entire block is a new addition; no existing line is modified.
 //--- Rebase after PR #286 (F5) which modifies AI_Commander_Allocate.sqf.
 if ((missionNamespace getVariable ["WFBE_C_AICOM_FEINT_ENABLE", 0]) > 0 && {!_expandFirst} && {!_concentrate}) then {
-	private ["_feintTgt","_feintTeam","_feintT0","_feintDur","_feintInterval","_feintGrp","_feintLdr","_feintAlive","_feintMode","_feintRelief","_feintStrike","_feintHasVeh","_feintExpiry","_feintRecalled","_feintFar","_feintD","_feintI","_feintGarGrp"];
+	private ["_feintTgt","_feintTeam","_feintT0","_feintDur","_feintInterval","_feintGrp","_feintLdr","_feintAlive","_feintMode","_feintRelief","_feintStrike","_feintRallying","_feintHasVeh","_feintExpiry","_feintRecalled","_feintFar","_feintD","_feintI","_feintGarGrp"];
 	_feintGarGrp   = _logik getVariable ["wfbe_aicom_garrison", grpNull];   //--- FIX(review HIGH): read garrison before team-picker uses it
 	_feintInterval = missionNamespace getVariable ["WFBE_C_AICOM_FEINT_INTERVAL", 600];
 	_feintDur      = missionNamespace getVariable ["WFBE_C_AICOM_FEINT_DUR", 120];
@@ -718,9 +744,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_FEINT_ENABLE", 0]) > 0 && {!_ex
 	{
 		_feintGrp    = _x;
 		_feintExpiry = [_feintGrp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool;
+		_feintRallying = [_feintGrp, "wfbe_aicom_rallying", false] Call WFBE_CO_FNC_GroupGetBool;
 		if (!isNull _feintGrp && {_feintExpiry > 0} && {time > _feintExpiry}) then {
 			_feintGrp setVariable ["wfbe_aicom_feint_expiry", 0];
-			if (count _fist > 0) then {
+			if (count _fist > 0 && {!_feintRallying}) then {
 				_feintGrp setVariable ["wfbe_aicom_alloc_target", (_fist select 0)];
 				_feintGrp setVariable ["wfbe_aicom_alloc_tick", time];
 				diag_log ("AICOM2|v1|FEINT|RECALL|" + str _side + "|" + str (round (time / 60)) + "|team=" + str _feintGrp + "|returnTo=" + ((_fist select 0) getVariable ["name","?"]));
@@ -756,11 +783,13 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_FEINT_ENABLE", 0]) > 0 && {!_ex
 				_feintMode   = toLower ([_feintGrp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 				_feintRelief = [_feintGrp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 				_feintStrike = [_feintGrp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
+				_feintRallying = [_feintGrp, "wfbe_aicom_rallying", false] Call WFBE_CO_FNC_GroupGetBool;
 				_feintExpiry = [_feintGrp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool;
 				_feintHasVeh = false;
 				{ if (alive _x && {(vehicle _x) != _x} && {canMove (vehicle _x)} && {!((vehicle _x) isKindOf "Air")}) exitWith {_feintHasVeh = true} } forEach (units _feintGrp);
 				if (!isNull _feintGrp && {_feintAlive > 0} && {!isNull _feintLdr} && {!isPlayer _feintLdr}
 					&& {_feintGrp != _feintGarGrp} && {isNull _feintRelief} && {!_feintStrike}
+					&& {!_feintRallying}
 					&& {!(_feintMode in ["move","patrol","defense"])}
 					&& {_feintExpiry <= 0}
 					&& {_feintHasVeh}
@@ -790,7 +819,7 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 	_riTown = _riPair select 0;
 	_riT0   = _riPair select 1;
 	if (!isNull _riTown && {(time - _riT0) < (missionNamespace getVariable ["WFBE_C_AICOM_REINFORCE_TTL", 300])}) then {
-		private ["_riBest","_riBestD","_riExisting","_riExistingD","_riTownSide","_riNeutral","_riGrp","_riLdr","_riAlive","_riMode","_riRelief","_riStrike"];
+		private ["_riBest","_riBestD","_riExisting","_riExistingD","_riTownSide","_riNeutral","_riGrp","_riLdr","_riAlive","_riMode","_riRelief","_riStrike","_riRallying"];
 		_riBest = grpNull; _riBestD = 1e9; _riExisting = grpNull; _riExistingD = 1e9;
 		_riTownSide = _riTown getVariable ["sideID", -1];
 		_riNeutral = (_riTownSide != _sideID) && {_riTownSide != _enemyID};
@@ -802,8 +831,9 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 				_riMode   = toLower ([_riGrp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 				_riRelief = [_riGrp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 				_riStrike = [_riGrp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
+				_riRallying = [_riGrp, "wfbe_aicom_rallying", false] Call WFBE_CO_FNC_GroupGetBool;
 				if (_riAlive > 0 && {!isNull _riLdr} && {!isPlayer _riLdr} && {_riGrp != _garGrp}
-				    && {isNull _riRelief} && {!_riStrike} && {!(_riMode in ["move","patrol","defense"])}
+				    && {isNull _riRelief} && {!_riStrike} && {!_riRallying} && {!(_riMode in ["move","patrol","defense"])}
 				    && {([_riGrp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool) <= 0}
 				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 					private ["_riD"]; _riD = (getPos _riLdr) distance _riTown;
