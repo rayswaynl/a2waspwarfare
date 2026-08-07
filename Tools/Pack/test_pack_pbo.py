@@ -60,6 +60,27 @@ class PackPboTests(unittest.TestCase):
 '''
         self.assertEqual(pack_pbo._slot_capacity(mission_sqm), (1, 0, 1))
 
+    def test_slot_census_recognizes_headless_by_description_without_flag(self) -> None:
+        # fix0807b: forceHeadlessClient is no longer written to the two CIV magnet
+        # slots (proven inert/harmful for A2 OA 1.64 -client auto-seat). The census
+        # must still classify them as headless via the description text alone.
+        mission_sqm = b'''class Mission
+{
+    class Item0 { class Vehicles { class Item0 {
+        player="PLAY CDG";
+        description="Headless Client 1";
+    }; }; };
+    class Item1 { class Vehicles { class Item0 {
+        player="PLAY CDG";
+        description="Headless Client 2";
+    }; }; };
+    class Item2 { class Vehicles { class Item0 {
+        player="PLAY CDG";
+    }; }; };
+};
+'''
+        self.assertEqual(pack_pbo._slot_capacity(mission_sqm), (3, 2, 0))
+
     def test_stale_maxplayers_rejected_after_reserved_slots_are_excluded(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
