@@ -1,6 +1,7 @@
-private["_capacity", "_clear", "_firstDelay", "_mapHalf", "_mapSize", "_maxPerCycle", "_scanCentre", "_scanRadius",
+private["_capacity", "_clear", "_firstDelay", "_gridX", "_gridY", "_mapHalf", "_mapSize", "_maxPerCycle", "_scanCentre", "_scanRadius",
         "_perfActive", "_perfDeleted", "_perfDispatched", "_perfHeldAge", "_perfHeldProx", "_perfItemStart", "_perfMines", "_perfScanned",
-        "_perfStart", "_perfWeaponholders", "_scanItems", "_timer", "_perfExtra",
+        "_perfSliceMax", "_perfSlices", "_perfStart", "_perfWeaponholders", "_scanCell", "_scanCellHalf", "_scanForClass", "_scanGrid",
+        "_scanOrigins", "_scanResult", "_scanSliced", "_scanSliceRadius", "_scanSliceSleep", "_timer", "_perfExtra",
         "_minAge", "_prox", "_proxHold", "_whAge", "_whFirst", "_whNear", "_whNearResult", "_whSkip"];
 
 // AI-lane (Ray spec, B40 2026-06-16): full-island weaponholder sweep on a ~10-minute cadence.
@@ -21,19 +22,15 @@ _timer = missionNamespace getVariable "WFBE_C_DROPPEDITEMS_CLEANER_TIME_PERIOD";
 if (isNil "_timer") then {_timer = 600};
 if (_timer < 300) then {_timer = 300};
 
-//--- FIRST sweep runs EARLY so the very first ~10-minute backlog never accumulates.
+//--- Configured first delay. The phase guard below may raise it to the steady cadence.
 _firstDelay = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_FIRST_DELAY", 90];
 if (_firstDelay < 1) then {_firstDelay = 90};
 
-//--- BOOT-STALL GUARD (flag WFBE_C_DROPPEDITEMS_CLEANER_DEFER_FIRST, default 0 = HEAD behaviour).
-//--- The first whole-island weaponholder sweep is IDENTICAL in radius (20000) and results to every
-//--- later sweep, but when it fires early at ~90s it lands inside the boot/spawn storm where the
-//--- server main thread is saturated, so the SAME scan measures ~6.5s wall (Performance Audit
-//--- cleaner_droppeditems MAX_MS 6414-6583, scanned:0 deleted:0) vs ~48-115ms once the server has
-//--- settled. The sibling whole-map cleaners (crater/ruins) never spike because their first sweep
-//--- is floored to >=1800s. When this flag is >0, defer the first droppeditems sweep to the steady
-//--- cadence (_timer) so pass 1 also runs on a settled server. Nothing is skipped: at ~90s the
-//--- early sweep finds ZERO drops (no deaths yet), so deferring only shifts an empty scan.
+//--- FIRST-SWEEP PHASE GUARD (registered default 1; inline fallback 0). This originally moved the
+//--- empty ~90s scan out of the boot/spawn storm. Current Chernarus RPTs prove the deferred 10m scan
+//--- still costs 2.5-2.8s while FPS is healthy immediately beforehand, so this changes phase only;
+//--- it does not bound the synchronous nearestObjects query. The opt-in path below instead bounds
+//--- each query's spatial scope and yields between them for a controlled test-server A/B.
 if ((missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_DEFER_FIRST", 0]) > 0) then {
 	if (_firstDelay < _timer) then {_firstDelay = _timer};
 };
@@ -73,26 +70,76 @@ if ((missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_HOLD_ENABLE", 0]) <= 0) 
 //--- Whole-island scan anchor + radius (weaponholders only; ~20km covers the legacy Chernarus map).
 _scanCentre = [7000, 7500, 0];
 _scanRadius = 20000;
+_mapSize = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
+if (_mapSize < 1) then {_mapSize = 15360};
 if ((missionNamespace getVariable ["WFBE_C_CLEANER_MAP_AWARE_ORIGINS", 0]) > 0) then {
-	_mapSize = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
-	if (_mapSize < 1) then {_mapSize = 15360};
 	_mapHalf = _mapSize / 2;
 	_scanCentre = [_mapHalf, _mapHalf, 0];
 	_scanRadius = _mapSize * 0.72;
 };
 
-//--- For one class, return every matching object within the full-island radius of the centre.
-_scanItems = {
-	private ["_class"];
-	_class = _this select 0;
-	nearestObjects [_scanCentre, [_class], _scanRadius]
+//--- perf/droppeditems-sliced-scan (draft, default OFF): the legacy 20km nearestObjects call is a
+//--- repeatable 2.5-2.8s single-frame hitch on Chernarus even when empty and after the 10m defer.
+//--- The opt-in path covers the official map square with a 3x3 grid of half-cell-diagonal circles,
+//--- deduplicates overlaps, and yields between queries. Flag OFF retains the exact legacy query.
+_scanSliced = (missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_SLICED_SCAN", 0]) > 0;
+_scanSliceSleep = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_SLICE_SLEEP", 0.05];
+if (_scanSliceSleep < 0.01) then {_scanSliceSleep = 0.05};
+_scanGrid = 3;
+_scanOrigins = [];
+if (_scanSliced) then {
+	_scanCell = _mapSize / _scanGrid;
+	_scanCellHalf = _scanCell / 2;
+	_scanSliceRadius = sqrt ((_scanCellHalf * _scanCellHalf) + (_scanCellHalf * _scanCellHalf)) + 1;
+	for "_gridX" from 0 to (_scanGrid - 1) do {
+		for "_gridY" from 0 to (_scanGrid - 1) do {
+			_scanOrigins set [count _scanOrigins, [_scanCellHalf + (_gridX * _scanCell), _scanCellHalf + (_gridY * _scanCell), 0]];
+		};
+	};
 };
 
-//--- FIRST sweep is EARLY; subsequent sweeps wait the full ~10-minute cadence at loop end.
+//--- Return [unique objects, measured active seconds, max slice seconds, slice count]. Cooperative
+//--- scan sleeps are deliberately outside the active segments; cycleMs below remains wall time.
+_scanForClass = {
+	private ["_class", "_scanActive", "_scanItems", "_scanObject", "_scanOrigin", "_scanSlice", "_scanSliceDt", "_scanSliceMax", "_scanSliceStart", "_scanSlices"];
+	_class = _this select 0;
+	_scanItems = [];
+	_scanActive = 0;
+	_scanSliceMax = 0;
+	_scanSlices = 0;
+	if (_scanSliced) then {
+		{
+			_scanOrigin = _x;
+			_scanSliceStart = diag_tickTime;
+			_scanSlice = nearestObjects [_scanOrigin, [_class], _scanSliceRadius];
+			{
+				_scanObject = _x;
+				if (!(_scanObject in _scanItems)) then {
+					_scanItems set [count _scanItems, _scanObject];
+				};
+			} forEach _scanSlice;
+			_scanSliceDt = diag_tickTime - _scanSliceStart;
+			_scanActive = _scanActive + _scanSliceDt;
+			if (_scanSliceDt > _scanSliceMax) then {_scanSliceMax = _scanSliceDt};
+			_scanSlices = _scanSlices + 1;
+			if (_scanSlices < count _scanOrigins) then {sleep _scanSliceSleep;};
+		} forEach _scanOrigins;
+	} else {
+		_scanSliceStart = diag_tickTime;
+		_scanItems = nearestObjects [_scanCentre, [_class], _scanRadius];
+		_scanSliceDt = diag_tickTime - _scanSliceStart;
+		_scanActive = _scanSliceDt;
+		_scanSliceMax = _scanSliceDt;
+		_scanSlices = 1;
+	};
+	[_scanItems, _scanActive, _scanSliceMax, _scanSlices]
+};
+
+//--- Wait the configured/phase-guarded first delay; later sweeps use the cadence at loop end.
 sleep _firstDelay;
 
 while {!WFBE_GameOver} do {
-	// Marty: Performance Audit timing excludes the cooperative delete sleeps below.
+	// Marty: Performance Audit active timing excludes cooperative scan and delete sleeps below.
 	_perfStart = diag_tickTime;
 	_perfActive = 0;
 	_perfScanned = 0;
@@ -102,15 +149,19 @@ while {!WFBE_GameOver} do {
 	_perfDispatched = 0;
 	_perfHeldAge = 0;
 	_perfHeldProx = 0;
+	_perfSliceMax = 0;
+	_perfSlices = 0;
 
 	//--- Shared per-cycle deletion budget. _capacity is the remaining number of objects we may
 	//--- delete this cycle; leftovers wait for the next cycle.
 	_capacity = _maxPerCycle;
 
 	//--- Weaponholders: full-island scan (the real work - dropped weapons/gear left by deaths).
-	_perfItemStart = diag_tickTime;
-	_clear = ["weaponholder"] call _scanItems;
-	_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
+	_scanResult = ["weaponholder"] call _scanForClass;
+	_clear = _scanResult select 0;
+	_perfActive = _perfActive + (_scanResult select 1);
+	_perfSliceMax = _scanResult select 2;
+	_perfSlices = _scanResult select 3;
 	_perfWeaponholders = count _clear;
 	_perfScanned = _perfScanned + _perfWeaponholders;
 	{
@@ -161,9 +212,9 @@ while {!WFBE_GameOver} do {
 					_perfDispatched = _perfDispatched + 1;
 				};
 				_capacity = _capacity - 1;
-				sleep 0.5;
 			};
 			_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
+			if (!_whSkip) then {sleep 0.5;};
 		};
 	} forEach _clear;
 
@@ -173,7 +224,7 @@ while {!WFBE_GameOver} do {
 
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			_perfExtra = Format["scanned:%1;deleted:%2;weaponholders:%3;mines:%4;cap:%5;cycleMs:%6;dispatched:%7;heldAge:%8;heldProx:%9", _perfScanned, _perfDeleted, _perfWeaponholders, _perfMines, _maxPerCycle, round ((diag_tickTime - _perfStart) * 1000), _perfDispatched, _perfHeldAge, _perfHeldProx];
+			_perfExtra = Format["scanned:%1;deleted:%2;weaponholders:%3;mines:%4;cap:%5;cycleMs:%6;dispatched:%7;heldAge:%8;heldProx:%9;slices:%10;sliceMaxMs:%11", _perfScanned, _perfDeleted, _perfWeaponholders, _perfMines, _maxPerCycle, round ((diag_tickTime - _perfStart) * 1000), _perfDispatched, _perfHeldAge, _perfHeldProx, _perfSlices, round (_perfSliceMax * 1000)];
 			["cleaner_droppeditems", _perfActive, _perfExtra, "SERVER"] Call PerformanceAudit_Record;
 		};
 	};
