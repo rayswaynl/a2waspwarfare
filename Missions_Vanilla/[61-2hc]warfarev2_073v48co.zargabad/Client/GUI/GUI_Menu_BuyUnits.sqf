@@ -57,6 +57,8 @@ if (!isNil '_mbuByTier') then {
 	_mbuPT = missionNamespace getVariable ['WFBE_PopTier', 0]; if (_mbuPT < 0) then {_mbuPT = 0};
 	if (_mbuPT <= ((count _mbuByTier) - 1)) then {_mbu = _mbuByTier select _mbuPT};
 };
+//--- Apply the player-class modifier after the tiered live cap, otherwise the tier array overwrites Soldier's 1.5x allowance.
+if (!isNil "WFBE_SK_V_AI_CAP_MULTIPLIER" && {typeName WFBE_SK_V_AI_CAP_MULTIPLIER == "SCALAR"}) then {_mbu = ceil (_mbu * WFBE_SK_V_AI_CAP_MULTIPLIER)};
 //--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
 if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 
