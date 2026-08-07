@@ -67,7 +67,7 @@ while {!WFBE_GameOver} do {
         };
     };
 
-    private ["_now","_kept","_townsWithGun","_dressedCount","_perfStart"];
+    private ["_now","_kept","_townsWithGun","_dressedCount","_perfStart","_spawnAttemptsThisCycle","_scanStart","_scanOffset"];
     _perfStart     = diag_tickTime;
     _now           = time;
     _kept          = [];
@@ -176,13 +176,18 @@ while {!WFBE_GameOver} do {
     _registry     = _kept;
     _dressedCount = count _registry;
 
-    //=== (2) MAINTAIN: dress one eligible active GUER town per cycle =========================
-    {
+    //=== (2) MAINTAIN: attempt at most one eligible active GUER town per cycle ================
+    //--- Randomize the scan origin so a persistently failing town cannot starve later towns.
+    _spawnAttemptsThisCycle = 0;
+    if ((count towns) > 0) then {
+        _scanStart = floor (random (count towns));
+        for "_scanOffset" from 0 to ((count towns) - 1) do {
 		private ["_town","_pos","_tRange","_enemies","_bear","_gunPos",
-		         "_tNameHash","_tIdx","_gun","_grp","_crew","_light","_isNight","_gunnerSeated"];
-        _town = _x;
+		         "_tNameHash","_tIdx","_gun","_grp","_crew","_light","_isNight","_gunnerSeated","_gpTries"];
+        _town = towns select ((_scanStart + _scanOffset) mod (count towns));
 
-        if (_dressedCount < _maxDressed
+        if (_spawnAttemptsThisCycle < 1
+            && {_dressedCount < _maxDressed}
             && {!(isNull _town)}
             && {(_town getVariable ["sideID", -1]) == WFBE_C_GUER_ID}
             && {_town getVariable ["wfbe_active", false]}
@@ -194,6 +199,8 @@ while {!WFBE_GameOver} do {
                 count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], _radius]);
 
             if (_enemies > 0) then {
+                //--- Charge before createVehicle: failed materialization still consumes this cycle's budget.
+                _spawnAttemptsThisCycle = _spawnAttemptsThisCycle + 1;
                 _pos = getPos _town;
 
                 //--- Deterministic bearing from town name to keep placement stable across ticks.
@@ -209,6 +216,23 @@ while {!WFBE_GameOver} do {
                     (_pos select 1) + ((_tRange * 0.4) + (_tRange * 0.1 * _tIdx)) * (cos _bear),
                     0
                 ];
+
+                //--- FOREST-GUARD (w807-L4): this ring placement had NO terrain check at all, so the
+                //--- ZU-23 + crew could spawn inside forest cover. Lighter than AI_Patrol's guard
+                //--- (isFlatEmpty only - this file has never checked water either and that stays
+                //--- out of scope here): bounded jitter-and-recheck against the SAME probe already
+                //--- proven live via WFBE_CO_FNC_GetEmptyPosition (Common_GetEmptyPosition.sqf);
+                //--- count>0 means clear. This MAINTAIN block already runs at most once per
+                //--- WFBE_C_GARRISON_DRESSING_INTERVAL per eligible town, so a few native probes per
+                //--- placement is cheap. Jitter only nudges the fine offset within the deterministic
+                //--- ring segment chosen by _bear/_tIdx above - it does not re-roll which segment. On
+                //--- repeated failure keep the last candidate (never-idle - every other failure mode
+                //--- in this file still places best-effort).
+                _gpTries = 0;
+                while {(_gpTries < 6) && {(count (_gunPos isFlatEmpty [15, 0, 2, 10, 0, false, objNull])) == 0}} do {
+                    _gunPos = [(_gunPos select 0) + (20 - random 40), (_gunPos select 1) + (20 - random 40), 0];
+                    _gpTries = _gpTries + 1;
+                };
 
                 //--- Create the ZU-23 server-side.
                 _gun = _gunClass createVehicle _gunPos;
@@ -284,7 +308,8 @@ while {!WFBE_GameOver} do {
                 };
             };
         };
-    } forEach towns;
+        };
+    };
 
     //--- Re-read quiet window each cycle (allows host tuning without restart).
     _quiet = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_QUIET", 300];

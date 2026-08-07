@@ -37,7 +37,7 @@ missionNamespace setVariable [Format["WFBE_%1PARACARGO", _side], 'C130J'];	//---
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCK", _side], 'MtvrRepair'];//--- Repair Truck model.
 missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['HMMWV_Ambulance','Pandur2_ACR']];//--- Starting Vehicles.
 missionNamespace setVariable [Format["WFBE_%1PARAAMMO", _side], ['USBasicAmmunitionBox','USBasicWeaponsBox','USLaunchersBox']];//--- Supply Paradropping, Dropped Ammunition.
-missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'MtvrRepair'];//--- Supply Paradropping, Dropped Vehicle.
+missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'HMMWV_M2'];//--- Supply Paradropping, Dropped Vehicle. fix0807/airdrop-armed-roster: MtvrRepair was an unarmed repair truck (RPT evidence: cargo drop mounted crew into landed vehicle [MtvrRepair]); HMMWV_M2 is already this side's WEST PATROL_LIGHT entry (armed).
 missionNamespace setVariable [Format["WFBE_%1PARAVEHI", _side], 'MH60S'];//--- Supply Paradropping, Vehicle
 missionNamespace setVariable [Format["WFBE_%1PARACHUTE", _side], 'ParachuteMediumWest'];//--- Supply Paradropping, Parachute Model.
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSupplyTruck_USMC'];//--- Supply Truck model.

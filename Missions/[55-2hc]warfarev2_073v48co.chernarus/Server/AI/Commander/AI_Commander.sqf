@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_aiCapTiers","_aiCapTierIndex","_aiCapTierLast","_aiMax","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_ltCargo","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState","_aicomFlushResetOrder"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_aiCapTiers","_aiCapTierIndex","_aiCapTierLast","_aiMax","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_ltCargo","_ltHeliLift","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState","_aicomFlushResetOrder"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -254,6 +254,7 @@ _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _l
 _ltBeacon = 0; //--- AICOM FORWARD SPAWN-BEACON throttle (Approach A): gated WFBE_C_AICOM_SPAWNBEACON_ENABLE (default 0 = INERT), paced to WFBE_C_AICOM_SPAWNBEACON_INTERVAL.
 _ltPara = 0; //--- AICOM PARATROOPS throttle: cheap O(towns) scan + drop attempt; paced to the town interval (worker self-cooldowns the actual drop, gated WFBE_C_AICOM_PARATROOPS_ENABLE, default-OFF).
 _ltCargo = 0; //--- AICOM CARGO AIRDROP Stage A throttle: flag-gated and paced to the same town interval; worker owns the 1800s per-side cooldown.
+_ltHeliLift = 0; //--- w807-L8 AICOM HELI SLING-LIFT throttle: flag-gated and paced to the same town interval; worker owns its own per-side cooldown.
 _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s cadence; gated WFBE_C_AICOM_HC_MERGE_ENABLE, default-OFF).
 _ltIntent = 0; //--- COMMAND CONSOLE: throttle for the AI-INTENT publish block (now runs on the _active gate, not _canBuild, so the readout refreshes + reaches JIP/assist clients).
 _prevHuman = false; _prevState = "";
@@ -421,6 +422,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- fund read, group creation, or spawn work. The worker owns the long cooldown and all hard gates.
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_ENABLE", 0]) > 0 && {!isNil "WFBE_SE_FNC_AI_Com_CargoAirdrop"} && {time - _ltCargo > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TOWN_INTERVAL")}) then {
 			(_side) Call WFBE_SE_FNC_AI_Com_CargoAirdrop; _ltCargo = time;
+		};
+
+		//--- w807-L8 AICOM HELI SLING-LIFT: AI-only heavy-lift heli + fresh armed ground vehicle sling delivery to the
+		//--- current assault target. The master flag is checked here as well as inside the worker, so flag-off performs
+		//--- no town scan, fund read, group creation, or spawn work. The worker owns the cooldown/concurrency/all hard gates.
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_HELILIFT_ENABLE", 1]) > 0 && {!isNil "WFBE_SE_FNC_AI_Com_HeliLift"} && {time - _ltHeliLift > (missionNamespace getVariable "WFBE_C_AI_COMMANDER_TOWN_INTERVAL")}) then {
+			(_side) Call WFBE_SE_FNC_AI_Com_HeliLift; _ltHeliLift = time;
 		};
 
 		//--- AI-INTENT PUBLISH (moved out of _canBuild, claude-gaming 2026-06-28): publish the side-keyed INTENT /

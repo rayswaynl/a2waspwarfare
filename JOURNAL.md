@@ -1,5 +1,38 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-07 - wave0807a folded into update/wave-20260807, draft PR #2380 opened
+
+**FOLD LANE (wave0807):** merged 13 branches into `update/wave-20260807` in order
+(#2293, #2299, #2298, #2294, #2295, #2301, #2361, #2362, #2363, #2372 [+#2366],
+#2367, #2375, #2376 [added mid-fold by coordinator]). All 13 `git merge --no-ff`
+resolved via git's automatic 3-way merge - zero manual conflict-marker resolution
+needed. Four flagged hotspots hand-verified post-merge: Squad_USMC.sqf (RHIB flag
+gate #2293 + MTVR->HMMWV swap #2362 both survive), Init_CommonConstants.sqf
+(WFBE_C_AICOM_NAVAL_TEMPLATES + CARGO_AIRDROP cooldown/cost + SVC_RECLAIM pair +
+HELILIFT block all survive across #2293/#2363/#2367/#2375), Server_TownGarrisonDressing.sqf
+(#2372's own #2366 alife-site-timer resolution shape untouched by later merges).
+
+**Mirror:** all 25 changed CH files byte-identical to TK/ZG (filecmp, pre-stamp).
+`dotnet run -c RELEASE -- --check`: both Takistan and Zargabad report "drift: none".
+
+**Gates:** lint 168/168 (baseline match, 0 new findings in any of the 75 changed .sqf
+files); bracket delta 0/0 on all 75; `Test-WaspVersionTemplates.ps1` all PASS;
+13/13 pytest cases pass across the 7 `Tools/Lint/test_*.py` the wave added.
+
+**Version stamp:** `WF_RELEASE_MARKER candidate=wave0807a` in all 3 tracked
+`version.sqf.template` files (commit `chore: stamp release RPT marker wave0807a`).
+**Finding:** no prior commit in this repo's full history ever stamped wave0805b /
+wave0806a / wave0806b into a tracked file via this field - those build-ids were
+deploy-time-only PBO naming, never source-committed (confirmed via `git log --all -S`
+across every branch). Continued the one real precedent instead (`fd04aac3fe`,
+`candidate=release-command-center-20260630`). `git=7d584d952c` pins the pre-stamp
+fold HEAD. Per-map values (WF_MAXPLAYERS/STARTING_DISTANCE/map-dependent defines)
+untouched - single-line diff per template, verified.
+
+**PR:** draft #2380, `update/wave-20260807` -> `master`, NOT merged. 86 files
+changed vs origin/master. No runtime/RPT verification performed (static-only per
+lane rules - no game/Workbench/validate launches, no live box access).
+
 ## Working State 2026-08-06 ~21:00 CEST — end of day: wave0806b LIVE, box repaired, board clear [master]
 
 **Task:** closed out the #2276 HC-seating program end-to-end, deployed it, and repaired two live

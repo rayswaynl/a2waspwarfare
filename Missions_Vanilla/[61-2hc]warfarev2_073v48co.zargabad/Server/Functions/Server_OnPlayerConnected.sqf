@@ -32,11 +32,30 @@ if (_name == '__SERVER__' || _uid == '' || _uid == '0' || local player) exitWith
 //--- resolver - it reseats itself to a civilian group (Init_HC) so it always bails the 3-retry self-heal and
 //--- adds fresh-round seat-magnet churn. Skip it once registered. WFBE_HEADLESS_<uid> is set ONLY for HCs
 //--- (Server_HandleSpecial; cleared in Server_OnPlayerDisconnected), so a human can NEVER match this regardless
-//--- of player name. This is the SOLE HC-identification gate: stamp-based, un-spoofable. (If the connected-hc
-//--- PVF hasn't landed yet the HC harmlessly runs the resolver once then re-arms; the stamp-on-demand tier
-//--- below also excludes HCs because they never store a RequestJoin body.)
-if (!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil]}) exitWith {
-	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for headless client [%1] [%2].", _name, _uid];
+//--- of player name.
+//--- NAME-GATE (fix0807/hc-team-resolution, live RPT evidence 2026-08-07): the comment above used to call
+//--- the WFBE_HEADLESS_<uid> stamp "the SOLE HC-identification gate" and assumed a miss is harmless ("the
+//--- HC harmlessly runs the resolver once then re-arms"). Both halves are FALSE, same shape as the
+//--- _clientBody scoping claim this file already had to correct below (2026-08-06): the stamp is written
+//--- ONLY by Server_HandleSpecial.sqf's "connected-hc" handler, which itself waits up to 60s for a non-zero
+//--- owner id then up to 30s for side==civilian before it finally sets WFBE_HEADLESS_<uid> - and that whole
+//--- chain only starts after Init_HC.sqf's own 20s player-object wait + up to 60s CIVILIAN reseat loop. The
+//--- engine's onPlayerConnected fires this handler essentially immediately on connect, long before any of
+//--- that lands, and until mission.sqm's HC CIV slots are the lowest-id playable slots (unmerged PR #1596),
+//--- the HC's engine-auto-seat is a REAL, already wfbe_side-stamped, WFBE_PRESENTSIDES-registered WEST
+//--- warfare slot. So the B746 fallback below does not miss and "harmlessly" re-arm - it SUCCEEDS, resolving
+//--- a genuine _team for the HC and running the full human enrollment path (JIP side-broadcasts, roster
+//--- push, TEAMBAR-FIRST insertion) exactly as for a real player. Live RPT: "[WFBE][B746 CONNECT] team
+//--- resolved for ["HC-AI-Control-1"] ..." followed by "... re-broadcast wfbe_upgrades ... for side WEST to
+//--- joiner "HC-AI-Control-1"" (and the JIP-HQSNAP/JIP-COMMANDER/JIP-VOTETIME/JIP-SUPPLY siblings) is this
+//--- exact path. Close the race at its source: _name is passed into this handler directly by the connect
+//--- event (no async wait), so a WFBE_C_HC_NAMES membership check is instant and un-racy - the same
+//--- structural idiom PR #2317 used to harden HC-blind consumers (server_victory_threeway.sqf,
+//--- Server_VoteForCommander.sqf, Init_HcLobbyLock.sqf). Kept ADDITIVE to the existing UID-stamp check
+//--- (superset, not replacement) so a name that somehow doesn't match WFBE_C_HC_NAMES yet but is already
+//--- UID-stamped is still excluded.
+if ((_name in WFBE_C_HC_NAMES) || {!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil]}}) exitWith {
+	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for headless client [%1] [%2] (nameGate=%3).", _name, _uid, (_name in WFBE_C_HC_NAMES)];
 };
 
 //--- Server-observable fallback event. No client payload or chat hook is involved.

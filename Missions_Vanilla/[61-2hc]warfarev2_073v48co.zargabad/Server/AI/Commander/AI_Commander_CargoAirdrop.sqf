@@ -28,7 +28,7 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_h
 if (_humanCmd) exitWith {};
 
 //--- Per-side cooldown is stamped before debit/spawn, so a long flight cannot double-fire.
-_cool = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN", 1800];
+_cool = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN", 1200]; //--- fix0807/airdrop-armed-roster: fallback kept in lock-step with Init_CommonConstants.sqf (1800 -> 1200)
 _last = _logik getVariable "wfbe_aicom_cargo_last";
 if (isNil "_last") then {_last = -1e9};
 if ((_now - _last) < _cool) exitWith {};
@@ -112,7 +112,7 @@ if (_escortEnable > 0) then {
 };
 
 //--- Server-side AICOM treasury gate. No yield occurs between this check, the stamp, debit, and dispatch.
-_cost = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_COST", 60000];
+_cost = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_COST", 45000]; //--- fix0807/airdrop-armed-roster: fallback kept in lock-step with Init_CommonConstants.sqf (60000 -> 45000)
 _escortCost = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST", 35000];
 _funds = (_side) Call GetAICommanderFunds;
 if (_funds < _cost) exitWith {

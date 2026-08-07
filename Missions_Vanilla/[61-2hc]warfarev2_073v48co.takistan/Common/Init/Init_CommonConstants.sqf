@@ -619,6 +619,8 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC") then {WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC = 0.8};
 		//--- B756 NAVAL-RAID gate: naval-HVT (carrier) spearhead targets are only assigned to teams with a TRANSPORT HELI (they're offshore, only reachable by air-insertion). Ground teams never get tasked to the sea (no stranding). This makes the carriers a real - but air-only - assault objective. Gate lives in AI_Commander_AssignTowns.sqf.
 		if (isNil "WFBE_C_AICOM_NAVAL_AIR_ONLY") then {WFBE_C_AICOM_NAVAL_AIR_ONLY = 1};
+		//--- Moving-platform audit: Ship AICOM templates stay out of the generic ground founder until a water-aware naval founder/route exists. 0 = fail-closed default; 1 = reserved for that future path.
+		if (isNil "WFBE_C_AICOM_NAVAL_TEMPLATES") then {WFBE_C_AICOM_NAVAL_TEMPLATES = 0};
 	//--- A/B EXPERIMENT (legacy-vs-next): arm label + sim-gating switch. LEGACY arm = control (gating off).
 	if (isNil "WFBE_C_AB_ARM") then {WFBE_C_AB_ARM = "NEXT-T1c"};
 	//--- AI COMMANDER ARTILLERY: locked off 2026-06-13 (Steff), RE-ENABLED 2026-07-09 by owner - an INFORMED
@@ -1509,6 +1511,15 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_SVC_TIMEOUT") then {WFBE_C_AICOM_SVC_TIMEOUT = 300};         //--- s: max EN-ROUTE drive time before the detour aborts + the team retargets the front.
 	if (isNil "WFBE_C_AICOM_SVC_ARMOUR_ONLY") then {WFBE_C_AICOM_SVC_ARMOUR_ONLY = 0};   //--- B66: 1->0 - any team may self-service (was armour/air-only). 1 = only teams with a Tank/APC/Air detour (costly to replace); 0 = any team.
 if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST = 300}; //--- B49: relaxed START gate (m). A disengaged team detours to service if NO enemy within this (was the full SAFE_DIST=600, which blocked every grinding team so the feature never fired). The hard en-route abort still uses SAFE_DIST; COMBAT teams are still never pulled out.
+	//--- LATCH-RECLAIM WATCHDOG (w807-L7, fable, idle-latch audit): svcstate=="enroute" self-heals only from
+	//--- WITHIN the same per-team spawned thread that set it (Common_AICOMServiceTick.sqf, called from
+	//--- Common_RunCommanderTeam.sqf's HC-local 20s order loop); if that owner machine disconnects/dies before
+	//--- its own WFBE_C_AICOM_SVC_TIMEOUT deadline re-check runs, the latch never clears and the team is skipped
+	//--- by every order issuer forever. AI_Commander_Allocate.sqf's watchdog only reclaims once the latch is
+	//--- independently proven stale by its OWN wfbe_aicom_svcdeadline field for this many CONSECUTIVE allocate
+	//--- ticks (never touches a live/legit enroute team).
+	if (isNil "WFBE_C_AICOM_SVC_RECLAIM_ENABLE") then {WFBE_C_AICOM_SVC_RECLAIM_ENABLE = 1}; //--- 1 = watchdog armed (default, correctness fix); 0 = kill-switch (legacy stuck-forever behaviour).
+	if (isNil "WFBE_C_AICOM_SVC_RECLAIM_TICKS")  then {WFBE_C_AICOM_SVC_RECLAIM_TICKS  = 10};  //--- consecutive allocate ticks (~10min at the default 60s Strategy/Allocate cadence) the latch must be proven stale before reclaim.
 	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AICOM_FWD_REINFORCE_RANGE = 900;       //--- FILL-FIX 2026-06-18: 500->900 (rollback 500) - forward spearheads 500-900m out of the rear base couldn't refill and bled toward ~4 units; widen so front-line teams top up from the nearest forward factory. Still requires an OWNED town within range (never resupplies on enemy ground). --- FORWARD-REINFORCE (claude-gaming 2026-06-13): deep teams beyond REINFORCE_RANGE may still refill if their leader hugs an owned town within this radius (fixes the deep-spearhead bleed-out / EAST snowball). Refill spawns at the factory nearest the team, so a captured forward town resupplies its own front instead of a lone unit trekking from the rear base.
 	if (isNil "WFBE_C_AICOM_FACTORY_TARGET_ENABLE") then {WFBE_C_AICOM_FACTORY_TARGET_ENABLE = 0}; //--- owner bug 07-24: 1 = refill from the eligible side-owned factory closest to the team's assigned AICOM objective, including player-built additional factories; 0 = legacy closest-to-leader selection.
@@ -3429,9 +3440,16 @@ if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_RATIO")  then {WFBE_C_AICOM_OVERRUN_MOPUP_
 if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS")  then {WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS  = 2};   //--- max concurrent field teams pressed onto live enemy factories by the mop-up closer.
 //--- AICOM CARGO AIRDROP (Stage A): registered dark by default; the worker is AI-only and adds no escort jet.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ENABLE = 1};
-if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN") then {WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN = 1800};
-if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_COST = 60000};
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN") then {WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN = 1200}; //--- fix0807/airdrop-armed-roster: was 1800; RPT evidence showed the drop firing but under-delivering (unarmed hulls) - tightened cadence now that the roster is armed/combat-relevant.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_COST = 45000}; //--- fix0807/airdrop-armed-roster: was 60000; lowered alongside the cooldown cut so the AI treasury can sustain the faster cadence.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX = 2};
+//--- w807-L8 AICOM HELI SLING-LIFT (owner 2026-08-07: "helicopter or plane lifting of vehicle" - owner wants to SEE
+//--- AI airlifting vehicles): dedicated support call, registered ARMED by default (owner asked to see it live).
+if (isNil "WFBE_C_AICOM_HELILIFT_ENABLE") then {WFBE_C_AICOM_HELILIFT_ENABLE = 1};
+if (isNil "WFBE_C_AICOM_HELILIFT_COOLDOWN") then {WFBE_C_AICOM_HELILIFT_COOLDOWN = 1500}; //--- s: per-side cooldown between heli-lift calls.
+if (isNil "WFBE_C_AICOM_HELILIFT_COST") then {WFBE_C_AICOM_HELILIFT_COST = 40000}; //--- AICOM-treasury $ debited atomically at dispatch; covers BOTH the transport heli and the slung vehicle (no refund on delivery - the heli is expendable-by-design; a pre-delivery setup abort still refunds in full, mirroring CargoAirdrop).
+if (isNil "WFBE_C_AICOM_HELILIFT_MAX_CONCURRENT") then {WFBE_C_AICOM_HELILIFT_MAX_CONCURRENT = 1}; //--- max simultaneous in-flight heli-lifts per side.
+if (isNil "WFBE_C_AICOM_HELILIFT_MIN_DIST") then {WFBE_C_AICOM_HELILIFT_MIN_DIST = 2000}; //--- m: the assault target must be at least this far from base/factory for the lift to fire (a near target is faster/cheaper by ground convoy).
 //--- CONVOY COHESION (Grok #5, update wave 2026-07-25): Common_RunCommanderTeam.sqf ground road-march.
 //--- 0 (default) = ORIGINAL behaviour, byte-identical to HEAD - every road-march node keeps FULL speed
 //--- and WFBE_C_AICOM_ROUTE_COMPLETION's completionRadius exactly as today. 1 = when a road-marching
