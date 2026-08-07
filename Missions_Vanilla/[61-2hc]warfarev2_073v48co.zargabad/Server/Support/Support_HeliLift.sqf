@@ -24,7 +24,7 @@
 
 private ["_args","_side","_target","_grp","_heliClass","_vehClass","_aicomCost","_sideID","_sideText",
 	"_release","_released",
-	"_baseLogikPos","_basePos","_spawnPos","_dir",
+	"_baseHQ","_basePos","_spawnPos","_dir",
 	"_transportGrp","_heli","_pilot",
 	"_veh","_offset",
 	"_origSideID","_lzPos","_flat","_t0","_approachLimited","_hoverFloor",
@@ -77,24 +77,11 @@ _release2 = {
 
 if (isNull _target) exitWith {Call _release};
 
-//--- Base position: normalise wfbe_startpos (object OR position array - Server_AicomSupplySquad.sqf's
-//--- WFBE_SE_FNC_AicomSupplyBasePos proves this exact normalisation is required; that helper is only
-//--- compiled behind its own feature flag so it cannot be relied on here - inline the same logic).
-_baseLogikPos = objNull;
-_basePos = [0,0,0];
-private "_baseLogik";
-_baseLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
-if (!isNull _baseLogik) then {
-	_basePos = getPos _baseLogik;
-	_baseLogikPos = _baseLogik getVariable "wfbe_startpos";
-	if (!isNil "_baseLogikPos") then {
-		if (typeName _baseLogikPos == "OBJECT") then {
-			if (!isNull _baseLogikPos) then {_basePos = getPos _baseLogikPos};
-		} else {
-			if (typeName _baseLogikPos == "ARRAY" && {count _baseLogikPos >= 2}) then {_basePos = [_baseLogikPos select 0, _baseLogikPos select 1, 0]};
-		};
-	};
-};
+//--- Use the current HQ rather than the immutable start-position snapshot: MHQ relocation replaces
+//--- the deployed site and a completed delivery must return to the base that exists now.
+_baseHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+if (isNull _baseHQ) exitWith {Call _release};
+_basePos = getPos _baseHQ;
 
 //--- Spawn heading: atan2 position-delta bearing toward the target (binary getDir is A3-only; same
 //--- idiom Common_AICOMAirLeg.sqf/Common_RunCommanderTeam.sqf use elsewhere in this tree). Cosmetic
@@ -330,8 +317,10 @@ if (!isNull _veh && {alive _veh}) then {
 	_veh setVariable ["wfbe_aicom_slung", false, true];
 };
 
-//--- Heli RTB: fly home and delete (delivery asset only; the vehicle+crew persist). No refund - the
-//--- lump WFBE_C_AICOM_HELILIFT_COST covers both the heli and the vehicle for this call.
+//--- Heli RTB: re-read the current HQ so a relocation during the flight cannot send it to the old base.
+//--- The lump cost still covers both delivery hulls; no refund after a delivered attempt.
+_baseHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+if (!isNull _baseHQ) then {_basePos = getPos _baseHQ};
 if (!isNull _heli && {alive _heli} && {!isNull (driver _heli)} && {alive (driver _heli)}) then {
 	(driver _heli) doMove _basePos;
 	_heli flyInHeight (90 + random 20);

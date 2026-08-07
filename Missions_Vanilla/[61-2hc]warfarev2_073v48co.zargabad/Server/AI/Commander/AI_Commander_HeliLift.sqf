@@ -30,7 +30,7 @@ private ["_side","_logik","_sideID","_now","_cool","_last","_humanCmd","_cmdTeam
 	"_upgrades","_liftLvl","_targets","_target","_objName",
 	"_airMax","_airAlive","_airSideOK",
 	"_active","_maxConcurrent",
-	"_baseLogikPos","_basePos","_baseDist","_minDist",
+	"_basePos","_baseDist","_minDist",
 	"_heliCandidates","_heliRoster","_heliClass",
 	"_vehCandidates","_vehRoster","_vehClass",
 	"_funds","_cost","_grp"];
@@ -43,6 +43,12 @@ if (isNil "_logik" || {isNull _logik}) exitWith {};
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 _sideText = str _side;
 _now = time;
+
+//--- A mobile HQ has no live production base while packed. The lift must use the current deployed HQ,
+//--- never the immutable wfbe_startpos object that remains at the original base after relocation.
+_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+if (isNull _hq || {!alive _hq}) exitWith {};
+if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {};
 
 //--- AI-RUN gate: the AI never spends a human commander's treasury. Mirrors CargoAirdrop's gate.
 _humanCmd = false;
@@ -99,15 +105,7 @@ if (isNull _target) exitWith {
 
 //--- Distance gate: only worth the spectacle/cost for a genuinely distant assault (a near target is faster/cheaper by ground convoy).
 _minDist = missionNamespace getVariable ["WFBE_C_AICOM_HELILIFT_MIN_DIST", 2000];
-_baseLogikPos = _logik getVariable "wfbe_startpos";
-_basePos = getPos _logik;
-if (!isNil "_baseLogikPos") then {
-	if (typeName _baseLogikPos == "OBJECT") then {
-		if (!isNull _baseLogikPos) then {_basePos = getPos _baseLogikPos};
-	} else {
-		if (typeName _baseLogikPos == "ARRAY" && {count _baseLogikPos >= 2}) then {_basePos = [_baseLogikPos select 0, _baseLogikPos select 1, 0]};
-	};
-};
+_basePos = getPos _hq;
 _baseDist = (getPos _target) distance _basePos;
 if (_baseDist < _minDist) exitWith {
 	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (_now / 60)) + "|HELILIFT_SKIP|too-close|dist=" + str (round _baseDist) + "|min=" + str _minDist);
