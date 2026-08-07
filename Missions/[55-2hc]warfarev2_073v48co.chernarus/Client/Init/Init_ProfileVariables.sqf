@@ -19,7 +19,9 @@ if !(isNil '_profile_var') then {
 _profile_var = profileNamespace getVariable "WFBE_TARGET_FPS";
 if !(isNil '_profile_var') then {
 	if (typeName _profile_var == "SCALAR") then {
-		missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", _profile_var];
+		if ((_profile_var >= 30) && {_profile_var <= 240}) then {
+			missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", _profile_var];
+		};
 	};
 };
 
@@ -37,7 +39,7 @@ missionNamespace setVariable ["WFBE_HighClimbingDefaultEnabled", WFBE_HighClimbi
 _profile_var = profileNamespace getVariable "WFBE_PERSISTENT_CONST_TERRAIN_GRID";
 if !(isNil '_profile_var') then {
 	if (typeName _profile_var == "SCALAR") then {
-		if (_profile_var <= (missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_CLUTTER")) then {
+		if ((_profile_var >= 1) && {_profile_var <= (missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_CLUTTER")}) then {
 			setTerrainGrid _profile_var;
 			currentTG = _profile_var;
 		};
