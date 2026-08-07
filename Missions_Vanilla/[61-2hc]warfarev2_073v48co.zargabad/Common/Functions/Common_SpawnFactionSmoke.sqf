@@ -11,6 +11,8 @@
 	Params: [ _pos (positionATL), _side ]
 	Returns: nothing.
 */
+if (!isServer) exitWith {};
+
 private ["_pos","_side","_color","_active","_pruned","_key","_cd","_s"];
 
 //--- Master gate (default OFF unless the constant turns it on).
