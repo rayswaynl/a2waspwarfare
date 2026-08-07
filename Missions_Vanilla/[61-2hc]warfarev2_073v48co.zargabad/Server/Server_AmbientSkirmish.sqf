@@ -79,7 +79,7 @@ _groupAlive = {
 
 _findPosition = {
 	Private ["_center","_radius","_tries","_playerRadius","_townRadius","_found","_playersOnline","_i",
-		"_ang","_dist","_candidate","_tooClose","_hcNames"];
+		"_ang","_dist","_candidate","_tooClose","_hcNames","_playerRadius2","_playerPos","_playerDx","_playerDy"];
 	_center       = _this select 0;
 	_radius       = _this select 1;
 	_tries        = _this select 2;
@@ -103,13 +103,18 @@ _findPosition = {
 		_dist = random _radius;
 		_candidate = [(_center select 0) + (_dist * sin _ang), (_center select 1) + (_dist * cos _ang), 0];
 		_tooClose = false;
+		_playerRadius2 = _playerRadius * _playerRadius;
 
 		if (surfaceIsWater _candidate) then {_tooClose = true};
 
 		if (!_tooClose) then {
 			{
 				if (isPlayer _x && {alive _x} && {!((name _x) in _hcNames)}) then {
-					if ((vehicle _x) distance _candidate < _playerRadius) then {_tooClose = true};
+					//--- A2 distance is 3D; ambient visibility must veto a player directly overhead too.
+					_playerPos = getPos (vehicle _x);
+					_playerDx = (_playerPos select 0) - (_candidate select 0);
+					_playerDy = (_playerPos select 1) - (_candidate select 1);
+					if ((_playerDx * _playerDx + _playerDy * _playerDy) < _playerRadius2) then {_tooClose = true};
 				};
 			} forEach allUnits;
 		};
