@@ -41,6 +41,9 @@ def test_guer_soft_threshold_is_consumed_by_debounced_warning() -> None:
             in guercap_block
         )
         assert "Call WFBE_CO_FNC_AICOMLog;" in guercap_block
+        assert guercap_block.count("missionNamespace setVariable") == 1
+        for forbidden in ("createGroup", "deleteGroup", "grpNull", "garrison"):
+            assert forbidden.lower() not in guercap_block.lower()
 
 
 def test_guer_groupgc_warning_block_is_mirrored() -> None:
