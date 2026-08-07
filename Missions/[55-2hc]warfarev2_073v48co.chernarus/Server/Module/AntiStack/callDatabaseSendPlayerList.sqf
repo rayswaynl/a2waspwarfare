@@ -58,16 +58,19 @@ if (_procedureName == "SEND_PLAYERLIST") then {
 	_response = "A2WaspDatabase" callExtension format ["%1,%2",_procedureCode,_parameters];
 };
 
-["INFORMATION", format ["CallDatabaseSendPlayerList.sqf: Called database successfully with procedure: [%1].", _procedureName]] Call WFBE_CO_FNC_LogContent;
-
 _response = call compile _response;
 
 //--- task46 (claude): extension absent -> compile "" = nil; exit to avoid _response/_responseCode undefined-variable RPT cascade.
 if (isNil "_response" || {(typeName _response) != "ARRAY"}) exitWith {
+	["ERROR", format ["CallDatabaseSendPlayerList.sqf: Database extension returned an invalid or empty response for procedure: [%1]. Neutral return value used.", _procedureName]] Call WFBE_CO_FNC_LogContent;
 	1
 };
 
 _responseCode = _response select 0;
+
+if (_responseCode == 1) then {
+	["INFORMATION", format ["CallDatabaseSendPlayerList.sqf: Called database successfully with procedure: [%1].", _procedureName]] Call WFBE_CO_FNC_LogContent;
+};
 
 if (_responseCode < 0) then {
 	["ERROR", format ["CallDatabaseSendPlayerList.sqf: CRITICAL ERROR! Something went wrong with database, check it's error logs. Procedure name: [%1].", _procedureName]] Call WFBE_CO_FNC_LogContent;
