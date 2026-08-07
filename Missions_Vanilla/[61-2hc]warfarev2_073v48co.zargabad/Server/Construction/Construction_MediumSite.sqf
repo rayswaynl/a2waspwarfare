@@ -1,7 +1,7 @@
 //*****************************************************************************************
 //Description: Creates a small construction site.
 //*****************************************************************************************
-Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_stage3Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type","_reqPlayer"];
+Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_stage3Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type","_reqPlayer","_capToken"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -13,6 +13,8 @@ _completionResultKey = if ((count _this) > 6) then {_this select 6} else {""};
 if ((typeName _completionResultKey) != "STRING") then {_completionResultKey = ""};
 _reqPlayer = if ((count _this) > 7) then {_this select 7} else {objNull};
 if (isNil "_reqPlayer" || {typeName _reqPlayer != "OBJECT"}) then {_reqPlayer = objNull};
+_capToken = if ((count _this) > 8) then {_this select 8} else {-1};
+if (typeName _capToken != "SCALAR") then {_capToken = -1};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 
@@ -74,21 +76,25 @@ _releasePending = {
 //--- MULTI-INSTANCE structure types this script builds (Light/Heavy - Barracks/CommandCenter/
 //--- Aircraft/ServicePoint have the MediumSite-sibling of this block in Construction_SmallSite.sqf).
 //--- Kept as a SEPARATE codeblock (not folded into _releasePending) so the existing CBRadar/AARadar/
-//--- Bank release paths - including their diag_log call count - are completely unchanged. Removes
-//--- exactly ONE reservation (the oldest) from the RequestStructure.sqf pending array; see that file
-//--- for the accept-time reserve. Called from every abort exitWith below AND once on the success tail.
+//--- release only the reservation token belonging to this worker; see RequestStructure.sqf for the
+//--- accept-time reserve. AICOM's legacy direct worker call has no token and cannot consume a player slot.
 private ["_releaseCapPending"];
 _releaseCapPending = {
 	//--- build/defense audit 2026-07-28: gate on the SAME flag as the RequestStructure.sqf reserve
 	//--- side, so flag-off is truly byte-identical to HEAD (no diag_log line, no missionNamespace
 	//--- touch) - not just "no reservation was ever taken".
-	if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_CAP_SERVER", 1]) > 0 && {_rlType in ["Light","Heavy"]}) then {
-		private ["_capKey","_capArr","_capNew","_capI"];
+	if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_CAP_SERVER", 1]) > 0 && {_capToken >= 0} && {_rlType in ["Light","Heavy"]}) then {
+		private ["_capKey","_capArr","_capNew","_capI","_capEntry"];
 		_capKey = Format ["WFBE_%1_%2_PENDING", str _side, _rlType];
 		_capArr = missionNamespace getVariable [_capKey, []];
 		if (count _capArr > 0) then {
 			_capNew = [];
-			for "_capI" from 1 to (count _capArr - 1) do {_capNew set [count _capNew, _capArr select _capI]};
+			for "_capI" from 0 to (count _capArr - 1) do {
+				_capEntry = _capArr select _capI;
+				if (typeName _capEntry == "ARRAY" && {count _capEntry > 0} && {(_capEntry select 0) != _capToken}) then {
+					_capNew set [count _capNew, _capEntry];
+				};
+			};
 			missionNamespace setVariable [_capKey, _capNew];
 		};
 		diag_log Format ["CONSTRUCTION|v1|pending-released|type=%1|side=%2", _rlType, str _side];
@@ -155,7 +161,7 @@ if (_startResultKey != "") then {missionNamespace setVariable [_startResultKey, 
 if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) then {
 	_nearLogic setVariable ["WFBE_B_Type", _rlType];
 
-	waitUntil {time >= _timeNextUpdate || {isNull _nearLogic}};
+	waitUntil {sleep 0.05; time >= _timeNextUpdate || {isNull _nearLogic}};
 	_timeNextUpdate = _startTime + _time * 2;
 	if (isNull _nearLogic) then {_constructionLogicLost = true};
 } else {
@@ -174,13 +180,13 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) then {
 	if (!_constructionLogicLost) then {
 		_constructed = _constructed + ([_position,_direction,_stage2Objects] Call _construct);
-		waitUntil {time >= _timeNextUpdate || {isNull _nearLogic}};
+		waitUntil {sleep 0.05; time >= _timeNextUpdate || {isNull _nearLogic}};
 		_timeNextUpdate = _startTime + _time * 3;
 		if (isNull _nearLogic) then {_constructionLogicLost = true};
 	};
 	if (!_constructionLogicLost) then {
 		_constructed = _constructed + ([_position,_direction,_stage3Objects] Call _construct);
-		waitUntil {time >= _timeNextUpdate || {isNull _nearLogic}};
+		waitUntil {sleep 0.05; time >= _timeNextUpdate || {isNull _nearLogic}};
 		if (isNull _nearLogic) then {_constructionLogicLost = true};
 	};
 	if (!_constructionLogicLost) then {
@@ -224,6 +230,21 @@ if (_constructionLogicLost) exitWith {
 };
 
 {if !(isNull _x) then {deleteVehicle _x}} forEach _constructed;
+
+//--- The validated request can wait through several construction stages. Re-check the live
+//--- world immediately before its permanent structure is created so an enabled footprint gate
+//--- cannot be bypassed by a concurrent placement during that wait. AI/FOB direct workers
+//--- have no verified player requester and retain their existing placement contracts.
+if (!isNull _reqPlayer && {isPlayer _reqPlayer} && {!([_side, _type, _position] Call WFBE_SE_FNC_ValidatePlayerStructurePlacement)}) exitWith {
+	Call _onConstructionAbort;
+	if !(isNull _nearLogic) then {
+		_group = group _nearLogic;
+		deleteVehicle _nearLogic;
+	};
+	if !(isNull _group) then {deleteGroup _group};
+	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"post-wait player placement invalid"]]};
+	diag_log Format ["CONSTRUCTION|v1|reject|reason=post-wait-player-placement-invalid|script=%1|type=%2|pos=%3", _script, _type, _position];
+};
 
 _site = createVehicle [_type, _position, [], 0, "NONE"];
 if (isNull _site) exitWith {
@@ -387,14 +408,11 @@ if (!IsNull _site) then {
 	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] Structure [%2] has been constructed.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
 	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [1,_site]]};
 
-	//--- B74.2: leaderboard STRUCTURE-built credit. Builder UID is not threaded through the
-	//--- RequestStructure->Construction path; attribute to the nearest same-side player at the
-	//--- completed site (the placer stands at the build spot). Same idiom as Construction_SmallSite.sqf.
-	private ["_bAttrPos","_bAttrSide","_bAttrRange","_bNear","_bDist","_bUid"];
-	_bAttrPos   = _position;
-	_bAttrSide  = _side;
-	_bAttrRange = missionNamespace getVariable ["WFBE_C_STATS_BUILD_ATTR_RANGE", 150];
-	_bNear = objNull; _bDist = _bAttrRange + 1;
-	{ if (isPlayer _x && {alive _x} && {side _x == _bAttrSide} && {(_x distance _bAttrPos) < _bDist}) then {_bNear = _x; _bDist = _x distance _bAttrPos} } forEach playableUnits;
-	if (!isNull _bNear) then {_bUid = getPlayerUID _bNear; if (_bUid != "") then {[_bUid, WFBE_STAT_STRUCTURES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
+	//--- Credit only the verified player requester threaded by RequestStructure. AICOM uses the
+	//--- five-argument worker form, so _reqPlayer stays objNull and nearby players get no false credit.
+	if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {
+		private ["_bUid"];
+		_bUid = getPlayerUID _reqPlayer;
+		if (_bUid != "") then {[_bUid, WFBE_STAT_STRUCTURES_BUILT, 1] call WFBE_SE_FNC_RecordStat};
+	};
 };
