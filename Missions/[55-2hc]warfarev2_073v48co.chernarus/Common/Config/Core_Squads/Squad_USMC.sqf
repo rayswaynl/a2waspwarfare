@@ -444,6 +444,10 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,true,false,false]];
 _aiTeamTypes = _aiTeamTypes + [1];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,1,0,0]];
 
+//--- AICOM naval-template admission is held behind WFBE_C_AICOM_NAVAL_TEMPLATES until
+//--- a water-aware founder/route exists.  These classes remain in Core_USMC.sqf and
+//--- Units_* for player purchase and other explicitly water-aware callers.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_TEMPLATES", 0]) > 0) then {
 //--- Motorized - RHIB Coastal Scout [type1]
 _u		= ["RHIB"];
 _u = _u + ["US_Soldier_TL_EP1"];
@@ -453,6 +457,7 @@ _aiTeamTemplates = _aiTeamTemplates + [_u];
 _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,true,false,false]];
 _aiTeamTypes = _aiTeamTypes + [1];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,1,0,0]];
+};
 
 //--- Motorized - HMMWV M2 QRF Pair [type1]
 _u		= ["HMMWV_M2"];
@@ -484,6 +489,7 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,true,false]];
 _aiTeamTypes = _aiTeamTypes + [2];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
 
+if ((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_TEMPLATES", 0]) > 0) then {
 //--- Mechanized - RHIB2Turret Coastal Raider [type2]
 _u		= ["RHIB2Turret"];
 _u = _u + ["US_Soldier_TL_EP1"];
@@ -495,6 +501,7 @@ _aiTeamTemplates = _aiTeamTemplates + [_u];
 _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,true,false]];
 _aiTeamTypes = _aiTeamTypes + [2];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+};
 
 //--- Mechanized - M1135 ATGM Ambush Team [type2]
 _u		= ["M1135_ATGMV_EP1"];
