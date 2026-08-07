@@ -3527,6 +3527,23 @@ if (isNil "WFBE_C_HC_NAMES") then {
 	//--- because the box still has WaspHC3/WaspHC4 launchers on disk and a stray one connecting must
 	//--- not be counted as a player (that exact drift is what broke spawn vetoes in #1456).
 	for "_hcSlot" from 1 to (WFBE_C_HC_SLOTS max 4) do {_hcNameList set [count _hcNameList, Format ["HC-AI-Control-%1", _hcSlot]]};
+	//--- QUOTED-NAME BELT (fix0807b/hc-quoted-names, live RPT evidence 2026-08-07): an A2OA launch
+	//--- flag shaped -name="HC-AI-Control-1" bakes the literal double-quote characters into the
+	//--- resolved profile name (CHATRELAY|v1|JOIN|"HC-AI-Control-1"| vs a real player's unquoted
+	//--- CHATRELAY|v1|JOIN|Zwanon), so a plain (name _x) in WFBE_C_HC_NAMES test misses it outright -
+	//--- the connect nameGate (Server_OnPlayerConnected.sqf) let a fully-enrolled HC back in as a WEST
+	//--- player despite PR #2376, and the commander-vote eligibility gate (Server_VoteForCommander.sqf)
+	//--- let the same HC WIN the elected-commander seat. Append the quoted twin of every bare name
+	//--- already collected above so an UNCHANGED `in WFBE_C_HC_NAMES` test at every existing call site
+	//--- catches both forms with zero consumer-file edits - this is the BELT; WFBE_CO_FNC_IsHcName
+	//--- (Common_IsHcName.sqf) is the BRACES the highest-value consumers were additionally switched to,
+	//--- for any future quoting quirk this registry widening does not anticipate. _hcDq = one literal
+	//--- '"' character (ASCII 34) via a single-quoted SQF string literal - avoids the doubled-"" escape
+	//--- a double-quoted literal would need for the same character.
+	private ["_hcBareNames","_hcDq"];
+	_hcDq = '"';
+	_hcBareNames = +_hcNameList; //--- snapshot copy: appending into _hcNameList while forEach'ing IT would rescan the growing array.
+	{ _hcNameList set [count _hcNameList, _hcDq + _x + _hcDq]; } forEach _hcBareNames;
 	WFBE_C_HC_NAMES = _hcNameList;
 };
 

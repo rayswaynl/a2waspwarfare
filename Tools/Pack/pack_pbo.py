@@ -296,11 +296,24 @@ def _innermost_config_block(text: str, masked: str, index: int) -> str:
 
 
 def _slot_capacity(mission_sqm: bytes) -> Tuple[int, int, int]:
-    """Count total, HC-reserved, and caster-reserved player slots in mission.sqm."""
+    """Count total, HC-reserved, and caster-reserved player slots in mission.sqm.
+
+    ``forceHeadlessClient`` was proven inert (and actively harmful - the engine
+    excludes flagged slots from its own lowest-id auto-seat scan, so the flag
+    never routes an HC there either) for A2 OA 1.64 ``-client`` HC connections;
+    HC reservation is now expressed purely via the lowest playable ``id=`` plus
+    the ``description="Headless Client N"`` label (see fix0807b lane). Detect
+    either signal so older/rebuilt missions that still carry the flag and
+    current missions that dropped it both classify correctly.
+    """
     text = mission_sqm.decode("latin-1")
     masked = _mask_config_comments(_mask_quoted_config_text(text))
     player_pattern = re.compile(r"\bplayer\s*=\s*")
-    headless_pattern = re.compile(r"(?m)^\s*forceHeadlessClient\s*=\s*[1-9][0-9]*\s*;")
+    headless_flag_pattern = re.compile(r"(?m)^\s*forceHeadlessClient\s*=\s*[1-9][0-9]*\s*;")
+    headless_desc_pattern = re.compile(
+        r'^\s*description\s*=\s*"Headless\s+Client\b',
+        re.IGNORECASE | re.MULTILINE,
+    )
     caster_pattern = re.compile(
         r'\bwfbe_caster_slot\b|^\s*description\s*=\s*"Caster\b',
         re.IGNORECASE | re.MULTILINE,
@@ -318,7 +331,10 @@ def _slot_capacity(mission_sqm: bytes) -> Tuple[int, int, int]:
         structural_block = _mask_config_comments(_mask_quoted_config_text(block))
         visible_block = _mask_config_comments(block)
         total += 1
-        headless += int(bool(headless_pattern.search(structural_block)))
+        headless += int(
+            bool(headless_flag_pattern.search(structural_block))
+            or bool(headless_desc_pattern.search(visible_block))
+        )
         caster += int(bool(caster_pattern.search(visible_block)))
     return total, headless, caster
 

@@ -530,7 +530,7 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 				//--- WFBE_CO_FNC_ComputePvpBounty; score read server-side at kill time, immune to client score-lag and
 				//--- corpse deletion) and the authoritative amount rides the payload as element 2 for the display line.
 				_srvPvp = [score _killed, _victimStreak] Call WFBE_CO_FNC_ComputePvpBounty;
-				if (_killer_uid != "" && {_srvPvp > 0} && {!((name (leader _killer_group)) in _hcNames)}) then {
+				if (_killer_uid != "" && {_srvPvp > 0} && {!((name (leader _killer_group)) call WFBE_CO_FNC_IsHcName)}) then {
 					[_killer_group, _srvPvp] Call WFBE_CO_FNC_ChangeTeamFunds;
 				};
 				[_killer_uid, "AwardBountyPlayer", [_killed, _victimStreak, _srvPvp]] Call WFBE_CO_FNC_SendToClients;
@@ -540,7 +540,7 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 			//--- WFBE_CO_FNC_ComputeKillBounty); the amount is appended to the payload for the client display.
 			//--- Credit only when > 0 (registry-less/zero-priced types never paid anything real before either).
 			_srvBounty = [_killed_type, false] Call WFBE_CO_FNC_ComputeKillBounty;
-			if (_killer_uid != "" && {_srvBounty > 0} && {!((name (leader _killer_group)) in _hcNames)}) then {
+			if (_killer_uid != "" && {_srvBounty > 0} && {!((name (leader _killer_group)) call WFBE_CO_FNC_IsHcName)}) then {
 				[_killer_group, _srvBounty] Call WFBE_CO_FNC_ChangeTeamFunds;
 			};
 			[_killer_uid, "AwardBounty", [_killed_type, false, _killer_award, _srvBounty]] Call WFBE_CO_FNC_SendToClients;
@@ -553,7 +553,7 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 				private ["_assistCreditedGroups"]; //--- fix(tonight-20260717): de-dup per-group credit below.
 				_assistCreditedGroups = [];
 				{if (alive _x && isPlayer _x) then {
-					if ((getPlayerUID _x) != "" && {_srvAssist > 0} && {!((name _x) in _hcNames)} && {!(group _x in _assistCreditedGroups)}) then { //--- fix(tonight-20260717): was keyed only on _hcNames with no per-group de-dup, so a same-squad vehicle crew (one wallet, multiple crewmates) got credited once PER surviving crewmate instead of once per group.
+					if ((getPlayerUID _x) != "" && {_srvAssist > 0} && {!((name _x) call WFBE_CO_FNC_IsHcName)} && {!(group _x in _assistCreditedGroups)}) then { //--- fix(tonight-20260717): was keyed only on _hcNames with no per-group de-dup, so a same-squad vehicle crew (one wallet, multiple crewmates) got credited once PER surviving crewmate instead of once per group.
 						[group _x, _srvAssist] Call WFBE_CO_FNC_ChangeTeamFunds;
 						_assistCreditedGroups set [count _assistCreditedGroups, group _x];
 					};
@@ -593,7 +593,7 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 		//--- Only applies to player groups.
 			//--- J1 funds authority: the penalty debit moves server-side (LocalizeMessage keeps only the chat
 			//--- text; an HC-led leader's client never ran the debit, so skip those here too).
-			if (_killer_uid != "" && {!((name (leader _killer_group)) in _hcNames)}) then {
+			if (_killer_uid != "" && {!((name (leader _killer_group)) call WFBE_CO_FNC_IsHcName)}) then {
 				[_killer_group, -(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL")] Call WFBE_CO_FNC_ChangeTeamFunds;
 			};
 			[_killer_uid, "LocalizeMessage", ['Teamkill']] Call WFBE_CO_FNC_SendToClients;
