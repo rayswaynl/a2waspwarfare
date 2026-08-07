@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_buildings','_commander','_funds','_get','_hcGroup','_hcList','_hcKeep','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires','_leaseGen'];
+Private ['_buildings','_commander','_funds','_get','_hcGroup','_hcList','_hcKeep','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires','_leaseGen','_queueRefund','_queueOrders','_queueBuildings','_queueBuilding','_queue','_queueCosts','_queueCpts','_queueLabels','_queueKeep','_queueCostsKeep','_queueCptsKeep','_queueLabelsKeep','_queuePrefix','_queueIndex','_queueToken','_queueCost','_queueLocked','_queueWait','_queueMatches','_queueTokenChars','_queueCharIndex'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -222,6 +222,68 @@ _team = grpNull;
 } forEach WFBE_PRESENTSIDES;
 
 if (isNull _team) exitWith {["WARNING", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] team is null", _name, _uid]] Call WFBE_CO_FNC_LogContent};
+
+//--- A player factory order is driven by the buyer's client coroutine.  When that client leaves,
+//--- the coroutine cannot deliver or refund, but its UID-token and exact paid cost remain public on
+//--- the live factory/depot/airport queue.  Cancel every still-pending token for this UID before the
+//--- disconnect wallet snapshot, so reconnect restores the refund and no orphan head blocks others.
+_queueRefund = 0;
+_queueOrders = 0;
+_queueBuildings = _side Call WFBE_CO_FNC_GetSideStructures;
+_queueBuildings = _queueBuildings + (if (isNil "towns") then {[]} else {towns}) + (if (isNil "airports") then {[]} else {airports});
+_queuePrefix = toArray (_uid + "_");
+{
+	_queueBuilding = _x;
+	if (!isNull _queueBuilding && {alive _queueBuilding}) then {
+		_queueLocked = false;
+		_queueWait = 0;
+		while {!_queueLocked && {_queueWait < 10}} do {
+			isNil {if (isNil {_queueBuilding getVariable "wfbe_cancel_queue_lock"}) then {_queueBuilding setVariable ["wfbe_cancel_queue_lock", true]; _queueLocked = true}};
+			if (!_queueLocked) then {sleep 0.1; _queueWait = _queueWait + 1};
+		};
+		if (_queueLocked) then {
+			_queue = _queueBuilding getVariable ["queu", []];
+			_queueCosts = _queueBuilding getVariable ["queu_costs", []];
+			_queueCpts = _queueBuilding getVariable ["queu_cpts", []];
+			_queueLabels = _queueBuilding getVariable ["queu_labels", []];
+			if (typeName _queue != "ARRAY") then {_queue = []};
+			if (typeName _queueCosts != "ARRAY") then {_queueCosts = []};
+			if (typeName _queueCpts != "ARRAY") then {_queueCpts = []};
+			if (typeName _queueLabels != "ARRAY") then {_queueLabels = []};
+			_queueKeep = []; _queueCostsKeep = []; _queueCptsKeep = []; _queueLabelsKeep = [];
+			for "_queueIndex" from 0 to ((count _queue) - 1) do {
+				_queueToken = _queue select _queueIndex;
+				_queueMatches = false;
+				if (typeName _queueToken == "STRING") then {
+					_queueTokenChars = toArray _queueToken;
+					if ((count _queueTokenChars) >= (count _queuePrefix)) then {
+						_queueMatches = true;
+						for "_queueCharIndex" from 0 to ((count _queuePrefix) - 1) do {if ((_queueTokenChars select _queueCharIndex) != (_queuePrefix select _queueCharIndex)) then {_queueMatches = false}};
+					};
+				};
+				if (_queueMatches) then {
+					_queueCost = if (_queueIndex < count _queueCosts && {typeName (_queueCosts select _queueIndex) == "SCALAR"}) then {_queueCosts select _queueIndex} else {0};
+					if (_queueCost > 0) then {_queueRefund = _queueRefund + _queueCost};
+					_queueOrders = _queueOrders + 1;
+				} else {
+					_queueKeep = _queueKeep + [_queueToken];
+					if (_queueIndex < count _queueCosts) then {_queueCostsKeep = _queueCostsKeep + [_queueCosts select _queueIndex]};
+					if (_queueIndex < count _queueCpts) then {_queueCptsKeep = _queueCptsKeep + [_queueCpts select _queueIndex]};
+					if (_queueIndex < count _queueLabels) then {_queueLabelsKeep = _queueLabelsKeep + [_queueLabels select _queueIndex]};
+				};
+			};
+			_queueBuilding setVariable ["queu", _queueKeep, true];
+			_queueBuilding setVariable ["queu_costs", _queueCostsKeep, true];
+			_queueBuilding setVariable ["queu_cpts", _queueCptsKeep, true];
+			_queueBuilding setVariable ["queu_labels", _queueLabelsKeep, true];
+			_queueBuilding setVariable ["wfbe_cancel_queue_lock", nil];
+		} else {
+			["WARNING", Format ["Server_PlayerDisconnected.sqf: queue refund lock timed out for player [%1] at [%2]; that building was left unchanged.", _uid, _queueBuilding]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+} forEach _queueBuildings;
+if (_queueRefund > 0) then {[_team, _queueRefund] Call ChangeTeamFunds};
+if (_queueOrders > 0) then {["INFORMATION", Format ["Server_PlayerDisconnected.sqf: cancelled [%1] pending factory order(s) for departing player [%2]; refunded [%3] into the persisted team wallet.", _queueOrders, _uid, _queueRefund]] Call WFBE_CO_FNC_LogContent};
 
 //--- We attempt to fetch the client old unit, we need to check if it's group is the right one (on the fly group swapping).
 //--- mission-core disconnect bughunt 2026-07-30: NEVER fall back to leader _team as the
