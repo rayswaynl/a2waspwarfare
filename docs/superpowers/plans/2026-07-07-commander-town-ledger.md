@@ -987,9 +987,10 @@ git checkout origin/claude/build84-cmdcon36 -- `
 
 - [ ] **Step 4: Verify per-map template values are correct**
 
-Confirm TK template still has `WF_MAXPLAYERS 31`, `STARTING_DISTANCE 7500`, no
-`IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`; ZG template still has `WF_MAXPLAYERS 33`,
-`STARTING_DISTANCE 5000`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`. (The
+Confirm TK template still has `WF_MAXPLAYERS 34`, `STARTING_DISTANCE 7500`, no
+`IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`; ZG template still has `WF_MAXPLAYERS 34`,
+`STARTING_DISTANCE 5000`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`. `AGENTS.md`
+is the single authority for these per-map template defines. (The
 `[61-...]` folder-name prefix is a player-slot label, not the WF_MAXPLAYERS value; a
 live/generated `version.sqf` can also hold a different number than the tracked `.template`.)
 
