@@ -308,15 +308,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 	};
 
 	if (_active) then {
-		_cmdTeam  = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-		_humanCmd = false;
-		if (!isNull _cmdTeam) then {
-			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
-		};
+		//--- CommanderLease is authoritative through promotion/respawn/disconnect grace; do not
+		//--- infer handover from the current group leader alone.
+		_humanCmd = ([_side] Call WFBE_CO_FNC_GetCommanderAuthorityUID) != "";
 
-		//--- cmdcon42 (Ray 2026-07-02): RAW human-seated flag, captured BEFORE the LOCK override below.
-		//--- The ECON_SINK block must pause whenever a human physically occupies the commander slot, even
-		//--- under WFBE_C_AI_COMMANDER_LOCK (which forces _humanCmd=false to keep the AI in full command for
+		//--- cmdcon42 (Ray 2026-07-02): RAW human-authority flag, captured BEFORE the LOCK override below.
+		//--- The ECON_SINK block must pause whenever a human command lease is active, even under
+		//--- WFBE_C_AI_COMMANDER_LOCK (which forces _humanCmd=false to keep the AI in full command for
 		//--- eval/night protection). _canBuild already blocks the sink for the normal no-lock case, but a lock
 		//--- would otherwise let the sink spend the human commander's side supply uncommanded. Keep this raw.
 		_humanSeated = _humanCmd;

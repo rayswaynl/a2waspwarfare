@@ -43,9 +43,8 @@ _now = time;
 
 //--- AI-RUN gate: never call a drop while a human commands this side (rule A: the AI does not spend a human's
 //--- support). LOCK forces AI command regardless of an occupied slot (mirrors AI_Commander.sqf:145).
-_humanCmd = false;
-_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-if (!isNull _cmdTeam) then { if (isPlayer (leader _cmdTeam)) then {_humanCmd = true} };
+//--- The active lease owns the command slot even while its human is not leader-shaped.
+_humanCmd = ([_side] Call WFBE_CO_FNC_GetCommanderAuthorityUID) != "";
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_humanCmd = false};
 if (_humanCmd) exitWith {};
 

@@ -71,6 +71,35 @@ WFBE_CO_FNC_CommanderLeaseHolderPresent = {
     _present
 };
 
+//--- AICOM authority read: the commander lease is the source of truth while a human
+//--- commander is temporarily not the current group leader (promotion, respawn, or
+//--- short disconnect). The legacy leader check remains the fallback when lease mode
+//--- is off or a pre-lease human assignment is still being published.
+WFBE_CO_FNC_GetCommanderAuthorityUID = {
+    Private ["_side","_logic","_team","_lease","_uid","_leader"];
+    _side = _this;
+    _uid = "";
+    _team = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+    if (!isNull _team) then {
+        if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+            _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
+            _lease = [];
+            if (!isNull _logic) then {
+                _lease = _logic getVariable "wfbe_commander_lease";
+                if (isNil "_lease") then {_lease = []};
+            };
+            if (typeName _lease == "ARRAY" && {count _lease >= 6} && {typeName (_lease select 0) == "STRING"} && {(_lease select 0) != ""} && {(_lease select 1) == _side} && {(_lease select 2) == (str _team)}) then {
+                _uid = _lease select 0;
+            };
+        };
+        if (_uid == "") then {
+            _leader = leader _team;
+            if (!isNull _leader && {isPlayer _leader}) then {_uid = getPlayerUID _leader};
+        };
+    };
+    _uid
+};
+
 //--- ENQUEUE-ONLY entry points (safe to Call from any server-side file). None of these mutate
 //--- wfbe_commander / wfbe_commander_lease / wfbe_commander_lease_gen - they only stamp a
 //--- per-kind command slot for the executor to consume.

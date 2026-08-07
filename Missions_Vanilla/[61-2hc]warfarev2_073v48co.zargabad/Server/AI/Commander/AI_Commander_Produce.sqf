@@ -303,13 +303,12 @@ if (_airMaxTotalP > 0) then {
 							_wm_unitCost = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_UNIT_COST", 300];
 							//--- cmdcon42 TOPUP OPTION B (Ray 2026-07-02): keep the quartermaster auto-refit running under a
 							//--- HUMAN commander, but HEAVILY DISCOUNT it (the player commander gets no kill income from his
-							//--- squads, as intended) and make each charge VISIBLE to that commander. Human-seat detection is
-							//--- the same RAW idiom as AI_Commander.sqf _humanSeated (isPlayer leader of the commander team,
-							//--- deliberately NOT the AICOM-LOCK-overridden state: the discount tracks the REAL seat).
+							//--- squads, as intended) and make each charge VISIBLE to that commander. Use the same lease-backed
+							//--- authority source as the supervisor so an AI promotion cannot silently remove the discount or
+							//--- lose the UID-targeted notice during a short reconnect.
 							//--- The AI commander keeps paying full price; payer (AICOM treasury) and cooldown are unchanged.
-							_wm_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-							_wm_humanSeated = false;
-							if (!isNull _wm_cmdTeam) then { if (isPlayer (leader _wm_cmdTeam)) then {_wm_humanSeated = true} };
+							_wm_cmdUID = [_side] Call WFBE_CO_FNC_GetCommanderAuthorityUID;
+							_wm_humanSeated = _wm_cmdUID != "";
 							_wm_mult = 1;
 							if (_wm_humanSeated) then {_wm_mult = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_HUMAN_MULT", 0.33]};
 							//--- QM REFIT FREE FOR PLAYER COMMANDER (Ray owner ruling, 2026-07-21): WFBE_C_AICOM_TOPUP_HUMAN_COST
@@ -341,7 +340,6 @@ if (_airMaxTotalP > 0) then {
 								//--- STRING destination = exact player UID; LocalizeMessage "QuartermasterRefit" is a passthrough case).
 								//--- Spam-bounded by the per-team 240s cooldown above - one line per real refit charge, human era only.
 								if (_wm_humanSeated) then {
-									_wm_cmdUID = getPlayerUID (leader _wm_cmdTeam);
 									if (_wm_cmdUID != "") then {
 										[_wm_cmdUID, "LocalizeMessage", ["QuartermasterRefit", Format ["Quartermaster: -%1 refit %2 (%3 men)", _wm_charge, str _team, _wm_missing]]] Call WFBE_CO_FNC_SendToClients;
 									};

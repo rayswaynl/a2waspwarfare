@@ -21,9 +21,8 @@ _sideText = str _side;
 _now = time;
 
 //--- AI-RUN gate: the AI never spends a human commander's treasury. LOCK mirrors the existing Paratroops gate.
-_humanCmd = false;
-_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-if (!isNull _cmdTeam) then {if (isPlayer (leader _cmdTeam)) then {_humanCmd = true}};
+//--- The active lease owns the command slot even while its human is not leader-shaped.
+_humanCmd = ([_side] Call WFBE_CO_FNC_GetCommanderAuthorityUID) != "";
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_humanCmd = false};
 if (_humanCmd) exitWith {};
 
