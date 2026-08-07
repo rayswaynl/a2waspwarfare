@@ -4,14 +4,31 @@
 		- Object
 */
 
-Private ["_closest","_near","_pos","_range","_hangar","_afSide"];
+Private ["_closest","_closestDistance","_candidateDistance","_near","_pos","_range","_hangar","_afSide"];
 
 _closest = objNull;
+_closestDistance = 1e12;
 _pos = _this select 0;
 _range = _this select 1;
 
 _near = _pos nearEntities [WFBE_Logic_Airfield, _range];
-{_hangar = _x getVariable ["wfbe_hangar", objNull]; if !(isNil {_x getVariable "wfbe_hangar"}) then {if (alive _hangar) then {if (sideJoined == resistance) then {_afSide = _x getVariable ["wfbe_airfield_side", civilian]; if (_afSide == resistance) then {_closest = _x}} else {_closest = _x}}}} forEach _near;
+{
+	_hangar = _x getVariable ["wfbe_hangar", objNull];
+	if !(isNil {_x getVariable "wfbe_hangar"}) then {
+		if (alive _hangar) then {
+			if (sideJoined == resistance) then {
+				_afSide = _x getVariable ["wfbe_airfield_side", civilian];
+				if (_afSide == resistance) then {
+					_candidateDistance = _x distance _pos;
+					if (_candidateDistance < _closestDistance) then {_closest = _x; _closestDistance = _candidateDistance};
+				};
+			} else {
+				_candidateDistance = _x distance _pos;
+				if (_candidateDistance < _closestDistance) then {_closest = _x; _closestDistance = _candidateDistance};
+			};
+		};
+	};
+} forEach _near;
 
 //--- B74.2: naval carrier air-shop. A captured carrier (wfbe_is_naval_hvt depot logic) acts as an
 //--- airfield: Init_NavalHVT spawns the same airfield hangar (wfbe_is_airfield_hangar) on it and sets
@@ -24,16 +41,22 @@ if (isNull _closest) then {
 	_nearN = _pos nearEntities [WFBE_Logic_Depot, _range];
 	{
 		_xn = _x;
-		if ((_xn getVariable ["wfbe_is_naval_hvt", false]) && isNull _closest) then {
+		if (_xn getVariable ["wfbe_is_naval_hvt", false]) then {
 			_hangar = _xn getVariable ["wfbe_hangar", objNull];
 			if (!isNull _hangar && {alive _hangar}) then {
 				_afSide = _xn getVariable ["wfbe_airfield_side", civilian];
 				//--- Same side-gate idiom as the airfield path: resistance only sees its own carrier;
 				//--- WEST/EAST see any carrier whose hangar is present (capture re-spawns it per owner).
 				if (sideJoined == resistance) then {
-					if (_afSide == resistance) then {_closest = _xn};
+					if (_afSide == resistance) then {
+						_candidateDistance = _xn distance _pos;
+						if (_candidateDistance < _closestDistance) then {_closest = _xn; _closestDistance = _candidateDistance};
+					};
 				} else {
-					if (_afSide == sideJoined) then {_closest = _xn};
+					if (_afSide == sideJoined) then {
+						_candidateDistance = _xn distance _pos;
+						if (_candidateDistance < _closestDistance) then {_closest = _xn; _closestDistance = _candidateDistance};
+					};
 				};
 			};
 		};
