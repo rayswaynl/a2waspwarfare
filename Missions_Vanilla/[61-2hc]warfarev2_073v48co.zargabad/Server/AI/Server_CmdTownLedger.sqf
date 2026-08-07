@@ -18,13 +18,34 @@ AICOMV2_CTL_INSTANCE = 1;
 
 ["INITIALIZATION", "Server_CmdTownLedger.sqf: CTL starting."] Call WFBE_CO_FNC_LogContent;
 
-waitUntil {!isNil "towns"};
-waitUntil {count towns > 0};
 //--- r98: wait for the STARTING-MODE assignment before seeding (Init_Server launches this
 //--- worker BEFORE Server\Init\Init_Towns.sqf runs). Seeding pre-assignment sideIDs found
 //--- zero W/E towns; the tick pickup then re-seeded the entire starting empire at
 //--- _captureSeed (0.25) instead of the seed-pass 1.0.
-waitUntil {!isNil "townInitServer"};
+//--- DEADLINE (w807-L2, 2026-08-07): 420s, not 90s. Common/Init/Init_Towns.sqf:35-40 (D6c
+//--- REVISED, 2026-08-03) documents a PROVEN dev-box case where all 46 depot workers parked
+//--- on their game-time-gated registration sleep for 300s+ before landing - same async
+//--- registration pipeline this loop polls. 420s covers that observed worst case with margin
+//--- while still failing closed (not hanging forever) on a genuinely broken mission.sqm.
+private ["_ctlTownReady","_ctlTownInitDeadline","_ctlTownInitWait","_ctlTownsReady","_ctlTownInitServerReady"];
+_ctlTownReady = false;
+_ctlTownInitDeadline = diag_tickTime + 420;
+_ctlTownInitWait = 0;
+_ctlTownsReady = false;
+_ctlTownInitServerReady = false;
+while {!_ctlTownReady && {diag_tickTime < _ctlTownInitDeadline} && {!(missionNamespace getVariable ["WFBE_GameOver", false])}} do {
+	_ctlTownsReady = !isNil "towns" && {count towns > 0};
+	_ctlTownInitServerReady = missionNamespace getVariable ["townInitServer", false];
+	if (_ctlTownsReady && {_ctlTownInitServerReady}) then {
+		_ctlTownReady = true;
+	} else {
+		sleep 0.25;
+		_ctlTownInitWait = _ctlTownInitWait + 1;
+	};
+};
+if (!_ctlTownReady) exitWith {
+	diag_log Format ["CTLSTAT|v1|BOTH|STARTUP_TIMEOUT|waitTicks=%1|townsReady=%2|townInitServer=%3|gameOver=%4", _ctlTownInitWait, _ctlTownsReady, _ctlTownInitServerReady, missionNamespace getVariable ["WFBE_GameOver", false]];
+};
 sleep 5;
 
 private ["_tickSec","_regenFullSec","_captureSeed"];
