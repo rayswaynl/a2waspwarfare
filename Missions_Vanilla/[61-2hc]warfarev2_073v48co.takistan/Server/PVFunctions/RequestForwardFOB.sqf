@@ -3,9 +3,10 @@
 	2026-07-17: v1 wrongly built it from the supply truck; corrected to the repair truck before ship).
 	  Flag WFBE_C_STRUCTURES_FOB. Owner rulings 2026-07-17; spec FORWARD-FOB-SPEC-20260717.md.
 
-	Sent by Client\Action\Action_BuildForwardFOB.sqf. AUTHORITATIVE: re-validates the per-side alive cap, the
-	base-area placement gate and the player's cash (the client pre-checks the same three for instant feedback
-	and is spoofable), charges server-side through the WFBE_CO_FNC_ChangeTeamFunds choke-point, then spawns
+	Sent by Client\Action\Action_BuildForwardFOB.sqf. AUTHORITATIVE: re-validates the live repair-truck trigger,
+	player range, server-derived placement, per-side alive cap, the base-area placement gate and the player's cash
+	(the client pre-checks the same values for instant feedback and is spoofable), charges server-side through the
+	WFBE_CO_FNC_ChangeTeamFunds choke-point, then spawns
 	the FOB - a LocationLogicCamp + the per-side tent (WFBE_%1FARP) as its wfbe_camp_bunker + the mast.
 
 	WHY a real LocationLogicCamp: it is what buys three of the four v1 effects with no new plumbing.
@@ -51,6 +52,27 @@ _side = side group _player;
 if !(_side in [west, east]) exitWith {
 	["WARNING", Format ["RequestForwardFOB.sqf: caller side [%1] is not WEST/EAST - rejected.", str _side]] Call WFBE_CO_FNC_LogContent;
 };
+
+//--- The client action is only reachable from a live WEST/EAST repair truck within the build range, but this
+//--- PVF is a public-variable boundary. Bind the request to that same server-visible trigger before charging
+//--- or constructing anything; a client must not be able to replace it with objNull, another vehicle, or a
+//--- remote truck. The target is derived here as well, so the client cannot move a valid request elsewhere.
+if (!((typeName _truck) in ["OBJECT"]) || {isNull _truck} || {!alive _truck}) exitWith {
+	["WARNING", Format ["RequestForwardFOB.sqf: invalid or dead repair-truck trigger [%1] - rejected.", _truck]] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeOf _truck) in (missionNamespace getVariable [Format ["WFBE_%1REPAIRTRUCKS", str _side], []])) exitWith {
+	["WARNING", Format ["RequestForwardFOB.sqf: trigger [%1] is not a %2 repair truck - rejected.", typeOf _truck, str _side]] Call WFBE_CO_FNC_LogContent;
+};
+if (side _truck != _side) exitWith {
+	["WARNING", Format ["RequestForwardFOB.sqf: trigger side [%1] does not match caller side [%2] - rejected.", str (side _truck), str _side]] Call WFBE_CO_FNC_LogContent;
+};
+if ((_player distance _truck) > (missionNamespace getVariable ["WFBE_C_FOB_BUILD_RANGE", 30])) exitWith {
+	["WARNING", Format ["RequestForwardFOB.sqf: player is too far from repair truck [%1] - rejected.", round (_player distance _truck)]] Call WFBE_CO_FNC_LogContent;
+};
+
+_dir = getDir _truck;
+_pos = _truck modelToWorld [0, (missionNamespace getVariable ["WFBE_C_FOB_BUILD_DIST", 22]), 0];
+_pos set [2, 0];
 
 _sideKey = Format ["WFBE_FOB_%1", str _side];
 _cost    = missionNamespace getVariable ["WFBE_C_FOB_COST", 25000];
