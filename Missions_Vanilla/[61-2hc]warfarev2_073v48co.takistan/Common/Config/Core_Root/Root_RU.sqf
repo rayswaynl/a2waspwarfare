@@ -41,7 +41,7 @@ missionNamespace setVariable [Format["WFBE_%1PARACARGO", _side], 'Mi17_Ins'];//-
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCK", _side], 'KamazRepair'];//--- Repair Truck model.
 missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['GAZ_Vodnik_MedEvac','BTR90']];//--- Starting Vehicles.
 missionNamespace setVariable [Format["WFBE_%1PARAAMMO", _side], ['RUBasicAmmunitionBox','RUBasicWeaponsBox','RULaunchersBox']];//--- Supply Paradropping, Dropped Ammunition.
-missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'KamazRepair'];//--- Supply Paradropping, Dropped Vehicle.
+missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'GAZ_Vodnik_HMG'];//--- Supply Paradropping, Dropped Vehicle. fix0807/airdrop-armed-roster: KamazRepair was an unarmed repair truck; Vodnik HMG is already this side's EAST PATROL_LIGHT technical entry (armed heavy MG).
 missionNamespace setVariable [Format["WFBE_%1PARAVEHI", _side], 'Mi17_Ins'];//--- Supply Paradropping, Vehicle
 missionNamespace setVariable [Format["WFBE_%1PARACHUTE", _side], 'ParachuteMediumEast'];//--- Supply Paradropping, Parachute Model.
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSupplyTruck_RU'];//--- Supply Truck model.
