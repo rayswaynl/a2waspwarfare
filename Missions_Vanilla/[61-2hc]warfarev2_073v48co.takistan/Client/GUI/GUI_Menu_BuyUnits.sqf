@@ -377,70 +377,11 @@ _IDCS = _IDCS - [_currentIDC];
 	//--- Lock icon.
 	if (MenuAction == 401) then {MenuAction = -1;_isLocked = if (_isLocked) then {false} else {true};_updateDetails = true};
 
-	//--- Task 33: cancel last queued order for this player in the current factory.
+	//--- Server-owned cancellation: the factory queue and refund are a shared ledger transaction.
+	//--- RequestCancelQueue serializes the removal and replies with the accepted refund/counter delta.
 	if (MenuAction == 501) then {
 		MenuAction = -1;
-		private ["_uid33","_q33","_qc33","_qp33","_ql33","_idx33","_paidCost33","_cpt33","_basePrice33","_refund33","_maxRefund33","_newArr33","_i33","_uidPrefix33"];
-		_uid33 = getPlayerUID player;
-		//--- A2-safe "token starts with UID" test. `string find string` is ARMA 3-only and
-		//--- throws "Type String, expected Array" on A2 OA; compare leading bytes via toArray.
-		//--- type-mismatch residual (2026-07-30): shared factory "queu" mixes player STRING tokens
-		//--- with AI SCALAR tokens (see #1050 Server_BuyUnit queue-fix). toArray on NUMBER throws
-		//--- and aborts Cancel Last when AI orders share the factory - skip non-STRING (false).
-		_uidPrefix33 = {
-			private ["_tok","_tokA","_uidA","_ul","_ok","_j"];
-			_tok = _this select 0;
-			if (typeName _tok != "STRING") exitWith {false};
-			if (typeName (_this select 1) != "STRING") exitWith {false};
-			_tokA = toArray _tok;
-			_uidA = toArray (_this select 1);
-			_ul = count _uidA;
-			_ok = (_ul > 0) && (_ul <= count _tokA);
-			if (_ok) then {
-				for "_j" from 0 to (_ul - 1) do {
-					if ((_tokA select _j) != (_uidA select _j)) exitWith {_ok = false};
-				};
-			};
-			_ok
-		};
-		_q33   = _closest getVariable ["queu",        []];
-		_qc33  = _closest getVariable ["queu_costs",  []];
-		_qp33  = _closest getVariable ["queu_cpts",   []];
-		_ql33  = _closest getVariable ["queu_labels",  []];
-		//--- Find the LAST entry belonging to this player.
-		_idx33 = -1;
-		{if ([_x, _uid33] call _uidPrefix33) then {_idx33 = _forEachIndex}} forEach _q33;
-		if (_idx33 == -1) exitWith {hint parseText "<t color='#ff9900'>You have no unit queued in this factory.</t>"};
-		_paidCost33 = if (_idx33 < count _qc33) then {_qc33 select _idx33} else {0};
-		_cpt33      = if (_idx33 < count _qp33) then {_qp33 select _idx33} else {1};
-		_refund33   = _paidCost33;
-		if (ATTACK_WAVE_PRICE_MODIFIER < 1.0 && UNIT_COST_MODIFIER > 0) then {
-			_basePrice33 = _paidCost33 / (ATTACK_WAVE_PRICE_MODIFIER * UNIT_COST_MODIFIER);
-			_maxRefund33 = round (_basePrice33 * 0.5);
-			if (_refund33 > _maxRefund33) then {_refund33 = _maxRefund33};
-		};
-		//--- Remove from all parallel arrays by index.
-		_q33 = _q33 - [_q33 select _idx33];
-		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _qc33; _qc33 = _newArr33;
-		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _qp33; _qp33 = _newArr33;
-		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _ql33; _ql33 = _newArr33;
-		_closest setVariable ["queu",        _q33,  true];
-		_closest setVariable ["queu_costs",  _qc33, true];
-		_closest setVariable ["queu_cpts",   _qp33, true];
-		_closest setVariable ["queu_labels", _ql33, true];
-		//--- Decrement queue counters.
-		unitQueu = (unitQueu - _cpt33) max 0;
-		missionNamespace setVariable [
-			Format ["WFBE_C_QUEUE_%1", _type],
-			((missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1", _type], 0]) - 1) max 0
-		];
-		//--- Refund.
-		if (_refund33 > 0) then {(_refund33) Call ChangePlayerFunds};
-		hint parseText Format [
-			"<t color='#00e83e'>Queue cancelled.</t><br/>Refunded: <t color='#ffe066'>$%1</t>%2",
-			_refund33,
-			if (_paidCost33 != _refund33) then {Format [" (capped from $%1 — attack-wave)", _paidCost33]} else {""}
-		];
+		["RequestCancelQueue", [player, _closest, _type]] Call WFBE_CO_FNC_SendToServer;
 		_updateDetails = true;
 	};
 	
