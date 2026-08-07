@@ -1,5 +1,66 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-07 - lane w807b-L11: mission-PBO Cprs compression wired into pack_pbo.py, draft PR opened
+
+**OWNER DIRECTIVE:** ship mission-PBO Cprs compression to live with wave0807b. This lane closes
+the writer side and the ship-blocker plan; it does not ship compressed PBOs to live itself.
+
+**Worktree:** `C:\Users\Steff\wt-w807b-cprs`, branch `feat0807b/pbo-cprs-compression`, based on
+`origin/master` @ `701959c615`.
+
+**Prior art found:** commit `c50b94422e` on local (unpushed, no open PR) branch
+`pbo/cprs-experiment` added `Tools/Pack/cprs.py` (BIS LZSS codec, compress+decompress) and wired
+decompression into `read_pbo.py`, but left `pack_pbo.py` untouched (reader-only phase). A second,
+**uncommitted** worktree at `C:\tmp\pbocprs` (same branch) held the actual `pack_pbo.py
+--compress-text` writer wiring used for a real boot test on the TEST box (`78.46.107.142`,
+2026-08-05): compressed Chernarus PBO 12,266,307 vs 17,454,965 control (-29.7%), engine reached
+MISSINIT, parsed the compressed `description.ext`+`mission.sqm` (role-count warning proves both),
+zero corruption/read errors. Full citation trail in `Tools/Pack/PBO-PACKING.md`'s new "Boot-test
+evidence" subsection (RPT lines quoted verbatim from that worktree's `fresh_arma2oaserver.RPT` /
+`diffsource_compressed.log`, never modified).
+
+**What this lane did:** ported `cprs.py` + `test_cprs.py` fresh onto this branch (900/900 real
+mission text files round-trip - up from the experiment's 890/890, tree has grown since), wired
+decompression into `read_pbo.py` (identical to the proven commit), and wrote a NEW `--compress` /
+`--cprs` writer in `pack_pbo.py` (independently designed, not a copy of the uncommitted
+`--compress-text` diff, though behaviourally equivalent: same `TEXT_COMPRESS_SUFFIXES`, same
+1024-byte `REAL_LZSS_MIN_SIZE` gate, same "only store compressed if actually smaller" rule).
+Strengthened `self_check()` to independently re-verify every Cprs-tagged entry decompresses to
+`original_size` and rejects any entry below the 1024-byte threshold - the "extend the self-check"
+requirement. `compress_entries()` also round-trips inline at pack time, before the entry is even
+accepted, so a codec regression aborts the pack immediately rather than only failing a later test.
+
+**Proof (all 3 launch missions, this worktree, `--compress` vs no flag):**
+
+| Mission | Uncompressed | Compressed | Reduction | round-trip |
+|---|---|---|---|---|
+| Chernarus | 17,704,799 B | 12,372,597 B | -30.1% | 1005/1005 byte-identical (read_pbo.py --diff-source, 1 not-found = gitignored version.sqf, expected) |
+| Takistan | 17,589,597 B | 12,285,880 B | -30.2% | same shape |
+| Zargabad | 17,538,209 B | 12,274,542 B | -30.0% | same shape |
+
+Default (flag omitted) re-verified byte-identical for all 3 missions too (no Cprs notes, same
+1005/0/1 diff-source shape) - the flag-off-is-inert contract holds structurally, not just by test.
+
+**Tests:** `test_cprs.py` (9 cases, 900/900 real files) + `test_pack_pbo.py` extended with
+`PackPboCompressionTests` (7 new cases: Cprs-tags+shrinks large text, byte-identical round-trip via
+the independent reader, never touches sub-1024-byte or non-text-suffix entries, `compress=False`
+byte-identical to omitting the parameter entirely, self_check rejects a synthetic sub-threshold
+Cprs entry and a corrupted compressed payload) - 20/20 pass. Wired `test_cprs.py` into
+`wasp-ci.yml` alongside the existing `test_pack_pbo.py` line.
+
+**Ship blocker (open, by design):** client-side load is still unproven - only the dedicated
+server's own parse has boot-test evidence. `PBO-PACKING.md`'s new "Client-join proof protocol"
+section specifies the exact staged-not-replaced TEST-box protocol (never live), the read-only
+`Test-WaspBootSmoke.ps1` grading step (confirmed it only grades an already-produced RPT - it does
+not itself launch a server or client, so the actual client-join step is an explicit
+orchestrator/owner action, out of this agent's authority), and the instant-rollback path via the
+existing `MPMissions`/`mission-park` model (`docs/ops/SERVER-STARTUP-ROTATION.md`) - swap the
+uncompressed PBO back in, no rebuild needed.
+
+**Gates:** no `.sqf`/mission files touched (pure `Tools/Pack/*.py` + CI yml) - SQF lint/bracket/
+mirror gates not applicable. `git status` clean of `_MISSIONS.7z`/`nul`/pbo artifacts. No
+`Co-Authored-By` trailer.
+
 ## 2026-08-07 - wave0807a folded into update/wave-20260807, draft PR #2380 opened
 
 **FOLD LANE (wave0807):** merged 13 branches into `update/wave-20260807` in order

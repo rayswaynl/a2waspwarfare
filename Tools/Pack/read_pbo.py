@@ -26,7 +26,17 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
+import cprs
+
 MAGIC_VERS = 0x56657273
+# Real BIS PBO reader convention (BIS.Core.Compression.BinaryReaderEx.ReadLZSS,
+# inPAA=False - see Tools/Pack/cprs.py's provenance docstring): an entry
+# tagged compressed whose original_size is below this threshold was never
+# actually run through LZSS by a real packer, and a real reader does not try
+# to decompress it either - it just reads original_size raw bytes. Getting
+# this wrong would silently corrupt small tagged-compressed entries against a
+# real engine.
+REAL_LZSS_MIN_SIZE = 1024
 
 
 class PboFormatError(RuntimeError):
@@ -84,18 +94,44 @@ def verify_checksum(buf: bytes, data_end: int, trailer: bytes) -> bool:
 
 
 def extract_entry_data(buf: bytes, entries, data_start: int):
-    """Return {name: bytes} for every entry, in stored order. Only correct for
-    mimetype==0 (uncompressed) entries, which is all this project's build
-    lineage ever produced; a compressed (mimetype != 0) entry is returned as
-    its raw (still-compressed) stored bytes with a note, since decompression
-    is out of scope here."""
+    """Return {name: bytes} for every entry, in stored order.
+
+    mimetype==0 (uncompressed) entries are returned byte-identical, exactly
+    as before. mimetype==Cprs (0x43707273, "srpC" on disk) entries are
+    decompressed via `cprs.decompress()` - UNLESS original_size is below
+    `REAL_LZSS_MIN_SIZE`, in which case the stored bytes are read as raw,
+    matching the real BIS reader's own behaviour for small "compressed"
+    entries (see cprs.py's provenance docstring). Any other non-zero
+    mimetype (e.g. encryption) or a Cprs entry that fails to decompress
+    (bad checksum, truncated stream) falls back to returning the raw stored
+    bytes with an explanatory note, so this stays a safe, non-crashing
+    inspector for arbitrary/third-party PBOs too."""
     out = {}
     off = data_start
     notes = []
     for nm, mi, osz, _rv, _ts, ds in entries:
-        out[nm] = buf[off : off + ds]
-        if mi != 0:
-            notes.append(f"{nm}: mimetype=0x{mi:08x} (compressed - not decompressed)")
+        raw = buf[off : off + ds]
+        if mi == 0:
+            out[nm] = raw
+        elif mi == cprs.MAGIC_CPRS:
+            if osz < REAL_LZSS_MIN_SIZE:
+                # real packer/reader convention: never actually LZSS'd below
+                # this size, regardless of the mimetype tag.
+                out[nm] = raw
+                notes.append(
+                    f"{nm}: mimetype=Cprs but original_size={osz} < "
+                    f"{REAL_LZSS_MIN_SIZE} - read as raw (real-engine convention)"
+                )
+            else:
+                try:
+                    out[nm] = cprs.decompress(raw, osz)
+                    notes.append(f"{nm}: mimetype=Cprs, decompressed {ds} -> {osz} bytes")
+                except cprs.CprsError as exc:
+                    out[nm] = raw
+                    notes.append(f"{nm}: mimetype=Cprs but decompression FAILED ({exc}) - kept raw stored bytes")
+        else:
+            out[nm] = raw
+            notes.append(f"{nm}: mimetype=0x{mi:08x} (not uncompressed or Cprs - not decoded)")
         off += ds
     return out, notes
 

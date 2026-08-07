@@ -116,10 +116,12 @@ implementation of that format — this tool is a generalized continuation of the
   `pack_pbo.py` keeps this fix as the default (there is no opt-out — reproducing the bug
   on purpose would be pointless). Confirmed against both downloaded reference PBOs: **zero**
   entries with any uppercase character in either.
-- **No compression, ever.** `mimetype` is hardcoded to `0` for every file entry. Real BI
-  tools can also emit LZSS-compressed entries (`mimetype = 0x43707273`), but nothing in
-  this project's build lineage ever used that — replicated here as-is, not as a
-  limitation to fix later.
+- **No compression by default.** `mimetype` is `0` for every file entry unless `--compress`
+  (alias `--cprs`) is passed. Real BI tools can also emit LZSS-compressed entries
+  (`mimetype = 0x43707273`, "Cprs"), and nothing in this project's build lineage ever used
+  that — matched here as the default, unchanged behaviour. `--compress` is opt-in, off by
+  default, and still gated on a client-join proof before any real deploy uses it. See
+  "Cprs text compression" below.
 - **No CRLF/text normalization of any kind.** Files are read with `open(path, "rb")` and
   concatenated as raw bytes. This matches every recovered script.
 
@@ -171,6 +173,171 @@ naming convention every recovered script used —
 folder name is passed in, rather than hardcoded per build like the original scripts were.
 `--prefix` overrides this entirely if you need something else (e.g. a dedicated internal
 name like the PrTestHarness's `WASP_Experital_TEST.Chernarus`).
+
+## Cprs text compression (`--compress` / `--cprs`, opt-in)
+
+The WASP mission PBO is ~17.5 MB per terrain × 3, and every joining player downloads it in
+full before they can play. `Tools/Pack/cprs.py` implements the real BIS "Cprs" LZSS scheme
+(ported from `BIS.Core.Compression.LZSS` in the third-party
+[Braini01/bis-file-formats](https://github.com/Braini01/bis-file-formats) library — see that
+module's docstring for the full provenance chain; the BI wiki page for this format is behind
+a CAPTCHA no environment touching this repo could clear, and no `.pbo` on any machine involved
+in this investigation — this repo's own builds, the Steam-installed base game, third-party
+addons — actually contains a compressed entry to reverse-engineer from directly). `pack_pbo.py`
+can now write those entries when `--compress` (alias `--cprs`) is passed; the default (flag
+omitted) is byte-for-byte identical to every build before this feature existed.
+
+**Do not use `--compress` for a real deploy yet.** Server-side engine acceptance is proven
+(see "Boot-test evidence" below); client-side load is not. See "Client-join proof protocol"
+below for what still has to happen before a compressed wave ships.
+
+### What gets compressed, and why
+
+Only text/config entries, matching the mission-pbo-bloat program's own corpus definition
+(the set `test_cprs.py`'s round-trip proof and the TEST-box boot test both used):
+
+```
+.sqf .hpp .ext .sqm .fsm .html .bikb .xml
+```
+
+`.paa` / `.ogg` / `.wss` and other already-compressed binary formats are never touched —
+LZSS would only make them larger. This followed a real refutation: an earlier proposal to
+quote a whole-corpus zlib ratio (3.32×–3.9×) as the expected win was killed on adversarial
+review because PBO `Cprs` is necessarily **per-entry** (the engine fetches one asset by
+name/offset and must decompress it alone, no shared dictionary across files), and BIS LZSS
+is a materially weaker scheme than deflate besides. The real, measured per-entry ratio on
+this mission's text corpus is **2.42×** (890 real files, 8,851,149 → ~3,658,000 bytes) — see
+`Tools/Pack/test_cprs.py::test_all_real_mission_text_files_round_trip`.
+
+An entry is compressed only if it clears every gate in `compress_entries()`
+(`Tools/Pack/pack_pbo.py`):
+
+1. Extension is in the list above.
+2. Size is `>= 1024` bytes (`REAL_LZSS_MIN_SIZE`) — this matches the real BIS packer/reader
+   convention (`BinaryReaderEx`/`WriterEx.ReadLZSS`/`WriteLZSS`'s own `< 1024` guard, per
+   `cprs.py`'s provenance docstring): a real packer never actually LZSS's an entry below this
+   size regardless of the mimetype tag, and a real reader reads it raw either way. Both
+   `read_pbo.py`'s decompressor and `pack_pbo.py`'s writer honour the identical threshold —
+   getting this wrong in either direction would silently desync from a real engine.
+3. The compressed result is actually smaller than the original (rare for already-dense text,
+   but LZSS framing overhead makes it possible; such entries fall back to uncompressed).
+
+Every entry that passes those gates is immediately round-tripped through `cprs.decompress()`
+inside `compress_entries()` and compared byte-for-byte against the original **before** being
+accepted into the PBO — a codec bug aborts the pack right there. `self_check()` independently
+re-verifies the same contract from the fully assembled bytes afterward (decompresses every
+Cprs-tagged entry, confirms it recovers exactly `original_size` bytes, and rejects any
+Cprs-tagged entry below the 1024-byte threshold that this writer should never produce) — two
+independent passes, not one function grading its own homework twice.
+
+### Round-trip proof
+
+- `python Tools/Pack/test_cprs.py` (or `python -m pytest Tools/Pack -q`) — the codec itself:
+  synthetic edge cases (empty input, window-boundary sizes, checksum-corruption detection)
+  plus **900/900 real mission text files** (9,100,369 bytes) under
+  `Missions/[55-2hc]warfarev2_073v48co.chernarus`, byte-identical after `compress()` →
+  `decompress()`.
+- `python Tools/Pack/test_pack_pbo.py` — `PackPboCompressionTests` (7 cases): large text
+  entries get Cprs-tagged and shrink; `read_pbo.py`'s independent decompressor recovers them
+  byte-identical; sub-1024-byte and non-text-suffix entries are never touched even with
+  `--compress`; `compress=False` is byte-identical to the flag never having existed;
+  `self_check()` rejects a synthetic sub-threshold Cprs entry and a corrupted compressed
+  payload.
+- **All three launch missions**, packed with `--compress` from this worktree and validated
+  with the independent reader (`read_pbo.py --diff-source`, a from-scratch second parser —
+  not the writer grading its own output):
+
+  | Mission | Uncompressed | Compressed | Reduction | `read_pbo.py --diff-source` |
+  |---|---|---|---|---|
+  | Chernarus (`[55-2hc]…`) | 17,704,799 B | 12,372,597 B | −30.1% (5,332,202 B saved) | 1005 byte-identical, 0 mismatched, 1 not-found (`version.sqf`, synthesized from template — gitignored by design, expected) |
+  | Takistan (`[61-2hc]…`) | 17,589,597 B | 12,285,880 B | −30.2% (5,303,717 B saved) | 1005 byte-identical, 0 mismatched, 1 not-found (same reason) |
+  | Zargabad (`[61-2hc]…`) | 17,538,209 B | 12,274,542 B | −30.0% (5,263,667 B saved) | 1005 byte-identical, 0 mismatched, 1 not-found (same reason) |
+  | **Total (×3 terrains)** | **52,832,605 B** | **36,933,019 B** | **−30.1% (15,899,586 B saved)** | |
+
+  Every compressed PBO's own checksum trailer also verified OK (`read_pbo.py`'s header dump:
+  `distinct entry mimetypes: ['0x0', '0x43707273']`, `checksum(...) OK`). Reproduce with:
+
+  ```powershell
+  python Tools\Pack\pack_pbo.py --source "Missions\[55-2hc]warfarev2_073v48co.chernarus" --output ch_compressed.pbo --build-tag proof --compress --force
+  python Tools\Pack\read_pbo.py ch_compressed.pbo --diff-source "Missions\[55-2hc]warfarev2_073v48co.chernarus"
+  ```
+
+### Boot-test evidence (server-side acceptance — separate investigation, cited here)
+
+This is NOT this PR's own test — it is prior, already-performed work on branch
+`pbo/cprs-experiment` (commit `c50b94422e` + an uncommitted `pack_pbo.py --compress-text`
+extension in that investigation's own worktree) that this PR's `--compress` reproduces the
+byte-level behaviour of. Real boot on the TEST box (`78.46.107.142`, "Miksuu's Warfare Test
+Server", via the `Arma2OA-PR8` service — **not** the live WASP box):
+
+- Compressed Chernarus PBO: **12,266,307 bytes vs 17,454,965 control (−29.7%)** (that
+  investigation's own point-in-time source tree; this PR's independently-repacked figures
+  above are −30.1% on the current tree — consistent, not identical, as expected for a tree
+  that has moved on since).
+- Server RPT: `Mission …_cprstest.chernarus: Number of roles (38) is different from
+  'description.ext::Header::maxPlayer' (34)` — this line only exists if the engine
+  successfully **parsed the compressed `description.ext`** to read `maxPlayer`, and the
+  role count itself comes from parsing the compressed `mission.sqm`. Both were Cprs-tagged
+  in that build. The **identical** warning (same numbers) also appears in the uncompressed
+  control boot from the same session — proof the compressed parse produced the same result
+  as the uncompressed one, not a different/degraded one.
+- `XEH: PreInit Started … MISSINIT: missionName=…_cprstest, worldName=chernarus,
+  isMultiplayer=true, isServer=true, isDedicated=true` followed by `XEH: PostInit Finished`
+  with `_startInitDone=true, _postInitDone=true` — full mission init reached.
+  Zero file-read / corruption / "cannot open" errors anywhere in that session's RPTs.
+- The only errors present (`Server error: Player without identity "HC-AI-Control-2"`) are
+  the rig's pre-documented HC/BattlEye identity plateau — environmental, reproduced
+  identically in the uncompressed control boot from the same session, not PBO-related.
+
+**This proves the A2OA 1.64 dedicated server reads and correctly parses a Cprs-compressed
+mission PBO.** It does not prove a connecting game client does — see below.
+
+### Client-join proof protocol (the ship blocker — NOT performed by this PR)
+
+The boot-test above only exercises the **server's** own parse of the compressed entries.
+Every joining player's game client downloads and loads the same PBO through the same
+engine code path, but under different conditions (streamed download vs local disk read,
+client-side mission cache), and nothing in either investigation to date has taken an actual
+client connection against a Cprs-compressed WASP PBO. This is the one remaining gap between
+"proven safe to build" and "proven safe to ship."
+
+Protocol for whoever runs this (owner or an agent with server/game-launch authority — this
+PR's author is explicitly barred from touching the live box or launching the game):
+
+1. **Stage, don't replace.** Build the compressed PBO with `pack_pbo.py --compress` using a
+   real (not template-fallback) `version.sqf`. Drop it into the TEST box
+   (`78.46.107.142`, already used for the server-side boot test above — never the live box
+   for this step) or a local dedicated-server instance, alongside — not instead of — the
+   normal uncompressed build.
+2. **Boot and grade.** Start the dedicated server on the compressed PBO. Once it reaches
+   `MISSINIT`, grade the RPT with the repo's existing read-only gate:
+   ```powershell
+   pwsh Tools\Smoke\Test-WaspBootSmoke.ps1 -ServerRpt <path-to-arma2oaserver.RPT>
+   ```
+   This repeats the boot-test evidence above in a form CI/the soak farm can consume, but it
+   does **not** launch anything itself — it only grades an RPT a real server run already
+   produced (see `Tools/Smoke/README.md`: "Read-only. It observes and asserts; it never
+   modifies the mission... or the box"). Launching the dedicated server and a game client are
+   both out of scope for any tool in this repo and out of scope for this agent's authority —
+   they are the orchestrator/owner's step, same as every prior boot test in this program.
+3. **Client joins.** Owner (or a designated test client) connects to the compressed-PBO
+   session directly (not JIP into an already-running uncompressed one). Confirm:
+   - The client completes its mission download/load without a "Cannot read/verify PBO" or
+     signature-style error.
+   - No new error class appears in either the server or client RPT that the uncompressed
+     control doesn't also produce.
+   - In-game: loading screen, briefing, and at least one asset from a Cprs-compressed
+     `.sqf`-driven system (e.g. an action menu entry, since `client\action\*.sqf` are all
+     large enough to compress) function normally.
+4. **Instant rollback.** Per `docs/ops/SERVER-STARTUP-ROTATION.md`'s existing park model,
+   only one map PBO is ever active in `MPMissions` at a time, with the other builds resting
+   in `C:\WASP\mission-park\{ch,tk,zg}\`. Keep the current uncompressed wave PBOs parked and
+   untouched throughout this test — rollback is "put the uncompressed PBO back in
+   `MPMissions`," a file swap, not a rebuild. Do this on the very first sign of a
+   client-side load anomaly.
+5. **Graduate.** Only after a clean client-join session (and, per standing owner policy, only
+   in an owner-present window) does `--compress` become eligible for an actual wave ship.
+   Until then this flag exists, is tested, and is documented — but is not live-ready.
 
 ## Verification performed
 
