@@ -18,6 +18,13 @@ if ((missionNamespace getVariable ["AICOMV2_GDIR_INSTANCE", 0]) > 0) exitWith {
 };
 AICOMV2_GDIR_INSTANCE = 1;
 
+//--- r204: mission-reload generation guard. `WFBE_GameOver` is reset FALSE by
+//--- initJIPCompatible.sqf during an in-place mission reload, so a prior scheduled
+//--- Director can otherwise wake after the new mission starts and share the live namespace.
+private ["_gdirMissionToken"];
+_gdirMissionToken = format ["%1|%2|%3", diag_tickTime, diag_frameno, random 1];
+missionNamespace setVariable ["AICOMV2_GDIR_MISSION_TOKEN", _gdirMissionToken];
+
 ["INITIALIZATION", "Server_GuerDirector.sqf: GUER Director lane 800 starting."] Call WFBE_CO_FNC_LogContent;
 
 //--- Wait for town initialisation.
@@ -37,7 +44,7 @@ _gdirTownInitDeadline = diag_tickTime + 420;
 _gdirTownInitWait = 0;
 _gdirTownsReady = false;
 _gdirTownInitServerReady = false;
-while {!_gdirTownReady && {diag_tickTime < _gdirTownInitDeadline} && {!(missionNamespace getVariable ["WFBE_GameOver", false])}} do {
+while {!_gdirTownReady && {diag_tickTime < _gdirTownInitDeadline} && {!(missionNamespace getVariable ["WFBE_GameOver", false])} && {(missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]) == _gdirMissionToken}} do {
 	_gdirTownsReady = !isNil "towns" && {count towns > 0};
 	_gdirTownInitServerReady = missionNamespace getVariable ["townInitServer", false];
 	if (_gdirTownsReady && {_gdirTownInitServerReady}) then {
@@ -47,12 +54,18 @@ while {!_gdirTownReady && {diag_tickTime < _gdirTownInitDeadline} && {!(missionN
 		_gdirTownInitWait = _gdirTownInitWait + 1;
 	};
 };
+if ((missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]) != _gdirMissionToken) exitWith {
+    diag_log "AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_STALE_GENERATION";
+};
 if (!_gdirTownReady) exitWith {
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_STARTUP_TIMEOUT|waitTicks=%1|townsReady=%2|townInitServer=%3|gameOver=%4", _gdirTownInitWait, _gdirTownsReady, _gdirTownInitServerReady, missionNamespace getVariable ["WFBE_GameOver", false]];
 };
 
 //--- Short delay to let town ownership settle before seeding ledger.
 sleep 5;
+if ((missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]) != _gdirMissionToken) exitWith {
+    diag_log "AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_STALE_GENERATION";
+};
 
 //--- #815 revive: live GUER census. WFBE_SE_FNC_GetTownGroupsDefender is a spawn-roster PLANNER
 //--- (and was called with a Boolean in its side slot - errored every call, returned []).
@@ -209,9 +222,12 @@ _elmin        = 0;
 _tick         = 0;
 _regenPerTick = 1.0 / (_regenFullSec / _tickSec);
 
-while {!WFBE_GameOver} do {
+while {!WFBE_GameOver && {(missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]) == _gdirMissionToken}} do {
 
     sleep _tickSec;
+    if ((missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]) != _gdirMissionToken) exitWith {
+        diag_log "AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_STALE_GENERATION";
+    };
     _tick  = _tick + 1;
     _elmin = floor (diag_tickTime / 60);
 
@@ -1183,4 +1199,8 @@ while {!WFBE_GameOver} do {
 };
 
 
-["INFORMATION", "Server_GuerDirector.sqf: WFBE_GameOver detected. GUER Director exiting."] Call WFBE_CO_FNC_LogContent;
+if ((missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]) != _gdirMissionToken) then {
+    diag_log "AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_STALE_GENERATION";
+} else {
+    ["INFORMATION", "Server_GuerDirector.sqf: WFBE_GameOver detected. GUER Director exiting."] Call WFBE_CO_FNC_LogContent;
+};
