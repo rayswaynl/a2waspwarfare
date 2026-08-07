@@ -74,4 +74,7 @@ waitUntil
 		};   
 		sleep 3;
 	};
+	if (!_isCommander && WFBE_SK_V_Type != "Spotter") then {
+		sleep 1;
+	};
 };
