@@ -1,4 +1,4 @@
-Private ["_commanderTeam","_direction","_hq","_HQName","_logik","_MHQ","_position","_replacementPosition","_reqPlayer","_side","_sideID","_sideText"];
+Private ["_commanderTeam","_direction","_hq","_HQName","_logik","_MHQ","_position","_replacementPosition","_reqPlayer","_side","_sideID","_sideText","_denyMsg"];
 
 _side = _this select 0;
 _reqPlayer = if (count _this > 1) then {_this select 1} else {objNull};
@@ -10,6 +10,8 @@ _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 //--- read, so two near-simultaneous requests cannot both capture the old HQ and orphan a
 //--- freshly built MHQ (the old client-only flag was set mid-script, after capture).
 if (_logik getVariable ['wfbe_hq_repairing', false]) exitWith {
+	_denyMsg = "MHQ repair rejected: another repair is already in progress.";
+	if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {[_reqPlayer, "LocalizeMessage", ["Wildcard", _denyMsg]] Call WFBE_CO_FNC_SendToClient};
 	["WARNING", Format ["Server_MHQRepair.sqf: [%1] rejected - repair already in progress.", _sideText]] Call WFBE_CO_FNC_LogContent;
 };
 _logik setVariable ['wfbe_hq_repairing', true, true];
@@ -26,6 +28,8 @@ if (alive _hq) exitWith {
 	//--- so this reject permanently disabled depot cash repair ("cannot be repaired using
 	//--- cash twice!") for the rest of the match even though no cash repair ever ran.
 	_logik setVariable ['cashrepaired', false, true];
+	_denyMsg = "MHQ repair rejected: the HQ has already been rebuilt.";
+	if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {[_reqPlayer, "LocalizeMessage", ["Wildcard", _denyMsg]] Call WFBE_CO_FNC_SendToClient};
 	["WARNING", Format ["Server_MHQRepair.sqf: [%1] rejected - HQ is alive; repair only rebuilds a destroyed HQ.", _sideText]] Call WFBE_CO_FNC_LogContent;
 };
 _position = getPos _hq;

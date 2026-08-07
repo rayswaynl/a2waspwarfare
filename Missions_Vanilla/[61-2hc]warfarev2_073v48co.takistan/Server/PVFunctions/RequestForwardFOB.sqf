@@ -26,7 +26,7 @@
 
 	_this = [pos, dir, truck, player]
 */
-private ["_secHardening","_pos","_dir","_truck","_player","_side","_sideKey","_cost","_cap","_reject","_logik","_areas","_near","_minRange","_grp","_logic","_tentCls","_tent","_antenna","_aPos","_reg","_live","_funds","_group","_town","_probeOk"];
+private ["_secHardening","_pos","_dir","_truck","_player","_side","_sideKey","_cost","_cap","_reject","_denyMsg","_logik","_areas","_near","_minRange","_grp","_logic","_tentCls","_tent","_antenna","_aPos","_reg","_live","_funds","_group","_town","_probeOk"];
 
 _secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
 
@@ -79,6 +79,7 @@ _cost    = missionNamespace getVariable ["WFBE_C_FOB_COST", 25000];
 _cap     = missionNamespace getVariable ["WFBE_C_FOB_CAP_PER_SIDE", 2];
 _group   = group _player;
 _reject  = false;
+_denyMsg = "";
 
 //--- (1) authoritative cap - count only FOBs whose tent is still alive.
 _reg  = missionNamespace getVariable [_sideKey, []];
@@ -86,6 +87,7 @@ _live = [];
 {if (!isNull _x && {alive _x}) then {_live = _live + [_x]}} forEach _reg;
 if ((count _live) >= _cap) then {
 	_reject = true;
+	_denyMsg = Format ["Forward FOB rejected: your side already has %1 active Forward FOBs (maximum %1).", _cap];
 	["WARNING", Format ["RequestForwardFOB.sqf: [%1] already at the Forward FOB cap (%2) - rejected.", str _side, _cap]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -98,6 +100,7 @@ if (!_reject) then {
 	_near = [_pos, _areas] Call WFBE_CO_FNC_GetClosestEntity;
 	if (!isNull _near && {(_near distance _pos) < _minRange}) then {
 		_reject = true;
+		_denyMsg = Format ["Forward FOB rejected: too close to your base area (minimum %1m).", _minRange];
 		["WARNING", Format ["RequestForwardFOB.sqf: [%1] placement %2m from a base area (min %3) - rejected.", str _side, round (_near distance _pos), _minRange]] Call WFBE_CO_FNC_LogContent;
 	};
 };
@@ -109,8 +112,13 @@ if (!_reject) then {
 	if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
 	if (_funds < _cost) then {
 		_reject = true;
+		_denyMsg = Format ["Forward FOB rejected: not enough funds ($%1 needed, $%2 available).", _cost, _funds];
 		["WARNING", Format ["RequestForwardFOB.sqf: [%1] insufficient funds ($%2 < $%3) - rejected.", str _side, _funds, _cost]] Call WFBE_CO_FNC_LogContent;
 	};
+};
+
+if (_reject) exitWith {
+	[_player, "LocalizeMessage", ["Wildcard", _denyMsg]] Call WFBE_CO_FNC_SendToClient;
 };
 
 if (!_reject) then {
