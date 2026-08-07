@@ -3538,10 +3538,10 @@ if (isNil "WFBE_C_HC_NAMES") then {
 	//--- catches both forms with zero consumer-file edits - this is the BELT; WFBE_CO_FNC_IsHcName
 	//--- (Common_IsHcName.sqf) is the BRACES the highest-value consumers were additionally switched to,
 	//--- for any future quoting quirk this registry widening does not anticipate. _hcDq = one literal
-	//--- '"' character (ASCII 34) via a single-quoted SQF string literal - avoids the doubled-"" escape
+	//--- _hcDq = one literal double-quote character, ASCII 34, built via toString - no quote characters appear in this source line or this comment.
 	//--- a double-quoted literal would need for the same character.
 	private ["_hcBareNames","_hcDq"];
-	_hcDq = '"';
+	_hcDq = toString [34]; //--- literal double-quote via ASCII code: ZERO quote characters in source. The previous quote-char single-quoted literal form compiled nowhere - the A2OA preprocessor treated the raw quote as an unterminated string and killed the ENTIRE file's compile (live incident wave0807a2, 2026-08-07: every WFBE_C_* constant nil, mission systemically broken).
 	_hcBareNames = +_hcNameList; //--- snapshot copy: appending into _hcNameList while forEach'ing IT would rescan the growing array.
 	{ _hcNameList set [count _hcNameList, _hcDq + _x + _hcDq]; } forEach _hcBareNames;
 	WFBE_C_HC_NAMES = _hcNameList;
