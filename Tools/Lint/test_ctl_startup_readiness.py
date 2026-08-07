@@ -44,7 +44,8 @@ def test_ctl_waits_for_true_starting_mode_with_a_bounded_fail_closed_gate() -> N
         gate_start = source.index("_ctlTownInitDeadline")
         gate = source[gate_start : source.index("sleep 5;", gate_start)]
         assert "missionNamespace getVariable [\"townInitServer\", false]" in gate
-        assert "diag_tickTime + 90" in gate
+        assert "diag_tickTime + 420" in gate
+        assert "diag_tickTime + 90" not in gate
         assert "while {" in gate
         assert "sleep 0.25" in gate
         assert "CTLSTAT|v1|BOTH|STARTUP_TIMEOUT" in gate

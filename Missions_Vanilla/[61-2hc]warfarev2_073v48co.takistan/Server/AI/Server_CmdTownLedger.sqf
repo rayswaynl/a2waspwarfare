@@ -22,9 +22,14 @@ AICOMV2_CTL_INSTANCE = 1;
 //--- worker BEFORE Server\Init\Init_Towns.sqf runs). Seeding pre-assignment sideIDs found
 //--- zero W/E towns; the tick pickup then re-seeded the entire starting empire at
 //--- _captureSeed (0.25) instead of the seed-pass 1.0.
+//--- DEADLINE (w807-L2, 2026-08-07): 420s, not 90s. Common/Init/Init_Towns.sqf:35-40 (D6c
+//--- REVISED, 2026-08-03) documents a PROVEN dev-box case where all 46 depot workers parked
+//--- on their game-time-gated registration sleep for 300s+ before landing - same async
+//--- registration pipeline this loop polls. 420s covers that observed worst case with margin
+//--- while still failing closed (not hanging forever) on a genuinely broken mission.sqm.
 private ["_ctlTownReady","_ctlTownInitDeadline","_ctlTownInitWait","_ctlTownsReady","_ctlTownInitServerReady"];
 _ctlTownReady = false;
-_ctlTownInitDeadline = diag_tickTime + 90;
+_ctlTownInitDeadline = diag_tickTime + 420;
 _ctlTownInitWait = 0;
 _ctlTownsReady = false;
 _ctlTownInitServerReady = false;
