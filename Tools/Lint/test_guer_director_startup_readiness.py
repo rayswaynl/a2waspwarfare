@@ -44,6 +44,24 @@ def test_guer_director_startup_gate_remains_after_flag_and_singleton_guards() ->
     assert text.index("AICOMV2_GDIR_INSTANCE") < text.index("_gdirTownInitDeadline")
 
 
+def test_guer_director_exits_when_mission_generation_is_superseded() -> None:
+    for relative in DIRECTOR_PATHS:
+        text = read(relative)
+
+        assert 'AICOMV2_GDIR_MISSION_TOKEN' in text
+        assert "_gdirMissionToken = format" in text
+        assert 'missionNamespace setVariable ["AICOMV2_GDIR_MISSION_TOKEN", _gdirMissionToken];' in text
+        assert 'missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]' in text
+        assert "GDIR_STALE_GENERATION" in text
+        assert "while {!WFBE_GameOver &&" in text
+        assert "== _gdirMissionToken" in text
+        post_sleep_guard = 'sleep _tickSec;\n    if ((missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]) != _gdirMissionToken) exitWith {\n        diag_log "AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_STALE_GENERATION";\n    };\n    _tick  = _tick + 1;'
+        assert post_sleep_guard in text
+        assert text.index(post_sleep_guard) < text.index("// PHASE 0")
+        startup_guard = 'while {!_gdirTownReady && {diag_tickTime < _gdirTownInitDeadline} && {!(missionNamespace getVariable ["WFBE_GameOver", false])} && {(missionNamespace getVariable ["AICOMV2_GDIR_MISSION_TOKEN", ""]) == _gdirMissionToken}} do {'
+        assert startup_guard in text
+
+
 def test_guer_director_mirrors_are_byte_identical() -> None:
     blobs = [(ROOT / relative).read_bytes() for relative in DIRECTOR_PATHS]
     assert blobs[0] == blobs[1] == blobs[2]
@@ -52,5 +70,6 @@ def test_guer_director_mirrors_are_byte_identical() -> None:
 if __name__ == "__main__":
     test_guer_director_waits_for_true_town_startup_readiness()
     test_guer_director_startup_gate_remains_after_flag_and_singleton_guards()
+    test_guer_director_exits_when_mission_generation_is_superseded()
     test_guer_director_mirrors_are_byte_identical()
     print("GUER Director startup readiness contract: PASS")
