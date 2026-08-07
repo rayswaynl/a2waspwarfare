@@ -2369,7 +2369,7 @@ if (isNull _base) exitWith {
 	//--- tree, so its only consumer (the WFBE_CLIENT_%1_OBJECTS disconnect cleanup in
 	//--- Server_OnPlayerDisconnected.sqf) could never run either; removed together.
 	case "repair-camp": {
-		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY","_repairHasRequester","_repairRequester"];
+		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY","_repairHasRequester","_repairRequester","_repairTeam","_repairFunds","_repairPrice"];
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
 		_repairHasRequester = (count _args) > 3;
@@ -2417,6 +2417,22 @@ if (isNull _base) exitWith {
 			if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair is no longer needed."]] Call WFBE_CO_FNC_SendToClient};
 		};
 
+		//--- The paid player path is authoritative here: only after the final requester/camp
+		//--- checks and latch claim may it debit the live team wallet. Server-internal presence
+		//--- repairs omit the requester and remain free.
+		_repairPrice = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE";
+		if (typeName _repairPrice != "SCALAR" || {_repairPrice < 0}) then {_repairPrice = 0};
+		if (_repairHasRequester && {_repairPrice > 0}) then {
+			_repairTeam = group _repairRequester;
+			_repairFunds = _repairTeam getVariable "wfbe_funds";
+			if (isNil "_repairFunds" || {typeName _repairFunds != "SCALAR"}) then {_repairFunds = 0};
+			if !(_repairFunds >= _repairPrice) exitWith {
+				_logic setVariable ["wfbe_camp_repairing", false, true];
+				[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair was rejected because your team no longer has enough funds."]] Call WFBE_CO_FNC_SendToClient;
+			};
+			[_repairTeam, -_repairPrice] Call WFBE_CO_FNC_ChangeTeamFunds;
+		};
+
 		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
 		//--- repaired camp must not re-bury itself on ZG (see Init_Town.sqf for full rationale + citations).
 		_campXY = getPos _logic;
@@ -2424,6 +2440,7 @@ if (isNull _base) exitWith {
 		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle [_campXY select 0, _campXY select 1, 0];
 		if (isNull _townModel) exitWith {
 			_logic setVariable ["wfbe_camp_repairing", false, true];
+			if (_repairHasRequester && {_repairPrice > 0}) then {[_repairTeam, _repairPrice] Call WFBE_CO_FNC_ChangeTeamFunds};
 			if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair failed because the bunker could not be created."]] Call WFBE_CO_FNC_SendToClient};
 			["WARNING", Format ["Server_HandleSpecial.sqf/repair-camp: camp bunker createVehicle FAILED at %1 - repair aborted, flag released.", _campXY]] Call WFBE_CO_FNC_LogContent;
 		};
