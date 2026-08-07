@@ -36,12 +36,12 @@
 		the same shipped, default-ON class as the B60 HELI CANNON-NUDGE
 		(Common_RunCommanderTeam.sqf), whose header states "no disableAI, no sim-gating."
 
-		Flag: WFBE_C_SMALLARMS_AIR_ENVELOPE (default 0 = OFF; loop never starts, no spawn
-		stamp, runtime byte-identical to HEAD). Tunables: WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE
+	Flag: WFBE_C_SMALLARMS_AIR_ENVELOPE (default 1 = ON; set 0 to disable; flag-off loop never starts, no spawn
+	stamp, runtime byte-identical to HEAD). Tunables: WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE
 		(300 m), WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK (5 s).
 */
 
-//--- Master gate. 0 = OFF (default) = byte-identical to HEAD: the loop never starts. Numeric guard, A2-OA-safe.
+//--- Master gate. 0 = OFF = byte-identical to HEAD; 1 = ON (default). Numeric guard, A2-OA-safe.
 if ((missionNamespace getVariable ["WFBE_C_SMALLARMS_AIR_ENVELOPE", 0]) < 1) exitWith {};
 
 //--- Only the server and headless clients host AICOM / town-AI local units (sibling-manager gate).

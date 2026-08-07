@@ -3172,8 +3172,8 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 //--- Common_AICOM_SmallArmsAirEnvelope.sqf (server + HC); the classifier is stamped at spawn
 //--- (WFBE_effAntiAir). NOT sim/distance-gating: distance is unit<->its-air-target, never unit<->player;
 //--- simulation is never frozen (precedent: the shipped default-ON B60 HELI CANNON-NUDGE). Master 0 =
-//--- manager never starts + no spawn stamp = runtime byte-identical to HEAD.
-	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE") then {WFBE_C_SMALLARMS_AIR_ENVELOPE = 1}; //--- master gate: 0=off (default), 1=on.
+//--- manager never starts + no spawn stamp = runtime byte-identical to HEAD when the flag is 0; default is 1 (ON).
+	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE") then {WFBE_C_SMALLARMS_AIR_ENVELOPE = 1}; //--- master gate: 0=off, 1=on (default).
 	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE") then {WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE = 300}; //--- small-arms x Air effective envelope, metres (tunable); beyond this a small-arms unit is steered off an air lock.
 	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK") then {WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK = 5}; //--- manager sweep cadence, seconds (tunable, 4-8s band).
 
