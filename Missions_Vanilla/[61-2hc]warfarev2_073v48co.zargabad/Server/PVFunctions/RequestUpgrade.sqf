@@ -38,7 +38,7 @@ if (typeName _requester != "OBJECT" || {isNull _requester}) exitWith {
 if (typeName _requestTeam != "GROUP" || {isNull _requestTeam}) exitWith {
 	["WARNING", Format ["RequestUpgrade.sqf: rejected invalid requester team [%1].", _requestTeam]] Call WFBE_CO_FNC_LogContent;
 };
-if (!isPlayer _requester) exitWith {
+if (!isPlayer _requester || {!alive _requester}) exitWith {
 	["WARNING", Format ["RequestUpgrade.sqf: rejected non-player requester [%1].", _requester]] Call WFBE_CO_FNC_LogContent;
 };
 if (group _requester != _requestTeam) exitWith {

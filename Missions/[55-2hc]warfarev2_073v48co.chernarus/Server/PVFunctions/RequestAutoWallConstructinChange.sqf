@@ -16,7 +16,7 @@ if !(typeName _isAutoWallConstructingEnabled in ["BOOL"]) exitWith {
 if (!(typeName _player in ["OBJECT"]) || {isNull _player}) exitWith {
 	["WARNING", Format ["RequestAutoWallConstructinChange.sqf: rejected invalid player object [%1].", _player]] Call WFBE_CO_FNC_LogContent;
 };
-if (!isPlayer _player) exitWith {
+if (!isPlayer _player || {!alive _player}) exitWith {
 	["WARNING", Format ["RequestAutoWallConstructinChange.sqf: rejected non-player requester [%1].", _player]] Call WFBE_CO_FNC_LogContent;
 };
 

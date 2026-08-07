@@ -3,7 +3,7 @@ private ["_player","_building","_factory","_team","_uid","_queu","_costs","_cpts
 _reply = {[_this select 0, "HandleSpecial", ["cancel-queue-result", _this select 1, _this select 2, _this select 3, _this select 4]] Call WFBE_CO_FNC_SendToClient};
 if ((count _this) < 3) exitWith {};
 _player = _this select 0; _building = _this select 1; _factory = _this select 2;
-if (isNull _player || {!isPlayer _player} || {isNull _building} || {!alive _building}) exitWith {};
+if (isNull _player || {!isPlayer _player} || {!alive _player} || {isNull _building} || {!alive _building}) exitWith {};
 _team = group _player; if (isNull _team) exitWith {};
 _uid = getPlayerUID _player; if (_uid == "") exitWith {};
 _locked = false;
