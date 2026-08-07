@@ -47,7 +47,7 @@ missionNamespace setVariable [Format["WFBE_%1PARACARGO", _side], 'Mi17_Ins'];//-
 missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCK", _side], 'UralRepair_TK_EP1'];//--- Repair Truck model.
 missionNamespace setVariable [Format["WFBE_%1STARTINGVEHICLES", _side], ['GAZ_Vodnik_MedEvac','BTR90']];//--- Starting Vehicles.
 missionNamespace setVariable [Format["WFBE_%1PARAAMMO", _side], ['TKBasicAmmunitionBox_EP1','TKBasicWeapons_EP1','TKLaunchers_EP1']];//--- Supply Paradropping, Dropped Ammunition.
-missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'UralRepair_TK_EP1'];//--- Supply Paradropping, Dropped Vehicle.
+missionNamespace setVariable [Format["WFBE_%1PARAVEHICARGO", _side], 'BRDM2_TK_EP1'];//--- Supply Paradropping, Dropped Vehicle. fix0807/airdrop-armed-roster: UralRepair_TK_EP1 was an unarmed repair truck; BRDM2_TK_EP1 is already this side's EAST PATROL_MEDIUM entry (KPVT/PKT turret).
 missionNamespace setVariable [Format["WFBE_%1PARAVEHI", _side], 'Mi17_TK_EP1'];//--- Supply Paradropping, Vehicle
 missionNamespace setVariable [Format["WFBE_%1PARACHUTE", _side], 'ParachuteMediumEast_EP1'];//--- Supply Paradropping, Parachute Model.
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'UralSupply_TK_EP1'];//--- Supply Truck model.

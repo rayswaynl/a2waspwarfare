@@ -3429,8 +3429,8 @@ if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_RATIO")  then {WFBE_C_AICOM_OVERRUN_MOPUP_
 if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS")  then {WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS  = 2};   //--- max concurrent field teams pressed onto live enemy factories by the mop-up closer.
 //--- AICOM CARGO AIRDROP (Stage A): registered dark by default; the worker is AI-only and adds no escort jet.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ENABLE = 1};
-if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN") then {WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN = 1800};
-if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_COST = 60000};
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN") then {WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN = 1200}; //--- fix0807/airdrop-armed-roster: was 1800; RPT evidence showed the drop firing but under-delivering (unarmed hulls) - tightened cadence now that the roster is armed/combat-relevant.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_COST = 45000}; //--- fix0807/airdrop-armed-roster: was 60000; lowered alongside the cooldown cut so the AI treasury can sustain the faster cadence.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX = 2};
 //--- CONVOY COHESION (Grok #5, update wave 2026-07-25): Common_RunCommanderTeam.sqf ground road-march.
 //--- 0 (default) = ORIGINAL behaviour, byte-identical to HEAD - every road-march node keeps FULL speed
