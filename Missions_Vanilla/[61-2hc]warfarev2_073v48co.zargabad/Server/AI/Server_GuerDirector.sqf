@@ -26,9 +26,14 @@ AICOMV2_GDIR_INSTANCE = 1;
 //--- require the TRUE starting-mode assignment before seeding; the variable itself is
 //--- initialized FALSE in initJIPCompatible.sqf. A bounded fail-closed gate prevents an
 //--- armed Director from remaining parked forever when town startup cannot complete.
+//--- DEADLINE (w807-L2, 2026-08-07): 420s, not 90s. Common/Init/Init_Towns.sqf:35-40 (D6c
+//--- REVISED, 2026-08-03) documents a PROVEN dev-box case where all 46 depot workers parked
+//--- on their game-time-gated registration sleep for 300s+ before landing - same async
+//--- registration pipeline this loop polls. 420s covers that observed worst case with margin
+//--- while still failing closed (not hanging forever) on a genuinely broken mission.sqm.
 private ["_gdirTownReady","_gdirTownInitDeadline","_gdirTownInitWait","_gdirTownsReady","_gdirTownInitServerReady"];
 _gdirTownReady = false;
-_gdirTownInitDeadline = diag_tickTime + 90;
+_gdirTownInitDeadline = diag_tickTime + 420;
 _gdirTownInitWait = 0;
 _gdirTownsReady = false;
 _gdirTownInitServerReady = false;

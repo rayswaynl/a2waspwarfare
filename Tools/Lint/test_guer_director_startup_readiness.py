@@ -27,7 +27,8 @@ def test_guer_director_waits_for_true_town_startup_readiness() -> None:
         assert 'waitUntil {!isNil "towns"};' not in text
         assert "waitUntil {count towns > 0};" not in text
         assert 'waitUntil {!isNil "townInitServer"};' not in text
-        assert "_gdirTownInitDeadline = diag_tickTime + 90;" in text
+        assert "_gdirTownInitDeadline = diag_tickTime + 420;" in text
+        assert "diag_tickTime + 90;" not in text
         assert "while {!_gdirTownReady && {diag_tickTime < _gdirTownInitDeadline}" in text
         assert '_gdirTownInitServerReady = missionNamespace getVariable ["townInitServer", false];' in text
         assert '_gdirTownsReady = !isNil "towns" && {count towns > 0};' in text
