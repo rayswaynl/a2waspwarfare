@@ -83,7 +83,7 @@ For harder wedges, expect higher strike tiers, possible `TIER3` road-node logs, 
 - Combat teams are not position-stuck by the normal parked-far gate; they may move slowly or orbit while fighting.
 - Air-mobile legs are exempt while their airborne window is active or the leader is inside an aircraft.
 - Tier-3 relocation is player-visibility guarded. A nearby player blocks the hidden road snap; the visible fallback is a small velocity bump.
-- Water-stuck leaders or hulls force the road-snap path because AutoFlip deliberately skips water.
+- Water-stuck leaders or hulls force the road-snap path because AutoFlip deliberately skips water — **except watercraft** (any hull `isKindOf "Ship"`), which are excluded from both the water-guard precompute and the tier-3 vehicle road-snap gate (lane w807-L3, 2026-08-07). A boat correctly floating on water is not "water-stuck," and a boat that reaches tier 3 through the normal strike ladder must not be `setPos`'d onto the nearest land road node — that was live-proven to beach boats on land (wave0806b, 343 `UNSTUCK` strikes in one session; owner report "boats with AI sitting on land"). Boats remain fully eligible for every non-teleport recovery tier (reverse-pulse/lane-flip, dead-driver swap, in-place repair, order reissue) — only the land road-snap `setPos` (including its nested no-road flat-ground fallback) is exempted. A boat stranded on land is not yet recovered by this system; a boat-to-nearest-water snap is a documented follow-up, not built here.
 - Gear governor `LIMITED` is temporary and movement-preserving. It is not a sim gate or freeze.
 
 ## Out Of Scope

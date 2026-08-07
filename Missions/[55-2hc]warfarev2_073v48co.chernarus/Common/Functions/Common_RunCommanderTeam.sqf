@@ -1421,7 +1421,11 @@ while {!WFBE_GameOver && _alive} do {
 						//--- cmdcon41-w3e (e) WATER GUARD precompute: is the stuck hull (or on-foot leader) sitting on water?
 						//--- A beached/water hull never self-frees and AutoFlip skips it, so flag it to force the road-snap below.
 						if (_recV2) then {
-							if (!isNull _uVeh && {alive _uVeh} && {surfaceIsWater (getPos _uVeh)}) then {_uOnWater = true};
+							//--- w807-L3 SHIP EXEMPT: a watercraft correctly floating on water is NOT water-stuck - only flag
+							//--- _uOnWater for a NON-Ship hull (the beached-land-vehicle-in-shallow-water case this guard exists
+							//--- for). Ships skip this precompute so _uForceRoad never forces the land road-snap below for a
+							//--- healthy boat; see the matching SHIP EXEMPT note at the tier-3 road-snap gate for the full fix.
+							if (!isNull _uVeh && {alive _uVeh} && {surfaceIsWater (getPos _uVeh)} && {!(_uVeh isKindOf "Ship")}) then {_uOnWater = true};
 							if (((vehicle _uLdr) == _uLdr) && {surfaceIsWater (getPos _uLdr)}) then {_uOnWater = true};
 							if (_uOnWater) then {_uForceRoad = true};
 						};
@@ -1523,7 +1527,15 @@ while {!WFBE_GameOver && _alive} do {
 						//--- Foot-branch defers to doMove fallback (re-issues move order, no teleport). No dead zone. A2-OA-safe: missionNamespace getVariable.
 						private "_uPGR";
 						_uPGR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R", 300];
-						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {!isNull _uVeh} && {alive _uVeh}) then {
+						//--- w807-L3 SHIP EXEMPT: a Ship hull reaching tier 3 through NORMAL stuck escalation (not only via
+						//--- the water-guard _uForceRoad path above) must NOT be snapped to the nearest land road node - that is
+						//--- the "boats teleported onto land roads" bug (live-proven wave0806b: 343 UNSTUCK strikes this session,
+						//--- rhib_gunboat trash-deletion + owner report "boats with AI sitting on land"). Boats stay eligible for
+						//--- every earlier non-teleport tier (reverse-nudge/lane-flip, dead-driver swap, in-place repair, order
+						//--- reissue) - only THIS land road-snap path (incl. the nested NOROAD_STEP flat-ground fallback) is
+						//--- exempted. FOLLOW-UP (not built here, out of scope for this minimal fix): a boat genuinely stranded
+						//--- ON land should be recovered by snapping it back to the nearest WATER, not a road.
+						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {!isNull _uVeh} && {alive _uVeh} && {!(_uVeh isKindOf "Ship")}) then {
 							private ["_uPlayerNear","_uPlayerNearResult"];
 							_uPlayerNear = false;
 							_uPlayerNearResult = 0;
