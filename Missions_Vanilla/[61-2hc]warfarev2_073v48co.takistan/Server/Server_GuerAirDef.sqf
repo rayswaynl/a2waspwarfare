@@ -53,7 +53,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_sliceCut","_sliceYield"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_destroyedCooldown","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_sliceCut","_sliceYield"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -64,6 +64,7 @@ _classKa    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_KA", "Ka13
 _classMi24  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_MI24", "Mi24_P"];
 _lifetime   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LIFETIME", 900];
 _quiet      = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_QUIET_DESPAWN", 300];
+_destroyedCooldown = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DESTROYED_COOLDOWN", 240]; //--- fix0807b (churn): per-town no-spawn window armed after a COMBAT loss (reason=destroyed or crew_dead) so a fresh defender does not fly straight back into the force that just killed the last one. See PR measurement table.
 _largeSV    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LARGE_SV", 2500];
 _flyHeight  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
 //--- Reserve one maintain-sweep interval so the next poll cannot extend a QRF past 600s from spawn.
@@ -175,7 +176,7 @@ _drops = [];
 _groundQrfs = [];
 
 ["INITIALIZATION", Format ["Server_GuerAirDef.sqf: GUER air defense started (interval=%1 cap=%2 atChance=%3 mi24Chance=%4).", _interval, _maxAir, _atChance, _mi24Chance]] Call WFBE_CO_FNC_LogContent;
-diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|aaChance=%5|ka=%6|mi24=%7|dropChance=%8|dropCount=%9|dropMax=%10", _interval, _maxAir, _atChance, _mi24Chance, _aaChance, _classKa, _classMi24, _dropChance, _dropCount, _dropMax];
+diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|aaChance=%5|ka=%6|mi24=%7|dropChance=%8|dropCount=%9|dropMax=%10|destroyedCooldown=%11", _interval, _maxAir, _atChance, _mi24Chance, _aaChance, _classKa, _classMi24, _dropChance, _dropCount, _dropMax, _destroyedCooldown];
 
 //--- B67 (Ray 2026-06-21): publish the GUER-air list for the client map-marker loop (updatepatrolmarkers.sqf
 //--- reads WFBE_ACTIVE_GUER_AIR = [[vehicle, sideID], ...]). Init empty + broadcast so a JIP client never sees
@@ -411,6 +412,15 @@ while {!WFBE_GameOver} do {
 				if (!isNull _eGunner && {!(isPlayer _eGunner)}) then { ["guerairdef-gunner", _eGunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eGunner; };
 				if (!isNull _eVeh && {({isPlayer _x} count (crew _eVeh)) == 0}) then { {["guerairdef-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eVeh); ["guerairdef-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh; }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 				if (!isNull _eGrp) then { _prunedGroups = _prunedGroups + [_eGrp]; };
+				//--- fix0807b (churn): a COMBAT loss (hull destroyed, or crew killed while the hull survived)
+				//--- arms a per-town cooldown so the next maintain sweep cannot refill this town while the same
+				//--- attacking force is still on it (measured: 23/23 combat losses in a 61-minute live window
+				//--- died with enemyAir=0 - ground fire only - and most were replaced in the SAME sweep that
+				//--- noticed the death). Quiet/lifetime/town_lost/town_inactive recalls are not combat losses
+				//--- and do not arm the cooldown.
+				if (!isNull _eTown && {(_reason == "destroyed") || (_reason == "crew_dead")}) then {
+					_eTown setVariable ["wfbe_guer_airdef_cooldown_until", _now + _destroyedCooldown];
+				};
 				diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
 			};
 		} else {
@@ -614,6 +624,11 @@ while {!WFBE_GameOver} do {
 			&& {(_town getVariable ["sideID", -1]) == WFBE_C_GUER_ID}
 			&& {_town getVariable ["wfbe_active", false]}
 			&& {!(_town in _townsWithAir)}
+			//--- fix0807b (churn): post-combat-loss cooldown gate. Skip a town whose last defender was a
+			//--- combat loss (destroyed/crew_dead) until WFBE_C_GUER_AIRDEF_DESTROYED_COOLDOWN seconds have
+			//--- passed (armed in the prune pass above). getVariable default 0 means an untouched town is
+			//--- never gated; quiet/lifetime/town_lost/town_inactive recalls never set this variable.
+			&& {_now >= (_town getVariable ["wfbe_guer_airdef_cooldown_until", 0])}
 			//--- fable/guer-air-tune (owner 2026-07-28: "make the Ka-137 appear less ... every town
 			//--- activation gets a bunch in the air"): THREAT-ONLY spawn gate. The old gate had no enemy
 			//--- requirement - every active GUER town summoned a defender on the next sweep, so idle towns
@@ -890,6 +905,14 @@ while {!WFBE_GameOver} do {
 								diag_log format ["GUERAIRDEF|KA137_SWARM|n=%1|town=%2|load=%3|alive=%4", (1 + _swarmMade), (_town getVariable ["name","?"]), _loadName, _aliveCount];
 							};
 						};
+
+						//--- fix0807b (perf): close the slice HERE, between the swarm roll (up to 3 hulls +
+						//--- crews + loadout swaps) and the paradrop build below. Live measurement (61-minute
+						//--- window, wave0807a3) showed guer_airdef_cycle spikes up to ~593ms of unyielded active
+						//--- CPU in a single maintain sweep, correlated with sweeps that spawned/respawned more
+						//--- than one defender; this yield gives the scheduler a bounded WFBE_C_AIRDEF_CHUNK_SLEEP
+						//--- breather mid-spawn instead of doing the whole swarm+paradrop build unbroken.
+						Call _sliceYield;
 
 						//=== CARGO/PARADROP variant (build83) ===============================================
 						//--- The Ka-137 is a DRONE (no cargo), so we SCRIPT-spawn the reinforcement stick rather
