@@ -929,6 +929,14 @@ while {!WFBE_GameOver} do {
 									//--- Round ended while the drop was inbound: do not land a fresh squad after teardown -
 									//--- every reaper has already stood down, so these troops would never be cleaned up.
 									if (WFBE_GameOver) exitWith {};
+									//--- The request captured _t/_tPos before the 20s approach delay. A capture or
+									//--- region deactivation during that delay must cancel this still-empty group; otherwise
+									//--- fresh troops land for a town that no longer admits a GUER defender. _drops is
+									//--- pruned on the next maintain pass after this group becomes null.
+									if (isNull _t || {(_t getVariable ["sideID", -1]) != WFBE_C_GUER_ID} || {!(_t getVariable ["wfbe_active", false])}) exitWith {
+										deleteGroup _g;
+										diag_log "GUERAIRDEF|DROPFAIL|reason=stale_town";
+									};
 
 									//--- Phase 1: create the whole stick at altitude over the town + chute each man, quickly
 									//--- (0.3s apart, like the supply-drop cadence) so the stick descends TOGETHER, not serially.
