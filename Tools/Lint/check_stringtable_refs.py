@@ -15,6 +15,12 @@ from typing import Iterable
 
 SOURCE_SUFFIXES = {".sqf", ".fsm", ".hpp", ".ext", ".sqm", ".cpp", ".inc"}
 KEY_RE = re.compile(r"\b[Ss][Tt][Rr]_[A-Za-z0-9_]+")
+REFERENCE_RE = re.compile(
+    r'''\blocalize\b\s*(?:\(\s*)?["']{1,2}(?P<localized>[Ss][Tt][Rr]_[A-Za-z0-9_]+)["']{1,2}
+        |\$(?P<macro>[Ss][Tt][Rr]_[A-Za-z0-9_]+)\b
+        |(?<![A-Za-z0-9_])["']{1,2}(?P<literal>[Ss][Tt][Rr]_[A-Za-z0-9_]+)["']{1,2}''',
+    re.IGNORECASE | re.VERBOSE,
+)
 KEY_ID_RE = re.compile(r"\bID\s*=\s*[\"']([Ss][Tt][Rr]_[A-Za-z0-9_]+)[\"']")
 DEFAULT_IGNORED_PREFIXES = (
     "STR_EP1_",
@@ -260,9 +266,13 @@ def collect_references(paths: Iterable[Path]) -> dict[str, list[Location]]:
         text = read_text(path)
         masked = mask_xml_comments(text) if path.suffix.lower() == ".xml" else mask_comments(text)
         starts = line_starts(masked)
-        for match in KEY_RE.finditer(masked):
-            key = match.group(0)
-            line, col = line_col(starts, match.start())
+        for match in REFERENCE_RE.finditer(text):
+            group = "localized" if match.group("localized") else "macro" if match.group("macro") else "literal"
+            key = match.group(group)
+            start, end = match.span(group)
+            if masked[start:end] != key:
+                continue
+            line, col = line_col(starts, start)
             references.setdefault(normalize_key(key), []).append(Location(key, path, line, col))
     return references
 

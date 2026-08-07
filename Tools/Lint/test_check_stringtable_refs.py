@@ -69,6 +69,27 @@ class CheckStringtableRefsTests(unittest.TestCase):
             self.assertIn("STR_WF_MISSING", output)
             self.assertNotIn("STR_WF_COMMENT_ONLY", output)
 
+    def test_ignores_diagnostic_labels_but_keeps_escaped_and_macro_references(self) -> None:
+        with self.make_repo() as (root, mission):
+            self.write_stringtable(mission, [])
+            (mission / "Client").mkdir()
+            (mission / "Client" / "commander.sqf").write_text(
+                'diag_log "|STR_LONE_ALIVE=" + str 2;\n', encoding="utf-8"
+            )
+            (mission / "Client" / "actions.fsm").write_text(
+                '"hint localize ""STR_WF_ESCAPED_MISSING"";"\n', encoding="utf-8"
+            )
+            (mission / "ui.hpp").write_text(
+                'text = "$STR_WF_MACRO_MISSING";\n', encoding="utf-8"
+            )
+
+            code, output = self.run_checker(root)
+
+            self.assertEqual(code, 1)
+            self.assertNotIn("STR_LONE_ALIVE", output)
+            self.assertIn("STR_WF_ESCAPED_MISSING", output)
+            self.assertIn("STR_WF_MACRO_MISSING", output)
+
     def test_ignores_builtin_expansion_keys_by_default(self) -> None:
         with self.make_repo() as (root, mission):
             self.write_stringtable(mission, [])
