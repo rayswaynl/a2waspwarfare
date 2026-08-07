@@ -787,14 +787,16 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 			if (_newSide == WFBE_DEFENDER) then {
 				//--- Resistance recapture: keep existing defender setup unchanged.
 				if (_town_defender_enabled) then {
-					[_location, _newSide, _sideID, _newSID] spawn {
-						Private ["_loc","_side","_oldSID","_newSIDAtCapture"];
+					[_location, _newSide, _sideID, _newSID, _captureEpoch] spawn {
+						Private ["_loc","_side","_oldSID","_newSIDAtCapture","_captureEpoch"];
 						_loc             = _this select 0;
 						_side            = _this select 1;
 						_oldSID          = _this select 2;
 						_newSIDAtCapture = _this select 3;
+						_captureEpoch    = _this select 4;
 						sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_SPAWN_DELAY", 300]);
 						if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) exitWith {};
+						if ((_loc getVariable ["wfbe_town_ai_epoch", -1]) != _captureEpoch) exitWith {};
 						[_loc, _side, _oldSID] Call WFBE_SE_FNC_ManageTownDefenses;
 						if (missionNamespace getVariable ["WFBE_C_TOWNS_GUNNERS_ON_CAPTURE", true]) then {
 							[_loc, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
