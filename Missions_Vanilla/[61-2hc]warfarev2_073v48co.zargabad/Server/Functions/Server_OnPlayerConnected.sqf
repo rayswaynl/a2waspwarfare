@@ -597,6 +597,19 @@ _team setVariable ["wfbe_teamleader", leader _team];
 //--- Clear any orphan stamp so the GC reaper does not reclaim a reclaimed team.
 _team setVariable ["wfbe_orphaned_at", nil];
 
+//--- Player-bought hull lock actions are client-local. The buy-team tag persists on the
+//--- vehicle, but its previous owner's actions vanish on disconnect; replay the actions to
+//--- the newly resolved owner-team client from the server-owned enrollment queue.
+private ["_pvorVehicles","_pvorVeh"];
+_pvorVehicles = WF_Logic getVariable "emptyVehicles";
+if (isNil "_pvorVehicles") then {_pvorVehicles = []};
+{
+	_pvorVeh = _x;
+	if (!isNil "_pvorVeh" && {!isNull _pvorVeh} && {alive _pvorVeh} && {!isNil {_pvorVeh getVariable "wfbe_buyteam"}} && {(_pvorVeh getVariable "wfbe_buyteam") == _team}) then {
+		[leader _team, "SetVehicleOwnerActions", [_pvorVeh]] Call WFBE_CO_FNC_SendToClient;
+	};
+} forEach _pvorVehicles;
+
 //--- If AI delegation is enabled, we create a special variable for player based on his UID and ID.  FPS | Groups handled | Session ID.
 if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 1) then {
 	missionNamespace setVariable [format["WFBE_AI_DELEGATION_%1", _uid], [0,0,_id]];

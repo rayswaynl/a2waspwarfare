@@ -53,6 +53,7 @@ _l = _l + ["LocalizeMessage"];
 _l = _l + ["WildcardMarker"]; //--- wildcard map markers: side-restricted local marker create/delete (Client\PVFunctions\WildcardMarker.sqf).
 _l = _l + ["SetTask"];
 _l = _l + ["SetVehicleLock"];
+_l = _l + ["SetVehicleOwnerActions"]; //--- replay player-bought hull lock actions after the owning team reconnects.
 _l = _l + ["TownCaptured"];
 _l = _l + ["SetMHQLock"];
 _l = _l + ["Available"];
