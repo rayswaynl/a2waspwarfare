@@ -668,6 +668,14 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 	// key has either never been set or expired.  Uses missionNamespace so the variable
 	// survives for the lifetime of the session.
 
+	// GUER - configured soft-cap approach (90%).
+	if (_cntGuer >= _guerSoftThreshold) then {
+		_lastGuerSoft = missionNamespace getVariable ["wfbe_groupcap_warn_guer90", -9999];
+		if ((_now - _lastGuerSoft) >= _warnInterval) then {
+			missionNamespace setVariable ["wfbe_groupcap_warn_guer90", _now];
+			["WARNING", Format ["server_groupsGC.sqf: [%1] side at %2/%3 groups - approaching configured GUER soft cap (>= %4); dynamic GUER Director groups may temporarily exceed the standing cap.", str resistance, _cntGuer, _guerMax, _guerSoftThreshold]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
 	// WEST - approach (130)
 	if (_cntWest >= 130) then {
 		_lastWest130 = missionNamespace getVariable ["wfbe_groupcap_warn_west130", -9999];
