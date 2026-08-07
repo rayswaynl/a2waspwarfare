@@ -501,6 +501,14 @@ _get = missionNamespace getVariable _killed_type; //--- Get the killed informati
 
 if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed type is defined in the core files and that the killer is a WF team.
 	if (_killer_side != _killed_side) then { //--- Normal kill.
+		//--- KILLMONEY|v1 (fix0807b/kill-money-client-sync, evidence-gated): owner-reported "kill rewards broken,
+		//--- I make no money" could not be pinned to a single mechanism from static analysis + available RPT alone.
+		//--- This fires for EVERY qualifying enemy kill by a WF team and records the exact identity inputs the
+		//--- credit gate below depends on: the credit path is keyed on leader(_killer_group), NOT on _killer
+		//--- directly, so a killer whose group leader differs from the killer (JIP/adopted-team edge cases) has
+		//--- its bounty silently gated out with no WARNING anywhere else in this file. One live kill + this line
+		//--- + the CLIRECV line in Client/PVFunctions/AwardBounty.sqf proves or disproves the mechanism.
+		diag_log Format ["KILLMONEY|v1|SRVDECIDE|killer=%1|killerUID=%2|leaderUID=%3|leaderIsPlayer=%4|group=%5|killedType=%6|t=%7", _killer, getPlayerUID _killer, _killer_uid, isPlayer (leader _killer_group), _killer_group, _killed_type, round time];
 		if (isPlayer (leader _killer_group)) then { //--- The team is lead by a player.
 			_killer_award = objNull;
 			if !(_killer_isplayer) then { //--- An AI is the killer.

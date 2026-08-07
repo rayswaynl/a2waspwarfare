@@ -14,6 +14,14 @@ _ai = if (count _this > 2) then {_this select 2} else {objNull};
 //--- legacy-payload display fallback.
 _srvBounty = if (count _this > 3) then {_this select 3} else {-1};
 
+//--- KILLMONEY|v1 CLIRECV (fix0807b/kill-money-client-sync, evidence-gated): pairs with the SRVDECIDE line
+//--- in Server/PVFunctions/RequestOnUnitKilled.sqf. If the server logs SRVDECIDE + a fired credit for a
+//--- kill but this line never appears in the killer own client RPT, the break is PVF delivery/routing
+//--- (WFBE_CO_FNC_SendToClients targeting), not the leader/UID credit gate. walletNow is the live read the
+//--- RHUD/GUI pull from ((clientTeam) Call GetTeamFunds), captured at message-receive time for comparison
+//--- against the pre-kill value.
+diag_log Format ["KILLMONEY|v1|CLIRECV|uid=%1|type=%2|assist=%3|srvBounty=%4|walletNow=%5|t=%6", getPlayerUID player, _type, _assist, _srvBounty, Call GetPlayerFunds, round time];
+
 _get = missionNamespace getVariable _type;
 if (isNil "_get") exitWith {}; //--- Build83 (Ray client RPT 2026-07-01): killed type with no price-registry entry -> _get nil -> the select lines below spammed "Undefined variable _get" every such kill. No price = no bounty, so exit cleanly.
 
