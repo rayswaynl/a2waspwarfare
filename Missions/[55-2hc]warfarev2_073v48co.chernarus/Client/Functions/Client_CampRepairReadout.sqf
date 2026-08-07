@@ -18,7 +18,7 @@ _rangePlayers = missionNamespace getVariable ["WFBE_C_CAMPS_RANGE_PLAYERS", 8];
 _threshold = missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE_TIME", 150];
 _shownPct = -1; //--- -1 = "nothing currently shown"; only touch hintSilent on a state change so this loop never fights other client hints for the screen every single second.
 
-while {true} do {
+while {!gameOver} do {
 	sleep 1;
 
 	_camp = objNull;
@@ -59,3 +59,5 @@ while {true} do {
 		_shownPct = _pct;
 	};
 };
+
+hintSilent "";

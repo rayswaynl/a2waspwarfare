@@ -44,7 +44,7 @@
 	findIf / selectRandom / apply / forEachIndex - none of those exist in OA 1.64.
 */
 
-private ["_enable","_period","_initial","_tips","_gate","_flag","_gateValue","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok"];
+private ["_enable","_period","_initial","_tips","_gate","_flag","_gateValue","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok","_waitUntil"];
 
 //--- Master toggle (default ON). Registered in Common\Init\Init_CommonConstants.sqf (cmdcon42-q).
 _enable = missionNamespace getVariable ["WFBE_C_TIPS_ENABLE", 1];
@@ -62,11 +62,13 @@ if (_initial < 0) then {_initial = 0};
 //--- Wait for a real, alive player before we start (covers a slow JIP spawn). Bounded so a
 //--- never-spawning edge case can never wedge this spawn. uiSleep is real-time.
 private "_t0"; _t0 = time;
-waitUntil { uiSleep 1; (!isNull player && {alive player}) || ((time - _t0) > 120) };
-if (isNull player) exitWith {};
+waitUntil {uiSleep 1; gameOver || {(!isNull player && {alive player}) || ((time - _t0) > 120)}};
+if (gameOver || {isNull player}) exitWith {};
 
-//--- Let onboarding cards / join titles clear before the first tip.
-uiSleep _initial;
+//--- Let onboarding cards / join titles clear before the first tip, without holding through debrief.
+_waitUntil = time + _initial;
+waitUntil {uiSleep 1; gameOver || {(time >= _waitUntil)}};
+if (gameOver) exitWith {};
 
 //================================================================ TIP POOL (21)
 //--- REDONE 2026-07-08 (GR-2026-07-08a, governance section 14 owner directive: "kind of
@@ -122,7 +124,7 @@ if (_n <= 0) exitWith {};
 _deck = [];
 _last = -1;   //--- index of the last tip shown, so we never repeat back-to-back across a refill.
 
-while {true} do {
+while {!gameOver} do {
 
 	//--- (Re)fill the deck when empty: [0 .. _n-1].
 	if ((count _deck) <= 0) then {
@@ -173,10 +175,11 @@ while {true} do {
 	};
 
 	//--- Only a gated-out tip is skipped silently; an eligible tip is posted and counts as "last".
-	if (_ok) then {
+	if (_ok && {!gameOver}) then {
 		systemChat ("TIP: " + _text);
 		_last = _idx;
 	};
 
-	uiSleep _period;
+	_waitUntil = time + _period;
+	waitUntil {uiSleep 1; gameOver || {(time >= _waitUntil)}};
 };
