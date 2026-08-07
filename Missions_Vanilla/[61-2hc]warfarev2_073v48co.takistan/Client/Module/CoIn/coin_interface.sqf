@@ -616,8 +616,12 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 							sleep 2;
 							_mhq = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
 							if (alive _mhq) then {
-								_mhq addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && locked _target'];
-								_mhq addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && !(locked _target)'];
+								private ["_oldActions","_unlockAction","_lockAction"];
+								_oldActions = _mhq getVariable ["wfbe_mhq_lock_actions", []];
+								if (typeName _oldActions == "ARRAY") then {{_mhq removeAction _x} forEach _oldActions};
+								_unlockAction = _mhq addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [false], 95, false, true, '', 'alive _target && locked _target'];
+								_lockAction = _mhq addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [true], 94, false, true, '', 'alive _target && !(locked _target)'];
+								_mhq setVariable ["wfbe_mhq_lock_actions", [_unlockAction, _lockAction], false];
 							};
 						};
 					};
