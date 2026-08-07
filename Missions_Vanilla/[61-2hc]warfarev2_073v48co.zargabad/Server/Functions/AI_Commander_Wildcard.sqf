@@ -107,17 +107,10 @@ while {!gameOver} do {
 	_jitter = random 30;
 	sleep _jitter;
 
-	//--- GATE: disabled only when BOTH sides are human-commanded.
-	_cmdTeam      = (west) Call WFBE_CO_FNC_GetCommanderTeam;
-	_humanCmdWEST = false;
-	if (!isNull _cmdTeam) then {
-		if (isPlayer (leader _cmdTeam)) then {_humanCmdWEST = true};
-	};
-	_cmdTeam      = (east) Call WFBE_CO_FNC_GetCommanderTeam;
-	_humanCmdEAST = false;
-	if (!isNull _cmdTeam) then {
-		if (isPlayer (leader _cmdTeam)) then {_humanCmdEAST = true};
-	};
+	//--- GATE: disabled only when BOTH sides are human-commanded. CommanderLease remains
+	//--- authoritative while an AI unit is temporarily promoted or a human reconnects.
+	_humanCmdWEST = ([west] Call WFBE_CO_FNC_GetCommanderAuthorityUID) != "";
+	_humanCmdEAST = ([east] Call WFBE_CO_FNC_GetCommanderAuthorityUID) != "";
 	_bothHuman = (_humanCmdWEST && _humanCmdEAST);
 
 	//--- AI COMMANDER LOCK: when lock=1, treat as not-both-human so wildcard draws continue.
@@ -136,11 +129,7 @@ while {!gameOver} do {
 		["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - both sides human-commanded", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	} else {
 		//--- AI-liveness gate ONLY when this side is AI-commanded.
-		_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-		_humanCmd = false;
-		if (!isNull _cmdTeam) then {
-			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
-		};
+		_humanCmd = ([_side] Call WFBE_CO_FNC_GetCommanderAuthorityUID) != "";
 
 		//--- For AI-commanded sides: also require wfbe_aicom_running; HQ alive.
 		_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;

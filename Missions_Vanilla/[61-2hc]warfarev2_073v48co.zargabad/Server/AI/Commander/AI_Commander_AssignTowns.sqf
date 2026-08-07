@@ -45,11 +45,8 @@ _fistSet = []; if (_consolidating) then {_fistSet = _logik getVariable ["wfbe_ai
 _consolRad = missionNamespace getVariable ["WFBE_C_AICOM2_CONSOLIDATE_RADIUS", 250];
 
 //--- Hybrid: when a human commands this side, only auto-assign DELEGATED (autonomous) teams.
-_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-_humanCmd = false;
-if (!isNull _cmdTeam) then {
-	if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
-};
+//--- Use the lease-backed commander authority, not only the current group leader.
+_humanCmd = ([_side] Call WFBE_CO_FNC_GetCommanderAuthorityUID) != "";
 
 //--- OA-safe filter: towns not owned by this side.
 _uncaptured = [];

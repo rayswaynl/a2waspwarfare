@@ -38,9 +38,8 @@ if (time < _minTime || {_maxPerTick <= 0}) exitWith {};
 if (_cooldown < 0) then {_cooldown = 0};
 if (_minDist < 0) then {_minDist = 0};
 
-//--- A side with a real player commander is never accelerated by this worker.
-_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-if (!isNil "_cmdTeam" && {!isNull _cmdTeam} && {isPlayer (leader _cmdTeam)}) exitWith {};
+//--- A side with an active human command lease is never accelerated by this worker.
+if (([_side] Call WFBE_CO_FNC_GetCommanderAuthorityUID) != "") exitWith {};
 
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 _homeRange = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_HOME_RANGE", 800];
