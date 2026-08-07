@@ -68,7 +68,7 @@ _origin = _ranPos select _ran;
 
 _currentUpgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 _currentLevel = _currentUpgrades select WFBE_UP_PARATROOPERS;
-_units = missionNamespace getVariable Format ["WFBE_%1PARACHUTELEVEL%2", str _side, _currentLevel];
+_units = +(missionNamespace getVariable Format ["WFBE_%1PARACHUTELEVEL%2", str _side, _currentLevel]);
 _planeClass = missionNamespace getVariable Format ["WFBE_%1PARACARGO", str _side];
 _cargoClass = missionNamespace getVariable Format ["WFBE_%1PARAVEHICARGO", str _side];
 _pilotClass = missionNamespace getVariable Format ["WFBE_%1PILOT", str _side];

@@ -86,6 +86,14 @@ def test_stage_b_paratroop_extra_is_clamped_to_plane_capacity():
     assert "if (_extraCount > _paratroopExtra) then {_extraCount = _paratroopExtra}" in source
 
 
+def test_stage_b_extra_padding_copies_the_shared_upgrade_roster_before_mutating():
+    source = read("Server/Support/Support_CargoAirdrop.sqf")
+
+    # Padding is per-sortie. The source roster is a missionNamespace value, so
+    # mutating its alias would permanently grow later sorties' upgrade roster.
+    assert '_units = +(missionNamespace getVariable Format ["WFBE_%1PARACHUTELEVEL%2", str _side, _currentLevel]);' in source
+
+
 def test_stage_b_escort_cleanup_precedes_group_delete():
     source = read("Server/Support/Support_CargoAirdrop.sqf")
 
