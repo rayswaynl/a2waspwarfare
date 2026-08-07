@@ -106,7 +106,17 @@ while {alive player && dialog} do {
 
 					if !(isNull leader _selected) then {
 						if (_selected != group player) then {
-							hint parseText format [localize "STR_WF_INFO_Funds_Sent", _funds_transfering, name leader _selected];
+							private ["_safeName","_charCode"];
+							_safeName = "";
+							{
+								_charCode = _x;
+								if (_charCode == 38) then {_safeName = _safeName + "&amp;"} else {
+									if (_charCode == 60) then {_safeName = _safeName + "&lt;"} else {
+										if (_charCode == 62) then {_safeName = _safeName + "&gt;"} else {_safeName = _safeName + toString [_charCode]};
+									};
+								};
+							} forEach (toArray (name leader _selected));
+							hint parseText format [localize "STR_WF_INFO_Funds_Sent", _funds_transfering, _safeName];
 							//--- N1 fix (GR-2026-07-08a): server is authoritative. The client-side optimistic
 							//--- debit+credit (WFBE_CL_FNC_ChangeClientFunds + WFBE_CO_FNC_ChangeTeamFunds, both
 							//--- executed on the caller's own machine) let any modified client forge the target
