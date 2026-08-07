@@ -207,7 +207,7 @@ _displayEH_keydown = (finddisplay 46) displayaddeventhandler ["keydown","
 		_level = _level + 50;
 		if (_level > 500) then {_level = 500};
 		if (_level < 200) then {_level = 200};
-		driver _uav forcespeed (_level / 3.6);
+		driver _uav forcespeed _level;
 		_uav setvariable ['BIS_UAV_speed',_level];
 		((uinamespace getvariable 'BIS_UAV_DISPLAY') displayctrl 112412) ctrlsettext str (_level);
 		((uinamespace getvariable 'BIS_UAV_DISPLAY') displayctrl 112412) ctrlcommit 0;
@@ -220,7 +220,7 @@ _displayEH_keydown = (finddisplay 46) displayaddeventhandler ["keydown","
 		_level = _level - 50;
 		if (_level > 500) then {_level = 500};
 		if (_level < 200) then {_level = 200};
-		driver _uav forcespeed (_level / 3.6);
+		driver _uav forcespeed _level;
 		_uav setvariable ['BIS_UAV_speed',_level];
 		((uinamespace getvariable 'BIS_UAV_DISPLAY') displayctrl 112412) ctrlsettext str (_level);
 		((uinamespace getvariable 'BIS_UAV_DISPLAY') displayctrl 112412) ctrlcommit 0;
