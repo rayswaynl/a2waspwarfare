@@ -119,6 +119,24 @@ if (_airMaxTotalP > 0) then {
 	//--- nil even with a default -> the lazy-brace check below threw and killed Produce,
 	//--- stopping ALL factory purchases for editor teams).
 	if (!isNull _team) then {
+	//--- r204 SERVER-LOCAL LEADER REPAIR: this worker only owns non-HC teams.  If a
+	//--- live server-local AICOM group lost its leader, select an alive non-player local
+	//--- member before the maintenance and refill gates resolve leader _team.  HC groups
+	//--- are repaired by their owning Common_RunCommanderTeam driver instead.
+	private ["_r204Leader","_r204Candidate"];
+	if (!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)) then {
+		_r204Leader = leader _team;
+		if (isNull _r204Leader || {!alive _r204Leader}) then {
+			_r204Candidate = objNull;
+			{
+				if (isNull _r204Candidate && {!isNull _x} && {alive _x} && {!isPlayer _x} && {local _x}) then {_r204Candidate = _x};
+			} forEach (units _team);
+			if (!isNull _r204Candidate) then {
+				_team selectLeader _r204Candidate;
+				diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LEADER_REPAIRED|team=" + str _team + "|owner=server");
+			};
+		};
+	};
 	_type = _team getVariable "wfbe_teamtype";
 	if (isNil "_type") then {_type = -1};
 
