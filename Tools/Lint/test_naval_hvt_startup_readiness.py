@@ -32,13 +32,16 @@ def test_naval_hvt_waits_for_all_named_carrier_logics_with_deadline() -> None:
     gate_end = source.index("//--- HELPER", gate_start)
     gate = source[gate_start:gate_end]
 
-    assert "diag_tickTime + 90" in gate
+    assert "diag_tickTime + 420" in gate
+    assert "diag_tickTime + 90" not in gate
     assert "while {!_navalHvtReady" in gate
     assert '"Khe Sanh Alpha"' in gate
     assert '"Khe Sanh Bravo"' in gate
     assert '"Khe Sanh Charlie"' in gate
     assert "if (!_navalHvtReady) exitWith {" in gate
     assert "NAVALHVT|STARTUP_TIMEOUT" in gate
+    assert '["WARNING", "Init_NavalHVT.sqf : pre-placed naval town logic(s) not found' in gate
+    assert "Call WFBE_CO_FNC_LogContent;" in gate
     assert source.index("_navalHvtDeadline") < source.index("//--- FIND PRE-PLACED TOWN LOGICS")
 
 

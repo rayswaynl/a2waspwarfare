@@ -39,10 +39,15 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) != 1) exitWith {
 //--- logic has registered. Init_Towns.sqf deliberately allows townInit=true with towns=[]
 //--- while game-time-gated Init_Town.sqf workers register late, so wait for the three named
 //--- carrier logics explicitly before the one-shot HVT setup. Never wait forever on a bad sqm.
+//--- DEADLINE (w807-L2, 2026-08-07): 420s, not 90s. Common/Init/Init_Towns.sqf:35-40 (D6c
+//--- REVISED, 2026-08-03) documents a PROVEN dev-box case where all 46 depot workers parked
+//--- on their game-time-gated registration sleep for 300s+ before landing - same async
+//--- registration pipeline this loop polls. 420s covers that observed worst case with margin
+//--- while still failing closed (not hanging forever) on a genuinely broken mission.sqm.
 //------------------------------------------------------------------------------------
 private ["_navalHvtReady","_navalHvtDeadline","_navalHvtWait","_navalHvtTownReady","_navalHvtLogicReady","_navalHvtAlphaLogic","_navalHvtBravoLogic","_navalHvtCharlieLogic","_navalHvtName"];
 _navalHvtReady       = false;
-_navalHvtDeadline    = diag_tickTime + 90;
+_navalHvtDeadline    = diag_tickTime + 420;
 _navalHvtWait        = 0;
 _navalHvtTownReady   = false;
 _navalHvtLogicReady  = false;
@@ -75,6 +80,7 @@ while {!_navalHvtReady && {diag_tickTime < _navalHvtDeadline} && {!(missionNames
 
 if (!_navalHvtReady) exitWith {
 	diag_log Format ["NAVALHVT|STARTUP_TIMEOUT|waitTicks=%1|townInit=%2|towns=%3|logics=%4|gameOver=%5", _navalHvtWait, missionNamespace getVariable ["townInit", false], if (isNil "towns") then {-1} else {count towns}, _navalHvtLogicReady, missionNamespace getVariable ["WFBE_GameOver", false]];
+	["WARNING", "Init_NavalHVT.sqf : pre-placed naval town logic(s) not found in towns[] after the readiness wait - check mission.sqm."] Call WFBE_CO_FNC_LogContent;
 };
 
 //------------------------------------------------------------------------------------
