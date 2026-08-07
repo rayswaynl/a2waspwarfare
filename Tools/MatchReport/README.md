@@ -72,7 +72,7 @@ controller names cannot leak into these stat surfaces.
 ## Data flow
 
 ```
-Hetzner server RPT  ──WASPSTAT|v1|…──►  box.ps1 / poster.ps1  ──►  :3010 ingest (gaming PC)
+Hetzner server RPT  ──WASPSTAT|v1|…──►  box.ps1 / poster.ps1  ──►  :3010 ingest (production host)
                                                                         │
                                               ROUNDEND detected ────────┘
                                                                         ▼

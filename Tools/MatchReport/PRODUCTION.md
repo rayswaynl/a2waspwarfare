@@ -1,16 +1,16 @@
 # Production — auto-generate a report per match
 
 > **Note (GR-2026-07-03a):** The `WaspMatchReport` scheduled task described in the Deploy
-> section below has **not been registered** on the Game PC as of this writing. Reports must
+> section below has **not been registered** on the production host as of this writing. Reports must
 > be triggered manually. See Known caveats for other open issues.
 
-The report is designed to run as a **box-side scheduled task** on the gaming PC (per the
+The report is designed to run as a **box-side scheduled task** on the production host (per the
 "automation on the box, never Claude crons" rule). Each run pulls the live server RPT, finds the
 newest completed match, and — if it hasn't already — renders that match's report and
 drops the MP4 for you to post to TikTok.
 
 ```
-Hetzner server RPT (WASPSTAT lines)  ──ssh──►  produce-match-report.ps1 (gaming PC)
+Hetzner server RPT (WASPSTAT lines)  ──ssh──►  produce-match-report.ps1 (production host)
         │                                              │
         └── newest ROUNDEND, de-duped on seq           ├─ slice match → render_report.py (mp4 + caption)
                                                         ├─ POST mp4+caption → Warfare Discord #media
@@ -37,15 +37,16 @@ latest** match (correct slice by ROUNDEND seq) → ~10 MB MP4, and a second run 
 ("Already rendered"). Output named `wasp-report-<stamp>-<map>-<winner>.mp4`.
 
 ## Deploy (one-time)
-1. **SSH:** the runner reads `Administrator@78.46.107.142:.../arma2oaserver.RPT` (same source
-   the leaderboard/soak reporters use). Make sure the scheduled-task user has the SSH key.
+1. **SSH:** the runner pulls the RPT over SSH; set `WASP_REMOTE_SSH_TARGET` (`user@host`) and
+   `WASP_REMOTE_RPT` (remote RPT file path) for the scheduled-task user (same source the
+   leaderboard/soak reporters use), and make sure that user has the SSH key.
 2. **Register the task** (~every 10 min; it de-dupes so frequent runs are safe):
    ```powershell
-   $action  = New-ScheduledTaskAction -Execute 'pwsh.exe' -Argument '-NoProfile -File "C:\Users\Game\a2waspwarfare-report\Tools\MatchReport\produce-match-report.ps1" -Notify'
+   $action  = New-ScheduledTaskAction -Execute 'pwsh.exe' -Argument '-NoProfile -File "<path-to-your-clone>\Tools\MatchReport\produce-match-report.ps1" -Notify'
    $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 10)
    Register-ScheduledTask -TaskName 'WaspMatchReport' -Action $action -Trigger $trigger -RunLevel Highest
    ```
-3. **Output:** `C:\Users\Game\wasp-match-reports\*.mp4`. With `-Notify`, Peach DMs Ray the path
+3. **Output:** `%USERPROFILE%\wasp-match-reports\*.mp4`. With `-Notify`, Peach DMs Ray the path
    when each report is ready.
 
 ## Known bugs (GR-2026-07-03a)
@@ -55,7 +56,7 @@ latest** match (correct slice by ROUNDEND seq) → ~10 MB MP4, and a second run 
 - **`WaspMatchEndRotate` dual-PBO abort.** When two PBO files exist for the same build in
   `MPMissions`, `produce-match-report.ps1` may select the wrong one and abort. Ensure only one
   PBO is present for the active build.
-- **Scheduled task not installed.** `WaspMatchReport` has not been registered on the Game PC
+- **Scheduled task not installed.** `WaspMatchReport` has not been registered on the production host
   as of GR-2026-07-03a. Trigger manually with `pwsh -File produce-match-report.ps1 -RptFile <log>`.
 
 ## Known caveats (v1)

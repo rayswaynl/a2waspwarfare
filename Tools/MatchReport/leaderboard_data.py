@@ -10,9 +10,11 @@ from collections import Counter
 
 SIDE_FROM_PSTAT = {1: "west", 2: "east", 3: "guer", 0: "neu"}
 
-def _db_url(env_path=r"C:\Users\Game\miksuus-warfare\web\.env.local"):
+def _db_url(env_path=None):
     url = os.environ.get("DATABASE_URL")
     if url: return url
+    if env_path is None:
+        env_path = os.path.join(os.path.expanduser("~"), "miksuus-warfare", "web", ".env.local")
     try:
         for ln in open(env_path, encoding="utf-8"):
             if ln.startswith("DATABASE_URL=") and "postgres" in ln:
