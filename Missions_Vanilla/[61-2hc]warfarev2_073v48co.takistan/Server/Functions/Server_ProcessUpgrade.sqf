@@ -86,6 +86,16 @@ if (typeName _upgrades != "ARRAY" || {_upgrade_id < 0} || {_upgrade_id >= count 
 };
 _curLvl = _upgrades select _upgrade_id;
 if (typeName _curLvl != "SCALAR") then {_curLvl = 0};
+
+//--- A wildcard may grant this tier while the paid timer is running. The live level must
+//--- never advance a second time at completion: that would pass the configured max and
+//--- make planners/purchase gates treat the side as having an impossible unlock.
+if (_curLvl > _upgrade_level) exitWith {
+	_logic setVariable ["wfbe_upgrading", false, true];
+	_logic setVariable ["wfbe_upgrading_id", -1, true];
+	_logic setVariable ["wfbe_upgrading_end_time", -1, true];
+	["INFORMATION", Format ["Server_ProcessUpgrade.sqf: completion superseded side %1 id %2 start %3 live %4; preserved wildcard-granted tier.", _side, _upgrade_id, _upgrade_level, _curLvl]] Call WFBE_CO_FNC_LogContent;
+};
 _upgrades set [_upgrade_id, _curLvl + 1];
 
 _logic setVariable ["wfbe_upgrades", _upgrades, true];
