@@ -1,4 +1,4 @@
-﻿
+
 While {!(Alive Player)} do {sleep 2;};
 
 
