@@ -32,7 +32,7 @@ def test_hc_names_registry_carries_the_quoted_variant() -> None:
     ]
     for text in sources:
         assert 'if (isNil "WFBE_C_HC_NAMES") then {' in text
-        assert "_hcDq = '\"';" in text
+        assert "_hcDq = toString [34];" in text
         assert "_hcBareNames = +_hcNameList;" in text
         assert (
             "{ _hcNameList set [count _hcNameList, _hcDq + _x + _hcDq]; } forEach _hcBareNames;"
