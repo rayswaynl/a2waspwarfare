@@ -38,7 +38,7 @@ while {alive _bank && {!WFBE_GameOver}} do {
 		//--- share can mint or lose funds whenever the player count does not divide the pool.
 		_eligible = [];
 		{
-			if ((isPlayer _x) && {alive _x} && {side _x == _side} && {!((name _x) in WFBE_C_HC_NAMES)}) then {
+			if ((isPlayer _x) && {alive _x} && {side _x == _side} && {!((name _x) call WFBE_CO_FNC_IsHcName)}) then {
 				_eligible set [count _eligible, _x];
 			};
 		} forEach playableUnits;
