@@ -25,7 +25,9 @@ if ((_vehicle getVariable ["FlareCount", 0]) <= 0) exitWith {};
 _vehicle setVariable ["FlareActive", true];
 
 _burst = 8;
-for "_i" from 1 to _burst do {
+//--- A missile event starts a scheduled burst; stop on the next tick when the airframe is destroyed.
+//--- Without this guard a 2.4s worker kept mutating FlareCount and spawning decoys from a dead hull.
+for [{_i = 1}, {_i <= _burst && {alive _vehicle}}, {_i = _i + 1}] do {
 	if ((_vehicle getVariable ["FlareCount", 0]) > 0) then {
 		_vehicle setVariable ["FlareCount", (_vehicle getVariable ["FlareCount", 0]) - 1];
 		_pos   = _vehicle modelToWorld [0, -2, -1.5];             //--- behind & below the aircraft
@@ -41,4 +43,6 @@ for "_i" from 1 to _burst do {
 	sleep 0.3;
 };
 
-_vehicle setVariable ["FlareActive", false];
+if (alive _vehicle) then {
+	_vehicle setVariable ["FlareActive", false];
+};
