@@ -47,10 +47,7 @@ if (count _camps == 0) exitWith {hint (localize "STR_WF_Repair_Camp_None_Dead")}
 //--- the camp-alive race below then REFUNDED money that was never paid. Hoisted to top scope so it really aborts.
 if ((_price > 0) && {(Call WFBE_CL_FNC_GetClientFunds) < _price}) exitWith {hint Format [localize "STR_WF_Repair_Camp_NoFunds", _price - (Call WFBE_CL_FNC_GetClientFunds)]};
 
-//--- Purchase a repair (price 0 = free camps, nothing to charge).
-if (_price > 0) then {
-	(-_price) Call WFBE_CL_FNC_ChangeClientFunds;
-};
+//--- The server debits only after its final requester and camp-state validation.
 	
 //--- Get the closest camp then.
 _camp = [_vehicle, _camps] Call WFBE_CO_FNC_GetClosestEntity;
@@ -69,13 +66,12 @@ while {_delay > 0} do {
 
 if (!(alive _vehicle) || (_vehicle distance _camp > _range)) exitWith {
 	hint (localize "STR_WF_Repair_TruckIsDeadOrTooFar");
-	if (_price > 0) then {_price Call WFBE_CL_FNC_ChangeClientFunds;};
+	//--- No refund: this client has not been debited.
 };
 if (alive (if (isNil {_camp getVariable 'wfbe_camp_bunker'}) then {objNull} else {_camp getVariable 'wfbe_camp_bunker'})) exitWith {
 	hint (localize "STR_WF_Repair_Camp_IsAlive");
 	
-	//--- Refunds the player.
-	if (_price > 0) then {_price Call WFBE_CL_FNC_ChangeClientFunds;};
+	//--- No refund: this client has not been debited.
 };
 
 //--- Repair order is sent to the server.

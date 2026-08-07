@@ -782,16 +782,12 @@ switch (_request) do {
 		};
 	};
 	case "repair-camp-result": {
-		Private ["_ok","_price","_text"];
+		Private ["_ok","_text"];
 		_ok = if ((count _args) > 0) then {_args select 0} else {false};
 		_text = if ((count _args) > 1) then {_args select 1} else {"Camp repair failed."};
 		if (typeName _ok != "BOOL") then {_ok = false};
 		if (typeName _text != "STRING") then {_text = "Camp repair failed."};
-		if (!_ok && {missionNamespace getVariable ["WFBE_CampRepairPending", false]}) then {
-			_price = missionNamespace getVariable ["WFBE_C_CAMPS_REPAIR_PRICE", 0];
-			if (typeName _price == "SCALAR" && {_price > 0}) then {_price Call WFBE_CL_FNC_ChangeClientFunds};
-			hint _text;
-		};
+		if (!_ok) then {hint _text};
 		missionNamespace setVariable ["WFBE_CampRepairPending", false];
 	};
 	case "support-callin-result": {
