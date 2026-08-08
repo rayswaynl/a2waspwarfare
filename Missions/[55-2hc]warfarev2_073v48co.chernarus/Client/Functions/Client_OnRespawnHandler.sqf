@@ -35,6 +35,41 @@ _allowCustom = true;
 if (!isNull (group _unit)) then {clientTeam = group _unit; WFBE_Client_Team = group _unit};
 if (!isNil "WFBE_Client_SideJoined") then {
 	["RequestFundsResend", [_unit, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
+	//--- w807e-L16 (funds display robustness): the request above is fire-and-forget. If THIS
+	//--- broadcast is the one that gets lost/delayed (the same setVariable-broadcast-not-replayed
+	//--- class the B76 join-time heal loop in Init_Client.sqf exists for), nothing ever retries it -
+	//--- the B76 loop already exited (its own _done=true) back at the ORIGINAL join and never
+	//--- re-arms. Re-arm here with a short, bounded, idempotent verify-and-retry mirroring the B76
+	//--- pattern, scoped to THIS respawn group (GROUP respawn/respawn=3 can hand the player a brand
+	//--- new group whose wfbe_funds never landed at all). Stops the instant wfbe_funds is observed as
+	//--- numeric; a healthy respawn (the normal case) exits after one cheap check with zero resends.
+	//--- RequestFundsResend never adds money (absolute-value re-broadcast only), so a stray/duplicate
+	//--- retry here cannot inflate the wallet. A2-OA-1.64 safe: group/getVariable/typeName/spawn/sleep.
+	[_unit, WFBE_Client_SideJoined] spawn {
+		private ["_u","_side","_grp","_f","_n","_done"];
+		_u = _this select 0;
+		_side = _this select 1;
+		_n = 0;
+		_done = false;
+		while {!_done && {_n < 10}} do {
+			sleep 2;
+			if (isNull _u || {!alive _u}) then {
+				_done = true;
+			} else {
+				_grp = group _u;
+				if (!isNull _grp) then {
+					_f = _grp getVariable "wfbe_funds";
+					if (!isNil "_f" && {typeName _f == "SCALAR"}) then {
+						_done = true;
+					} else {
+						["RequestFundsResend", [_u, _side]] Call WFBE_CO_FNC_SendToServer;
+						diag_log format ["[WFBE][w807e-L16 RESPAWN-FUNDS-HEAL] group has no wfbe_funds after respawn (poll %1); requested server re-broadcast.", _n];
+					};
+				};
+			};
+			_n = _n + 1;
+		};
+	};
 };
 
 //--- cmdcon23 deadspawn-strand fallback. _spawn arrives objNull when the respawn menu's spawn list

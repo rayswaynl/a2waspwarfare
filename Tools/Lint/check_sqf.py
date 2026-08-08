@@ -137,6 +137,22 @@ MARKER_COLOR_ARG_RE = re.compile(r"\bsetMarkerColor(?:Local)?\s+[\"']([A-Za-z][A
 A3_REVEAL_ARRAY_LEFT_RE = re.compile(r"\[[^\]\n;]*\]\s+reveal\b", re.IGNORECASE)
 A3_REVEAL_ARRAY_RIGHT_RE = re.compile(r"\breveal\s+\[[^\]\n;]*\]", re.IGNORECASE)
 A3_SELECT_SLICE_RE = re.compile(r"\bselect\s*\[", re.IGNORECASE)
+# A3SELECT gap (lane w807e-L16): the slice regex above only matches `select [`
+# (ARRAY select [start,count]) and never fires when a CODE block is used as
+# select's operand instead, because a code block is followed by `select (` or
+# `select {`, not `select [`. Live-burned example: GUI_Menu_Service.sqf:359/397
+# `{alive _x} select (nearEntities[...])` (CODE select ARRAY, A3-only predicate
+# form written backwards) parsed as a runtime 'select: Type code, expected
+# Array,Config entry' error and silently killed the town-service support scan.
+# A `}` can never legally be followed directly by `select` in A2/OA (select's
+# left operand must be ARRAY or STRING, never CODE), so this is a zero-false-
+# positive signature regardless of what select's right-hand side looks like.
+A3_SELECT_CODE_LEFT_RE = re.compile(r"\}\s*select\b", re.IGNORECASE)
+# Mirror shape: ARRAY select {CODE} (the A3 predicate-filter idiom written the
+# "normal" way round). Not observed as live code in this tree yet, but the
+# comments in Init_Server.sqf/Server_CounterBattery.sqf/Init_Client.sqf show
+# agents keep having to reason about it by hand; catch it mechanically too.
+A3_SELECT_CODE_RIGHT_RE = re.compile(r"\bselect\s*\{", re.IGNORECASE)
 A3_SORT_CODE_RE = re.compile(r"\bsort\s*\{", re.IGNORECASE)
 # exitWith is only valid as `if (cond) exitWith {..}`; any other placement (statement-start OR
 # inline after `;`/`{`) parse-fails the whole file on A2 OA 1.64 ("Error Missing ;") - live-burned
@@ -563,6 +579,8 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
         (A3_REVEAL_ARRAY_LEFT_RE, "A3REVEAL", "Array-form reveal is an A3-era trap; reveal units one at a time"),
         (A3_REVEAL_ARRAY_RIGHT_RE, "A3REVEAL", "Array-form reveal is an A3-era trap; reveal units one at a time"),
         (A3_SELECT_SLICE_RE, "A3SELECT", "select [start,count] syntax is not A2/OA 1.64-safe"),
+        (A3_SELECT_CODE_LEFT_RE, "A3SELECT", "'{code} select ...' uses a code block as select's array operand; A2/OA select never accepts CODE (use an explicit forEach/for filter loop)"),
+        (A3_SELECT_CODE_RIGHT_RE, "A3SELECT", "'select {code}' predicate-filter syntax is not A2/OA 1.64-safe (use an explicit forEach/for filter loop)"),
         (A3_SORT_CODE_RE, "A3SORT", "sort-by-code syntax is not A2/OA 1.64-safe"),
         (A3_BIS_FNC_CALL_RE, "A3BISFNC", "BIS_fnc_* calls require the Arma 3 function library and are not A2/OA 1.64-safe"),
         (GROUP_GETVARIABLE_ARRAY_RE, "GROUPGETVAR", "Review two-argument getVariable on a group; use plain get + isNil for groups"),
