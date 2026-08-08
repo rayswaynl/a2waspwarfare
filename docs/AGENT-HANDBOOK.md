@@ -45,6 +45,12 @@ step entirely. The mirror always completes regardless; the pack step is optional
 
 If none is found, LoadoutManager logs a line and skips packing. The mirror still completes.
 
+**Never compress the mission PBO:**
+
+Never pack a mission PBO with `--compress` (Cprs). A2 OA refuses to read a Cprs-compressed
+mission PBO on client join. The error is `Cannot evaluate 'ReadAndWrite' - no file`. This broke
+wave0807b. Compression is shelved; do not turn it back on.
+
 **What LoadoutManager generates:**
 
 LoadoutManager writes `Common/Init/Init_CommonBalanceInit.sqf` and
@@ -70,7 +76,7 @@ the folder name. These are the tracked `version.sqf.template` values; a live/gen
 
 | Field | CH | TK | ZG |
 |---|---|---|---|
-| `WF_MAXPLAYERS` | 32 | 31 | 33 |
+| `WF_MAXPLAYERS` | 34 | 34 | 34 |
 | `STARTING_DISTANCE` | 7500 | 7500 | 5000 |
 | `IS_CHERNARUS_MAP_DEPENDENT` | defined | NOT defined | NOT defined |
 | `IS_NAVAL_MAP` | defined | NOT defined | NOT defined |
@@ -140,6 +146,25 @@ Each trap below gives the rule and the WHY in one line.
 
 Never use `==` or `!=` with Boolean operands. `true == true` compiles but has undefined
 behaviour in A2 OA. Use `if (_flag)` and `if (!_flag)`.
+
+### Raw double-quote kills the file
+
+A raw `"` character in SQF code or in a `//` comment breaks parsing. The A2 OA preprocessor
+reads it as a string delimiter. A single raw quote kills the ENTIRE file. Every constant in the
+file becomes nil. Build a quote character with `toString [34]` instead of typing `"`. Check
+quote parity (an even count of `"` per line) on every line you touch. Burned live: wave0807a2.
+
+### Stray backslash comment trap
+
+A stray backslash where `//` was intended breaks the file mid-parse. A lone `\` is not a valid
+comment start in A2 OA. This is the same file-death class as the raw-quote trap above. Burned
+live: wave0808c — 392,000 errors and about 6.3 million RPT lines before rollback.
+
+### SendToClients nil destination
+
+`SendToClients` called with a nil destination throws a hard A2 error (`typeName` on nil). The
+packet is dropped on both branches. PR #2452 found 54 call sites with this bug. Always check the
+destination is not nil before the call.
 
 ### NSSETVAR3 trap
 
@@ -292,7 +317,7 @@ A stacked PR is required when your target file is already touched by an open (dr
 
 Before requesting review or marking a PR ready:
 
-- [ ] Lint gate passed: `check_sqf.py --select A3CMD,A3MARKER,A3NUMGATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET,NSSETVAR3,TRAILCOMMA --no-classname-index`
+- [ ] Lint gate passed: `python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BAREEXIT,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MARKERCOLOR,MARKERTYPE,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index`
 - [ ] Net bracket delta is zero per edited file
 - [ ] All new classnames present in mission tree or config proof attached
 - [ ] Flag-off leaves mission byte-identical to HEAD (diff the generated output)
