@@ -87,6 +87,8 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	//--- leg (WFBE_C_TOWNS_SORTIES_RTB); seeded here purely for clarity - the manager already defaults
 	//--- this to false via getVariable, so flag-off behaviour is unaffected either way.
 	_town setVariable ["wfbe_sortie_rtb", false];
+	//--- True after a contested recall until the tracked group has been returned to its town post.
+	_town setVariable ["wfbe_sortie_recalled", false];
 	//--- Terrain sector classifier (WFBE_C_TERRAIN_CLASSIFY_SECTORS, default 0 = INERT): once per town at
 	//--- boot, averages 5 jittered selectBestPlaces samples per axis (Houses/Trees/Forest/Hills) via
 	//--- Common_TerrainClassifySector.sqf and caches garrison/bush-camp/open-maneuver on the town object
@@ -885,6 +887,7 @@ while {!WFBE_GameOver} do {
 					_sortieMins = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIE_MINS", 8]; if (_sortieMins < 1) then {_sortieMins = 8};
 					_sortieGrp = _town getVariable ["wfbe_sortie_grp", grpNull];
 					_sortieStarted = _town getVariable ["wfbe_sortie_started", 0];
+					_sortieRecalled = _town getVariable ["wfbe_sortie_recalled", false];
 					_townPos = getPos _town;
 					//--- Only manage sorties over SERVER-LOCAL town groups (delegated AI lives elsewhere).
 					_localTeams = [];
@@ -915,11 +918,23 @@ while {!WFBE_GameOver} do {
 							_sortieGrp setBehaviour "AWARE";
 							_sortieGrp setCombatMode "RED";
 							["INFORMATION", Format ["server_town_ai.sqf: sortie RECALLED (contested) for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+							//--- Keep ownership of the sortie slot. Clearing it here orphaned the group
+							//--- on its SAD order once contact ended, because its patrol worker stayed in PATROL mode.
+							_town setVariable ["wfbe_sortie_recalled", true];
 						};
-						_town setVariable ["wfbe_sortie_grp", grpNull, true];
-						_town setVariable ["wfbe_sortie_started", 0];
 					} else {
 						if (_sortieValid) then {
+							//--- A recalled group must walk back to its assigned town before the slot can rotate.
+							//--- This runs even when optional rotation RTB is off: contested recall is correctness, not a feature.
+							if (_sortieRecalled) then {
+								[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
+								_town setVariable ["wfbe_sortie_started", time];
+								_town setVariable ["wfbe_sortie_rtb", true];
+								_town setVariable ["wfbe_sortie_recalled", false];
+								_sortieStarted = time;
+								_sortieInRtb = true;
+								["INFORMATION", Format ["server_town_ai.sqf: sortie RETURNING (contact lost) for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+							};
 							//--- u3-sortie-despawn: WFBE_C_TOWNS_SORTIES_RTB (default 0) gives the group a bounded
 							//--- return-to-town-centre leg instead of ending the sortie the instant the rotation
 							//--- timer fires. Flag OFF => _sortieRtbOn is false => the branch below always takes
@@ -927,7 +942,7 @@ while {!WFBE_GameOver} do {
 							//--- end-state to pre-RTB behaviour (immediate clear + same log line).
 							_sortieRtbOn = (missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES_RTB", 0]) > 0;
 							_sortieInRtb = _town getVariable ["wfbe_sortie_rtb", false];
-							if (_sortieRtbOn && _sortieInRtb) then {
+							if (_sortieInRtb) then {
 								//--- RETURN LEG in progress: the MOVE-home order was already issued when this leg
 								//--- started (below). Poll non-blocking each sweep (no waitUntil - this loop covers
 								//--- every town per sweep, a blocking wait here would stall the whole FSM) for either
@@ -946,6 +961,7 @@ while {!WFBE_GameOver} do {
 									_town setVariable ["wfbe_sortie_grp", grpNull, true];
 									_town setVariable ["wfbe_sortie_started", 0];
 									_town setVariable ["wfbe_sortie_rtb", false];
+									_town setVariable ["wfbe_sortie_recalled", false];
 									["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 								};
 							} else {
@@ -1007,6 +1023,7 @@ while {!WFBE_GameOver} do {
 									//--- this town (e.g. one that died mid-return-leg) so the freshly-picked group is
 									//--- never misread as "already returning" on the next sweep.
 									_town setVariable ["wfbe_sortie_rtb", false];
+									_town setVariable ["wfbe_sortie_recalled", false];
 									["INFORMATION", Format ["server_town_ai.sqf: sortie LAUNCHED for %1 (ring %2m).", _town getVariable "name", floor _ringR]] Call WFBE_CO_FNC_AICOMLog;
 								};
 							};
