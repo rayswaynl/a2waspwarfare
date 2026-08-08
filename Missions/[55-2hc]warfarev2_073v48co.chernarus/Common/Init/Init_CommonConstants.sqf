@@ -3380,6 +3380,32 @@ if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {
 		WFBE_C_TOTAL_AI_MAX_BY_TIER = [140,115,90,80];
 	};
 };
+\--- FPS-ADAPTIVE AI GOVERNOR (fable/fps-governor, 2026-08-08, NEXT-WAVE / default-off): owner
+//--- direction - AI commander AI, town defenders and HQ teams should be limited PER SIDE based on
+//--- LIVE server FPS, scaling to keep FPS high, on top of (not instead of) the static
+//--- WFBE_C_TOTAL_AI_MAX_BY_TIER tier ceiling and the AICAP trim above. Server_FpsGovernor.sqf
+//--- samples diag_fps on an EMA (AICAP-MIDHIGH-SCATTER-2026-07-22.md knee data sets the default
+//--- ceiling/floor bands below) and derives ONE shared [MULT_FLOOR..1.0] scalar
+//--- (WFBE_FpsGovMultiplier) - server FPS is a single measured resource, not sampled per side, so
+//--- "per side" means each side's OWN budget is scaled by this shared signal, not that the signal
+//--- itself differs by side. Applied at the SAME choke points the static cap already gates:
+//--- AI_Commander_Produce.sqf's per-side produce cap, AI_Commander_Teams.sqf's founding-gate cap,
+//--- Server_GetTownGroups.sqf's town-garrison groups_max (after the CTL strength overlay, same
+//--- integration point CTL uses - composes for WEST/EAST, applies directly for GUER), and
+//--- AI_Commander_HCTopUp.sqf's per-team top-up request size. Every read site is gated on
+//--- WFBE_C_FPS_GOVERNOR (default 0) - flag off is byte-identical to HEAD (WFBE_FpsGovMultiplier
+//--- stays seeded at 1 and no consumer ever reads it). NEVER deletes/disbands an existing team or
+//--- group; only throttles NEW production/founding/top-up/garrison-materialization volume.
+if (isNil "WFBE_C_FPS_GOVERNOR") then {WFBE_C_FPS_GOVERNOR = 0};
+if (isNil "WFBE_FpsGovMultiplier") then {WFBE_FpsGovMultiplier = 1};      //--- neutral seed; Server_FpsGovernor.sqf (flag-on only) is the sole writer after boot.
+if (isNil "WFBE_C_FPS_GOVERNOR_TICK_SEC")    then {WFBE_C_FPS_GOVERNOR_TICK_SEC    = 10};   //--- diag_fps sample cadence (s).
+if (isNil "WFBE_C_FPS_GOVERNOR_EMA_SEC")     then {WFBE_C_FPS_GOVERNOR_EMA_SEC     = 90};   //--- EMA smoothing window (s); alpha = tick/EMA_SEC per sample (60-120s owner ask).
+if (isNil "WFBE_C_FPS_GOVERNOR_FPS_CEIL")    then {WFBE_C_FPS_GOVERNOR_FPS_CEIL    = 40};   //--- smoothed FPS at/above which the multiplier is 1.0 (AICAP-MIDHIGH-SCATTER 350-399 AI_TOT band, 40.8 mean FPS - comfortably above the first sustained decline).
+if (isNil "WFBE_C_FPS_GOVERNOR_FPS_FLOOR")   then {WFBE_C_FPS_GOVERNOR_FPS_FLOOR   = 20};   //--- smoothed FPS at/below which the multiplier hits its floor (600-649 band, 22.4 mean FPS - clearly degraded).
+if (isNil "WFBE_C_FPS_GOVERNOR_MULT_FLOOR")  then {WFBE_C_FPS_GOVERNOR_MULT_FLOOR  = 0.5};  //--- minimum budget multiplier - a governed side never drops below half its static tier cap.
+if (isNil "WFBE_C_FPS_GOVERNOR_STEP_MAX")    then {WFBE_C_FPS_GOVERNOR_STEP_MAX    = 0.1};  //--- max |multiplier delta| applied per tick (ramps toward target, never jumps - anti-oscillation lever 1).
+if (isNil "WFBE_C_FPS_GOVERNOR_DEADBAND")    then {WFBE_C_FPS_GOVERNOR_DEADBAND    = 0.02}; //--- a computed step smaller than this is dropped, not published (anti-oscillation lever 2 - hysteresis).
+if (isNil "WFBE_C_FPS_GOVERNOR_TOWNS_FLOOR") then {WFBE_C_FPS_GOVERNOR_TOWNS_FLOOR = 1};    //--- Server_GetTownGroups.sqf groups_max never governed below this many groups (a garrisoned town never goes empty).
 //--- SATCHEL-TK (wiring-sweep 2026-07-22): Client_FNC_OnFired.sqf (satchel team-kill-near-structure
 //--- detection: deletes a satchel placed within 30m of a friendly structure/HQ + broadcasts the
 //--- StructureTK chat callout) has been compiled since the original import but was never attached to
