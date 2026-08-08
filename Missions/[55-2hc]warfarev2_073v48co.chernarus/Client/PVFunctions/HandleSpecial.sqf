@@ -223,11 +223,22 @@ switch (_request) do {
 		//--- authoritative. Fails closed; the sender defers hot bodies itself and releases dispatched ones back
 		//--- to its collector, so a rejection here is re-queued on the next pass, never leaked.
 		//--- r66: purge dead non-player crew before deleting a local wreck; A2 refuses crewed hull deletion.
-		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])} && {!(_trashObj isKindOf "Man") || {vehicle _trashObj == _trashObj} || {!(alive (vehicle _trashObj)) && {({alive _x} count crew (vehicle _trashObj)) == 0}}}) then {
+		//--- crash 014EFCF4 #7 (2026-08-08 18:09 live, wave0808i): defense-in-depth only. Common_TrashObject.sqf's
+		//--- dispatch gate is the single point of authority and should already hold a corpse for the full
+		//--- post-eject cooldown BEFORE it is ever sent here - this receiver has no way to compute the cooldown
+		//--- itself, only to read the PUBLIC deadline (wfbe_trash_posteject_until) the sender stamps. A hit here
+		//--- means the sender-side gate was bypassed or raced; refuse and let the sender's own re-queue (it never
+		//--- clears wfbe_trashed on a rejection) retry once the window has actually closed.
+		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])} && {(_trashObj getVariable ["wfbe_trash_posteject_until", -1]) <= diag_tickTime} && {!(_trashObj isKindOf "Man") || {vehicle _trashObj == _trashObj} || {!(alive (vehicle _trashObj)) && {({alive _x} count crew (vehicle _trashObj)) == 0}}}) then {
 			if (!(_trashObj isKindOf "Man")) then {
 				{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { deleteVehicle _x } } forEach (crew _trashObj);
 			};
 			if (!isNull _trashObj) then { deleteVehicle _trashObj };
+		} else {
+			if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])} && {(_trashObj getVariable ["wfbe_trash_posteject_until", -1]) > diag_tickTime}) then {
+				diag_log Format ["WASPCRASH014E|DISPATCH|obj=%1|decision=EXECUTOR-HELD|reason=posteject-cooldown|remaining=%2|t=%3",
+					_trashObj, round ((_trashObj getVariable ["wfbe_trash_posteject_until", diag_tickTime]) - diag_tickTime), diag_tickTime];
+			};
 		};
 	};
 	//--- fable/cleanup-locality-2: owner-side half of the weaponholder sweep (droppeditems_cleaner.sqf).
