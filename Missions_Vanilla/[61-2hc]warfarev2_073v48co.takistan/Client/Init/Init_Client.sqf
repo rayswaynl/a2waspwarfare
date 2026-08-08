@@ -2009,13 +2009,10 @@ if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFB
 
 [] spawn {
 	private [
-		"_toleranceAboveGround",
 		"_lastLockSoundTime",
 		"_lockSoundInterval",
 		"_isRestrictedMissileAmmo"
 	];
-
-	_toleranceAboveGround = 2.5;
 
 	_lastLockSoundTime = 0;
 
@@ -2127,13 +2124,9 @@ if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFB
 				_lastLockSoundTime = 0;
 			};
 
-			// Check if terrain blocks the line between the firing vehicle and the target.
-			// A small vertical tolerance is added to avoid false terrain masking detection.
-			_fromPos = getPosASL _vehicle;
-			_fromPos set [2, (_fromPos select 2) + _toleranceAboveGround];
-
-			_targetPos = getPosASL _unit_targeted;
-			_targetPos set [2, (_targetPos select 2) + _toleranceAboveGround];
+			// Match Fired enforcement: trace from the operator's actual ASL eye point to the target aim point.
+			_fromPos = eyePos player;
+			_targetPos = aimPos _unit_targeted;
 
 			_terrainMasked = terrainIntersectASL [_fromPos, _targetPos];
 
