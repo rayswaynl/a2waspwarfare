@@ -68,7 +68,7 @@ _welcome = parseText (
 	+ "<t color='#42b6ff'>The goal:</t> push the frontline by capturing towns and break the enemy HQ. The side that holds the map (or destroys the enemy headquarters) wins the round.<br/><br/>"
 	+ "<t color='#42b6ff'>Your three core moves:</t><br/>"
 	+ "<t color='#FFAC1C'>1. BUY</t> - drive to a friendly factory / your base and use the action menu to buy gear, vehicles and AI squads.<br/>"
-	+ "<t color='#FFAC1C'>2. COMMAND / VOTE</t> - vote a side commander and give orders; the AI commander spends the side economy.<br/>"
+	+ "<t color='#FFAC1C'>2. COMMAND</t> - open the Command menu to vote a side commander and give orders; the AI commander spends the side economy.<br/>"
 	+ "<t color='#FFAC1C'>3. CAPTURE</t> - take a town by clearing & holding its camps, then standing on the town center until it flips to <t color='#1ff026'>green</t>."
 );
 hint _welcome;
@@ -87,7 +87,7 @@ uiSleep 13;
 _commandHint = parseText (
 	"<t size='1.2' color='#28ff14'>Commander and supply move the war.</t><br/><br/>"
 	+ "The commander uses <t color='#42b6ff'>side supply</t> to build factories, defences and upgrades. Captured towns feed that supply, so holding camps matters even when you are buying with your own cash.<br/><br/>"
-	+ "Use the <t color='#42b6ff'>COMMAND / VOTE</t> tools to vote a commander and follow orders. If the AI is commander, it spends the side economy for you."
+	+ "Use the <t color='#42b6ff'>Command menu</t> (Start Comm Vote to vote) to pick a commander and follow orders. If the AI is commander, it spends the side economy for you."
 );
 hint _commandHint;
 uiSleep 12;

@@ -356,7 +356,11 @@ _i = 0;
 	};
 	
 	//--- Repairs Trucks.
-	_checks = {alive _x} select ((getPos _x) nearEntities[_typeRepair, missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"]);
+	_nearRepairTrucks = (getPos _x) nearEntities[_typeRepair, missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"];
+	_checks = [];
+	for "_rtIdx" from 0 to ((count _nearRepairTrucks) - 1) do {
+		if (alive (_nearRepairTrucks select _rtIdx)) then {_checks set [count _checks, _nearRepairTrucks select _rtIdx]};
+	};
 	if (count _checks > 0) then {
 		_add = true;
 		_nearSupport set [_i,(_nearSupport select _i) + _checks];
@@ -394,7 +398,11 @@ _i = 0;
 	};
 } forEach _vehi;
 
-_checks = {alive _x} select ((getPos player) nearEntities[_typeRepair, missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"]);
+_nearRepairTrucks = (getPos player) nearEntities[_typeRepair, missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"];
+_checks = [];
+for "_rtIdx" from 0 to ((count _nearRepairTrucks) - 1) do {
+	if (alive (_nearRepairTrucks select _rtIdx)) then {_checks set [count _checks, _nearRepairTrucks select _rtIdx]};
+};
 if (count _checks > 0) then {
 	_repair = _checks select 0;
 	_vehi = ((getPos _repair) nearEntities[["Car","Motorcycle","Tank","Air","Ship","StaticWeapon"],100]) - [_repair];
@@ -543,7 +551,7 @@ while {true} do {
 		if (MenuAction == 1) then {
 			MenuAction = -1;
 			if ((_curSel != -1) && {[_veh,_nearSupport select _curSel] Call _martyRearmBlockedAirDepot}) then {
-				hint "You can't rearm air in town"; //--- fix(hunt): precondition BEFORE the charge - SupportRearm hard-aborts this case AFTER the money is taken (no refund path).
+				hint "You can't rearm aircraft at a town depot."; //--- fix(hunt): precondition BEFORE the charge - SupportRearm hard-aborts this case AFTER the money is taken (no refund path).
 			} else {
 				if (_funds >= _rearmPrice) then { //--- QoL: affordability guard (parity with repair/heal)
 				-_rearmPrice Call ChangePlayerFunds;

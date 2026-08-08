@@ -89,7 +89,7 @@ while {true} do {
 		//todo refresh targets on click
 
 		if !(alive _target) then {
-			hint "the target is dead, refreshing";
+			hint "Target is dead - refreshing the gear list.";
 			_update_target = true;
 			_target = player;
 			_targets = (_target) Call WFBE_CL_FNC_UI_Gear_UpdateTarget;
@@ -577,7 +577,7 @@ while {true} do {
 	//--- Update the target eta
 	if !(alive _target) then {
 		//--- Get a living target
-		hint "the target is dead, refreshing";
+		hint "Target is dead - refreshing the gear list.";
 		_update_target = true;
 		_target = player;
 		_targets = (_target) Call WFBE_CL_FNC_UI_Gear_UpdateTarget;

@@ -351,15 +351,14 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 					//--- CURRENT sensed lane every 15s; keeps patrolling while this flight's lane stays the live sense
 					//--- target, self-despawns the moment the lane goes cold or AIRRESP_LOITER_TIME elapses - whichever
 					//--- first. Runs server-side (spawn stays on the calling machine, same as every other AICOM worker).
-					[_grp, _heli, _laneTown, _side] spawn {
-						private ["_g","_h","_lane","_sd","_elapsed","_loiter","_poll","_hot","_logikW","_curLane"];
-						_g = _this select 0; _h = _this select 1; _lane = _this select 2; _sd = _this select 3;
+					[_grp, _heli, _laneTown, _side, time] spawn {
+						private ["_g","_h","_lane","_sd","_t0","_deadline","_loiter","_poll","_hot","_logikW","_curLane"];
+						_g = _this select 0; _h = _this select 1; _lane = _this select 2; _sd = _this select 3; _t0 = _this select 4;
 						_loiter = missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_LOITER_TIME", 240];
-						_poll = 15; _elapsed = 0; _hot = true;
+						_poll = 15; _deadline = _t0 + _loiter; _hot = true;
 						_logikW = (_sd) Call WFBE_CO_FNC_GetSideLogic;
-						while {_hot && {_elapsed < _loiter} && {!isNull _g} && {({alive _x} count (units _g)) > 0} && {!isNull _h} && {alive _h}} do {
+						while {_hot && {time < _deadline} && {!isNull _g} && {({alive _x} count (units _g)) > 0} && {!isNull _h} && {alive _h}} do {
 							sleep _poll;
-							_elapsed = _elapsed + _poll;
 							_curLane = objNull;
 							if (!isNil "_logikW") then {_curLane = _logikW getVariable ["wfbe_aicom2_airresp_lane", objNull]};
 							if (isNull _curLane || {_curLane != _lane}) then {_hot = false};

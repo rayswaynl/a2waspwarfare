@@ -86,6 +86,7 @@ _cts = 0;
 _i = 0;
 while {!gameOver && {!WFBE_GameOver}} do {
 	sleep 1;
+	if (gameOver) exitWith {_cts = 0;};
 	
 	//--- Check the distance & alive.
 	_cts = 0;

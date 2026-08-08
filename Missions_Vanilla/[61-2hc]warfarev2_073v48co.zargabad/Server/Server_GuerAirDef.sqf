@@ -53,7 +53,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_destroyedCooldown","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_sliceCut","_sliceYield"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_destroyedCooldown","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_sliceCut","_sliceYield","_iffAware","_classMi24VsWest","_classMi24VsEast","_siegeQrfEnable","_siegeQrfChance","_siegeQrfThreshold","_siegeQrfCooldown","_siegeQrfMaxForce","_siegeQrfMaxDist","_siegeQrfSourceMaxEnemies","_siegeQrfMaxConcurrent","_siegeQrfLifetime","_siegeQrfArriveDist","_siegeQrfs"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -62,6 +62,22 @@ _mi24Chance = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MI24_CHANCE", 0.
 _aaChance   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_AA_CHANCE", 0.75];
 _classKa    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_KA", "Ka137_MG_PMC"];
 _classMi24  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_MI24", "Mi24_P"];
+//--- IFF-aware Mi-24 airframe selection (fix0807e, owner-approved same-lane addition, 2026-08-08):
+//--- A2 radar pre-identification colors a contact by the AIRFRAME's own CfgVehicles side, not its
+//--- actual crew side. No guerrilla-faction Mi-24 exists in loaded content, so every GUER Mi-24 hull
+//--- spoofs SOME real faction; live RPT showed a GUER Mi24_P (EAST-config) reading FRIENDLY on an
+//--- EAST player it was actively attacking. Pick the airframe whose config side does NOT match the
+//--- dominant attacker side at the town, so it always reads HOSTILE to the side actually under fire.
+//--- VSWEST = airframe used when the detected attackers are WEST (an EAST-config hull, so it reads
+//--- hostile to them) - default Mi24_P, unchanged from the pre-fix single-class behaviour. VSEAST =
+//--- airframe used when attackers are EAST (a WEST-config hull) - Mi24_D_CZ_ACR (ACR is loaded on
+//--- the live modline; already spawned/rostered elsewhere in this repo - Core_ACR.sqf, EASA_Init.sqf,
+//--- Common_BalanceInit.sqf, Units_CO_US.sqf/Units_USMC.sqf - so no new/unverified classname risk).
+//--- Mixed/unknown attacker mix falls back to WFBE_C_GUER_AIRDEF_CLASS_MI24 (today's default), same
+//--- as if IFF_AWARE were off. Master switch default 1 (owner-ordered); 0 restores single-class.
+_iffAware        = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_IFF_AWARE", 1];
+_classMi24VsWest = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_MI24_VSWEST", "Mi24_P"];
+_classMi24VsEast = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_MI24_VSEAST", "Mi24_D_CZ_ACR"];
 _lifetime   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LIFETIME", 900];
 _quiet      = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_QUIET_DESPAWN", 300];
 _destroyedCooldown = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DESTROYED_COOLDOWN", 240]; //--- fix0807b (churn): per-town no-spawn window armed after a COMBAT loss (reason=destroyed or crew_dead) so a fresh defender does not fly straight back into the force that just killed the last one. See PR measurement table.
@@ -71,6 +87,45 @@ _flyHeight  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
 _groundQrfTTL = 600 - _interval;
 if (_groundQrfTTL < 1) then {_groundQrfTTL = 1};
 _groundQrfMax = 2;
+
+//--- W807E-L17 (owner-approved 2026-08-08): siege-triggered GUER ground QRF. Reuses the CAPGATE
+//--- mode2 self-protect siege streak signal already published per-town by server_town.sqf
+//--- (_location setVariable [wfbe_capgate_siege_streak, ...], see server_town.sqf ~L337-343) -
+//--- no new signal-publish plumbing needed; it is polled here at this file own existing
+//--- WFBE_C_GUER_AIRDEF_INTERVAL maintain cadence instead of a new scheduled loop. DISTINCT from
+//--- the E3 GROUND QRF above (WFBE_C_GUER_GROUND_QRF): E3 spawns a fresh squad AT the besieged
+//--- town itself on raw real-time enemy presence; this feature instead dispatches a squad that
+//--- spawns AT a neighboring GUER-held town and marches in, gated on the CAPGATE sustained-siege
+//--- streak (consecutive mode2 self-protect ticks with an attacker present). Composition reuses
+//--- the SAME WFBE_GUERRESTEAMTEMPLATES pool + WFBE_CO_FNC_CreateUnit idiom as the E3 GROUNDQRF
+//--- block below (no new classnames). Defaults ARMED per repo flag policy (owner: we go with
+//--- these); WFBE_C_GUER_QRF_ENABLE=0 is the rollback switch - the whole block below then
+//--- becomes a no-op (empty registry every cycle, same class of inert-flag overhead as the
+//--- pre-existing WFBE_C_GUER_GROUND_QRF gate just above - no spawns/writes/telemetry either way).
+_siegeQrfEnable    = missionNamespace getVariable ["WFBE_C_GUER_QRF_ENABLE", 1];
+_siegeQrfChance    = missionNamespace getVariable ["WFBE_C_GUER_QRF_CHANCE", 0.3];
+//--- consecutive CAPGATE mode2 self-protect ticks (~5s each in server_town.sqf) - matches the
+//--- owner spec example of >=6 (~30s sustained siege).
+_siegeQrfThreshold = missionNamespace getVariable ["WFBE_C_GUER_QRF_SIEGE_THRESHOLD", 6];
+//--- per-TARGET-town cooldown after a dispatch (companion to WFBE_C_GUER_AIRDEF_DESTROYED_COOLDOWN
+//--- above - same per-town cooldown idiom, different trigger).
+_siegeQrfCooldown  = missionNamespace getVariable ["WFBE_C_GUER_QRF_COOLDOWN", 300];
+//--- airdef meat-grinder lesson (fix0807b DESTROYED_COOLDOWN precedent above): never dispatch a
+//--- single ~7-8 unit QRF squad (WFBE_GUERRESTEAMTEMPLATES, Config_GUE.sqf) into odds it cannot
+//--- survive; 16 ~= 2x squad size.
+_siegeQrfMaxForce  = missionNamespace getVariable ["WFBE_C_GUER_QRF_MAX_ATTACKER_FORCE", 16];
+_siegeQrfMaxDist   = missionNamespace getVariable ["WFBE_C_GUER_QRF_MAX_SOURCE_DIST", 3000];
+//--- spare-strength gate: a source town with ANY west/east presence near it is itself contested
+//--- and must not be drafted from. This codebase has no persistent per-town garrison-headcount
+//--- tracking to check instead (checked Server_TownGarrisonDressing.sqf, Server_GetTownGroups*.sqf
+//--- and server_town.sqf) - an uncontested-neighbor gate is the closest honest proxy; documented as
+//--- a design choice in the PR body, not a discovered pre-existing signal.
+_siegeQrfSourceMaxEnemies = missionNamespace getVariable ["WFBE_C_GUER_QRF_SOURCE_MAX_ENEMIES", 0];
+_siegeQrfMaxConcurrent = missionNamespace getVariable ["WFBE_C_GUER_QRF_MAX_CONCURRENT", 2];
+//--- bounded TTL, same anti-accumulation shape as _groundQrfTTL above - a one-shot reinforcement
+//--- run is torn down after a fair chance to fight regardless of outcome.
+_siegeQrfLifetime = missionNamespace getVariable ["WFBE_C_GUER_QRF_LIFETIME", 600];
+_siegeQrfArriveDist = missionNamespace getVariable ["WFBE_C_GUER_QRF_ARRIVE_DIST", 150];
 
 //--- CARGO/PARADROP variant (build83). DROP_CHANCE: per-spawn roll for the Ka-137 to run a paradrop of
 //--- infantry over a town under GROUND attack. DROP_COUNT: troopers per stick. DROP_MAX: global alive cap
@@ -175,8 +230,14 @@ _drops = [];
 //--- capped independently from air/paradrop assets, and never marked persistent.
 _groundQrfs = [];
 
+//--- W807E-L17 GUER SIEGE QRF registry (neighbor-town reinforcement). Each entry:
+//--- [_targetTown, _sourceTown, _group, _spawnTime, _arrived]. Script-local, capped independently
+//--- (_siegeQrfMaxConcurrent) from every other registry in this file, never marked persistent.
+_siegeQrfs = [];
+
 ["INITIALIZATION", Format ["Server_GuerAirDef.sqf: GUER air defense started (interval=%1 cap=%2 atChance=%3 mi24Chance=%4).", _interval, _maxAir, _atChance, _mi24Chance]] Call WFBE_CO_FNC_LogContent;
 diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|aaChance=%5|ka=%6|mi24=%7|dropChance=%8|dropCount=%9|dropMax=%10|destroyedCooldown=%11", _interval, _maxAir, _atChance, _mi24Chance, _aaChance, _classKa, _classMi24, _dropChance, _dropCount, _dropMax, _destroyedCooldown];
+diag_log format ["GUERQRF|v1|START|enable=%1|chance=%2|threshold=%3|cooldown=%4|maxForce=%5|maxDist=%6|sourceMaxEnemies=%7|maxConcurrent=%8|lifetime=%9|arriveDist=%10", _siegeQrfEnable, _siegeQrfChance, _siegeQrfThreshold, _siegeQrfCooldown, _siegeQrfMaxForce, _siegeQrfMaxDist, _siegeQrfSourceMaxEnemies, _siegeQrfMaxConcurrent, _siegeQrfLifetime, _siegeQrfArriveDist];
 
 //--- B67 (Ray 2026-06-21): publish the GUER-air list for the client map-marker loop (updatepatrolmarkers.sqf
 //--- reads WFBE_ACTIVE_GUER_AIR = [[vehicle, sideID], ...]). Init empty + broadcast so a JIP client never sees
@@ -463,7 +524,7 @@ while {!WFBE_GameOver} do {
 	private ["_keptDrops","_dropAlive"];
 	_keptDrops = [];
 	{
-		private ["_dEntry","_dTown","_dGrp","_dSpawn","_dLastEnemy","_dDrop","_dReason","_dLiving","_dEnemiesNow","_dTownSide","_dTownActive"];
+		private ["_dEntry","_dTown","_dGrp","_dSpawn","_dLastEnemy","_dDrop","_dReason","_dLiving","_dEnemiesNow","_dTownSide","_dTownActive","_dLanded"];
 		_dEntry     = _x;
 		_dTown      = _dEntry select 0;
 		_dGrp       = _dEntry select 1;
@@ -495,6 +556,26 @@ while {!WFBE_GameOver} do {
 		//--- Quiet too long / lifetime exceeded => recall (anti-accumulation).
 		if (!_dDrop && {(_now - _dLastEnemy) > _quiet}) then { _dDrop = true; _dReason = "quiet"; };
 		if (!_dDrop && {(_now - _dSpawn) > _lifetime}) then { _dDrop = true; _dReason = "lifetime"; };
+
+		//--- fix0807e (chute-occupant-teardown): a paradropped stick can still be MID-DESCENT here - units
+		//--- are already createUnit'd into _dGrp by Phase 1, each possibly riding a live ParachuteC the
+		//--- sub-thread tracks in its own LOCAL _chutes array (invisible to this prune pass). Deleting
+		//--- (units _dGrp) for a recall reason other than "wiped" while that is true orphans a live chute
+		//--- mid-air and yanks a trooper for a reason (town_lost/town_inactive/quiet/lifetime) that does not
+		//--- need to happen mid-fall - letting the squad land and fight on before the NEXT sweep re-applies
+		//--- the same recall is the immersive/safe outcome (owner: "town_lost ... acceptable+immersive").
+		//--- "wiped" (0 living units) is exempt - nobody is left to protect. The sub-thread stamps
+		//--- wfbe_guer_drop_landed=false synchronously at registration (below, before it Spawns) and only
+		//--- flips it true once every chute in the stick has been fully processed. A hard ceiling
+		//--- (WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING, default 240s - generous over the ~97s worst-case
+		//--- descent) guarantees this can never defer forever even if the landed stamp were somehow lost.
+		if (_dDrop && {_dReason != "wiped"}) then {
+			_dLanded = [_dGrp, "wfbe_guer_drop_landed", false] Call WFBE_CO_FNC_GroupGetBool;
+			if (!_dLanded && {(_now - _dSpawn) < (missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING", 240])}) then {
+				diag_log format ["GUERAIRDEF|DROPDEFER|town=%1|reason=%2", (if (isNull _dTown) then {"?"} else {_dTown getVariable ["name","?"]}), _dReason];
+				_dDrop = false;
+			};
+		};
 
 		if (_dDrop) then {
 			//--- Player-safe teardown: only delete non-player bodies; then drop the group.
@@ -542,6 +623,56 @@ while {!WFBE_GameOver} do {
 		_groundQrfs = _keptGroundQrfs;
 	};
 
+	//=== (1d) PRUNE + SELF-CLEAN GUER SIEGE QRFs (W807E-L17) ================================
+	//--- Entry: [_target, _source, _grp, _spawnTime, _arrived]. Same player-safe teardown idiom as
+	//--- every other registry in this file. Bounded TTL (_siegeQrfLifetime) is the ONLY normal exit -
+	//--- this is a one-shot reinforcement run, not a standing garrison, so it is torn down once it has
+	//--- had a fair chance to fight regardless of outcome (mirrors _groundQrfTTL bounded-lifetime
+	//--- shape just above). Arrival is detected here too (same cadence as the rest of this sweep) and
+	//--- switches the group onto a defend/AIPatrol order at the target, exactly like E3 GROUNDQRF does
+	//--- for its own freshly-spawned squad.
+	if (_siegeQrfEnable > 0) then {
+		private ["_keptSiegeQrfs","_sqEntry","_sqTarget","_sqSource","_sqGrpP","_sqSpawn","_sqArrived","_sqDrop","_sqReason","_sqTargetSide","_sqLiving"];
+		_keptSiegeQrfs = [];
+		{
+			_sqEntry   = _x;
+			_sqTarget  = _sqEntry select 0;
+			_sqSource  = _sqEntry select 1;
+			_sqGrpP    = _sqEntry select 2;
+			_sqSpawn   = _sqEntry select 3;
+			_sqArrived = _sqEntry select 4;
+			_sqDrop    = false;
+			_sqReason  = "";
+			_sqLiving  = if (isNull _sqGrpP) then {0} else {{alive _x} count (units _sqGrpP)};
+			if (isNull _sqGrpP || {_sqLiving == 0}) then { _sqDrop = true; _sqReason = "wiped"; };
+			if (!_sqDrop && {(time - _sqSpawn) >= _siegeQrfLifetime}) then { _sqDrop = true; _sqReason = "lifetime"; };
+			if (!_sqDrop) then {
+				_sqTargetSide = if (isNull _sqTarget) then {-1} else {_sqTarget getVariable ["sideID", -1]};
+				if (_sqTargetSide != WFBE_C_GUER_ID) then { _sqDrop = true; _sqReason = "target_lost"; };
+			};
+			if (!_sqDrop && {!_sqArrived} && {!isNull _sqGrpP} && {!isNull (leader _sqGrpP)} && {alive (leader _sqGrpP)} && {!isNull _sqTarget}) then {
+				if ((leader _sqGrpP) distance _sqTarget < _siegeQrfArriveDist) then {
+					_sqArrived = true;
+					[_sqGrpP, getPos _sqTarget, ((_sqTarget getVariable ["range", 600]) max 300)] Call AIPatrol;
+					_sqGrpP setBehaviour "COMBAT";
+					_sqGrpP setCombatMode "RED";
+					_sqGrpP setSpeedMode "NORMAL";
+					diag_log format ["GUERQRF|v1|ARRIVE|target=%1|source=%2|elapsed=%3", (_sqTarget getVariable ["name","?"]), (if (isNull _sqSource) then {"?"} else {_sqSource getVariable ["name","?"]}), round (time - _sqSpawn)];
+				};
+			};
+			if (_sqDrop) then {
+				if (!isNull _sqGrpP) then {
+					{if (!(isPlayer _x)) then {["guerqrf-cleanup", _x, Format ["target=%1", (if (isNull _sqTarget) then {"?"} else {_sqTarget getVariable ["name","?"]})]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _sqGrpP);
+					if (({isPlayer _x} count (units _sqGrpP)) == 0) then {deleteGroup _sqGrpP};
+				};
+				diag_log format ["GUERQRF|v1|DESPAWN|target=%1|reason=%2|alive=%3", (if (isNull _sqTarget) then {"?"} else {_sqTarget getVariable ["name","?"]}), _sqReason, count _keptSiegeQrfs];
+			} else {
+				_keptSiegeQrfs = _keptSiegeQrfs + [[_sqTarget, _sqSource, _sqGrpP, _sqSpawn, _sqArrived]];
+			};
+		} forEach _siegeQrfs;
+		_siegeQrfs = _keptSiegeQrfs;
+	};
+
 	private ["_enemyAirVehicles"];
 	_enemyAirVehicles = [];
 	//--- A match-long wreck list makes `vehicles` an unbounded input after #1471 deliberately
@@ -568,7 +699,7 @@ while {!WFBE_GameOver} do {
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
-		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfRadius","_diag"];
+		private ["_town","_pos","_enemies","_enemiesWest","_enemiesEast","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfRadius","_diag","_iffTag","_nearFoes","_dqStreak","_dqTargetHasQrf","_dqAttackerForce","_dqCandidates","_dqSource","_dqGrp","_dqPool","_dqTemplate","_dqBuilt","_dqUnit","_dqDiag","_dqPos"];
 		_town = _x;
 
 		//--- E3: a GUER-held town under a genuine ground attack gets one edge-of-town defender
@@ -619,6 +750,91 @@ while {!WFBE_GameOver} do {
 			};
 		};
 
+		//--- W807E-L17: siege-triggered GUER ground QRF (reinforce a besieged GUER town from a
+		//--- neighboring GUER-held town). Distinct from the E3 GROUND QRF just above: this triggers
+		//--- off the CAPGATE mode2 sustained-siege streak (server_town.sqf wfbe_capgate_siege_streak,
+		//--- already published per-town - see the constants-read header note above), not raw real-time
+		//--- presence.
+		if (_siegeQrfEnable > 0
+			&& {!(isNull _town)}
+			&& {(_town getVariable ["sideID", -1]) == WFBE_C_GUER_ID}
+			&& {_town getVariable ["wfbe_active", false]}
+			&& {(count _siegeQrfs) < _siegeQrfMaxConcurrent}
+			&& {_now >= ((_town getVariable ["wfbe_guer_qrf_last", -999999]) + _siegeQrfCooldown)}) then {
+
+			_dqStreak = _town getVariable ["wfbe_capgate_siege_streak", 0];
+			_dqTargetHasQrf = false;
+			{if ((_x select 0) == _town) then {_dqTargetHasQrf = true}} forEach _siegeQrfs;
+
+			if (_dqStreak >= _siegeQrfThreshold && {!_dqTargetHasQrf}) then {
+				_dqAttackerForce = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+
+				if (_dqAttackerForce > _siegeQrfMaxForce) then {
+					diag_log format ["GUERQRF|v1|DENY|target=%1|reason=overwhelming|streak=%2|attackerForce=%3|maxForce=%4", (_town getVariable ["name","?"]), _dqStreak, _dqAttackerForce, _siegeQrfMaxForce];
+				} else {
+					if ((random 1) < _siegeQrfChance) then {
+						//--- Candidate source towns: GUER-held, active, not this town, within max distance,
+						//--- itself clear of west/east presence (spare-strength proxy - see the constants-read
+						//--- header note: no persistent garrison-headcount tracking exists in this codebase),
+						//--- and not already the source of another live siege QRF.
+						_dqCandidates = [];
+						{
+							private ["_dqC","_dqCAlreadySource","_dqCEnemies"];
+							_dqC = _x;
+							if (!isNull _dqC && {_dqC != _town} && {(_dqC getVariable ["sideID", -1]) == WFBE_C_GUER_ID} && {_dqC getVariable ["wfbe_active", false]} && {(_dqC distance _town) <= _siegeQrfMaxDist}) then {
+								_dqCAlreadySource = false;
+								{if ((_x select 1) == _dqC) then {_dqCAlreadySource = true}} forEach _siegeQrfs;
+								if (!_dqCAlreadySource) then {
+									_dqCEnemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _dqC) nearEntities [["Man","LandVehicle","Air","Ship"], ((_dqC getVariable ["range", 600]) max 600)]);
+									if (_dqCEnemies <= _siegeQrfSourceMaxEnemies) then {_dqCandidates set [count _dqCandidates, _dqC]};
+								};
+							};
+						} forEach towns;
+
+						_dqSource = [_town, _dqCandidates] Call WFBE_CO_FNC_GetClosestEntity;
+
+						if (isNull _dqSource) then {
+							diag_log format ["GUERQRF|v1|DENY|target=%1|reason=no_source|streak=%2", (_town getVariable ["name","?"]), _dqStreak];
+						} else {
+							_dqPool = missionNamespace getVariable ["WFBE_GUERRESTEAMTEMPLATES", []];
+							if (typeName _dqPool == "ARRAY" && {(count _dqPool) > 0}) then {
+								_dqTemplate = _dqPool select floor (random count _dqPool);
+								if (typeName _dqTemplate == "ARRAY" && {(count _dqTemplate) > 0}) then {
+									_dqPos = ([getPos _dqSource, 30, 150] Call WFBE_CO_FNC_GetRandomPosition);
+									_dqPos = [_dqPos, 30] Call WFBE_CO_FNC_GetEmptyPosition;
+									_dqGrp = [resistance, "guer-siege-qrf"] Call WFBE_CO_FNC_CreateGroup;
+									_dqBuilt = 0;
+									if (!isNull _dqGrp) then {
+										{if (!isNil "_x" && {typeName _x == "STRING"}) then {
+											_dqUnit = [_x, _dqGrp, _dqPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+											if (!isNull _dqUnit) then {
+												_dqUnit setVariable ["WFBE_IsTownDefenderAI", true, true];
+												_dqBuilt = _dqBuilt + 1;
+											};
+										}} forEach _dqTemplate;
+										if (_dqBuilt > 0) then {
+											_dqGrp setBehaviour "AWARE";
+											_dqGrp setCombatMode "RED";
+											_dqGrp setSpeedMode "FULL";
+											[_dqGrp, getPos _town, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple;
+											_siegeQrfs = _siegeQrfs + [[_town, _dqSource, _dqGrp, time, false]];
+											_town setVariable ["wfbe_guer_qrf_last", time, false];
+											_dqDiag = format ["GUERQRF|v1|DISPATCH|target=%1|source=%2|units=%3|streak=%4|attackerForce=%5|alive=%6", (_town getVariable ["name","?"]), (_dqSource getVariable ["name","?"]), _dqBuilt, _dqStreak, _dqAttackerForce, count _siegeQrfs];
+											diag_log _dqDiag;
+										} else {
+											{if (!(isPlayer _x)) then {["guerqrf-buildfail", _x, Format ["target=%1", (_town getVariable ["name","?"])]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _dqGrp);
+											deleteGroup _dqGrp;
+											diag_log format ["GUERQRF|v1|DENY|target=%1|reason=build_failed|streak=%2", (_town getVariable ["name","?"]), _dqStreak];
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+
 		if (_aliveCount < _maxAir
 			&& {!(isNull _town)}
 			&& {(_town getVariable ["sideID", -1]) == WFBE_C_GUER_ID}
@@ -639,7 +855,10 @@ while {!WFBE_GameOver} do {
 			//--- the threat ends - this is the symmetric spawn half. 0 = legacy always-spawn.
 			&& {((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) <= 0)
 				|| {
-					_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+					_nearFoes = (getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)];
+					_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count _nearFoes;
+					_enemiesWest = {alive _x && {(side _x) == west}} count _nearFoes;
+					_enemiesEast = {alive _x && {(side _x) == east}} count _nearFoes;
 					_enemies > 0
 				}}) then {
 
@@ -648,7 +867,10 @@ while {!WFBE_GameOver} do {
 			//--- Enemies near the town (west + east, GUER's foes).
 			//--- fix(hunt): nearEntities "Man" returns only DISMOUNTED infantry - fully mounted assaults were invisible (defenders recalled as "quiet" mid-attack, paradrop/Mi-24 response never triggered). Include vehicle hulls: a crewed hull carries its crew's side; empty hulls resolve CIVILIAN and stay filtered by the side check.
 			if (!((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) > 0)) then {
-				_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+				_nearFoes = (getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)];
+				_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count _nearFoes;
+				_enemiesWest = {alive _x && {(side _x) == west}} count _nearFoes;
+				_enemiesEast = {alive _x && {(side _x) == east}} count _nearFoes;
 			};
 
 			//--- Enemy AIR near the town (crewed west/east aircraft) - use the one bounded live-air
@@ -705,7 +927,20 @@ while {!WFBE_GameOver} do {
 			//--- The paradrop variant normally uses the DEFAULT Ka-137 (drone recon-MG airframe).
 			//--- E5: once late-game air scaling begins, the dark-gated delivery bird is the registered
 			//--- crewed UH-1H; the existing pilot/gunner seat receipt and airdef lifecycle remain in force.
-			_class = if (_useMi24) then {_classMi24} else {_classKa};
+			_iffTag = "n/a";
+			if (_useMi24) then {
+				if (_iffAware >= 1 && {_enemiesEast > _enemiesWest}) then {
+					_class = _classMi24VsEast; _iffTag = "vseast";
+				} else {
+					if (_iffAware >= 1 && {_enemiesWest > _enemiesEast}) then {
+						_class = _classMi24VsWest; _iffTag = "vswest";
+					} else {
+						_class = _classMi24; _iffTag = "default";
+					};
+				};
+			} else {
+				_class = _classKa;
+			};
 			if (_useDrop && {(missionNamespace getVariable ["WFBE_C_GUER_HUEY_QRF", 0]) > 0} && {(time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45])}) then {_class = "UH1H_TK_GUE_EP1"};
 
 			//--- Spawn the airframe airborne, a short way off the town so it flies in (FLY special, like W13).
@@ -935,6 +1170,10 @@ while {!WFBE_GameOver} do {
 								_drops     = _drops + [[_town, _dropGrp, time, time]];
 								_dropAlive = _dropAlive + 1;
 								_registered = true;
+								//--- fix0807e (chute-occupant-teardown): stamp NOT-landed synchronously, in this main thread,
+								//--- before the sub-thread below is even Spawned - so the prune-pass defer guard above can never
+								//--- observe a torn (unset) flag for a freshly-registered drop.
+								_dropGrp setVariable ["wfbe_guer_drop_landed", false];
 
 								[_town, _pos, _dropGrp, _dropRoster, _dropCount, _dropChute, _flyHeight] Spawn {
 									private ["_t","_tPos","_g","_roster","_count","_chuteModel","_baseH","_type","_ux","_uy","_uz","_uPos","_u","_chute","_wtr","_built","_ctr","_chutes","_pair","_cu","_cc"];
@@ -1016,11 +1255,47 @@ while {!WFBE_GameOver} do {
 									};
 
 									//--- Phase 3: dismount + clean every chute (leave the troopers on the ground).
+									//--- fix0807e (chute-occupant-teardown): "_cu action ['getOut', _cc]" only QUEUES
+									//--- the disembark - it is not synchronous. Live RPT evidence (VEHDEL|v1|reason=
+									//--- guerairdef-L621|alive=true|crew=[GUE_Soldier_AR/p:false]) showed the
+									//--- immediate deleteVehicle that used to follow firing while _cu was STILL
+									//--- seated, yanking the chute out from under a live trooper -> the owner-reported
+									//--- "paratroopers falling without parachutes." Bounded poll (<=5s @ 0.25s) for the
+									//--- seat to actually clear (vehicle _cu != _cc) before the chute is torn down.
+									//--- B66 doctrine: never touch a player-occupied chute (should be impossible here -
+									//--- script-spawned GUER AI only - guarded anyway). If a live non-player is
+									//--- somehow STILL seated after the bounded wait, skip only THIS chute's delete
+									//--- (not wfbe_persistent, no cleanup debt) and log a loud CHUTEGUARD tripwire so a
+									//--- regression is visible in soak grading, instead of risking an occupied delete.
 									{
+										private ["_cwtr"];
 										_cu = _x select 0; _cc = _x select 1;
-										if (!isNull _cu && {alive _cu} && {!isNull _cc}) then { _cu action ["getOut", _cc]; };
-										if (!isNull _cc) then { ["guerairdef-L621", _cc, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _cc; };
+										if (!isNull _cu && {isPlayer _cu}) then {
+											diag_log format ["GUERAIRDEF|CHUTEGUARD|reason=player-occupant|chute=%1|unit=%2", _cc, _cu];
+										} else {
+											if (!isNull _cu && {alive _cu} && {!isNull _cc}) then { _cu action ["getOut", _cc]; };
+											if (!isNull _cc && {!isNull _cu} && {alive _cu}) then {
+												_cwtr = 0;
+												waitUntil {
+													sleep 0.25;
+													_cwtr = _cwtr + 1;
+													(isNull _cu) || {!(alive _cu)} || {(vehicle _cu) != _cc} || {_cwtr >= 20}
+												};
+											};
+											if (!isNull _cc) then {
+												if (!isNull _cu && {alive _cu} && {(vehicle _cu) == _cc}) then {
+													diag_log format ["GUERAIRDEF|CHUTEGUARD|reason=getout-timeout|chute=%1|unit=%2", _cc, _cu];
+												} else {
+													["guerairdef-L621", _cc, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _cc;
+												};
+											};
+										};
 									} forEach _chutes;
+									//--- fix0807e: stamp landed AFTER every chute in the stick has been fully processed
+									//--- above (deleted or guarded), so the main maintain-loop prune pass (L302) never
+									//--- sees this squad as safe-to-recall while any trooper could still be mid-descent
+									//--- (or mid the bounded getOut wait just above).
+									_g setVariable ["wfbe_guer_drop_landed", true];
 
 									//--- Order the landed squad to hold/defend the town: patrol first (it re-sets AWARE/YELLOW),
 									//--- then stamp COMBAT/RED last so they actually engage the attackers (same order fix as the air).
@@ -1040,7 +1315,7 @@ while {!WFBE_GameOver} do {
 							};
 						};
 
-						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|drop=%5|enemies=%6|enemyAir=%7|large=%8|alive=%9|dropsAlive=%10", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _useDrop, _enemies, _enemyAir, _isLarge, _aliveCount, _dropAlive];
+						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|drop=%5|enemies=%6|enemyAir=%7|large=%8|alive=%9|dropsAlive=%10|iff=%11", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _useDrop, _enemies, _enemyAir, _isLarge, _aliveCount, _dropAlive, _iffTag];
 						};
 					} else {
 						//--- No pilot: tear down the empty hull + group so nothing leaks.

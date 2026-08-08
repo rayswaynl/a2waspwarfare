@@ -14,8 +14,8 @@ switch (_localize) do {
 	case "BaseFallSting": { playSound "inbound"; _commandChat = false; }; //--- B69 S6: HQ-fall server-wide audible sting (sound only, no chat text). Companion to the Server_OnHQKilled.sqf SendToClients broadcast. "inbound" is a registered CfgSounds class (also used by CampCaptured/Common_HandleAlarm).
 	case "FirstBlood": { playSound "newCommander"; _txt = Format ["FIRST BLOOD!  %1 drew first blood on %2  (+%3 funds).", _this select 1, _this select 2, _this select 3]; if (!isNil "TitleTextMessage") then {[Format ["FIRST BLOOD!  %1 vs %2", _this select 1, _this select 2], "PLAIN DOWN"] Call TitleTextMessage}; }; //--- esports first-kill flourish (server broadcasts once/match from RequestOnUnitKilled.sqf); newCommander = registered CfgSounds; command-chat line + center-screen sting.
 	case "BuildingTeamkill": {_txt = Format [Localize "STR_WF_CHAT_Teamkill_Building",_this select 1, _this select 2, [_this select 3, 'displayName'] Call GetConfigInfo]};
-    case "AttackModeActivated": {_txt = Format ["Commander has activated heavy attack mode! You get %1 %2 discount from all units for the next %3 minutes!", (100 - floor (_this select 1)), "%", _this select 2]; playSound "attackMode";};
-    case "AttackModeActiveJIP": {_txt = Format ["Your team is currently in heavy attack mode! Buy units with discount before the time runs out!"]; playSound "attackMode";};
+    case "AttackModeActivated": {_txt = Format ["Commander has activated heavy attack mode! You get a %1%2 discount on all units for the next %3 minutes!", (100 - floor (_this select 1)), "%", _this select 2]; playSound "attackMode";};
+    case "AttackModeActiveJIP": {_txt = Format ["Your team is currently in heavy attack mode! Buy units at a discount before the time runs out!"]; playSound "attackMode";};
     case "AttackModeEnd": {_txt = format ["Your team's attack mode has ended."];};
 	case "Teamswap": {_txt = Format [Localize "STR_WF_CHAT_Teamswap",_this select 3, _this select 4]};
 	case "Teamstack": 
@@ -137,7 +137,7 @@ switch (_localize) do {
 
         if ((name player) == _killer_name) then
         {
-            _txt = format ["You cleared a Guerrilla FOB (%1) and earned %2!", ([_structure_kind, "displayName"] call GetConfigInfo), _bounty];
+            _txt = format ["You cleared a Guerrilla FOB (%1) and earned $%2!", ([_structure_kind, "displayName"] call GetConfigInfo), _bounty];
             //--- J1 funds authority: credit moved server-side (Server_BuildingKilled.sqf).
             _commandChat = false;
         }

@@ -131,9 +131,9 @@ player createDiaryRecord [_subAdvanced, ["Class Guide",
 	"Class tags (SOL/SPEC/MED/ENG/SNI) appear on the map."
 ]];
 
-player createDiaryRecord [_subAdvanced, ["Patrols, Convoys & Queues",
-	"<br/><t size='1.2' color='#F5D363'>Patrols and Convoys</t><br/>" +
-	"The commander can research the Patrols upgrade (4 levels - supply 300 / 1,600 / 2,400 / 3,200). Patrols spawn near your HQ and push toward the frontline, capturing towns as they go (max 2 active per side). <t color='#F5D363'>Level 4 Convoys</t> add a supply truck to each patrol that pays your whole team $750, split equally, at every town stop. Each active patrol lowers every player's max AI by 1.<br/><br/>" +
+player createDiaryRecord [_subAdvanced, ["Patrols & Queues",
+	"<br/><t size='1.2' color='#F5D363'>Patrols</t><br/>" +
+	"The commander can research the Patrols upgrade (4 levels - supply 350 / 1,400 / 2,800 / 5,000). Patrols spawn near your HQ and push toward the frontline, capturing towns as they go (up to 3 active per side). From level 3, a patrol calls in an <t color='#F5D363'>off-map air strike</t> pass whenever it reaches its objective town - level 4 sends a pair. Researching Patrols (any level) costs each player 1 max AI slot.<br/><br/>" +
 	"<t size='1.2' color='#F5D363'>Factory Queue (N/CAP)</t><br/>" +
 	"The buy menu shows queue depth as <t color='#F5D363'>N/CAP</t>. Caps scale with factory level (Barracks min 10, Light 5, Heavy/Air 3). Cancel the last queued order for a refund (capped at 50% if a discount was applied).<br/><br/>" +
 	"<t size='1.2' color='#F5D363'>Medic Redeployment Truck</t><br/>" +

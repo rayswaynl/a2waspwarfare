@@ -393,7 +393,7 @@ class WFBE_RespawnMenu {
 			ShowCountourInterval = 1;
 			
 			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)";
-			onMouseButtonDown = "mouseButtonDown = _this select 1;";
+			onMouseButtonDown = "mouseX = (_this select 2);mouseY = (_this select 3);mouseButtonDown = _this select 1;";
 			onMouseButtonUp = "mouseButtonUp = _this select 1;";
 		};
 		class CA_RespawnDetails : RscStructuredText {
@@ -1707,7 +1707,7 @@ class RscMenu_TeamV2 {
 			x = 0.192941;
 			y = 0.206879;
 			w = 0.3;
-			text = "Team Menu V2";
+			text = "Team Menu";
 		};
 		class CA_IC_SubTitle : RscText_SubTitle {
 			idc = 13010;
@@ -3170,7 +3170,7 @@ class RscMenu_Command {
 			w = 0.224000;
 			text = "DISBAND SELECTED";
 			action = "MenuAction = 746";
-			tooltip = "Stand down ONLY the highlighted team (player-safe: deletes it where no player is near + not in combat). Click twice to confirm.";
+			tooltip = "Stand down ONLY the highlighted team. Executes immediately, even near players or in combat - vehicles explode, infantry drop grenades. Click twice to confirm.";
 			colorBackground[] = {0.45, 0.05, 0.1, 0.85};
 			colorBackgroundActive[] = {0.7, 0.1, 0.15, 1};
 		};
@@ -3906,7 +3906,7 @@ class RscMenu_Service {
 			x = 0.50748;
 			y = 0.767311;
 			w = 0.331764;
-			text = "Loadout (EASA)";
+			text = "EASA Loadout";
 			action = "MenuAction = 7";
 		};
 		/* Back */

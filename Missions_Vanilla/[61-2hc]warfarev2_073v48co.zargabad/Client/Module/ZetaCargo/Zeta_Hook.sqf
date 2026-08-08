@@ -22,8 +22,8 @@ if (count _vehicles < 1) exitWith {};
 
 _vehicle = [_lifter,_vehicles] Call WFBE_CO_FNC_GetClosestEntity;
 
-if ((typeOf _vehicle in _ehq) && (!(alive _vehicle)) && (side _caller == WEST)) exitWith {hint "You can't airlift ennemy HQ wreck because someone thought it was a bit too much"};
-if ((typeOf _vehicle in _whq) && (!(alive _vehicle)) && (side _caller == EAST)) exitWith {hint "You can't airlift ennemy HQ wreck because someone thought it was a bit too much"};
+if ((typeOf _vehicle in _ehq) && (!(alive _vehicle)) && (side _caller == WEST)) exitWith {hint "You can't airlift the enemy HQ wreck."};
+if ((typeOf _vehicle in _whq) && (!(alive _vehicle)) && (side _caller == EAST)) exitWith {hint "You can't airlift the enemy HQ wreck."};
 _type = typeOf _lifter;
 _position = Zeta_DefaultPos;
 _index = Zeta_Special find _type;

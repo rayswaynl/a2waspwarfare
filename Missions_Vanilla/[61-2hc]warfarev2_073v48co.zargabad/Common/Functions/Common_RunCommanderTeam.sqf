@@ -3134,6 +3134,8 @@ while {!WFBE_GameOver && _alive} do {
 								//--- town centre, flag which town it is holding, clear stale strike/relief, and
 								//--- do NOT null the goto (so AssignTowns' holder-skip keeps it here).
 								_townObj setVariable ["wfbe_aicom_hold_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180]), true];
+								//--- Owner token lets team-end release only its own town hold.
+								_townObj setVariable ["wfbe_aicom_hold_team", _team, true];
 								[_team, "defense"] Call SetTeamMoveMode;               //--- broadcast wfbe_teammode "defense"
 								[_team, getPos _townObj] Call SetTeamMovePos;          //--- broadcast wfbe_teamgoto = town centre (goto NOT nulled)
 								//--- r37 post-capture hold: HC driver ignores teammode/teamgoto - dual-write defense order
@@ -3293,6 +3295,8 @@ while {!WFBE_GameOver && _alive} do {
 							if ((_townObj getVariable ["wfbe_active", false]) && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _townObj) nearEntities [["Man","LandVehicle","Air"], _armHoldEnemyDist])) > 0}) then {_armHoldUnderAttack = true};
 							if (_armHoldMode > 0 && {time > _armHoldUntil} && {((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0) || {_armHoldUnderAttack}}) then {
 								_townObj setVariable ["wfbe_aicom_hold_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180]), true];
+								//--- Owner token lets team-end release only its own town hold.
+								_townObj setVariable ["wfbe_aicom_hold_team", _team, true];
 								[_team, "defense"] Call SetTeamMoveMode;
 								[_team, getPos _townObj] Call SetTeamMovePos;
 								if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {

@@ -71,6 +71,33 @@ WFBE_CO_FNC_CommanderLeaseHolderPresent = {
     _present
 };
 
+//--- fix0807e (commander-elected announce dedup): both a real assignment (vote/claim/grant/AI
+//--- hand-back, via Server_AssignNewCommander.sqf) and a lease RECLAIM (ExecReclaim below,
+//--- which fires on every single respawn/reconnect of the SAME sitting commander - its own
+//--- precondition requires the reclaimed uid+team to already match the current lease, i.e. the
+//--- identity never actually changed) broadcast the new-commander-assigned event to the WHOLE side.
+//--- Without this guard the elected-commander title/chat pops for everyone on every death+
+//--- respawn even though nobody new took the seat. Compare against the last identity actually
+//--- announced (server-local bookkeeping only - never a public/networked var) and broadcast
+//--- only when it differs. Touches announce only; election/eligibility/lease writes unchanged.
+WFBE_CO_FNC_CommanderAnnounceIfChanged = {
+    //--- params: [side, sideLogic, commanderTeam-or-objNull].
+    Private ["_side","_logic","_commander","_key","_last"];
+    _side = _this select 0;
+    _logic = _this select 1;
+    _commander = _this select 2;
+
+    _key = "AI";
+    if !(isNull _commander) then {_key = Format ["%1|%2", getPlayerUID (leader _commander), str _commander]};
+
+    _last = _logic getVariable "wfbe_commander_announced_key"; if (isNil "_last") then {_last = ""};
+
+    if (_key != _last) then {
+        _logic setVariable ["wfbe_commander_announced_key", _key]; //--- local only, never public
+        [_side, "HandleSpecial", ["new-commander-assigned", _commander]] Call WFBE_CO_FNC_SendToClients;
+    };
+};
+
 //--- ENQUEUE-ONLY entry points (safe to Call from any server-side file). None of these mutate
 //--- wfbe_commander / wfbe_commander_lease / wfbe_commander_lease_gen - they only stamp a
 //--- per-kind command slot for the executor to consume.
@@ -200,7 +227,7 @@ WFBE_CO_FNC_CommanderLeaseExecReclaim = {
     _logic setVariable ["wfbe_commander_lease_expires", nil];
     _logic setVariable ["wfbe_commander_lease", [_uid, _side, str _team, time, "reclaim", _gen]];
     _logic setVariable ["wfbe_commander", _team, true];
-    [_side, "HandleSpecial", ["new-commander-assigned", _team]] Call WFBE_CO_FNC_SendToClients;
+    [_side, _logic, _team] Call WFBE_CO_FNC_CommanderAnnounceIfChanged; //--- fix0807e: dedup identical-identity reclaim announce
 };
 
 WFBE_CO_FNC_CommanderLeaseExecStandDown = {

@@ -2070,7 +2070,7 @@ if (isNil "WFBE_C_AICOM_WATER_LEG_GATE") then {WFBE_C_AICOM_WATER_LEG_GATE = 1};
 	if (isNil "WFBE_C_TOWNS_STARTING_MODE") then {WFBE_C_TOWNS_STARTING_MODE = 0}; //--- Town starting mode (0: Resistance, 1: 50% blu, 50% red, 2: Nearby Towns, 3: Random).
 	if (isNil "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") then {WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = 1}; //--- Lock the vehicles of the defender side.
 	if (isNil "WFBE_C_TOWNS_CAPTURE_BAR_DETAIL") then {WFBE_C_TOWNS_CAPTURE_BAR_DETAIL = 0}; //--- Lane 52: 1 adds SV trend, mode-2 Camps X/Y, and camp SV text to the client capture bar; 0 keeps the legacy label.
-	if (isNil "WFBE_C_TOWN_FLIP_BROADCAST") then {WFBE_C_TOWN_FLIP_BROADCAST = 1}; //--- ARMED (owner ruling 2026-07-21: everything flags on). Client-only enemy town-flip title/chat; marker recolor is always applied regardless.
+	if (isNil "WFBE_C_TOWN_FLIP_BROADCAST") then {WFBE_C_TOWN_FLIP_BROADCAST = 0}; //--- DISARMED on owner order 2026-08-08 (supersedes the 2026-07-21 blanket everything-on ruling): owner reported enemy captures leaking to uninvolved sides as side-sensitive intel (West has captured X shown to an EAST player). 0 restores the TownCaptured.sqf side filter: title/chat only when the client side is the old or new owner (GUER always informed - the insurgency knows its towns). Marker recolor for the OWNING side is applied regardless of this flag.
 
 	//--- Air units.
 	if (isNil "WFBE_C_JET_AA_SURVIVE") then {WFBE_C_JET_AA_SURVIVE = 1}; //--- Jets survive the 1st SPAAG (Tunguska/Linebacker) hit: fuel drained + slight damage for a landing attempt; a 2nd hit explodes. 0 disables.
@@ -3970,6 +3970,46 @@ if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME") then {WFBE_C_AICOM_ENDGAME_T
 if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN") then {WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN = 0};
 if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK = 0};
 if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST = 0};
+
+//--- fix0807e (chute-occupant-teardown, Server_GuerAirDef.sqf) BEGIN - keep this block intact/together
+//--- at fold time if a concurrent lane's own append lands nearby; do not interleave.
+if (isNil "WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING") then {WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING = 240}; //--- hard ceiling (seconds since drop registration) after which the drop-prune defer guard gives up waiting for wfbe_guer_drop_landed and lets a non-"wiped" recall through anyway; generous over the ~97s worst-case paradrop descent so it never fires in normal play.
+//--- fix0807e END
+
+//--- fix0807e (Mi-24 IFF-aware airframe selection, Server_GuerAirDef.sqf) BEGIN - owner-approved
+//--- same-lane addition 2026-08-08 - keep this block intact/together at fold time if a concurrent
+//--- lane's own append lands nearby; do not interleave.
+if (isNil "WFBE_C_GUER_AIRDEF_IFF_AWARE") then {WFBE_C_GUER_AIRDEF_IFF_AWARE = 1}; //--- master switch: pick the Mi-24 airframe by dominant attacker side so it never radar-spoofs FRIENDLY to the side actually attacking it (A2 pre-identification colors by the airframe's own CfgVehicles side). 0 restores the single-class WFBE_C_GUER_AIRDEF_CLASS_MI24 behaviour.
+if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24_VSWEST") then {WFBE_C_GUER_AIRDEF_CLASS_MI24_VSWEST = "Mi24_P"}; //--- airframe when the detected attackers are WEST (EAST-config hull so it reads hostile to them); unchanged from today's single-class default.
+if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24_VSEAST") then {WFBE_C_GUER_AIRDEF_CLASS_MI24_VSEAST = "Mi24_D_CZ_ACR"}; //--- airframe when the detected attackers are EAST (WEST-config ACR hull so it reads hostile to them); already spawned/rostered elsewhere in this repo (Core_ACR.sqf, EASA_Init.sqf, Common_BalanceInit.sqf, Units_CO_US.sqf/Units_USMC.sqf) - no new/unverified classname.
+//--- fix0807e END
+//--- w807e-L17 (owner-approved 2026-08-08, feature pair: early-game GUER defense). Both flag-gated,
+//--- defaults ARMED per repo flag policy (owner: we go with these); rollback = set the *_MULT to 1.0
+//--- / the *_ENABLE flags to 0 (documented in the PR body).
+//---
+//--- (1) Early-window GUER patrol density boost - read in Server/FSM/server_side_patrols.sqf.
+//--- Time-decaying multiplier on the GUER-only concurrent side-patrol cap + spawn cadence for the
+//--- first EARLY_WINDOW seconds of a mission, linearly tapering to 1.0 (baseline). Telemetry:
+//--- PATROLBOOST|v1| lines from the same file.
+if (isNil "WFBE_C_GUER_PATROL_EARLY_ENABLE") then {WFBE_C_GUER_PATROL_EARLY_ENABLE = 1};
+if (isNil "WFBE_C_GUER_PATROL_EARLY_MULT") then {WFBE_C_GUER_PATROL_EARLY_MULT = 2.0};
+if (isNil "WFBE_C_GUER_PATROL_EARLY_WINDOW") then {WFBE_C_GUER_PATROL_EARLY_WINDOW = 3600};
+//---
+//--- (2) Siege-triggered GUER ground QRF - read in Server/Server_GuerAirDef.sqf. Reinforces a
+//--- besieged GUER town from a neighboring GUER-held town, gated on the CAPGATE mode2 sustained-
+//--- siege streak (server_town.sqf wfbe_capgate_siege_streak). Distinct from the pre-existing
+//--- WFBE_C_GUER_GROUND_QRF (E3) feature above - see Server_GuerAirDef.sqf for the design note.
+//--- Telemetry: GUERQRF|v1|DISPATCH/ARRIVE/DENY lines from the same file.
+if (isNil "WFBE_C_GUER_QRF_ENABLE") then {WFBE_C_GUER_QRF_ENABLE = 1};
+if (isNil "WFBE_C_GUER_QRF_CHANCE") then {WFBE_C_GUER_QRF_CHANCE = 0.3};
+if (isNil "WFBE_C_GUER_QRF_SIEGE_THRESHOLD") then {WFBE_C_GUER_QRF_SIEGE_THRESHOLD = 6};
+if (isNil "WFBE_C_GUER_QRF_COOLDOWN") then {WFBE_C_GUER_QRF_COOLDOWN = 300};
+if (isNil "WFBE_C_GUER_QRF_MAX_ATTACKER_FORCE") then {WFBE_C_GUER_QRF_MAX_ATTACKER_FORCE = 16};
+if (isNil "WFBE_C_GUER_QRF_MAX_SOURCE_DIST") then {WFBE_C_GUER_QRF_MAX_SOURCE_DIST = 3000};
+if (isNil "WFBE_C_GUER_QRF_SOURCE_MAX_ENEMIES") then {WFBE_C_GUER_QRF_SOURCE_MAX_ENEMIES = 0};
+if (isNil "WFBE_C_GUER_QRF_MAX_CONCURRENT") then {WFBE_C_GUER_QRF_MAX_CONCURRENT = 2};
+if (isNil "WFBE_C_GUER_QRF_LIFETIME") then {WFBE_C_GUER_QRF_LIFETIME = 600};
+if (isNil "WFBE_C_GUER_QRF_ARRIVE_DIST") then {WFBE_C_GUER_QRF_ARRIVE_DIST = 150};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

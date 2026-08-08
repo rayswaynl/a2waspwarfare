@@ -165,7 +165,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_DESCRIPTIONS"], [
 	localize 'STR_WF_UPGRADE_AntiAirRadar_Desc',
 	localize 'STR_WF_UPGRADE_UnitCost_Desc',
 	localize 'STR_WF_UPGRADE_CBRadar_Desc',
-	"Fields autonomous side patrols (max 3 active per side) that spawn near your HQ and push toward the frontline, capturing towns as they go. Cheap to start — worth rushing early.<br /><br />Level 1: light infantry patrol.<br />Level 2: motorised patrol (requires Light Factory level 1).<br />Level 3: armoured patrol (requires Light Factory level 1) — completing it pays your team a <t color='#F5D363'>cash bonus</t>.<br />Level 4: Convoys (requires Heavy Factory level 1) — grants your side a <t color='#F5D363'>supply bonus</t> on completion, and each patrol fields a supply truck that pays your team <t color='#F5D363'>$750 split equally</t> at every town stop.<br /><br />Patrol equipment scales with your side's tech level. Each active patrol reduces every player's max AI by 1."
+	"Fields autonomous side patrols (max 3 active per side) that spawn near your HQ and push toward the frontline, capturing towns as they go. Cheap to start — worth rushing early.<br /><br />Level 1: light infantry patrol.<br />Level 2: motorised patrol (requires Light Factory level 1).<br />Level 3: armoured patrol (requires Light Factory level 1) — unlocks an <t color='#F5D363'>off-map air support pass</t> on arrival at a target town.<br />Level 4: Convoys (requires Heavy Factory level 1) — doubles that support to a <t color='#F5D363'>pair of air passes</t> per arrival.<br /><br />Patrol equipment scales with your side's tech level. Researching Patrols (any level) costs each player 1 max AI slot."
 ]];
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_IMAGES"], [

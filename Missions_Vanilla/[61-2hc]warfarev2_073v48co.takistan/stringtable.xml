@@ -112,7 +112,7 @@
         <Russian>Прочее</Russian>
       </Key>
 	<Key ID="STR_Supplies_2">
-        <English>&lt;br/&gt;Each captured town has an Actual and Potential Value. On the map you will see this represented as 2 numbers seperated by a / for example; Zelenogorsk, once captured will start as 30/120. This means that the current supplies to each player from this town is $30 per minute. Each time a supply truck arrives at the town depot its value will increase by 10. Remember though, the supply truck must be either fully loaded from the HQ or a Supply point or, have come from a town with a higher actual value. if you drive the truck to base yourself you will also earn cash equal to the supply value delivered (with a +25% bonus for helicopter delivery). Supply runs should be the responsibility of all. The best way to win Warfare is to work together capping and then supping up the town before moving to another.</English>
+        <English>&lt;br/&gt;Supply missions have replaced the old town-depot delivery loop. Pick up cargo at any friendly town marked [+SUPPLY] on the map (SpecOps sees the SUPPLY label; other classes see a plain + after the town's SV once cargo is ready), then fly or drive it to your Command Center (CC) to unload. Completing a delivery pays out and posts a message in group chat; flying it in by helicopter pays a bonus. Supply runs should be the responsibility of all - the best way to win Warfare is to work together capturing towns and keeping the supply chain moving.</English>
         <Russian>&lt;br/&gt;Возрождение&lt;br/&gt;&lt;br/&gt;Если вас убили, вы можете возродиться в следующих местах:&lt;br/&gt;1. На КШМ.&lt;br/&gt;2. На любом строении любой вашей базы.&lt;br/&gt;3. На любом доступном маленьком бункере, захваченном вашей командой в том селении, где вас убили.&lt;br/&gt;4. На палатке, установленной соответствующим игроком-слотом (если она включена в настройках игры).&lt;br/&gt;5. На медицинской машине (если она имеется в данной версии игры и включена как место возрождения в настройках сервера).&lt;br/&gt;&lt;br/&gt;Для этого просто нужно выбрать соответствующее место возрождения, нажав по нему левой кнопкой мыши в течение времени, установленного для возрождения (обычно 20 секунд). Если не выбрали, возродитесь на КШМ.&lt;br/&gt;Часто для оперативного реагирования на угрозы команде в целом или по другим причинам бывает целесообразно специально "умирать и возрождаться" в нужном месте, даже на другом конце карты (опции-меню-возрождение).&lt;br/&gt;Поскольку маленькие бункеры в селениях (в малых их 2, а в больших городах - 3) дают возможность возрождаться, то, как правило, основные действия по захвату селений начинаются с попытки сразу захватить любой маленький бункер. Для этого нужно либо забежать в бункер, либо находиться очень близко от него, когда видна полоска "лояльности" этого бункера. Когда из синего или красного полоска вверху экрана станет зелёной, то бункер считается захваченным вами. В нём вы теперь можете покупать любое доступное личное оружие и возрождаться. Возможность возрождения зависит от установок игры и наличия рядом с бункером определённых врагов. Обычно ставится классический режим возрождения на бункерах, который позволяет возродиться на другом захваченном бункере, если вас убили в первом, и рядом с ним теперь находится враг. Обычно такое ограничение по присутствию рядом с бункером врагов действует только в отношении игроков и ботов противоположной команды (присутствие рядом бойцов сопротивления не влияет на возможность возрождения). Также важна дистанция от места вашей гибели до бункера возрождения: если она слишком большая, бункер работать уже не будет (по умолчанию это - 400 метров).&lt;br/&gt;В маленьком бункере через опцию снаряжения можно пополнить как свои боеприпасы, так и ваших солдат, перевооружить себя и ботов. Но для этого нужно заставить войти данного солдата прямо в бункер, что не всегда получается.&lt;br/&gt;&lt;br/&gt;Бункер&lt;br/&gt;&lt;br/&gt;Главный бункер селения (большой) - это центр захвата селения в целом, когда оно и все маленькие бункеры сразу становятся вашими. В главном бункере или непосредственно рядом с ним вы можете:&lt;br/&gt;1. Через опцию поддержки вылечить себя и своих солдат, отремонтировать и перезарядить технику, заправить её.&lt;br/&gt;2. Купить себе гражданскую технику (от велосипеда до грузовика), выбрав её из перечня, доступном после нажатия в опции "отряды" самого правого значка вверху ввиде скрещенных молотка и гаечного ключа.&lt;br/&gt;&lt;br/&gt;Техника&lt;br/&gt;&lt;br/&gt;Обычно через 20 минут пустая ваша техника исчезает. Чтобы не допустить этого, оставляйте в ней вашего солдата (лучше на месте пассажира, чтобы не тратилось горючее и не работал двигатель).&lt;br/&gt;Также исчезать имеет свойство и трофейная техника сопротивления, когда спустя какое-то время вы, уже находясь в другом селении, вдруг вылезли из неё.&lt;br/&gt;В трофейную технику можно посадить только солдат под названием "члены экипажа" (и то не всегда получается), все прочие будут просто выскакивать из неё. При этом трофеная техника должна быть уже до их посадки отремонтирована.&lt;br/&gt;&lt;br/&gt;Классификация слотов&lt;br/&gt;&lt;br/&gt;Большинство слотов игроков имеют свои уникальные дополнительные возможности:&lt;br/&gt;1. Медик - может лечить себя и других.&lt;br/&gt;2. Командир отделения (сапёр у НАТО) - ремонтировать технику (при этом ремонт может быть удачным, восстанавливается практически до целого состояния, или неудачным, в последнем случае техника может двигаться, но на пределе прочности).&lt;br/&gt;3. Командир разведотделения - вскрывает запертую свою и вражескую технику (вскрытие тоже может быть удачным или нет, после неудачного повторение вскрытия этой же техники уже невозможно).&lt;br/&gt;4. Снайпер отличается повышенной скрытностью на местности для ботов.&lt;br/&gt;5. Офицер  - может ставить медицинскую палатку, которая не только лечит, но и выступает в качестве точки возрождения.&lt;br/&gt;6. Разведчик-наблюдатель - даёт точные целеуказания.</Russian>
       </Key>
 	<Key ID="STR_Upgrades">
@@ -186,7 +186,7 @@
         <Russian>Ваше снаряжение сброшено: пользовательское снаряжение отключено (режим 1).</Russian>
       </Key>
       <Key ID="STR_WF_CHAT_Gear_RespawnCharge">
-        <English>You were deducted from $%1 due to your gear</English>
+        <English>You were charged $%1 for your custom gear.</English>
         <Russian>У вас изъято $%1 за ваше снаряжение</Russian>
       </Key>
       <Key ID="STR_WF_CHAT_Gear_CampKept">
@@ -454,7 +454,7 @@
 
 <!--EASA Menu - ALL DONE-->
       <Key ID="STR_WF_EASA">
-        <English>EASA</English>
+        <English>EASA LOADOUT</English>
         <Russian>EASA</Russian>
       </Key>
 
@@ -582,7 +582,7 @@
         <Russian>Информация:\n\n текущее задание отменено.</Russian>
       </Key>
       <Key ID="STR_WF_INFO_NoArty"><!--need rework -0.71-->
-        <English>Information:\n\n You need at last one artillery in order to call a Fire Mission.</English>
+        <English>Information:\n\n You need at least one artillery piece in order to call a Fire Mission.</English>
         <Russian>Информация:\n\n для вызова артиллерии у Вас должна быть хотя бы одна арт. установка.</Russian>
       </Key>
       <Key ID="STR_WF_INFO_Paratroop_Info">
@@ -623,23 +623,7 @@
       </Key>
 
 
-	<Key ID="STR_WF_INFO_Supply_Deliver">
-        <English>Information:\n\n A Supply truck of your team has delivered supplies at %1, the supply value is now %2/%3. $%4. Gained during the delivery.</English>
-        <Russian>Информация:\n\n Грузовик снабжения доставил 1% единиц припасов. Объем припасов %2/%3. $%4 Получено во время доставки.</Russian>
-      </Key>
-      <Key ID="STR_WF_INFO_Supply_Equal">
-        <English>Information:\n\n A Supply truck of your team has delivered supplies at %1, the supply value is %2/%3.</English>
-        <Russian>Информация:\n\n Грузовик снабжения доставил %1 единиц припасов, Объем припасов %2/%3.</Russian>
-      </Key>
-      <Key ID="STR_WF_INFO_Supply_Full">
-        <English>Information:\n\n The Supply truck is fully loaded.</English>
-        <Russian>Информация:\n\n Грузовик снабжения заполнен.</Russian>
-      </Key>
-      <Key ID="STR_WF_INFO_Supply_Status">
-        <English>Information:\n\n The Supply truck has %1 supplies in cargo.</English>
-        <Russian>Информация:\n\n В грузовик снабжения загружено %1 единиц поставки.</Russian>
-      </Key>
-      <Key ID="STR_WF_INFO_Spot_Info"><!--need rework -0.71-->
+	<Key ID="STR_WF_INFO_Spot_Info"><!--need rework -0.71-->
         <English>Information:\n\n Spotting Ability require the use of binoculars.</English>
         <Russian>Информация:\n\n чтобы указать цель используйте бинокль.</Russian>
       </Key>
@@ -1906,7 +1890,7 @@
       </Key>
       <!-- respawn-ui-v2: footer legend (IDC 511005) -->
       <Key ID="STR_WF_RESPAWN_Legend">
-        <English>Click a marker to choose your spawn. Green = safe, amber = contested.</English>
+        <English>Click a marker to choose your spawn. Green = safe, amber = contested. Your squad leader is the triangle marker.</English>
         <Russian>Нажмите на маркер для выбора точки возрождения. Зелёный = безопасно, жёлтый = оспаривается.</Russian>
       </Key>
       <Key ID="STR_WF_RESPAWN_Status">
@@ -2013,7 +1997,7 @@
         <Russian>Артиллерия:</Russian>
       </Key>
       <Key ID="STR_WF_TACTICAL_ArtilleryMinimapInfo">
-        <English>An Artillery Minimap display fitler has been toggled</English>
+        <English>The Artillery Minimap display filter has been toggled</English>
         <Russian>Режим фильтра на артиллерийском дисплее был сменен</Russian>
       </Key>
 	  <Key ID="STR_WF_TACTICAL_ArtilleryInRange">
@@ -2288,7 +2272,7 @@
         <Russian>Открыть сохранённые комплекты снаряжения</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_RespawnST">
-        <English>Respawn stucked Supply Trucks. ATTENTION => ALL Trucks will be destroyed!</English>
+        <English>Respawn stuck Supply Trucks. Warning: this destroys ALL of your team's Supply Trucks!</English>
         <Russian>Возродить застрявший грузовик. ВНИМАНИЕ => Все грузовики будут уничтожены!</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_TeamOrders_Con1">
@@ -2324,7 +2308,7 @@
         <Russian>Покупка тяжелой техники (Танки, Артиллерия и т.д.)</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_UnitPurchase_Con4">
-        <English>Purchase Aircarft (Gunship, Helicopter,Plane)</English>
+        <English>Purchase Aircraft (Gunship, Helicopter, Plane)</English>
         <Russian>Покупка Авиации (Ветролеты, Самолеты)</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_UnitPurchase_Con5">
@@ -5758,6 +5742,11 @@
         <English>Gameplay: Limitation of bomb dropping.</English>
         <Russian>Геймплей: Ограничение на сброс бомб.</Russian>
         <Spanish>Jugabilidad: Limitación del lanzamiento de bombas.</Spanish>
+    </Key>
+
+    <Key ID="STR_WF_PARAMETER_BombDistance">
+        <English>Gameplay: Bomb Drop Max Distance from Target.</English>
+        <Russian>Геймплей: Максимальное расстояние сброса бомбы от цели.</Russian>
     </Key>
 
     <Key ID="STR_WF_PARAMETER_CampnDepot">

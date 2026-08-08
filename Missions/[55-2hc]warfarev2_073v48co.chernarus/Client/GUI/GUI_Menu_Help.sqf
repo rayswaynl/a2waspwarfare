@@ -87,7 +87,7 @@ switch (_action) do {
 2. Spawn, then open the <t color='" + GOLD + "'>WF Menu</t> (scroll-wheel action, blue 'Options') for everything: buy gear, buy units, give orders.<br />
 3. Head to the nearest contested <t color='" + KEY + "'>town</t> (blue/red circle on the map) and help capture it.<br /><br />
 <t size='1.2' color='" + KEY + "'>How you win</t><br />
-Default victory is <t color='" + GOLD + "'>Towns</t>: hold a target number of towns. Lobby parameters can switch this (e.g. <t color='" + GOLD + "'>Annihilation</t> = destroy all enemy forces and structures). Check the parameter screen if unsure.<br /><br />
+You win by wiping the enemy HQ and factories (<t color='" + GOLD + "'>Annihilation</t>), by capturing every town on the map (<t color='" + GOLD + "'>Supremacy</t>), or by holding most of the map for long enough (<t color='" + GOLD + "'>Territorial Victory</t> - default 80% of towns for 30 minutes unbroken). Check the parameter screen for the exact settings this game is using.<br /><br />
 <t size='1.2' color='" + KEY + "'>Respawn &amp; forward spawns</t><br />
 While dead you pick a spawn from the yellow circles on the map. Base buildings (MHQ, Barracks, all Factories) are <t color='" + GOLD + "'>unlimited-range</t> spawns. A <t color='" + KEY + "'>MEV</t> (medical/ambulance vehicle) gives a <t color='" + GOLD + "'>forward</t> spawn within 500 m of it - drive one up to the fight so the team does not run from base every time. Service points, the Command Center and radars are NOT spawn points.<br /><br />
 Tip: wait until a forward spawn exists before pushing a town, so deaths cost seconds, not a long walk.<br />",
@@ -116,7 +116,7 @@ Note: WASP intentionally uses the action menu instead of a help hotkey, so there
 Two currencies drive the war: <t color='" + GOLD + "'>$ cash</t> (you spend it on gear and units) and <t color='" + GOLD + "'>supply</t> (the side resource the commander spends on structures and upgrades). Both sides start with <t color='" + GOLD + "'>$30,000</t> and <t color='" + GOLD + "'>12,800 supply</t>.<br /><br />
 <t size='1.2' color='" + KEY + "'>Where income comes from</t><br />
 - Captured <t color='" + KEY + "'>towns</t> pay supply and cash. A fully 'pushed' town (high Supply Value) pays more and defends harder.<br />
-- <t color='" + KEY + "'>Supply trucks</t> raise a town's Supply Value: shuttle them between MHQ / Service Point (to reload) and the town centre's 30 m delivery range. The counter reads e.g. 10/70.<br /><br />
+- <t color='" + KEY + "'>Supply missions</t> load at a friendly town showing a + after its SV on the map ([+SUPPLY] label for SpecOps) and deliver to your Command Center (CC). Completing one pays out and posts a group-chat message; flying it in by helicopter pays a bonus.<br /><br />
 <t size='1.2' color='" + KEY + "'>The Bank (Federal Reserve / Bank Rossii)</t><br />
 A 9,500-supply structure, one per side, placed &gt; 800 m from your HQ. While your HQ stands it pays <t color='" + GOLD + "'>$6,000 every 5 minutes</t> split among living players. Destroying the enemy Bank awards <t color='" + GOLD + "'>+10,000</t> side supply and <t color='" + GOLD + "'>$25,000</t> to the killer. Both Banks are marked on the map for both sides - it is a real endgame objective.<br /><br />
 <t size='1.2' color='" + KEY + "'>Factory queue &amp; refunds</t><br />
@@ -151,8 +151,8 @@ If no human takes the Commander slot within 5 minutes of round start (re-armed w
 - <t color='" + GOLD + "'>Economy</t> - sell structures, distribute income.<br />
 - <t color='" + GOLD + "'>Command Center</t> - set team orders and squad respawn.<br />
 - <t color='" + GOLD + "'>Upgrade Menu</t> - research better equipment and unlocks.<br /><br />
-<t size='1.2' color='" + KEY + "'>Patrols &amp; convoys (upgrade)</t><br />
-Patrols upgrade across 4 levels (300 / 1,600 / 2,400 / 3,200 supply). Up to <t color='" + GOLD + "'>2 active patrols</t> per side; each active patrol reduces every player's max AI by 1. Level 4 fields a <t color='" + KEY + "'>convoy</t> supply truck that pays $750 split equally at each town stop.<br /><br />
+<t size='1.2' color='" + KEY + "'>Patrols (upgrade)</t><br />
+Patrols upgrade across 4 levels (350 / 1,400 / 2,800 / 5,000 supply). Up to <t color='" + GOLD + "'>3 active patrols</t> per side. Researching Patrols (any level) costs each player 1 max AI slot. From level 3, a patrol calls in an <t color='" + KEY + "'>off-map air strike</t> pass whenever it reaches its objective town - level 4 sends a pair.<br /><br />
 <t size='1.2' color='" + KEY + "'>Team composition notes</t><br />
 - Tanks and wheeled APCs arrive crewed by engineers.<br />
 - Commander field compositions are capped at 3 per base area (cash refunded over-cap).<br />
@@ -204,11 +204,11 @@ SOL / SPEC / MED / ENG / SNI, shown on join and via the <t color='" + GOLD + "'>
 <t size='1.2' color='" + KEY + "'>Where do I buy things?</t><br />
 Open the WF Menu in range of the right structure: gear at the <t color='" + GOLD + "'>Barracks</t> (or a captured town centre's stairs), infantry/vehicles at the matching <t color='" + GOLD + "'>Factory</t>. A <t color='" + GOLD + "'>Command Center</t> lets you remote-buy infantry and vehicles from anywhere.<br /><br />
 <t size='1.2' color='" + KEY + "'>Why can't I attack that town?</t><br />
-It is either not adjacent to your territory, or it is in hatched-yellow <t color='" + GOLD + "'>peace-time</t> after a recent capture. Wait for the marker to clear, or push an adjacent town first.<br /><br />
+It is either not adjacent to your territory, or it is in hatched-yellow <t color='" + GOLD + "'>peace-time</t> after a recent capture. Keep up pressure on it - sustained siege now decays that protection faster than a passive timer - or push an adjacent town first.<br /><br />
 <t size='1.2' color='" + KEY + "'>I keep spawning at base - why?</t><br />
 You died more than 500 m from any MEV / forward spawn. Drive a MEV up near the fight, or capture a closer town, to create a nearer spawn.<br /><br />
 <t size='1.2' color='" + KEY + "'>How do I get money?</t><br />
-Capture and push towns, build the Bank (pays every 5 min while your HQ stands), kill the enemy Bank, and run convoy supply trucks.<br /><br />
+Capture and push towns, build the Bank (pays every 5 min while your HQ stands), kill the enemy Bank, and shuttle supply trucks to raise town Supply Value.<br /><br />
 <t size='1.2' color='" + KEY + "'>What are the structure tags on the map?</t><br />
 MHQ, B (Barracks), LF/HF/AF (Light/Heavy/Air Factory), S (Service Point), C (Command Center), AAR (Anti-Air Radar), CBR (Counter Battery Radar), Bank (Federal Reserve).<br /><br />
 <t size='1.2' color='" + KEY + "'>Server rules</t><br />

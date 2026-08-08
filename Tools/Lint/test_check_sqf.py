@@ -48,6 +48,28 @@ class CheckSqfTests(unittest.TestCase):
         self.assertIn("A3SELECT", codes)
         self.assertIn("A3SORT", codes)
 
+    def test_a3select_code_operand_shapes_are_reported(self) -> None:
+        """Lane w807e-L16: A3SELECT previously only matched 'select [' (the
+        substring-slice shape) and missed a CODE block used as select's
+        operand on either side - the exact shape that killed
+        GUI_Menu_Service.sqf's town-service support scan
+        ('{alive _x} select (nearEntities[...])')."""
+        codes = lint_codes(
+            "_checks = {alive _x} select ((getPos _x) nearEntities[_typeRepair, 50]);\n"
+            "_alive = _units select {alive _x};\n"
+        )
+        self.assertEqual(codes.count("A3SELECT"), 2)
+
+    def test_a3select_parenthesized_index_is_not_flagged(self) -> None:
+        """Valid A2 idiom: select with a computed/parenthesized scalar index
+        must not be flagged - only a CODE block on either side of select is
+        the trap."""
+        codes = lint_codes(
+            "_val = _array select (_i + 1);\n"
+            "_val2 = [{doA}, {doB}] select _bool;\n"
+        )
+        self.assertNotIn("A3SELECT", codes)
+
     def test_bis_fnc_calls_are_reported_outside_comments_and_strings(self) -> None:
         codes = lint_codes(
             "// _ignored = _xs call BIS_fnc_arrayPush;\n"

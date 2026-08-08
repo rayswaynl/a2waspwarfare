@@ -27,17 +27,31 @@ def test_repair_truck_service_list_excludes_remote_vehicles() -> None:
 
 
 def test_repair_truck_queries_exclude_destroyed_supports() -> None:
+    # lane w807e-L16: the original `{alive _x} select (nearEntities[...])` shape asserted here
+    # is A3-only (CODE used as select's array operand) and is not valid on A2/OA 1.64 - it threw
+    # 'Error select: Type code, expected Array,Config entry' at runtime and silently killed the
+    # town-service support scan (owner-reported: no vehicle/repair/heal costs at service points).
+    # Fixed to an explicit for-loop filter that keeps the same alive-only invariant this test
+    # guards; the assertions below were updated to the new (A2-legal) query shape.
     text = SERVICE_MENU.read_text(encoding="utf-8-sig")
     per_target_query = (
-        "_checks = {alive _x} select ((getPos _x) nearEntities[_typeRepair, "
-        'missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"]);'
+        "_nearRepairTrucks = (getPos _x) nearEntities[_typeRepair, "
+        'missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"];'
     )
     player_query = (
-        "_checks = {alive _x} select ((getPos player) nearEntities[_typeRepair, "
-        'missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"]);'
+        "_nearRepairTrucks = (getPos player) nearEntities[_typeRepair, "
+        'missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE"];'
+    )
+    alive_filter = (
+        "if (alive (_nearRepairTrucks select _rtIdx)) then "
+        "{_checks set [count _checks, _nearRepairTrucks select _rtIdx]};"
     )
     assert per_target_query in text, "per-target repair-truck lookup still admits wrecks"
     assert player_query in text, "nearby-unit repair-truck lookup still selects a wreck"
+    assert text.count(alive_filter) == 2, (
+        "both repair-truck lookups (per-target and nearby-unit) must filter their "
+        "nearEntities result down to alive entries only"
+    )
 
 
 def test_airlift_hook_blocks_only_living_crew() -> None:

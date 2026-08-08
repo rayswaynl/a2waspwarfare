@@ -1504,6 +1504,7 @@ if (isNull _base) exitWith {
 						if (!isNull _hdTown) then {
 							_hdSecs = missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180];
 							_hdTown setVariable ["wfbe_aicom_hold_until", time + _hdSecs, true];
+							_hdTown setVariable ["wfbe_aicom_hold_team", _hdTeam, true];
 							[_hdTeam, "defense"]      Call SetTeamMoveMode;
 							[_hdTeam, getPos _hdTown] Call SetTeamMovePos;
 							[_hdTeam, false]          Call SetTeamAutonomous;
@@ -1955,7 +1956,7 @@ if (isNull _base) exitWith {
 	//--- the Transfer menu (GUI_TransferMenu.sqf) - it shares the same "aicom-donate-confirm" client confirm. Donating
 	//--- to the AI treasury only makes sense while the AI runs the side, which that path already enforces.
 	case "aicom-team-ended": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew","_cteams","_cregistered"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew","_cteams","_cregistered","_endedHoldTown","_endedHoldOwner"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
 		//--- Drop this team's arrow-marker entry (match slot 3 == team) and any null leftovers,
@@ -1968,6 +1969,19 @@ if (isNull _base) exitWith {
 		missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomNew];
 		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
+		//--- Release a capture/manual hold when its owning team ends. The owner token prevents a late
+		//--- cleanup from clearing a newer team's hold on the same town after a retake.
+		if (!isNull _cteam) then {
+			_endedHoldTown = _cteam getVariable "wfbe_aicom_holding_town";
+			if (!isNil "_endedHoldTown" && {typeName _endedHoldTown == "OBJECT"} && {!isNull _endedHoldTown}) then {
+				_endedHoldOwner = _endedHoldTown getVariable ["wfbe_aicom_hold_team", grpNull];
+				if (_endedHoldOwner == _cteam) then {
+					_endedHoldTown setVariable ["wfbe_aicom_hold_until", 0, true];
+					_endedHoldTown setVariable ["wfbe_aicom_hold_team", grpNull, true];
+				};
+				_cteam setVariable ["wfbe_aicom_holding_town", objNull, true];
+			};
+		};
 		if (!isNull _clogik) then {
 			if (isNull _cteam) then {
 				//--- Creation failed before registration: release the pending slot AND refund its booked
@@ -2375,10 +2389,36 @@ if (isNull _base) exitWith {
 	//--- tree, so its only consumer (the WFBE_CLIENT_%1_OBJECTS disconnect cleanup in
 	//--- Server_OnPlayerDisconnected.sqf) could never run either; removed together.
 	case "repair-camp": {
-		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY","_repairRequester"];
+		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY","_repairHasRequester","_repairRequester"];
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
-		_repairRequester = if ((count _args) > 3 && {(typeName (_args select 3)) == "OBJECT"}) then {_args select 3} else {objNull};
+		_repairHasRequester = (count _args) > 3;
+		_repairRequester = if (_repairHasRequester && {(typeName (_args select 3)) == "OBJECT"}) then {_args select 3} else {objNull};
+
+		//--- r175 TOCTOU: RequestSpecial validates the paid player, then Spawn defers this case to
+		//--- another scheduled script. Re-read every mutable player precondition at the effect boundary;
+		//--- an enemy kill, disconnect, movement or side change can land after ingress validation but
+		//--- before this handler claims the latch. Server-internal presence repairs omit the requester
+		//--- argument and deliberately bypass these player-only checks; a supplied requester that has
+		//--- become objNull during the handoff must still fail closed.
+		if (_repairHasRequester && {isNull _repairRequester}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - supplied requester became null before repair commit."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_repairHasRequester && {!isPlayer _repairRequester}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - requester disconnected before repair commit."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_repairHasRequester && {!alive _repairRequester}) exitWith {
+			[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair was rejected because the requester is no longer alive."]] Call WFBE_CO_FNC_SendToClient;
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - requester died before repair commit."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_repairHasRequester && {(_repairRequester distance _logic) > (missionNamespace getVariable ["WFBE_C_CAMPS_REPAIR_SERVER_RADIUS", 50])}) exitWith {
+			[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair was rejected because the requester is out of range."]] Call WFBE_CO_FNC_SendToClient;
+			["WARNING", Format ["Server_HandleSpecial.sqf/repair-camp: rejected - requester moved out of range before repair commit (dist=%1).", _repairRequester distance _logic]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_repairHasRequester && {(side group _repairRequester) != (_repairSideID Call WFBE_CO_FNC_GetSideFromID)}) exitWith {
+			[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair was rejected because the requested side no longer matches."]] Call WFBE_CO_FNC_SendToClient;
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - requester side changed before repair commit."] Call WFBE_CO_FNC_LogContent;
+		};
 
 		//--- harden-repair-camp (2026-07-25): reentrancy guard, mirrors Server_MHQRepair.sqf's
 		//--- precedent (PR #1361) - check+set BEFORE the alive read so two near-simultaneous
