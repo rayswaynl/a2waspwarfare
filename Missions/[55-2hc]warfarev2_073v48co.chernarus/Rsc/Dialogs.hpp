@@ -3906,7 +3906,7 @@ class RscMenu_Service {
 			x = 0.50748;
 			y = 0.767311;
 			w = 0.331764;
-			text = "Weapon Loadout";
+			text = "EASA Loadout";
 			action = "MenuAction = 7";
 		};
 		/* Back */
