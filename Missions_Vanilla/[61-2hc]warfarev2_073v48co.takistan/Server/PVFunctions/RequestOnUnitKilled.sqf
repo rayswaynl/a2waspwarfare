@@ -153,7 +153,18 @@ if ((missionNamespace getVariable ["WFBE_C_FPV_CAUSE_LOG", 1]) > 0) then {
 
 ["INFORMATION", Format ["RequestOnUnitKilled.sqf: [%1] [%2] has been killed by [%3].", _killed_side, _killed, _killer]] Call WFBE_CO_FNC_LogContent;
 
-if !(alive _killer) exitWith {}; //--- Killer is null or dead, nothing to see here.
+if !(alive _killer) exitWith {
+	//--- B74.2: a player death still counts when attribution has no live killer (environment,
+	//--- disconnect or delayed cleanup). Require a confirmed-dead player so the legacy unauthenticated
+	//--- PVF cannot turn a live victim into a death-stat write while hardening is disabled.
+	if (!(isNil "WFBE_C_STATS_ENABLED")) then {
+		if (WFBE_C_STATS_ENABLED && {!alive _killed} && {isPlayer _killed}) then {
+			private "_deadUid";
+			_deadUid = getPlayerUID _killed;
+			if (_deadUid != "") then {[_deadUid, WFBE_STAT_DEATHS, 1] call WFBE_SE_FNC_RecordStat};
+		};
+	};
+}; //--- Killer is null or dead, nothing to see here.
 
 //--- Retrieve basic information.
 _killed_group = group _killed;
