@@ -79,7 +79,7 @@ missionNamespace setVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", WFBE_AMBULANCE_C
 
 //--- Kill feed (bounty chat lines; bounty CASH is never gated).
 WFBE_KILL_MESSAGES = true;
-_profile_var = profileNamespace getVariable "WFBE_KILL_MESSAGES_ENABLED";
+_profile_var = profileNamespace getVariable "WFBE_KILL_MESSAGES_ENABLED_V2"; //--- fix0808h (owner live 2026-08-08): key bump to V2. A stale persisted FALSE (settings menu mis-index weeks back) hid every bounty chat line while the cash still paid - the gate sat in the PROFILE, not the chat channel. The V2 read restarts every client at the TRUE default; the Settings toggle persists to V2 from now on.
 if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_KILL_MESSAGES = _profile_var}};
 missionNamespace setVariable ["WFBE_KILL_MESSAGES", WFBE_KILL_MESSAGES];
 

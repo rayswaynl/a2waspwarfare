@@ -9,5 +9,8 @@ if (_this == "") exitWith {};
 //--- systemChat renders unconditionally (local-only, no channel gating); evidence: KILLMONEY CLIRECV
 //--- receipts with owner seeing nothing. Keep the groupChat call too so squadmates still get the line
 //--- if/when the engine-side display recovers.
-player groupChat _this;
-systemChat _this;
+//--- fix0808e (owner live evidence 2026-08-08): group chat NEVER renders on live clients even with
+//--- channel 3 enabled (three builds of proof), and systemChat does NOT exist on A2 OA 1.64 (A3-only
+//--- command; the 0808b line was silent). Command chat provably renders (wildcard/first-blood lines).
+//--- Route through commandChat; local display only, same pattern as Client_CommandChatMessage.sqf.
+player commandChat _this;

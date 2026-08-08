@@ -627,6 +627,18 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 				_preview = _itemclass_preview createVehicleLocal (screenToWorld [0.5,0.5]);
 				//--- FAIL-CLEAN r44: guard create null BEFORE setDir/camSetTarget/helper (late isnull ran after mutators)
+				//--- fable/placement-preview-fix (owner 2026-08-08 "LoS Screen has NO preview at all"):
+				//--- if a WFBE_ANCHOR_PREVIEW_MAP override classname fails to spawn, retry ONCE with the
+				//--- raw anchor classname (_itemclass) before giving up. The anchor itself is always a
+				//--- proven, placeable prop (every WDDM anchor previewed as itself before
+				//--- WFBE_C_DEF_PREVIEW_MAP existed), so this guarantees the player sees SOME ghost
+				//--- instead of none if a representative classname ever turns out to be unspawnable.
+				//--- Only fires when an override actually changed the classname.
+				if (isNull _preview && {_itemclass_preview != _itemclass}) then {
+					diag_log Format ["COINPLACE|v1|preview-override-fallback|failed=%1|itemclass=%2", _itemclass_preview, _itemclass];
+					_itemclass_preview = _itemclass;
+					_preview = _itemclass_preview createVehicleLocal (screenToWorld [0.5,0.5]);
+				};
 				if (isNull _preview) then {
 					["WARNING", Format ["coin_interface.sqf: preview class [%1] createVehicleLocal failed.", _itemclass_preview]] Call WFBE_CO_FNC_LogContent;
 					//--- fable/coin-placement-fixes (owner live report 2026-07-28 "some things dont even show a preview"):
@@ -1014,10 +1026,28 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					} else {100};
 
 					if (_itemcategory < count _categories) then {
-						_itemcost = _x select 2;
+						_itemcostRaw = _x select 2;
+						_itemcostWasArray = (typename _itemcostRaw == "ARRAY");
+						_itemcost = _itemcostRaw;
 						_itemcash = 0;
-						if (typename _itemcost == "ARRAY") then {_itemcash = _itemcost select 0; _itemcost = _itemcost select 1};
+						if (_itemcostWasArray) then {_itemcash = _itemcostRaw select 0; _itemcost = _itemcostRaw select 1};
 						if (isNil "_itemcost" || {typeName _itemcost != "SCALAR"}) then {_itemcost = 0}; //--- PR8 (claude): a malformed item (invalid anchor class -> [cash,<null>] cost) leaves _itemcost nil; force numeric to stop the _canAffordCount/_itemcost undefined-variable RPT cascade.
+						//--- fable/placement-preview-fix (owner 2026-08-08, live RPT: 318x "Invalid number in
+						//--- expression" with an empty error position, traced to this menu's per-category click-
+						//--- handler compile). PR8 only sanitized the LOCAL _itemcost/_itemcash above (used for
+						//--- THIS tick's canAfford display) - the raw _x embedded into _arrayParams (below) still
+						//--- carried a malformed item's original, unsanitized cost untouched. _arrayParams is str-serialized
+						//--- and call-compiled as ONE string per category (vanilla BIS_fnc_createmenu, %3 below),
+						//--- exactly like the wave0804b apostrophe bug corrupted labels - one bad numeric cost
+						//--- corrupts every sibling item's click handler in the same category, which is exactly
+						//--- what turns every preview in that category into a dead/red click (PR8's own note:
+						//--- "restoring the build preview for the affected WDDM positions still needs valid
+						//--- anchor classes (separate, held fix)" - this IS that fix, made unconditional so it
+						//--- protects every category regardless of which item is ever malformed). Build a
+						//--- numeric-safe copy of _x with only the cost field replaced, same shape (array or
+						//--- scalar) as the original, so well-formed items are byte-identical.
+						_xSafe = +_x;
+						_xSafe set [2, if (_itemcostWasArray) then {[_itemcash,_itemcost]} else {_itemcost}];
 						_cashValue = _cashValues select _itemcash;
 						_cashDescription = if (count _fundsDescription > _itemcash) then {_fundsDescription select _itemcash} else {"?"};
 						_itemname = if (count _x > 3) then {_x select 3} else {getText (configFile >> "CfgVehicles" >> _itemclass >> "displayName")};
@@ -1053,7 +1083,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 							_arrayNames = _arrayNames + [_text];
 							_arrayNamesLong = _arrayNamesLong + [_text];
 							_arrayEnable = _arrayEnable + [_canAfford];
-							_arrayParams = _arrayParams + [[_logic getVariable "BIS_COIN_ID"] + [_x,_i]];
+							_arrayParams = _arrayParams + [[_logic getVariable "BIS_COIN_ID"] + [_xSafe,_i]];
 						};
 					};
 				} forEach _items;

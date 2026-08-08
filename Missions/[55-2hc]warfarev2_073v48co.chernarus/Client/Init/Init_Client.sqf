@@ -1856,7 +1856,24 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 					default {_p=1};
 					};
 
-                	if(_preview distance _factory < _p*(_lx min _ly)) then {_color = _colorRed};
+					//--- fable/placement-preview-fix (owner 2026-08-08: "ALL NEW structure previews
+					//--- render RED, game does not allow placement" - simplify criteria for these
+					//--- structures). This clearance was authored for compact static-weapon defenses and
+					//--- scales with the FACTORY's own footprint (0.54-1.0x _lx/_ly above), not the
+					//--- placed item's. The 5 Fortification Pack pieces (WFBE_FORTIF_PACK_PREVIEW_CLASSES,
+					//--- Init_CommonConstants.sqf) are 22-43 m linear structures MEANT to run close to/
+					//--- around the base's own factories - the factory-scaled clearance (12-20+ m from a
+					//--- typical HQ) routinely rejected the whole structure inside any compact base. Use
+					//--- one small fixed clearance for these 5 items only (WFBE_C_FORTIF_PACK_FACTORY_
+					//--- CLEARANCE): enough to stop the anchor spawning literally inside the factory model,
+					//--- not a general keep-away buffer. Every other item (statics, Hedgehog Line, Flak
+					//--- Tower, legacy Fortification walls/camo nets) keeps the original factory-scaled
+					//--- clearance unchanged.
+					if ((typeOf _preview) in WFBE_FORTIF_PACK_PREVIEW_CLASSES) then {
+						if(_preview distance _factory < (missionNamespace getVariable ["WFBE_C_FORTIF_PACK_FACTORY_CLEARANCE", 3])) then {_color = _colorRed};
+					} else {
+						if(_preview distance _factory < _p*(_lx min _ly)) then {_color = _colorRed};
+					};
 				};
 
 			}else{

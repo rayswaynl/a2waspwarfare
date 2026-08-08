@@ -103,6 +103,16 @@ REPRESENTATIVE_OK = {
         "composition is 10x Concrete_Wall_EP1, which is already Wall Row's preview - "
         "the pairwise-distinctness rule forbids reuse, so a validated wall segment stands in",
     ),
+    "Misc_cargo_cont_net3": (
+        "Base_WarfareBBarrier10x",
+        "fable/placement-preview-fix (owner 2026-08-08, \"LoS Screen has NO preview at all\"): "
+        "the composition's real child, Base_WarfareBBarrier10xTall, has no other reference "
+        "anywhere in this mission tree and was never independently proven before this "
+        "composition was authored - unlike its Base_WarfareBBarrier5x/10x siblings, which are "
+        "proven via long-standing barracks/artyradar/HQ wall rings. The proven 10x sibling "
+        "stands in as a safe, visually-consistent preview (coin_interface.sqf also gains a "
+        "runtime preview-override fallback as a safety net on top of this)",
+    ),
     "Misc_concrete_High": (
         "Land_CncBlock_Stripes",
         "Land_BarGate2 is A2-only/unverified in this tree (see the Bank-gate precedent "
@@ -215,11 +225,15 @@ def test_preview_lookup_keeps_the_original_fallback_before_any_override():
 
 
 def test_preview_lookup_override_is_a_pure_addition_not_a_replacement():
-    """The preview-building/spawn code downstream (createVehicleLocal, cleanup sites)
-    must be untouched - the fix is a single lookup-value override, nothing else."""
+    """The preview-building/spawn code downstream (createVehicleLocal, cleanup sites) is
+    otherwise untouched. fable/placement-preview-fix (owner 2026-08-08, "LoS Screen has NO
+    preview at all") added ONE fallback retry: if an override classname fails to spawn, the
+    code retries once with the raw anchor classname before giving up - so two creation
+    call-sites are now expected (primary attempt + fallback retry), not the original single
+    call-site the earlier fix package shipped with."""
     code = _masked(CH, COIN_INTERFACE)
-    assert code.count("createVehicleLocal (screenToWorld [0.5,0.5])") == 1
-    assert code.count("_preview = _itemclass_preview createVehicleLocal") == 1
+    assert code.count("createVehicleLocal (screenToWorld [0.5,0.5])") == 2
+    assert code.count("_preview = _itemclass_preview createVehicleLocal") == 2
 
 
 # ---------------------------------------------------------------------------
