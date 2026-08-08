@@ -69,10 +69,10 @@ if (_assist) then {
 	_bounty = _bounty * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_ASSISTANCE_COEF");
 	if (_srvBounty >= 0) then {_bounty = _srvBounty}; //--- J1: display the server-paid amount (already post-coef).
 	//--- B748: Kill Feed Settings opt-out gates ONLY the chat line (J1: the payout itself is now server-side).
-	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty_Assist", _bounty, _name] Call GroupChatMessage} else {diag_log Format ["KILLMONEY|v1|GATED|assist=1|uid=%1|t=%2", getPlayerUID player, round time]};
+	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {private "_bMsg"; _bMsg = Format[Localize "STR_WF_CHAT_Award_Bounty_Assist", _bounty, _name]; _bMsg Call GroupChatMessage; hintSilent _bMsg} else {diag_log Format ["KILLMONEY|v1|GATED|assist=1|uid=%1|t=%2", getPlayerUID player, round time]};
 } else {
 	if (_srvBounty >= 0) then {_bounty = _srvBounty}; //--- J1: display the server-paid amount.
-	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage} else {diag_log Format ["KILLMONEY|v1|GATED|assist=0|uid=%1|t=%2", getPlayerUID player, round time]};
+	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {private "_bMsg"; _bMsg = Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name]; _bMsg Call GroupChatMessage; hintSilent _bMsg} else {diag_log Format ["KILLMONEY|v1|GATED|assist=0|uid=%1|t=%2", getPlayerUID player, round time]};
 };
 
 //--- J1 funds authority: wallet write removed - the server credits the killer's/assister's group in RequestOnUnitKilled.sqf.
