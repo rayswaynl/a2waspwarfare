@@ -43,7 +43,7 @@ if(isNull _trg || _u aimedAtTarget [_trg] == 0 || {_trgtp isKindOf _x} count _rt
                   _sspd = (velocity _rkt) distance [0,0,0];
                  _spd = _sspd;
 				 
-                        While {!isNull _rkt} do {
+                        While {!isNull _rkt && {!isNull _trg} && {alive _trg}} do {
 
                          _dis = _fp distance (getPosASL _trg);
                         _trvldis = _fp distance _rkt;
