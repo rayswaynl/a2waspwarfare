@@ -102,6 +102,7 @@ _anchor setVariable ["wfbe_rh_eligible", _eligibleSides, true];
 _anchor setVariable ["wfbe_rh_contest_mode", _contestMode, true];
 _anchor setVariable ["wfbe_rh_holder_side", -1, true];
 _anchor setVariable ["wfbe_rh_progress", 0, true];
+_anchor setVariable ["wfbe_rh_progress_side", -1, true];
 _anchor setVariable ["wfbe_rh_cooldown_until", 0, true];
 _anchor setVariable ["wfbe_rh_last_complete_side", -1, true];
 _anchor setVariable ["wfbe_rh_last_complete_time", -1, true];
@@ -125,7 +126,7 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 		//--- matching the task's single-registration scope.
 		_tickHold = {
 			private ["_anchor","_id","_radius","_holdSecs","_eligible","_contestMode","_cooldownSecs","_onComplete",
-			         "_cooldownUntil","_progress","_objects","_westN","_eastN","_guerN","_presentSides",
+			         "_cooldownUntil","_progress","_progressSideNum","_objects","_westN","_eastN","_guerN","_presentSides",
 			         "_holderSideNum","_soleSide","_decayRate","_tick","_winnerSideType","_winnerSideNum"];
 			_anchor = _this;
 			if (isNull _anchor) exitWith {};
@@ -139,6 +140,7 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 			_onComplete    = _anchor getVariable ["wfbe_rh_oncomplete",""];
 			_cooldownUntil = _anchor getVariable ["wfbe_rh_cooldown_until",0];
 			_progress      = _anchor getVariable ["wfbe_rh_progress",0];
+			_progressSideNum = _anchor getVariable ["wfbe_rh_progress_side",-1];
 			_tick          = missionNamespace getVariable ["WFBE_C_RADIUSHOLD_TICK_SECS",5];
 
 			//--- Presence scan: same type filter + idiom as server_town.sqf's proven town-capture scan
@@ -203,12 +205,20 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 					if (_contestMode == 1) then {
 						_decayRate = missionNamespace getVariable ["WFBE_C_RADIUSHOLD_CONTEST_DECAY",0];
 						_progress = (_progress - _decayRate) max 0;
+						if (_progress <= 0) then {_progressSideNum = -1};
 					};
 				} else {
 					if ((count _presentSides) == 1) then {
 						_soleSide = _presentSides select 0;
 						if (_soleSide in _eligible) then {
 							_holderSideNum = _soleSide Call WFBE_CO_FNC_GetSideID;
+							//--- Progress belongs to the side that earned it. Contest/empty states pause that
+							//--- side's clock, but an opposing sole side starts its own hold at zero instead
+							//--- of inheriting the previous side's accumulated seconds.
+							if (_progressSideNum != _holderSideNum) then {
+								_progress = 0;
+								_progressSideNum = _holderSideNum;
+							};
 							_winnerSideType = _soleSide;
 							_progress = (_progress + _tick) min _holdSecs;
 						} else {
@@ -225,6 +235,7 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 
 			_anchor setVariable ["wfbe_rh_holder_side", _holderSideNum, true];
 			_anchor setVariable ["wfbe_rh_progress", _progress, true];
+			_anchor setVariable ["wfbe_rh_progress_side", _progressSideNum, true];
 			_anchor setVariable ["wfbe_rh_westn", _westN];
 			_anchor setVariable ["wfbe_rh_eastn", _eastN];
 			_anchor setVariable ["wfbe_rh_guern", _guerN];
@@ -244,6 +255,7 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 			if (_holderSideNum != -1 && {_holdSecs > 0} && {_progress >= _holdSecs}) then {
 				_winnerSideNum = _holderSideNum;
 				_anchor setVariable ["wfbe_rh_progress", 0, true];
+				_anchor setVariable ["wfbe_rh_progress_side", -1, true];
 				_anchor setVariable ["wfbe_rh_holder_side", -1, true];
 				_anchor setVariable ["wfbe_rh_cooldown_until", time + _cooldownSecs, true];
 				_anchor setVariable ["wfbe_rh_last_complete_side", _winnerSideNum, true];
