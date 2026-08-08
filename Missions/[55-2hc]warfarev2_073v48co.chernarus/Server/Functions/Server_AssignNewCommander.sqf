@@ -7,8 +7,9 @@ _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
 _syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
 
 
-//--- Notify the clients.
-[_side, "HandleSpecial", ["new-commander-assigned", _commander]] Call WFBE_CO_FNC_SendToClients;
+//--- Notify the clients only when the elected/assigned identity actually changed (fix0807e:
+//--- dedup commander-elected announce - see WFBE_CO_FNC_CommanderAnnounceIfChanged).
+[_side, _logic, _commander] Call WFBE_CO_FNC_CommanderAnnounceIfChanged;
 
 //--- Process the AI Commander FSM if it's not running.
 if !(isNull _commander) then {
