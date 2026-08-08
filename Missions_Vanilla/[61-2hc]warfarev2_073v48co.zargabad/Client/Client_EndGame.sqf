@@ -152,12 +152,12 @@ if (missionNamespace getVariable ["WFBE_C_VICTORY_OUTRO_FX", true]) then {
 	};
 };
 
-waitUntil {camCommitted _camera};
+waitUntil {sleep 0.05; camCommitted _camera};
 
 _camera camSetRelPos [-190.71,190.55,180.94];
 _camera camCommit 10;
 
-waitUntil {camCommitted _camera};
+waitUntil {sleep 0.05; camCommitted _camera};
 
 _camShotOrder = [[0,100,35],[50,0,20],[0,-50,20],[-50,0,20]];
 
@@ -168,12 +168,12 @@ _camShotOrder = [[0,100,35],[50,0,20],[0,-50,20],[-50,0,20]];
 	{
 		_camera camSetRelPos _x;
 		_camera camCommit 5;
-		waitUntil {camCommitted _camera};
+		waitUntil {sleep 0.05; camCommitted _camera};
 	} forEach _camShotOrder;
 	
 	_camera camSetRelPos [0,100,35];
 	_camera camCommit 5;
-	waitUntil {camCommitted _camera};
+	waitUntil {sleep 0.05; camCommitted _camera};
 } forEach _blist;
 
 sleep 3;
