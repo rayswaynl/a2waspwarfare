@@ -27,6 +27,10 @@ from the `7za` env var, `C:\Program Files\7-Zip`, or PATH; if none is found it l
 skips the optional `_MISSIONS.7z` pack step only — the mirror still completes.
 Set `A2WASP_SKIP_ZIP=1` to suppress packing explicitly.
 
+⚠️ Never pack a mission PBO with `--compress` (Cprs). A2 OA refuses to read a Cprs-compressed
+mission PBO on client join — the error is `Cannot evaluate 'ReadAndWrite' - no file`. This broke
+wave0807b. Compression is shelved; do not turn it back on.
+
 After the run, restore any `version.sqf.template` that drifted on TK or ZG to its pre-run
 merge-base state before staging:
 
@@ -73,6 +77,13 @@ Never use — these are A3-only or wrong-spelling and will silently corrupt or c
   Lint code `BAREEXIT`. Burned live 2026-08-03: an empty Factory Upgrade Menu for every side.
   ⚠️ Run the gate command from THIS file verbatim — never a selector remembered from an earlier
   session; that is exactly how this shipped (the rule existed and was already wired here).
+- A raw `"` character in SQF code or in a `//` comment — the A2 OA preprocessor reads it as a
+  string delimiter. **A single raw quote kills the ENTIRE file**, so every constant in it
+  becomes nil. Build a quote character with `toString [34]` instead of typing `"`. Check quote
+  parity (an even count of `"` per line) on every line you touch. Burned live: wave0807a2.
+- A stray backslash where `//` was intended — a lone `\` breaks the A2 OA parser mid-file. Same
+  file-death class as the raw-quote trap above. Burned live: wave0808c — 392,000 errors and
+  about 6.3 million RPT lines before rollback.
 - `inline private _x =` — use `private ["_x"]`
 - `==` / `!=` with Boolean operands — use `if (_flag)` / `if (!_flag)`
 - `missionNamespace setVariable` with a third (public) argument — NSSETVAR3 trap; A2/OA runtime error
@@ -82,6 +93,9 @@ Never use — these are A3-only or wrong-spelling and will silently corrupt or c
 - `&&` / `||` evaluate both sides eagerly; use `&& {code}` / `|| {code}` for lazy short-circuit
 - Never use `exitWith` inside `forEach` to skip one iteration — use `if` nesting instead
 - `publicVariableServer` from server-side code never fires the server's own PVEH — call the handler directly
+- `SendToClients` called with a nil destination — A2 throws a hard error (`typeName` on nil)
+  and drops the packet on both branches. PR #2452 found 54 call sites with this bug. Always
+  check the destination is not nil before the call.
 - Guard numeric-threshold flags with `> 0`, not bare `if (number)`
 - Never use `isKindOf` on weapon or magazine classnames — it walks `CfgVehicles`
 - "Has launcher" = non-empty `secondaryWeapon _unit`, not `primaryWeapon`
