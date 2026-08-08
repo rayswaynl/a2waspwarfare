@@ -3380,7 +3380,7 @@ if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {
 		WFBE_C_TOTAL_AI_MAX_BY_TIER = [140,115,90,80];
 	};
 };
-\--- FPS-ADAPTIVE AI GOVERNOR (fable/fps-governor, 2026-08-08, NEXT-WAVE / default-off): owner
+//--- FPS-ADAPTIVE AI GOVERNOR (fable/fps-governor, 2026-08-08, NEXT-WAVE / default-off): owner
 //--- direction - AI commander AI, town defenders and HQ teams should be limited PER SIDE based on
 //--- LIVE server FPS, scaling to keep FPS high, on top of (not instead of) the static
 //--- WFBE_C_TOTAL_AI_MAX_BY_TIER tier ceiling and the AICAP trim above. Server_FpsGovernor.sqf
