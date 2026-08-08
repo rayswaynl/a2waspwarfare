@@ -230,6 +230,7 @@ FINDING_CODES = (
     "MILMARKER",
     "NSSETVAR3",
     "PUBVARSV",
+    "QUOTEPARITY",
     "TRAILCOMMA",
 )
 
@@ -446,6 +447,70 @@ def mask_comments(text: str) -> str:
     return "".join(out)
 
 
+def find_unterminated_dquote(text: str) -> int | None:
+    """Scan raw text for a "..." string still open when the scan reaches EOF.
+
+    Mirrors mask_comments' state machine exactly (comment-aware, both quote
+    types tracked so a " inside a '...'-delimited string is ordinary content
+    rather than a delimiter, doubled "" / '' escape pairs consumed together
+    without toggling state) but records the text index where the CURRENTLY
+    open " string began instead of building masked output. A2/OA string
+    literals are legal across physical lines, so checking raw quote parity
+    per physical line false-positives on any multi-line string block; this
+    open/close state is exactly what the A2 OA preprocessor itself tracks; if
+    it's still open at EOF, a real quote was left unmatched somewhere in the
+    file (or a stray quote earlier opened one that was never meant to exist).
+
+    Returns None when every " string in the file is closed by EOF.
+    """
+    i = 0
+    n = len(text)
+    in_block = False
+    in_string: str | None = None
+    dquote_open_index: int | None = None
+    while i < n:
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < n else ""
+        if in_block:
+            if ch == "*" and nxt == "/":
+                i += 2
+                in_block = False
+            else:
+                i += 1
+            continue
+        if in_string is not None:
+            if ch == in_string:
+                if i + 1 < n and text[i + 1] == in_string:
+                    i += 2
+                else:
+                    i += 1
+                    in_string = None
+                    if ch == '"':
+                        dquote_open_index = None
+            else:
+                i += 1
+            continue
+        if ch == "/" and nxt == "/":
+            i += 2
+            while i < n and text[i] != "\n":
+                i += 1
+            continue
+        if ch == "/" and nxt == "*":
+            i += 2
+            in_block = True
+            continue
+        if ch in ("'", '"'):
+            in_string = ch
+            if ch == '"':
+                dquote_open_index = i
+            i += 1
+            continue
+        i += 1
+    if in_string == '"':
+        return dquote_open_index
+    return None
+
+
 def count_top_level_elements(masked: str, open_index: int) -> int | None:
     """Count comma-separated top-level elements of the bracket opening at open_index.
 
@@ -533,6 +598,28 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
     comments_masked = mask_comments(text)
     starts = line_starts(masked)
     comments_starts = line_starts(comments_masked)
+
+    # QUOTEPARITY: scans RAW text (comment/string-aware, mirrors mask_comments'
+    # state machine exactly) and flags a " string that is still open when the
+    # scan reaches EOF. A2/OA " string literals are legal across physical
+    # lines (long <t>...</t> help-text blocks in GUI_Menu_Help.sqf etc. rely
+    # on this deliberately), so a naive per-line raw-quote-count parity check
+    # false-positives on every such block; tracking real open/close state
+    # across the whole file does not. Doubled "" (A2's in-string escaped
+    # quote) is consumed as a pair, exactly like mask_comments, so it never
+    # toggles state. This is the automation of the rule that killed
+    # wave0807a2 - a stray quote character desynced this same open/close
+    # state and silently corrupted everything after it, parse-failing the
+    # whole file with no A2 compiler available to catch it locally.
+    unterminated_dquote = find_unterminated_dquote(text)
+    if unterminated_dquote is not None:
+        line, col = line_col(starts, unterminated_dquote)
+        findings.append(Finding(
+            path, line, col, "QUOTEPARITY",
+            "Double-quoted string opened here is never closed before end of file "
+            "(quote parity broken) - A2 OA's preprocessor treats everything after it as "
+            "string content, silently corrupting the rest of the file",
+        ))
 
     # DBLBOM: at most one UTF-8 BOM, and only at byte 0. Scans RAW text —
     # masking would blank a BOM hiding inside a string literal, but the physical
