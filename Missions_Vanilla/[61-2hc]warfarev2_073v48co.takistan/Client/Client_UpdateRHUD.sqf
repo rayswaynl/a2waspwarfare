@@ -97,7 +97,15 @@ _RHUDSetColor = {
 _RHUDGetDisplay = {
 	private["_cutDisplay"];
 	_cutDisplay = ["currentCutDisplay"] call BIS_FNC_GUIget;
-	if (isNull _cutDisplay) then {
+	//--- w807e-L16 (RHUD blank-values RCA): currentCutDisplay is shared mission-wide - Rsc/Titles.hpp
+	//--- wires the SAME onLoad/onUnload BIS_FNC_GUIset hooks onto EndOfGameStats, so a non-null but
+	//--- WRONG display could be silently accepted and cached below; every RHUD value write then lands
+	//--- on dead/foreign controls with no RPT error (A2/OA ctrlSetText etc. no-op silently on a control
+	//--- that does not exist on the given display - see the isNull-on-a-control idiom already used at
+	//--- the build-queue guard below). Validate identity via the RHUD own anchor control (1345,
+	//--- RUBHUD_Background, always present whenever OptionsAvailable is actually the loaded resource)
+	//--- before trusting the display, not just non-null.
+	if (isNull _cutDisplay || {isNull (_cutDisplay displayCtrl 1345)}) then {
 		CutRsc["OptionsAvailable","PLAIN",0];
 		_cutDisplay = ["currentCutDisplay"] call BIS_FNC_GUIget;
 	};
