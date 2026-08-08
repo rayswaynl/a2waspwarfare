@@ -1383,7 +1383,7 @@ missionNamespace setVariable ["wfbe_coreloop_handle_groupsgc", [_clGCOwner] Exec
 
 //--- AICOM SMALL-ARMS x AIR ENGAGEMENT ENVELOPE (fable/smallarms-air-envelope): per-machine steering loop that
 //--- clears a NON-AA unit's lock on an aircraft it cannot damage when the aircraft is beyond the effective range
-//--- (WFBE_C_SMALLARMS_AIR_ENVELOPE, default 0 = OFF -> self-exits, byte-identical to HEAD). Runs on server + each
+//--- (WFBE_C_SMALLARMS_AIR_ENVELOPE, default 1 = ON; set 0 to disable). Runs on server + each
 //--- HC (same file, Init_HC.sqf) touching only LOCAL units. NOT sim-gating: unit<->target range, sim never frozen.
 [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_SmallArmsAirEnvelope.sqf";
 

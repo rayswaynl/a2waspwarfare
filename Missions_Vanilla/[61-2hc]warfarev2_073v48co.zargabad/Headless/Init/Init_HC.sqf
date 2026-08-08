@@ -271,5 +271,5 @@ private "_reseatResult"; _reseatResult = if ((side group player == civilian) && 
 //--- AICOM SMALL-ARMS x AIR ENGAGEMENT ENVELOPE twin (fable/smallarms-air-envelope): the HC-local copy of the
 //--- per-machine steering loop, covering the DELEGATED AICOM commander teams + delegated town-AI local to THIS
 //--- headless client (WFBE_CL_TownAI_Groups). Server runs its own copy (Init_Server.sqf) for the no-HC fallback
-//--- set. Shares WFBE_C_SMALLARMS_AIR_ENVELOPE (default 0 = OFF -> self-exits). Touches only LOCAL units.
+//--- set. Shares WFBE_C_SMALLARMS_AIR_ENVELOPE (default 1 = ON; set 0 to disable). Touches only LOCAL units.
 [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_SmallArmsAirEnvelope.sqf";
