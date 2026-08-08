@@ -2070,7 +2070,7 @@ if (isNil "WFBE_C_AICOM_WATER_LEG_GATE") then {WFBE_C_AICOM_WATER_LEG_GATE = 1};
 	if (isNil "WFBE_C_TOWNS_STARTING_MODE") then {WFBE_C_TOWNS_STARTING_MODE = 0}; //--- Town starting mode (0: Resistance, 1: 50% blu, 50% red, 2: Nearby Towns, 3: Random).
 	if (isNil "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") then {WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = 1}; //--- Lock the vehicles of the defender side.
 	if (isNil "WFBE_C_TOWNS_CAPTURE_BAR_DETAIL") then {WFBE_C_TOWNS_CAPTURE_BAR_DETAIL = 0}; //--- Lane 52: 1 adds SV trend, mode-2 Camps X/Y, and camp SV text to the client capture bar; 0 keeps the legacy label.
-	if (isNil "WFBE_C_TOWN_FLIP_BROADCAST") then {WFBE_C_TOWN_FLIP_BROADCAST = 1}; //--- ARMED (owner ruling 2026-07-21: everything flags on). Client-only enemy town-flip title/chat; marker recolor is always applied regardless.
+	if (isNil "WFBE_C_TOWN_FLIP_BROADCAST") then {WFBE_C_TOWN_FLIP_BROADCAST = 0}; //--- DISARMED on owner order 2026-08-08 (supersedes the 2026-07-21 blanket everything-on ruling): owner reported enemy captures leaking to uninvolved sides as side-sensitive intel (West has captured X shown to an EAST player). 0 restores the TownCaptured.sqf side filter: title/chat only when the client side is the old or new owner (GUER always informed - the insurgency knows its towns). Marker recolor for the OWNING side is applied regardless of this flag.
 
 	//--- Air units.
 	if (isNil "WFBE_C_JET_AA_SURVIVE") then {WFBE_C_JET_AA_SURVIVE = 1}; //--- Jets survive the 1st SPAAG (Tunguska/Linebacker) hit: fuel drained + slight damage for a landing attempt; a 2nd hit explodes. 0 disables.
