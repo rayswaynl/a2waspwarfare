@@ -8,7 +8,7 @@ _vehicle = _this select 0;
 //--- because the condition could then never be satisfied the waitUntil re-threw it on every re-check.
 //--- Terminate on null/dead instead. isNull is tested FIRST behind lazy || so the getVariable never runs
 //--- against a null object (a null object ignores the 2-arg default - see RequestVehicleSell.sqf L72-73).
-waituntil {isNull _vehicle || {!alive _vehicle} || {(_vehicle getVariable ["restricted", false]) && {({isPlayer _x} count (crew _vehicle)) != 0}}};
+waituntil {sleep 0.05; isNull _vehicle || {!alive _vehicle} || {(_vehicle getVariable ["restricted", false]) && {({isPlayer _x} count (crew _vehicle)) != 0}}};
 if (isNull _vehicle || {!alive _vehicle}) exitWith {};
 if (isNull _unit) exitWith {};
 _unit action  ["getOut", _vehicle];hintsilent "ARTILLERY MISSION RUNNING";
