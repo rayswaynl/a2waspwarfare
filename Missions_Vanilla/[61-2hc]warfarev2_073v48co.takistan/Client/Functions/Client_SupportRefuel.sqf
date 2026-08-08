@@ -8,6 +8,8 @@ _supportRange = missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_RANGE";
 _repairRange = missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE";
 _get = _veh getVariable ["stopped", false]; //--- cmdcon41-w3m (P2, live client RPT): "stopped" is set ONLY by the stealth engine toggle (Startengine.sqf false / Stopengine.sqf true); a support vehicle never toggled has NIL here, so the bare 1-arg read fed a nil into the if() below and threw ("Type Nothing, expected Bool"). Object 2-arg getVariable [name,default] is reliable in A2-OA 1.64 and returns false when unset.
 if (_get) exitWith {if (_price > 0) then {_price Call ChangePlayerFunds;};hint "Quit the stealth mode !";};
+if (_veh getVariable ["wfbe_refuel_inProgress", false]) exitWith {if (_price > 0) then {_price Call ChangePlayerFunds;};hint "Refuel already in progress."};
+_veh setVariable ["wfbe_refuel_inProgress", true];
 //--- Retrieve Informations.
 _name = [typeOf _veh, 'displayName'] Call GetConfigInfo;
 _refTime = missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_REFUEL_TIME";
@@ -82,3 +84,4 @@ if (_cts == 0 && {_price > 0}) then {_price Call ChangePlayerFunds;};
 if (_cts != 0 && {!gameOver} && {!WFBE_GameOver}) then {
 	_veh setFuel 1;
 };
+if (!isNull _veh) then {_veh setVariable ["wfbe_refuel_inProgress", false];};

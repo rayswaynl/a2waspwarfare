@@ -47,6 +47,8 @@ if ((side group player == resistance) && {(missionNamespace getVariable ["WFBE_C
 	} forEach _supports;
 };
 if ((typeOf _veh) iskindOf "Air" && _nearIsDP && {!_guerTownRearm}) exitWith {if (_price > 0) then {_price Call ChangePlayerFunds;};Hint "You can't rearm air in town"};
+if (_veh getVariable ["wfbe_rearm_inProgress", false]) exitWith {if (_price > 0) then {_price Call ChangePlayerFunds;};hint "Rearm already in progress."};
+_veh setVariable ["wfbe_rearm_inProgress", true];
 //--- Coefficient Vary depending on the support type.
 _airCoef = 1;
 _artCoef = 1;
@@ -107,3 +109,4 @@ if (_cts == 0 && {_price > 0}) then {_price Call ChangePlayerFunds;};
 if (_cts != 0 && {!gameOver} && {!WFBE_GameOver}) then {
 	[_veh,sideJoined] Spawn RearmVehicle;
 };
+if (!isNull _veh) then {_veh setVariable ["wfbe_rearm_inProgress", false];};
