@@ -18,6 +18,8 @@ while {time < _lockSec} do {
 	sleep 2;
 	if (alive player) then {
 		if ((player distance [_hold select 0, _hold select 1, _hold select 2]) > 150) then {
+			//--- This lockout owns the player, not the vehicle or its other occupants.
+			if (vehicle player != player) then {moveOut player};
 			player setPosASL _hold;
 		};
 		if ((time - _lastHint) >= 60) then {
