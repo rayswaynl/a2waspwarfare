@@ -55,6 +55,10 @@ Where this diverges from a hypothetical "by the book" packer:
     (mimetype 0x43707273, "Cprs"), but nothing in this project's build
     lineage ever used that, and it stays off unless `--compress` is passed
     (see "Cprs text compression" in `Tools/Pack/PBO-PACKING.md`).
+  - No SQF comment stripping by default. `--strip-comments` (off unless
+    passed) deletes `//` and `/* */` comments from packed `.sqf` entries only,
+    preserving every newline so RPT line numbers are unaffected (see "SQF
+    comment stripping" in `Tools/Pack/PBO-PACKING.md`).
   - File bytes are read/written exactly as-is (`open(..., 'rb')` /
     concatenation of raw bytes) — no CRLF normalisation of any kind. This
     matches every recovered script; PBO entries are opaque byte blobs.
@@ -294,6 +298,194 @@ def _mask_config_comments(text: str) -> str:
                 continue
         i += 1
     return "".join(chars)
+
+
+def strip_sqf_comments(text: str) -> str:
+    """Remove `//` and `/* */` comments from SQF source text while preserving
+    every newline character exactly where it was, so line numbers reported by
+    the engine's own `preprocessFileLineNumbers` (and therefore every RPT
+    error/callstack) are identical whether or not this ran.
+
+    A sibling of `_mask_config_comments()` above, not a call-through to it:
+    that helper *masks* (blanks to spaces, same length) for structural
+    depth-counting on mission.sqm/config text, and only understands `"`-
+    delimited strings (the mission.sqm/config convention). This function
+    *deletes* comment characters outright (that's the whole point - shrink
+    the file) and additionally must be:
+
+      - single- AND double-quote aware. SQF strings use `'...'` as often as
+        `"..."`, and both delimiters use the same doubled-quote-escapes-itself
+        convention as config text (`'it''s'` / doubled double-quotes inside a
+        "..." string) - never treat a `//` or `/*` inside either kind of
+        string as a comment.
+      - preprocessor-aware. A physical line that is (or continues, via a
+        trailing `\\` line-continuation) a `#define`/`#include`/`#if...`
+        directive is copied through **completely untouched** - no comment
+        detection is even attempted on it. This is deliberately conservative:
+        a macro body can legitimately contain `//`-looking text that is not a
+        comment once the preprocessor joins its continuation lines, and
+        getting that wrong would silently corrupt a build-time constant. A
+        directive line with a genuine trailing `//` comment simply keeps that
+        comment (a missed few bytes of savings, not a correctness risk) - see
+        `test_directive_with_trailing_comment_is_untouched`.
+
+    Every `\\n` in the input is copied to the output exactly once, in every
+    state (normal code, inside a string, inside a comment, inside a
+    directive) - this is what makes the "preserve line numbers" contract hold
+    structurally, not just for the common case. See
+    `test_strip_preserves_line_count_on_real_corpus` for the corpus-wide
+    proof against every real `.sqf` file in this repo.
+    """
+    out: List[str] = []
+    n = len(text)
+    i = 0
+    state = "code"  # code | line_comment | block_comment | string | directive
+    quote_char = ""
+    at_line_start = True
+
+    def _prev_char_before_newline_is_backslash() -> bool:
+        # out[-1] is the '\n' just appended; walk back over any '\r' before it
+        # (CRLF line endings) to find the last real content character.
+        j = len(out) - 2
+        while j >= 0 and out[j] == "\r":
+            j -= 1
+        return j >= 0 and out[j] == "\\"
+
+    while i < n:
+        ch = text[i]
+
+        if state == "directive":
+            # Directive lines (and their backslash-continuations) pass through
+            # byte-identical - no comment or string parsing is attempted here.
+            out.append(ch)
+            if ch == "\n":
+                if _prev_char_before_newline_is_backslash():
+                    pass  # continuation line - still inside the directive
+                else:
+                    state = "code"
+                    at_line_start = True
+            i += 1
+            continue
+
+        if state == "line_comment":
+            if ch == "\n":
+                out.append(ch)
+                state = "code"
+                at_line_start = True
+            elif ch == "\r":
+                out.append(ch)  # keep CRLF pairing intact ahead of the '\n'
+            # else: comment text - dropped (this is the actual byte saving)
+            i += 1
+            continue
+
+        if state == "block_comment":
+            if ch == "*" and i + 1 < n and text[i + 1] == "/":
+                i += 2
+                state = "code"
+                at_line_start = False
+                continue
+            if ch == "\n" or ch == "\r":
+                out.append(ch)  # preserve line structure through the comment
+            i += 1
+            continue
+
+        if state == "string":
+            out.append(ch)
+            if ch == quote_char:
+                if i + 1 < n and text[i + 1] == quote_char:
+                    out.append(text[i + 1])  # doubled quote = literal escape
+                    i += 2
+                    continue
+                state = "code"
+            i += 1
+            continue
+
+        # state == "code"
+        if at_line_start and ch in " \t":
+            out.append(ch)
+            i += 1
+            continue
+        if at_line_start and ch == "#":
+            state = "directive"
+            out.append(ch)
+            i += 1
+            continue
+        at_line_start = False
+
+        if ch == '"' or ch == "'":
+            state = "string"
+            quote_char = ch
+            out.append(ch)
+            i += 1
+            continue
+        if ch == "/" and i + 1 < n and text[i + 1] == "/":
+            state = "line_comment"
+            i += 2
+            continue
+        if ch == "/" and i + 1 < n and text[i + 1] == "*":
+            state = "block_comment"
+            i += 2
+            continue
+        if ch == "\n":
+            out.append(ch)
+            at_line_start = True
+            i += 1
+            continue
+        out.append(ch)
+        i += 1
+
+    return "".join(out)
+
+
+# v1 scope, deliberately narrow: .sqf only. description.ext/mission.sqm/
+# stringtable.xml/.hpp are config/data formats with different comment/parsing
+# rules (`_mask_config_comments` above serves a different purpose - masking
+# for structural depth-counting, not stripping for size) that this pass never
+# audited for safety. Extending is future work, not this spike.
+STRIP_COMMENT_SUFFIXES = (".sqf",)
+
+
+def strip_comment_entries(
+    files: List[Tuple[str, bytes]], quiet: bool
+) -> List[Tuple[str, bytes]]:
+    """Return `files` with every entry matching `STRIP_COMMENT_SUFFIXES` run
+    through `strip_sqf_comments()`; every other entry is passed through byte-
+    identical. Re-verifies the line-count-preservation contract on every
+    transformed file before accepting it - belt-and-suspenders alongside the
+    stripper's own construction and `test_pack_pbo.py`'s corpus-wide test, so
+    a future edit to `strip_sqf_comments()` that ever breaks the contract
+    aborts the pack instead of silently shipping an RPT-line-number-shifted
+    build."""
+    out: List[Tuple[str, bytes]] = []
+    total_before = 0
+    total_after = 0
+    touched = 0
+    for path, data in files:
+        if not path.endswith(STRIP_COMMENT_SUFFIXES):
+            out.append((path, data))
+            continue
+        text = data.decode("latin-1")
+        stripped_text = strip_sqf_comments(text)
+        if stripped_text.count("\n") != text.count("\n"):
+            raise PackError(
+                f"internal error: comment-stripping changed the line count of "
+                f"'{path}' ({text.count(chr(10))} -> {stripped_text.count(chr(10))}) "
+                "- refusing to ship an RPT-line-number-shifted build"
+            )
+        stripped_bytes = stripped_text.encode("latin-1")
+        total_before += len(data)
+        total_after += len(stripped_bytes)
+        touched += 1
+        out.append((path, stripped_bytes))
+    if touched and total_before:
+        log(
+            f"  strip-comments: {touched} {STRIP_COMMENT_SUFFIXES} entries, "
+            f"{total_before:,} -> {total_after:,} bytes "
+            f"({total_before - total_after:,} saved, "
+            f"{(total_before - total_after) / total_before:.1%})",
+            quiet,
+        )
+    return out
 
 
 def _innermost_config_block(text: str, masked: str, index: int) -> str:
@@ -618,6 +810,7 @@ def pack(
     force: bool,
     quiet: bool,
     compress: bool = False,
+    strip_comments: bool = False,
 ) -> None:
     if not source.is_dir():
         raise PackError(f"Source mission folder not found or not a directory: {source}")
@@ -633,6 +826,11 @@ def pack(
     check_slot_header_consistency(source, files)
     check_debug_guard(files, allow_debug, quiet)
     check_no_init_contamination(files)
+
+    # Every guard above runs against original, unstripped bytes - stripping
+    # happens last so it can never change what any guard sees or decides.
+    if strip_comments:
+        files = strip_comment_entries(files, quiet)
 
     files.sort(key=lambda x: x[0])
 
@@ -655,6 +853,13 @@ def pack(
             "  compress=True: Cprs-compressed eligible "
             f"{TEXT_COMPRESS_SUFFIXES} entries >= {REAL_LZSS_MIN_SIZE} bytes "
             "(see Tools/Pack/PBO-PACKING.md, 'Cprs text compression')",
+            quiet,
+        )
+    if strip_comments:
+        log(
+            f"  strip-comments=True: stripped // and /* */ comments from "
+            f"{STRIP_COMMENT_SUFFIXES} entries, preserving line numbers (see "
+            "Tools/Pack/PBO-PACKING.md, 'SQF comment stripping')",
             quiet,
         )
     log(
@@ -716,6 +921,18 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
         "'Cprs text compression' in Tools/Pack/PBO-PACKING.md before shipping "
         "this to a real deploy - client-side load is not yet proven.",
     )
+    p.add_argument(
+        "--strip-comments",
+        dest="strip_comments",
+        action="store_true",
+        help="Opt-in: strip // and /* */ comments from every packed "
+        f"{STRIP_COMMENT_SUFFIXES} entry, preserving every newline so RPT "
+        "line numbers are unaffected. String-literal and preprocessor-"
+        "directive aware - never touches comment-like text inside a quoted "
+        "string or a #define/#include line. Default: off (byte-for-byte "
+        "identical to every prior build). See 'SQF comment stripping' in "
+        "Tools/Pack/PBO-PACKING.md.",
+    )
     return p.parse_args(argv)
 
 
@@ -732,6 +949,7 @@ def main(argv: List[str] | None = None) -> int:
             force=args.force,
             quiet=args.quiet,
             compress=args.compress,
+            strip_comments=args.strip_comments,
         )
     except PackError as exc:
         print(f"error: {exc}", file=sys.stderr)
