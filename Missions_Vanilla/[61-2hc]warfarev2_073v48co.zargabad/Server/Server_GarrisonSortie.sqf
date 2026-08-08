@@ -47,14 +47,17 @@ _maxActive   = missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_MAX_ACTIVE"
 //--- frame-spike slice bounding (flag WFBE_C_GARRISON_SORTIE_BATCHED, default 0; see the towns-forEach
 //--- block below). Flag-off: byte-identical to HEAD (batchSize/cursor unused).
 _batchSize   = missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_TOWN_BATCH", 15];
+if (_batchSize < 1) then {_batchSize = 1;}; //--- guard: used as a divisor below (same idiom as this file's MIN/MAX guard and Server_AmbientSkirmish.sqf/Server_GuerAirDef.sqf/Server_Oilfields.sqf).
 
 //--- Wait for towns to exist (mirrors GuerAirDef/GarrisonDressing startup gate).
 waitUntil { (!isNil "towns") && {(count towns) > 0} };
 sleep 45;
 
-//--- frame-spike slice-bounding setup (flag WFBE_C_GARRISON_SORTIE_BATCHED, default 0): read once
-//--- at startup, same idiom as WFBE_C_GARRISON_SORTIE itself above. Flag-off keeps _numBatches=1 so
-//--- _batchInterval==_interval and the per-pass sleep is unchanged from HEAD.
+//--- frame-spike slice-bounding setup (flag WFBE_C_GARRISON_SORTIE_BATCHED, default 0): primes the
+//--- FIRST sleep only. Every cycle after that recomputes _numBatches/_batchInterval from the CURRENT
+//--- town count (see the towns-forEach block below), so a changing town count keeps the intended
+//--- full-sweep cadence instead of drifting. Flag-off keeps _numBatches=1 so _batchInterval==_interval
+//--- and the per-pass sleep is unchanged from HEAD.
 _gsBatched     = (missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_BATCHED", 0]) > 0;
 _numBatches    = if (_gsBatched) then {ceil ((count towns) / _batchSize) max 1} else {1};
 _batchInterval = _interval / _numBatches;
@@ -125,19 +128,33 @@ while {!WFBE_GameOver} do {
 
 	//--- frame-spike slice bounding (flag WFBE_C_GARRISON_SORTIE_BATCHED, default 0): flag-off builds
 	//--- _gsTownList as the full towns array (byte-identical to the old unbounded forEach towns).
-	//--- Flag-on builds it as a bounded _batchSize-town window starting at the persistent _cursor,
-	//--- which advances (wrapping) so every town is still visited once per full sweep - same per-town
-	//--- body below either way, only the enumerated collection changes.
-	Private ["_gsTownsCount","_gsI","_gsIdx","_gsTownList"];
+	//--- Flag-on walks a sequential, contiguous _batchSize window from the persistent _cursor and wraps
+	//--- to 0 only at the end of the array (never mod-wraps mid-batch), so every town is visited exactly
+	//--- once per full sweep with no double-hits and no gaps - same per-town body below either way, only
+	//--- the enumerated collection changes. _numBatches/_batchInterval are recomputed here from the
+	//--- CURRENT town count (used for the NEXT sleep) so a changing town count keeps the intended cadence.
+	Private ["_gsTownsCount","_gsI","_gsIdx","_gsTownList","_gsBatchLen"];
 	_gsTownsCount = count towns;
 	_gsTownList = towns;
+	if (_gsBatched) then {
+		_numBatches    = ceil (_gsTownsCount / _batchSize) max 1;
+		_batchInterval = _interval / _numBatches;
+	} else {
+		_numBatches    = 1;
+		_batchInterval = _interval;
+	};
 	if (_gsBatched && {_gsTownsCount > 0}) then {
+		//--- town count may have shrunk since the cursor last advanced; a stale cursor past the current
+		//--- end restarts the sweep at 0 instead of reading out of range.
+		if (_cursor >= _gsTownsCount) then { _cursor = 0; };
+		_gsBatchLen = (_batchSize min (_gsTownsCount - _cursor)) max 1;
 		_gsTownList = [];
-		for "_gsI" from 0 to (((_batchSize min _gsTownsCount) max 1) - 1) do {
-			_gsIdx = (_cursor + _gsI) mod _gsTownsCount;
+		for "_gsI" from 0 to (_gsBatchLen - 1) do {
+			_gsIdx = _cursor + _gsI;
 			_gsTownList set [count _gsTownList, towns select _gsIdx];
 		};
-		_cursor = (_cursor + _batchSize) mod _gsTownsCount;
+		_cursor = _cursor + _gsBatchLen;
+		if (_cursor >= _gsTownsCount) then { _cursor = 0; };
 	};
 	//=== (2) MAINTAIN: spawn one sortie per eligible town, under the global active cap =========
 	{
