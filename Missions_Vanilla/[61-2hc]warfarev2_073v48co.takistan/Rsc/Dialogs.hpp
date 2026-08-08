@@ -4874,7 +4874,7 @@ class WFBE_PlayerSettingsMenu {
 		class CA_AAR   : CA_HUD { idc = 30021; x = 0.505; y = 0.135 + 0.345; text = "AAR Markers: ON";    action = "WFBE_MenuAction = 2"; };
 		class CA_Bomb  : CA_HUD { idc = 30022; x = 0.29;  y = 0.135 + 0.392; text = "Bomb Warning: ON";   action = "WFBE_MenuAction = 3"; };
 		class CA_Amb   : CA_HUD { idc = 30023; x = 0.505; y = 0.135 + 0.392; text = "Ambulance Rings: ON"; action = "WFBE_MenuAction = 4"; };
-		class CA_Kill  : CA_HUD { idc = 30024; x = 0.29;  y = 0.135 + 0.439; text = "Kill Feed: ON";       action = "WFBE_MenuAction = 5"; };
+		class CA_Kill  : CA_HUD { idc = 30024; x = 0.29;  y = 0.135 + 0.439; text = "Bounty Chat Messages: ON";       action = "WFBE_MenuAction = 5"; };
 		class CA_IRS   : CA_HUD { idc = 30025; x = 0.505; y = 0.135 + 0.439; text = "Auto IR Smoke: ON";   action = "WFBE_MenuAction = 6"; };
 		class CA_Bipod : CA_HUD { idc = 30026; x = 0.29;  y = 0.135 + 0.486; w = 0.42; text = "Auto Deploy Bipod: ON"; action = "WFBE_MenuAction = 7"; };
 		//--- High-climbing default (same var/key/localized labels as the Team-menu control; text set live).
