@@ -115,6 +115,17 @@ while {_i > 0} do {
 	sleep 1;
 };
 
+//--- Terminal round end: clear an applied guard, but do not equip or move the unit during teardown.
+if (gameOver) exitWith {
+	if (_deadspawnGuardApplied && {alive _respawnedUnit}) then {
+		_respawnedUnit setVariable ["wfbe_penWeapons", []];
+		_respawnedUnit setVariable ["wfbe_penMagazines", []];
+		_respawnedUnit setCaptive false;
+		_respawnedUnit allowDamage true;
+		["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|skip=gameOver", _sideText, _respawnedUnit]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
 //--- A player/death transition can land during the final sleep, after the loop's last check.
 if (isPlayer(_respawnedUnit) || !(alive _respawnedUnit)) then {_skip = true};
 
