@@ -237,6 +237,11 @@ score and playtime across sessions, keyed by Steam UID, and uses it to detect/co
 team skill-stacking. Persistence goes through a native extension the mission calls as
 `"A2WaspDatabase" callExtension ...`.
 
+> **Full guide:** `docs/ops/ANTISTACK-INSTALL.md` is the complete standalone version of
+> this section — full wire-protocol spec, reference SQL schema + DDL, database engine
+> setup, replacement-DLL build guidance, and verification. Use it if the current host
+> will not provide the original DLL/database. This section stays as the summary.
+
 **What is and is not in this codebase:**
 
 - **In the repo:** the complete mission-side module — every call site, the wire protocol,
@@ -284,21 +289,22 @@ So a new box can go live immediately and add the database later.
 ### Appendix — A2WaspDatabase extension interface (for re-implementation)
 
 All calls: `"A2WaspDatabase" callExtension "<code>,<params>"`. Responses are SQF-parsable
-strings (the mission runs `call compile` on them) of the form `[<responseCode>, <body>]`.
-Long-running queries are **asynchronous**: the initial call returns a request ID, which the
-mission polls with a separate procedure code (~0.1 s interval, up to 120 attempts).
+strings (the mission runs `call compile` on them) — valid SQF array literals whose first
+element is the response code. Long-running queries are **asynchronous**: the initial call
+returns a request ID, which the mission polls with a separate procedure code (505: every
+0.10 s, up to 120 attempts; 707: every 3 s, up to 9 attempts).
 
 | Code | Name (mission side) | Request params | Response |
 |---|---|---|---|
 | 101 | RETRIEVE (player stats) | `uid` | `[code, requestID]` → poll with 505 |
-| 505 | TRY_RETRIEVE (poll for 101) | `requestID` | `[code, [totalScore, ticksPlayed]]`; code < 0 = pending |
+| 505 | TRY_RETRIEVE (poll for 101) | `requestID` | `[code, totalScore, ticksPlayed]` (flat, 3 elements); code < 0 = pending |
 | 202 | STORE (score delta) | `uid,scoreDiff` | `[1, ...]` on success |
-| 404 | STORE_SIDE | `uid,side` (side: 1 = WEST, 2 = EAST) | `[1, ...]` |
-| 303 | SEND_PLAYERLIST | `uid,side,uid,side,...` (flat CSV) | `[1, ...]` |
+| 404 | STORE_SIDE | `uid,side` (side: 0 = NONE — sent on disconnect, 1 = WEST, 2 = EAST) | `[1, ...]` |
+| 303 | SEND_PLAYERLIST | `uid,side,uid,side,...` (flat CSV; empty list arrives as `303,`) | `[1, ...]` |
 | 808 | FLUSH_PLAYERLIST | *(none — code only)* | `[1, ...]` |
-| 606 | REQUEST_SIDE_TOTAL_SKILL | `side` (1/2) | `[code, requestID]` → poll with 707 |
+| 606 | REQUEST_SIDE_SKILL | `side` (1/2) | `[code, requestID]` → poll with 707 |
 | 707 | TRY_RETRIEVE (poll for 606) | `requestID` | `[code, totalSkill]`; code < 0 = pending |
-| 909 | SET_MAP | `mapId` | `[1, ...]` |
+| 909 | SET_MAP | `mapId` (0 = none/match end, 1 = Chernarus/other, 2 = Takistan, 3 = Zargabad) | `[1, ...]` |
 
 Stored data per player is minimal: **UID → (totalScore, ticksPlayed, side)**. The
 score-flush loop (`mainLoop.sqf`) runs every main-loop interval per connected human player:
@@ -356,7 +362,9 @@ For a hardened public deployment (per `server-config/README.md`):
    races that stop within the first few hundred lines are normal.
 5. AntiStack: with the DLL installed, RPT shows
    `CallDatabaseRetrieve.sqf: Called database ... RESPONSE (REQUEST ID) IS: [...]` with real
-   IDs; without it, either silence (parameter off) or harmless sentinel fallbacks.
+   IDs; without it, either silence (parameter off) or harmless sentinel fallbacks. These
+   lines only print when content logging is active (`WF_LOG_CONTENT` in `version.sqf` —
+   see `ANTISTACK-INSTALL.md` §9).
 6. Join with a real client, take a town, disconnect, restart the mission, rejoin — with the
    DB active your score total persists.
 
