@@ -148,8 +148,8 @@ _applyKaFlares = {
 		};
 		_n = _eMin + floor(random (_eMax - _eMin + 1)); //--- MIN..MAX inclusive; tier-scaled when WFBE_C_GUER_KA137_FLARE_TIER_SCALE>0.
 		//--- Mount the manual OA launcher + one flare mag (turret path [-1], as the Ka-137 fires from MainTurret).
-		{_v addMagazineTurret [_x, [-1]]} forEach [_flareMag];
 		{_v addWeaponTurret  [_x, [-1]]} forEach [_flareLauncher];
+		{_v addMagazineTurret [_x, [-1]]} forEach [_flareMag];
 		//--- Public FlareCount = the AUTO-CM budget the module decrements. Deferred so it beats CM_Set's default.
 		[_v, _n] Spawn {
 			private ["_veh","_cnt"];
@@ -750,8 +750,8 @@ while {!WFBE_GameOver} do {
 						if (_useAT) then {
 							{_veh removeMagazineTurret [_x, [-1]]} forEach ["100Rnd_762x54_PKT"];
 							{_veh removeWeaponTurret  [_x, [-1]]} forEach ["PKT"];
-							{_veh addMagazineTurret [_x, [-1]]} forEach ["5Rnd_AT5_BRDM2","64Rnd_57mm"];
 							{_veh addWeaponTurret  [_x, [-1]]} forEach ["AT5Launcher","57mmLauncher"];
+							{_veh addMagazineTurret [_x, [-1]]} forEach ["5Rnd_AT5_BRDM2","64Rnd_57mm"];
 							_loadName = "AT5";
 						};
 						//--- Apply the EASA Igla AA loadout (counter-air): strip the recon MG, mount the Igla SAM set.
@@ -760,8 +760,8 @@ while {!WFBE_GameOver} do {
 						if (_useAA) then {
 							{_veh removeMagazineTurret [_x, [-1]]} forEach ["100Rnd_762x54_PKT"];
 							{_veh removeWeaponTurret  [_x, [-1]]} forEach ["PKT"];
-							{_veh addMagazineTurret [_x, [-1]]} forEach ["2Rnd_Igla","2Rnd_Igla"];
 							{_veh addWeaponTurret  [_x, [-1]]} forEach ["Igla_twice"];
+							{_veh addMagazineTurret [_x, [-1]]} forEach ["2Rnd_Igla","2Rnd_Igla"];
 							_loadName = "IglaAA";
 						};
 						//--- CARGO/PARADROP variant keeps the DEFAULT recon-MG airframe (drone delivery bird);
@@ -859,14 +859,14 @@ while {!WFBE_GameOver} do {
 										if (_useAT) then {
 											{_eVeh2 removeMagazineTurret [_x, [-1]]} forEach ["100Rnd_762x54_PKT"];
 											{_eVeh2 removeWeaponTurret  [_x, [-1]]} forEach ["PKT"];
-											{_eVeh2 addMagazineTurret [_x, [-1]]} forEach ["5Rnd_AT5_BRDM2","64Rnd_57mm"];
 											{_eVeh2 addWeaponTurret  [_x, [-1]]} forEach ["AT5Launcher","57mmLauncher"];
+											{_eVeh2 addMagazineTurret [_x, [-1]]} forEach ["5Rnd_AT5_BRDM2","64Rnd_57mm"];
 										};
 										if (_useAA) then {
 											{_eVeh2 removeMagazineTurret [_x, [-1]]} forEach ["100Rnd_762x54_PKT"];
 											{_eVeh2 removeWeaponTurret  [_x, [-1]]} forEach ["PKT"];
-											{_eVeh2 addMagazineTurret [_x, [-1]]} forEach ["2Rnd_Igla","2Rnd_Igla"];
 											{_eVeh2 addWeaponTurret  [_x, [-1]]} forEach ["Igla_twice"];
+											{_eVeh2 addMagazineTurret [_x, [-1]]} forEach ["2Rnd_Igla","2Rnd_Igla"];
 										};
 
 										//--- Tag + flyInHeight to match the leader; the group already carries the
@@ -952,6 +952,14 @@ while {!WFBE_GameOver} do {
 									//--- Round ended while the drop was inbound: do not land a fresh squad after teardown -
 									//--- every reaper has already stood down, so these troops would never be cleaned up.
 									if (WFBE_GameOver) exitWith {};
+									//--- The request captured _t/_tPos before the 20s approach delay. A capture or
+									//--- region deactivation during that delay must cancel this still-empty group; otherwise
+									//--- fresh troops land for a town that no longer admits a GUER defender. _drops is
+									//--- pruned on the next maintain pass after this group becomes null.
+									if (isNull _t || {(_t getVariable ["sideID", -1]) != WFBE_C_GUER_ID} || {!(_t getVariable ["wfbe_active", false])}) exitWith {
+										deleteGroup _g;
+										diag_log "GUERAIRDEF|DROPFAIL|reason=stale_town";
+									};
 
 									//--- Phase 1: create the whole stick at altitude over the town + chute each man, quickly
 									//--- (0.3s apart, like the supply-drop cadence) so the stick descends TOGETHER, not serially.
