@@ -16,7 +16,7 @@ _pvf set [1, Format["CLTFNC%1",_func]];
 //--- publicVariable reaches every client before Client_HandlePVF can reject the packet,
 //--- exposing side-only recon, markers and purchase state to the enemy. Deliver those
 //--- packets directly to matching human clients; nil/UID routes retain their legacy scope.
-if (typeName _destination == "SIDE") then {
+if (!isNil "_destination" && {typeName _destination == "SIDE"}) then { //--- LIVE HOTFIX wave0808b (2026-08-08): 54 call sites pass nil as the legacy broadcast destination, and on A2OA typeName on a NIL local is a hard error - the whole statement died and the packet was NEVER sent (town/camp captures, dashboard + restart announces, base-area JIP sync, ICBM countdown all silently dropped; RPT: 17x undefined _destination in the first 21 min of the first wave0808a match). isNil must be checked BEFORE typeName; nil now falls through to the else branch = the legacy global publicVariable, exactly the scope the r212 rewrite documented for nil routes.
 	{
 		_recipient = _x;
 		if (isPlayer _recipient && {side _recipient == _destination}) then {
