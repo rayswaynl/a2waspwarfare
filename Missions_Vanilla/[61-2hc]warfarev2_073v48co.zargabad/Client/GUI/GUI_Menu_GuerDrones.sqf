@@ -2,7 +2,7 @@ disableSerialization; //--- Hotfix: _map holds a control - engine serialization 
 Private ["_map","_fpvCooldown","_fpvState","_fpvRemain","_fpvTTL",
          "_fpvElapsed","_battPct","_battFull","_battEmpty","_battBar","_battI",
          "_hvtList","_platform","_carHolder","_hSID","_carrierOwned",
-         "_scudState","_scudCost","_scudCooldownKey","_scudLast","_scudRemain",
+         "_scudState","_scudCost","_scudLast","_scudRemain",
          "_funds","_liveDrones","_mxPos","_scudTargeting","_scudTargetPos",
          "_t","_tm","_ts","_minStr","_secStr","_x"];
 
@@ -129,8 +129,7 @@ while {alive player && dialog} do {
 			ctrlSetText [32024, Format ["$%1 (carrier required)", _scudCost]];
 			ctrlEnable  [32023, false];
 		} else {
-			_scudCooldownKey = Format ["WFBE_SCUD_LAST_%1", str _platform];
-			_scudLast        = missionNamespace getVariable [_scudCooldownKey, -99999];
+			_scudLast = _platform getVariable ["wfbe_scud_last", -99999];
 			_scudRemain      = (missionNamespace getVariable ["WFBE_C_SCUD_COOLDOWN", 300]) - (time - _scudLast);
 			if (_scudRemain > 0) then {
 				_scudState = 2;

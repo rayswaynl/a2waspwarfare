@@ -19,7 +19,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) != 1) exitWith {
 };
 
 private ["_side","_destination","_playerTeam","_sideID","_enemySides","_hvtList","_platform",
-         "_cooldownKey","_lastFired","_now","_funds","_launchPos","_dx","_dy","_len","_dist",
+         "_lastFired","_now","_funds","_launchPos","_dx","_dy","_len","_dist",
          "_chukar","_travelTime","_zoneR","_warHE","_warSADARM","_warWP","_caller","_x"];
 
 _side        = _this select 1;
@@ -45,8 +45,7 @@ if (isNull _platform) exitWith {
 };
 
 //--- VALIDATION 2: per-platform cooldown.
-_cooldownKey = Format ["WFBE_SCUD_LAST_%1", str _platform];
-_lastFired = missionNamespace getVariable [_cooldownKey, -99999];
+_lastFired = _platform getVariable ["wfbe_scud_last", -99999];
 if ((_now - _lastFired) < WFBE_C_SCUD_COOLDOWN) exitWith {
 	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- cooldown (%2s left).", str _side, round (WFBE_C_SCUD_COOLDOWN - (_now - _lastFired))]] Call WFBE_CO_FNC_LogContent;
 };
@@ -62,7 +61,7 @@ if (_funds < WFBE_C_SCUD_COST) exitWith {
 //--- All checks pass: deduct funds + stamp cooldown BEFORE firing (anti double-fire race).
 _playerTeam setVariable ["wfbe_funds", (_funds - WFBE_C_SCUD_COST), true];
 [_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord; //--- Ray pick A: this direct server write bypasses ChangeTeamFunds; keep WFBE_JIP_USER<uid> cash in lock-step so a JIP zero-latch restore stays provably safe.
-missionNamespace setVariable [_cooldownKey, _now];
+_platform setVariable ["wfbe_scud_last", _now, true];
 
 ["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] AUTHORISED -- launching from %2 at target %3.", str _side, getPos _platform, _destination]] Call WFBE_CO_FNC_LogContent;
 
@@ -127,7 +126,7 @@ if (isNull _chukar) exitWith {
 	if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
 	_playerTeam setVariable ["wfbe_funds", (_funds + WFBE_C_SCUD_COST), true];
 	[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord;
-	missionNamespace setVariable [_cooldownKey, _lastFired];
+	_platform setVariable ["wfbe_scud_last", _lastFired, true];
 	["WARNING", Format ["Support_ScudStrike.sqf: [%1] Chukar createVehicle FAILED after debit - refunded %2 and restored cooldown.", str _side, WFBE_C_SCUD_COST]] Call WFBE_CO_FNC_LogContent;
 };
 _chukar setPosASL [_launchPos select 0, _launchPos select 1, 350];
@@ -155,6 +154,12 @@ _caller = leader _playerTeam;
 	_travelTime = _this select 8;
 
 	sleep _travelTime;
+
+	//--- Round-end cancellation: victory sets both flags before the 45s outro hold.
+	//--- The Chukar is exempt from generic vehicle GC, so explicitly reap it on abort.
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
+	};
 
 	//--- Acquire enemy armour/static in the zone for the SADARM top-attack rounds.
 	_armour = [];
@@ -185,9 +190,13 @@ _caller = leader _playerTeam;
 			};
 		} forEach (nearestObjects [_dest, ["Man"], _zoneR]);
 	};
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
+	};
 
 	//--- SADARM x2: top-attack drop from altitude on the two best targets (scatter if none).
 	for "_i" from 0 to 1 do {
+		if (gameOver || {WFBE_GameOver}) exitWith {};
 		if (_i < count _armour) then {
 			_veh = _armour select _i;
 			if (!isNull _caller) then { _veh setVariable ["wfbe_lasthitby", _caller, true]; _veh setVariable ["wfbe_lasthittime", time, true]; };
@@ -198,19 +207,30 @@ _caller = leader _playerTeam;
 		};
 		sleep 0.4;
 	};
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
+	};
 
 	//--- HE x3: scattered area bursts across the zone.
 	for "_i" from 0 to 2 do {
+		if (gameOver || {WFBE_GameOver}) exitWith {};
 		_ang = random 360; _r = random _zoneR;
 		_warHE createVehicle [(_dest select 0) + _r * sin _ang, (_dest select 1) + _r * cos _ang, 0];
 		sleep 0.3;
 	};
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
+	};
 
 	//--- WP x3: incendiary / obscuring burn layer.
 	for "_i" from 0 to 2 do {
+		if (gameOver || {WFBE_GameOver}) exitWith {};
 		_ang = random 360; _r = random (_zoneR * 0.7);
 		_warWP createVehicle [(_dest select 0) + _r * sin _ang, (_dest select 1) + _r * cos _ang, 0];
 		sleep 0.2;
+	};
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
 	};
 
 	["INFORMATION", Format ["Support_ScudStrike.sqf : saturation delivered at %1 (%2 armour targets).", _dest, count _armour]] Call WFBE_CO_FNC_LogContent;
