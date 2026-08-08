@@ -259,7 +259,7 @@ WFBE_CO_FNC_CommanderLeaseStandDownExecutor = {
     if (_side == civilian) exitWith {};
     _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
     if (isNull _logic) exitWith {};
-    while {true} do {
+    while {!WFBE_GameOver} do {
         sleep 1;
 
         _cmd = _logic getVariable "wfbe_commander_lease_cmd_grant";
