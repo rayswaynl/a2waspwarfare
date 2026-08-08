@@ -24,3 +24,13 @@ def test_cancel_queue_is_a_server_transaction_with_a_targeted_result():
     assert '"HandleSpecial"' in handler
     special = (MISSION / "Client" / "PVFunctions" / "HandleSpecial.sqf").read_text(encoding="utf-8")
     assert 'case "cancel-queue-result"' in special
+
+
+def test_factory_queue_removals_preserve_duplicate_token_rows():
+    """A single completion/cancel may remove one token, not every equal token."""
+    cancel = (MISSION / "Server" / "PVFunctions" / "RequestCancelQueue.sqf").read_text(encoding="utf-8")
+    client_build = (MISSION / "Client" / "Functions" / "Client_BuildUnit.sqf").read_text(encoding="utf-8")
+
+    assert '_queu = _queu - [_token];' not in cancel
+    assert '_queu = _queu - [_unique];' not in client_build
+    assert 'if (_i != _idx) then {_new=_new+[_x]}' in cancel
