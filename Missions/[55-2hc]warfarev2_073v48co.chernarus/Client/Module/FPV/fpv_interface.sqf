@@ -1,4 +1,4 @@
-Private ['_action_boom','_action_leave','_defaultTeamswitch','_dgrp','_driver','_drone','_ppColor','_t0','_ttl','_warned'];
+Private ['_action_boom','_action_leave','_defaultTeamswitch','_dgrp','_driver','_drone','_firstFlightShown','_ppColor','_t0','_ttl','_warned'];
 _defaultTeamswitch = teamswitchenabled;
 
 _drone = playerFPV;
@@ -36,7 +36,10 @@ _fpvArmDmg = -1;
 hintSilent Format ["FPV drone airborne. Battery: %1s.\nAction menu: DETONATE WARHEAD / abort.", _ttl];
 
 //--- fable/drones-menu: one-time first-flight drill (per profile, TAGS persistence idiom).
-if (!(profileNamespace getVariable ["WFBE_FPV_FIRSTFLIGHT_SHOWN", false])) then {
+//--- Sanitize corrupt profile data before the BOOL-only negation.
+_firstFlightShown = profileNamespace getVariable ["WFBE_FPV_FIRSTFLIGHT_SHOWN", false];
+if (typeName _firstFlightShown != "BOOL") then {_firstFlightShown = false};
+if (!_firstFlightShown) then {
 	if (!isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_FPV_FIRSTFLIGHT_SHOWN", true] Call WFBE_CO_FNC_SetProfileVariable; if !(isNil "WFBE_CO_FNC_SaveProfile") then {Call WFBE_CO_FNC_SaveProfile}};
 	hint parseText "<t size='1.1' color='#ffd24d'>FPV STRIKE DRONE - FIRST FLIGHT</t><br/><br/>You ARE the drone now - fly it like a light helicopter. Your body stays safe where you launched.<br/><br/><t color='#ffd24d'>DETONATE WARHEAD</t> (action menu) - ram your target; an armed crash detonates too.<br/><t color='#ffd24d'>Abort flight</t> - safe self-destruct, no warhead.<br/><br/>The battery is your flight time - at zero the drone is lost. After each flight the launcher rearms before the next buy.";
 };
