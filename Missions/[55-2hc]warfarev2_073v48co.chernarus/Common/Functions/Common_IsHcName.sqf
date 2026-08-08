@@ -27,7 +27,12 @@
 	Returns: BOOL - true if the (possibly quote-wrapped) candidate matches WFBE_C_HC_NAMES.
 */
 Private ["_name","_hcNames","_chars","_len","_stripped","_inner","_i"];
-_name = _this select 0;
+_name = _this; //--- LIVE BUG wave0807a3/c (2026-08-08): every caller passes a BARE STRING - (name _x) call WFBE_CO_FNC_IsHcName -
+//--- but this line was (_this select 0), and on A2OA select on a STRING is a TYPE ERROR (Error select: Type String, expected Array).
+//--- The error killed the enclosing condition in EVERY money path (BankIncome tick, CreditSidePlayers, kill pvp/bounty/assist rows,
+//--- connect nameGate) - players spawned broke and earned nothing. Accept the documented bare-string contract, tolerate a wrapped
+//--- [string] defensively.
+if ((typeName _name) == "ARRAY") then {_name = _name select 0};
 if (typeName _name != "STRING") exitWith {false};
 
 _hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", []];
