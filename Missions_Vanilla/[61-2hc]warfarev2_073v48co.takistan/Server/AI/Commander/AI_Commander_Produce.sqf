@@ -31,6 +31,12 @@ _capTier = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
 _capTierLast = (count _capTiers) - 1;
 if (_capTier > _capTierLast) then {_capTier = _capTierLast};
 _cap = _capTiers select _capTier;   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
+//--- FPS GOVERNOR (flag WFBE_C_FPS_GOVERNOR, default 0; fable/fps-governor): scale the tier
+//--- ceiling by the live-FPS budget multiplier the same way the static AICAP_MIDHIGH_TRIM cap-swap
+//--- narrows it - only shrinks _cap (never deletes/disbands existing AI), so a governed-down side
+//--- simply stops producing new bodies sooner. Flag-off: WFBE_FpsGovMultiplier stays seeded at 1
+//--- (Init_CommonConstants.sqf), so this is a no-op even if the flag check were ever bypassed.
+if ((missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR", 0]) > 0) then {_cap = floor (_cap * (missionNamespace getVariable ["WFBE_FpsGovMultiplier", 1]))};
 _sideAI = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
 //--- F2 fable/aicom-econ-triad (2026-08-02): pending-spawn ledger. _sideAI counts ALIVE units only, but
 //--- every producer pipeline is latent (factory FIFO in Server_BuyUnit.sqf sleeps through build time; HC

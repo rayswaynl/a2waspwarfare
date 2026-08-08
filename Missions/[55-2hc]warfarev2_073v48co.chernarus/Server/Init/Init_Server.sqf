@@ -1318,6 +1318,16 @@ if (isServer && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 
 	["INITIALIZATION", "Init_Server.sqf: Commander Town Ledger launched (AICOMV2_LANE_CMD_TOWN_LEDGER=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- FPS-adaptive AI governor (fable/fps-governor, NEXT-WAVE): live-FPS budget multiplier for
+//--- AICOM produce/founding, town-garrison materialization (both attacker + defender planners) and
+//--- HC top-up. Gated on WFBE_C_FPS_GOVERNOR (default 0 = inert, byte-identical to HEAD - the
+//--- script's own top-of-file gate is a second belt-and-braces check, matching every other
+//--- default-off worker launch in this file).
+if (isServer && {(missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR", 0]) > 0}) then {
+	[] execVM "Server\AI\Server_FpsGovernor.sqf";
+	["INITIALIZATION", "Init_Server.sqf: FPS-adaptive AI governor launched (WFBE_C_FPS_GOVERNOR=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 // run one global server town script to process supply updates in each town
 //--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation + stored
 //--- handle so server_coreloop_supervisor.sqf can detect a silently-dead loop (stale

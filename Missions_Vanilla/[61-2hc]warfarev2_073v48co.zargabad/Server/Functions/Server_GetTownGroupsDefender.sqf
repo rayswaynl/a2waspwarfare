@@ -204,6 +204,17 @@ if ((missionNamespace getVariable ["AICOMV2_CTL_GARRISON_LINK", 0]) > 0 && {(mis
 	};
 };
 
+//--- FPS GOVERNOR (flag WFBE_C_FPS_GOVERNOR, default 0; fable/fps-governor): scale the planned
+//--- TOWN-DEFENDER garrison by the live-FPS budget multiplier, AFTER the CTL garrison-link block
+//--- above (same integration point CTL uses, so both overlays compose). This is the file the owner
+//--- meant by "town defenders" - GUER/neutral towns route through here (Server_GetTownGroups.sqf
+//--- above is the WEST/EAST attacker-materialization sibling). Floor-protected so a contested town
+//--- is never planned empty purely from FPS governance.
+if ((missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR", 0]) > 0) then {
+	_groups_max = round (_groups_max * (missionNamespace getVariable ["WFBE_FpsGovMultiplier", 1]));
+	if (_groups_max < (missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR_TOWNS_FLOOR", 1])) then {_groups_max = missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR_TOWNS_FLOOR", 1]};
+};
+
 if (_aa_get) then {if (_groups_max > 3) then {_groups_max = 3}};
 
 _unit_infantry = [];
