@@ -404,7 +404,7 @@ if (worldName == "Zargabad") then {
 	WFBE_C_TOWNS_DEFENDER_BY_TIER     = [2,2,2,1];            //--- town garrison difficulty -> COEF (Medium/Medium/Medium/Light)
 	WFBE_C_TOWNS_ACTIVE_MAX_BY_TIER   = [12,12,10,8];         //--- concurrently-active-towns cap (the single largest AI slice)
 	WFBE_C_SIDE_PATROLS_MAX_BY_TIER   = [3,3,3,2];            //--- Build83 (Ray 2026-07-01): +1 WEST/EAST side-patrol cap per tier ([2,2,2,1]->[3,3,3,2]). Effective = min(this, patrol level).
-	WFBE_C_PLAYERS_AI_MAX_BY_TIER     = [16,14,12,10];        //--- per-player AI buy-cap (recruit cap; never deletes an existing squad)
+	WFBE_C_PLAYERS_AI_MAX_BY_TIER     = [23,20,17,14];        //--- per-player AI buy-cap (recruit cap; never deletes an existing squad). fix0808c: base 23 restores the ORIGINAL Miksuu numbers through the restored Soldier x1.5 + commander +10 mechanisms: ceil(23*1.5)=35 soldier, +10=45 commander at low pop (owner Discord receipt 2026-08-02); population tiers still scale down under load.
 	WFBE_C_AICOM_INCOME_PC_BONUS_VALVE = 0.045; //--- B37: gentler low-pop income boost when the valve is on (vs 0.06), so more-squads does not over-bank.
 	WFBE_C_AICOM_INCOME_MULT_MAX = 4.0;        //--- B67 (Ray 2026-06-21): 3.0->4.0 - lift the town-cash multiplier ceiling so the low-pop inverted bonus is not clipped (keeps near-empty-server PvE well-funded). CASH only. hard ceiling on the scaled commander income multiplier (packed-server runaway guard).
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 3}; //--- B66: 4->3 - bring air online a town sooner. Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.

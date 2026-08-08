@@ -57,6 +57,14 @@ if (!isNil '_mbuByTier') then {
 	_mbuPT = missionNamespace getVariable ['WFBE_PopTier', 0]; if (_mbuPT < 0) then {_mbuPT = 0};
 	if (_mbuPT <= ((count _mbuByTier) - 1)) then {_mbu = _mbuByTier select _mbuPT};
 };
+//--- fable/original-ai-caps (2026-08-08, owner order 2026-08-02): restore the original Miksuu
+//--- "Soldier" skill bonus (upstream Miksuu/a2waspwarfare master, Skill_Init.sqf: "the soldier can
+//--- hire more units than the others leader") that B74.2's pop-tier select above silently killed -
+//--- Skill_Init.sqf still mutates the raw SCALAR WFBE_C_PLAYERS_AI_MAX to ceil(1.5x), but the tier
+//--- select just above always overwrote _mbu back to the un-boosted per-tier value, so the bonus
+//--- never survived to reach the buy-gate. Re-apply the same 1.5x here, on the resolved per-tier
+//--- _mbu, so it composes with pop-tier scaling instead of being dead code.
+if (!isNil "WFBE_SK_V_Type" && {WFBE_SK_V_Type == 'Soldier'}) then {_mbu = ceil (1.5 * _mbu)};
 //--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
 if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 
@@ -238,7 +246,14 @@ _IDCS = _IDCS - [_currentIDC];
 				//--- build more"). Intent: START at 10 (lvl 0) and rise +2 per barracks level, clamped to the param (_mbu).
 				//--- The per-FACTORY QUEUE rate-caps (WFBE_C_QUEUE_*_MAX = barracks 10 / light 5 / heavy-air 3, below) are separate.
 				_realSize = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
-				_realSize = (10 + (_realSize * 2)) min _mbu;
+				//--- fable/original-ai-caps (2026-08-08): the flat "10 + level*2" B750 ramp above was tuned to
+				//--- land exactly on _mbu=16 at level 3, so it silently ate the restored Soldier x1.5 (or any
+				//--- future) _mbu boost - the min() clamp never engaged because the LEFT side already capped at
+				//--- 16 regardless of _mbu. Rescale the ramp AS A FRACTION OF _mbu (matches upstream's original
+				//--- round(_mbu/4)*level intent) so it still starts at the B750 floor of 10 at level 0 and still
+				//--- reaches exactly _mbu at level 3 (full barracks) - byte-identical output at today's _mbu=16
+				//--- (level*2 == round(level*(16-10)/3)), but now tracks a boosted _mbu correctly.
+				_realSize = (10 + (round ((_realSize * (_mbu - 10)) / 3))) min _mbu;
 						if (!isNull(commanderTeam)) then {
 			  if (commanderTeam == group player) then {
               _realSize = _realSize + 10;
@@ -448,7 +463,8 @@ _IDCS = _IDCS - [_currentIDC];
 	//--- Mirrors _realSize formula from the purchase guard; same vars already in scope.
 	private ["_capSize","_capAlive","_capUsed"];
 	_capSize = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
-	_capSize = (10 + (_capSize * 2)) min _mbu;
+	//--- fable/original-ai-caps (2026-08-08): mirrors the _realSize ceiling-rescale above (same _mbu boost).
+	_capSize = (10 + (round ((_capSize * (_mbu - 10)) / 3))) min _mbu;
 	if (!isNull(commanderTeam) && {commanderTeam == group player}) then {_capSize = _capSize + 10};
 	if (sideJoined == resistance) then {
 		private ["_capGK","_capGC"];

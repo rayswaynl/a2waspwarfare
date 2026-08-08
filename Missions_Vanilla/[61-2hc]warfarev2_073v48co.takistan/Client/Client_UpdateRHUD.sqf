@@ -542,6 +542,10 @@ while {true} do {
 				_mbuPT = missionNamespace getVariable ['WFBE_PopTier', 0]; if (_mbuPT < 0) then {_mbuPT = 0};
 				if (_mbuPT <= ((count _mbuByTier) - 1)) then {_mbu = _mbuByTier select _mbuPT};
 			};
+			//--- fable/original-ai-caps (2026-08-08): mirrors GUI_Menu_BuyUnits.sqf's restored original
+			//--- Miksuu "Soldier" skill bonus (was dead code - see that file for the full explanation),
+			//--- so the RHUD "AI: X / Y" readout matches what the buy-gate actually allows.
+			if (!isNil "WFBE_SK_V_Type" && {WFBE_SK_V_Type == 'Soldier'}) then {_mbu = ceil (1.5 * _mbu)};
 			//--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
 			//--- B76 DEFENSIVE: resolve GetSideUpgrades ONCE and guard the select math. GetSideUpgrades returns objNull
 			//--- for a civilian side (Common_GetSideUpgrades default) - selecting an index off objNull throws a per-tick
@@ -556,7 +560,9 @@ while {true} do {
 			//--- GUI_Menu_BuyUnits.sqf:198-199 exactly: cap = 10 + 2*barracksLevel, clamped to pop-tier max _mbu.
 			//--- The old round(_mbu/4)*N switch was the pre-b750 regression (lvl-0 capped at 4) fixed in the
 			//--- buy-gate 2026-06-24 (605ad73) but never mirrored to the RHUD - HUD and buy-gate disagreed.
-			_maxUnitsCount = (10 + (_maxUnitsCount * 2)) min _mbu;
+			//--- fable/original-ai-caps (2026-08-08): mirrors the GUI_Menu_BuyUnits.sqf _realSize ceiling-rescale
+			//--- (same ceiling-tracks-_mbu fix - see that file for the full explanation).
+			_maxUnitsCount = (10 + (round ((_maxUnitsCount * (_mbu - 10)) / 3))) min _mbu;
 			_isCommanderTeam = false;
 			if (!isNull commanderTeam) then {_isCommanderTeam = commanderTeam == group player};
 			if (_isCommanderTeam) then {_maxUnitsCount = _maxUnitsCount + 10};
