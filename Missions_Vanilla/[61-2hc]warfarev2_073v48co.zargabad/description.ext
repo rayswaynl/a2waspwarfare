@@ -67,5 +67,5 @@
 loadScreen = "loadScreen.jpg";
 enableSentences = false;
 showGPS = 1;
-disableChannels[]={3,6};
+disableChannels[]={6}; //--- fix0807e (owner 2026-08-08): channel 3 (GROUP) re-enabled - it was disabled in the stock 2023 import, and every Client_GroupChatMessage notification (kill bounty messages, supply-mission load/complete, action feedback) was silently discarded by the engine while sounds still played. Channel 6 stays disabled.
 disabledAI=0;
