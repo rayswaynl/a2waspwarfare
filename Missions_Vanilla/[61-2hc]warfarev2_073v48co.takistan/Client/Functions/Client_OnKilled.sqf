@@ -236,7 +236,7 @@ if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 
 //--- Camera & post-process thread.
 [] Spawn {
-	Private ["_delay"];
+	Private ["_delay","_deathCamera","_deathCameraCommitDeadline"];
 
 	_delay = missionNamespace getVariable "WFBE_C_RESPAWN_DELAY";
 
@@ -278,37 +278,50 @@ if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 		"colorCorrections" ppEffectEnable false;
 	};
 
-	WFBE_DeathCamera = "camera" camCreate WFBE_DeathLocation;
+	_deathCamera = "camera" camCreate WFBE_DeathLocation;
+	WFBE_DeathCamera = _deathCamera;
 	//--- camCreate always assigns; failure is a null object, not an undefined var. isNil never fired.
-	if (isNull WFBE_DeathCamera) exitWith {
+	if (isNull _deathCamera) exitWith {
 		WFBE_DeathCamera = nil;
 		"dynamicBlur" ppEffectEnable false;
 		"colorCorrections" ppEffectEnable false;
 	};
-	WFBE_DeathCamera camSetDir 0;
-	WFBE_DeathCamera camSetFov 0.7;
-	WFBE_DeathCamera cameraEffect ["Internal", "TOP"];
+	_deathCamera camSetDir 0;
+	_deathCamera camSetFov 0.7;
+	_deathCamera cameraEffect ["Internal", "TOP"];
 
-	WFBE_DeathCamera camSetTarget WFBE_DeathLocation;
-	WFBE_DeathCamera camSetPos [
+	_deathCamera camSetTarget WFBE_DeathLocation;
+	_deathCamera camSetPos [
 		WFBE_DeathLocation select 0,
 		(WFBE_DeathLocation select 1) + 2,
 		5
 	];
 
-	WFBE_DeathCamera camCommit 0;
+	_deathCamera camCommit 0;
 
+	//--- The respawn menu can terminate and clear the shared global camera while this
+	//--- thread is waiting. Keep a local object reference, yield between checks, and
+	//--- bound the zero-duration commit handoff so a race or engine failure cannot park
+	//--- this scheduled thread forever.
+	_deathCameraCommitDeadline = diag_tickTime + 5;
 	waitUntil {
-		camCommitted WFBE_DeathCamera
+		sleep 0.1;
+		isNull _deathCamera || {camCommitted _deathCamera} || {diag_tickTime > _deathCameraCommitDeadline}
+	};
+	if (isNull _deathCamera) exitWith {
+		diag_log "[WFBE][RESPAWN-CAMERA-TEARDOWN] Client_OnKilled: respawn menu destroyed the death camera during the initial commit; camera handoff aborted.";
+	};
+	if (diag_tickTime > _deathCameraCommitDeadline) then {
+		diag_log "[WFBE][RESPAWN-CAMERA-TIMEOUT] Client_OnKilled: initial death-camera commit did not complete within 5s; continuing without another commit wait.";
 	};
 
-	WFBE_DeathCamera camSetPos [
+	_deathCamera camSetPos [
 		WFBE_DeathLocation select 0,
 		(WFBE_DeathLocation select 1) + 2,
 		30
 	];
 
-	WFBE_DeathCamera camCommit (_delay + 2);
+	_deathCamera camCommit (_delay + 2);
 };
 
 sleep random 1;
