@@ -25,6 +25,15 @@ for '_i' from 0 to (count (missionConfigFile >> "Params"))-1 do {
 		_value = getNumber (missionConfigFile >> "Params" >> _paramName >> "default");
 	};
 
+	//--- A stale lobby cache can still provide a non-nil value from an older schema. Reject it
+	//--- before a mode switch or other first-frame consumer sees an unsupported scalar.
+	_values = getArray (missionConfigFile >> "Params" >> _paramName >> "values");
+	if ((count _values > 0) && {!(_value in _values)}) then {
+		_fallback = getNumber (missionConfigFile >> "Params" >> _paramName >> "default");
+		diag_log format ["## PARAMGUARD|name=%1|value=%2|fallback=%3", _paramName, _value, _fallback];
+		_value = _fallback;
+	};
+
 	missionNamespace setVariable [_paramName, _value];
 };
 
