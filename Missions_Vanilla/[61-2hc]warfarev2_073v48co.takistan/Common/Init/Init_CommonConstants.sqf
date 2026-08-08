@@ -3983,6 +3983,33 @@ if (isNil "WFBE_C_GUER_AIRDEF_IFF_AWARE") then {WFBE_C_GUER_AIRDEF_IFF_AWARE = 1
 if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24_VSWEST") then {WFBE_C_GUER_AIRDEF_CLASS_MI24_VSWEST = "Mi24_P"}; //--- airframe when the detected attackers are WEST (EAST-config hull so it reads hostile to them); unchanged from today's single-class default.
 if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24_VSEAST") then {WFBE_C_GUER_AIRDEF_CLASS_MI24_VSEAST = "Mi24_D_CZ_ACR"}; //--- airframe when the detected attackers are EAST (WEST-config ACR hull so it reads hostile to them); already spawned/rostered elsewhere in this repo (Core_ACR.sqf, EASA_Init.sqf, Common_BalanceInit.sqf, Units_CO_US.sqf/Units_USMC.sqf) - no new/unverified classname.
 //--- fix0807e END
+//--- w807e-L17 (owner-approved 2026-08-08, feature pair: early-game GUER defense). Both flag-gated,
+//--- defaults ARMED per repo flag policy (owner: we go with these); rollback = set the *_MULT to 1.0
+//--- / the *_ENABLE flags to 0 (documented in the PR body).
+//---
+//--- (1) Early-window GUER patrol density boost - read in Server/FSM/server_side_patrols.sqf.
+//--- Time-decaying multiplier on the GUER-only concurrent side-patrol cap + spawn cadence for the
+//--- first EARLY_WINDOW seconds of a mission, linearly tapering to 1.0 (baseline). Telemetry:
+//--- PATROLBOOST|v1| lines from the same file.
+if (isNil "WFBE_C_GUER_PATROL_EARLY_ENABLE") then {WFBE_C_GUER_PATROL_EARLY_ENABLE = 1};
+if (isNil "WFBE_C_GUER_PATROL_EARLY_MULT") then {WFBE_C_GUER_PATROL_EARLY_MULT = 2.0};
+if (isNil "WFBE_C_GUER_PATROL_EARLY_WINDOW") then {WFBE_C_GUER_PATROL_EARLY_WINDOW = 3600};
+//---
+//--- (2) Siege-triggered GUER ground QRF - read in Server/Server_GuerAirDef.sqf. Reinforces a
+//--- besieged GUER town from a neighboring GUER-held town, gated on the CAPGATE mode2 sustained-
+//--- siege streak (server_town.sqf wfbe_capgate_siege_streak). Distinct from the pre-existing
+//--- WFBE_C_GUER_GROUND_QRF (E3) feature above - see Server_GuerAirDef.sqf for the design note.
+//--- Telemetry: GUERQRF|v1|DISPATCH/ARRIVE/DENY lines from the same file.
+if (isNil "WFBE_C_GUER_QRF_ENABLE") then {WFBE_C_GUER_QRF_ENABLE = 1};
+if (isNil "WFBE_C_GUER_QRF_CHANCE") then {WFBE_C_GUER_QRF_CHANCE = 0.3};
+if (isNil "WFBE_C_GUER_QRF_SIEGE_THRESHOLD") then {WFBE_C_GUER_QRF_SIEGE_THRESHOLD = 6};
+if (isNil "WFBE_C_GUER_QRF_COOLDOWN") then {WFBE_C_GUER_QRF_COOLDOWN = 300};
+if (isNil "WFBE_C_GUER_QRF_MAX_ATTACKER_FORCE") then {WFBE_C_GUER_QRF_MAX_ATTACKER_FORCE = 16};
+if (isNil "WFBE_C_GUER_QRF_MAX_SOURCE_DIST") then {WFBE_C_GUER_QRF_MAX_SOURCE_DIST = 3000};
+if (isNil "WFBE_C_GUER_QRF_SOURCE_MAX_ENEMIES") then {WFBE_C_GUER_QRF_SOURCE_MAX_ENEMIES = 0};
+if (isNil "WFBE_C_GUER_QRF_MAX_CONCURRENT") then {WFBE_C_GUER_QRF_MAX_CONCURRENT = 2};
+if (isNil "WFBE_C_GUER_QRF_LIFETIME") then {WFBE_C_GUER_QRF_LIFETIME = 600};
+if (isNil "WFBE_C_GUER_QRF_ARRIVE_DIST") then {WFBE_C_GUER_QRF_ARRIVE_DIST = 150};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
