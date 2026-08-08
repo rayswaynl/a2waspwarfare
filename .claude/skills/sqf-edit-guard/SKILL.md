@@ -57,7 +57,7 @@ mirror (load **mirror-regen** after editing).
 ```powershell
 python Tools/Lint/check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BAREEXIT,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index
 ```
-The gate reports ~447 pre-existing findings across the tree; only NEW findings in files you
+The gate reports ~168 pre-existing findings across the tree; only NEW findings in files you
 edited matter. Then per changed file, net `{}` and `[]` delta vs base must be zero:
 
 ```powershell
