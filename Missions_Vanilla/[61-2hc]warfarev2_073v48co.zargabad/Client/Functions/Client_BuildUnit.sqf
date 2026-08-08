@@ -1309,7 +1309,7 @@ if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base",
 //--- V2: removed duplicate "fired"->HandleReload event handler (was identical to the IFV line above; double-registering spawned HandleReload twice per shot).
 
 if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle addeventhandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
-     _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];}; //--- fix(code-as-string r33): lazy && so isEngineOn is not evaluated on a dead hull
+     _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target} && {player == driver _target}"];}; //--- driver-only: passengers cannot stop a vehicle they do not command; lazy guards keep isEngineOn off dead hulls
 
 // IRS MODULE
 if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then {

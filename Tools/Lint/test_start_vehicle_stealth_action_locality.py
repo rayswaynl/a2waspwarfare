@@ -21,6 +21,17 @@ class StartVehicleStealthActionLocalityTests(unittest.TestCase):
         self.assertIn('"Client\\Module\\Engines\\Stopengine.sqf"', unit_init)
         self.assertIn('"Client\\Module\\Engines\\Engine.sqf"', unit_init)
 
+    def test_stealth_action_is_driver_only_at_menu_and_activation(self):
+        unit_init = (MISSION / "Common" / "Init" / "Init_Unit.sqf").read_text(encoding="utf-8")
+        build_unit = (MISSION / "Client" / "Functions" / "Client_BuildUnit.sqf").read_text(encoding="utf-8")
+        handler = (MISSION / "Client" / "Module" / "Engines" / "Stopengine.sqf").read_text(encoding="utf-8")
+
+        condition = "alive _target && {isEngineOn _target} && {player == driver _target}"
+        self.assertIn(condition, unit_init)
+        self.assertIn(condition, build_unit)
+        self.assertIn("_caller = _this select 1;", handler)
+        self.assertIn("driver _vehicle != _caller", handler)
+
 
 if __name__ == "__main__":
     unittest.main()

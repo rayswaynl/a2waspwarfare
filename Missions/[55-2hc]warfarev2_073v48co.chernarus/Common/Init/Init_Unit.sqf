@@ -180,7 +180,7 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FOB", 0]) > 0 && {_side in
 //--- on dedicated clients. The server broadcasts this marker; each client registers its own local entry.
 if (_unit getVariable ["wfbe_engine_stealth_action", false]) then {
 	_unit addEventHandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
-	_unit addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];
+	_unit addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target} && {player == driver _target}"];
 };
 
 if (_unit isKindOf "Tank") then { //--- Tanks.
