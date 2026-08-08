@@ -202,7 +202,11 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 								//--- rather than flipping wfbe_persistent (that would stop the empty-group GC reaping dead
 								//--- garrison shells mid-siege). GroupGetBool = A2-safe bool read on a GROUP.
 								private "_baseIsTownGarr"; _baseIsTownGarr = [_baseG, "WFBE_TownAI_Group", false] Call WFBE_CO_FNC_GroupGetBool;
-								if (!_baseIsPers && {!_baseIsTownTeam} && {!_baseIsPatrol} && {!_baseIsTownGarr}) then {
+								//--- Garrison sorties are deliberately short-lived and remain outside commander ownership.
+								//--- Their source tag is the locality-safe exclusion; BASE-GC must not re-adopt/re-task one
+								//--- merely because its patrol passes near HQ before its TTL or town-loss cleanup runs.
+								private "_baseIsGarrisonSortie"; _baseIsGarrisonSortie = [_baseG, "wfbe_garrison_sortie", false] Call WFBE_CO_FNC_GroupGetBool;
+								if (!_baseIsPers && {!_baseIsTownTeam} && {!_baseIsPatrol} && {!_baseIsTownGarr} && {!_baseIsGarrisonSortie}) then {
 									//--- COMBAT GUARD (always): skip if the group is fighting OR took damage / fired
 									//--- since the last pass. We detect "fired/took damage in last ~30s" via a stamped
 									//--- damage sum: any rise vs the stored value (or an active COMBAT behaviour / enemy
