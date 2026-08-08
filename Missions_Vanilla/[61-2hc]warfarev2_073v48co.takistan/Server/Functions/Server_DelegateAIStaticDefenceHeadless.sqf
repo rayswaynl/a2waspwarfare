@@ -9,7 +9,7 @@
 		- Move In Gunner immidietly or not
 */
 
-Private ["_hcUnit", "_groups", "_positions", "_side", "_team", "_defence", "_moveInGunner", "_live", "_x", "_seedIdx", "_rr", "_hcCount", "_delegated"];
+Private ["_hcUnit", "_groups", "_positions", "_side", "_team", "_defence", "_moveInGunner", "_live", "_x", "_seedIdx", "_rr", "_hcCount", "_delegated", "_fpsReg", "_hcKey", "_fidx", "_slot", "_fresh"];
 
 //--- r80 fail-clean: short/malformed args or non-array groups/positions must not OOB select.
 if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 6}) exitWith {
@@ -37,14 +37,24 @@ if (isNil "_groups" || {typeName _groups != "ARRAY"} || {isNil "_positions"} || 
 //--- groups delegated, same SendToClient payload/format, same live-HC filter, same no-live-HC skip.
 _hcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
 
-//--- Build the live-HC leader list locally (cheap: no allUnits scan; same liveness test the picker uses).
+//--- Build the live-HC leader list locally (cheap: no allUnits scan; same liveness and HCSTAT
+//--- freshness test the picker uses). A retained owner-positive group without a fresh heartbeat is
+//--- not a routable endpoint; including it here would count a dropped dispatch and delay the caller's
+//--- server fallback even though Server_PickLeastLoadedHC returned objNull.
+_fpsReg = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
 _live = [];
 {
-	//--- BUGFIX (2026-07-17, HC-founding zombie-picker): keep this liveness test identical to
-	//--- Server_PickLeastLoadedHC.sqf's (owner<=0 = disconnected/locality-transferred zombie,
-	//--- never a routable Common_SendToClient target) - this comment block already claimed "same
-	//--- liveness test the picker uses"; it previously was not.
-	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {_live = _live + [leader _x]};
+	_fresh = false;
+	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {
+		_hcKey = Format ["HC-%1", netId (leader _x)];
+		_fidx = -1;
+		{ if ((_x select 0) == _hcKey) exitWith {_fidx = _forEachIndex} } forEach _fpsReg;
+		if (_fidx >= 0) then {
+			_slot = _fpsReg select _fidx;
+			if ((time - (_slot select 2)) <= 150) then {_fresh = true};
+		};
+	};
+	if (_fresh) then {_live = _live + [leader _x]};
 } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 
 _hcCount = count _live;
