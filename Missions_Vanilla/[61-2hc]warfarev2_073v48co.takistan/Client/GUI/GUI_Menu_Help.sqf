@@ -116,7 +116,7 @@ Note: WASP intentionally uses the action menu instead of a help hotkey, so there
 Two currencies drive the war: <t color='" + GOLD + "'>$ cash</t> (you spend it on gear and units) and <t color='" + GOLD + "'>supply</t> (the side resource the commander spends on structures and upgrades). Both sides start with <t color='" + GOLD + "'>$30,000</t> and <t color='" + GOLD + "'>12,800 supply</t>.<br /><br />
 <t size='1.2' color='" + KEY + "'>Where income comes from</t><br />
 - Captured <t color='" + KEY + "'>towns</t> pay supply and cash. A fully 'pushed' town (high Supply Value) pays more and defends harder.<br />
-- <t color='" + KEY + "'>Supply trucks</t> raise a town's Supply Value: shuttle them between MHQ / Service Point (to reload) and the town centre's 30 m delivery range. The counter reads e.g. 10/70.<br /><br />
+- <t color='" + KEY + "'>Supply missions</t> load at a friendly town marked [+SUPPLY] and deliver to your Command Center (CC). Completing one pays out and posts a group-chat message; flying it in by helicopter pays a bonus.<br /><br />
 <t size='1.2' color='" + KEY + "'>The Bank (Federal Reserve / Bank Rossii)</t><br />
 A 9,500-supply structure, one per side, placed &gt; 800 m from your HQ. While your HQ stands it pays <t color='" + GOLD + "'>$6,000 every 5 minutes</t> split among living players. Destroying the enemy Bank awards <t color='" + GOLD + "'>+10,000</t> side supply and <t color='" + GOLD + "'>$25,000</t> to the killer. Both Banks are marked on the map for both sides - it is a real endgame objective.<br /><br />
 <t size='1.2' color='" + KEY + "'>Factory queue &amp; refunds</t><br />
@@ -204,7 +204,7 @@ SOL / SPEC / MED / ENG / SNI, shown on join and via the <t color='" + GOLD + "'>
 <t size='1.2' color='" + KEY + "'>Where do I buy things?</t><br />
 Open the WF Menu in range of the right structure: gear at the <t color='" + GOLD + "'>Barracks</t> (or a captured town centre's stairs), infantry/vehicles at the matching <t color='" + GOLD + "'>Factory</t>. A <t color='" + GOLD + "'>Command Center</t> lets you remote-buy infantry and vehicles from anywhere.<br /><br />
 <t size='1.2' color='" + KEY + "'>Why can't I attack that town?</t><br />
-It is either not adjacent to your territory, or it is in hatched-yellow <t color='" + GOLD + "'>peace-time</t> after a recent capture. Wait for the marker to clear, or push an adjacent town first.<br /><br />
+It is either not adjacent to your territory, or it is in hatched-yellow <t color='" + GOLD + "'>peace-time</t> after a recent capture. Keep up pressure on it - sustained siege now decays that protection faster than a passive timer - or push an adjacent town first.<br /><br />
 <t size='1.2' color='" + KEY + "'>I keep spawning at base - why?</t><br />
 You died more than 500 m from any MEV / forward spawn. Drive a MEV up near the fight, or capture a closer town, to create a nearer spawn.<br /><br />
 <t size='1.2' color='" + KEY + "'>How do I get money?</t><br />

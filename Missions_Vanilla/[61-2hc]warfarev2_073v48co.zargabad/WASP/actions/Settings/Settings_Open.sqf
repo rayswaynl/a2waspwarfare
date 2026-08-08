@@ -77,7 +77,7 @@ while {alive player && dialog} do {
 	ctrlSetText [30021, if (_aar)  then {"AAR Markers: ON"}         else {"AAR Markers: OFF"}];
 	ctrlSetText [30022, if (_bomb) then {"Bomb Warning: ON"}        else {"Bomb Warning: OFF"}];
 	ctrlSetText [30023, if (_amb)  then {"Ambulance Rings: ON"}     else {"Ambulance Rings: OFF"}];
-	ctrlSetText [30024, if (_kill) then {"Kill Feed: ON"}           else {"Kill Feed: OFF"}];
+	ctrlSetText [30024, if (_kill) then {"Bounty Chat Messages: ON"} else {"Bounty Chat Messages: OFF"}];
 	ctrlSetText [30025, if (_irs)  then {"Auto IR Smoke: ON"}       else {"Auto IR Smoke: OFF"}];
 	ctrlSetText [30026, if (_bip)  then {"Auto Deploy Bipod: ON"}   else {"Auto Deploy Bipod: OFF"}];
 	ctrlSetText [30030, if (_acue) then {"Audio Cues: ON"}          else {"Audio Cues: OFF"}];

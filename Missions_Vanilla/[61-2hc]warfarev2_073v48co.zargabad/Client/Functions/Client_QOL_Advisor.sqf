@@ -130,7 +130,7 @@ while {!gameOver} do {
 				if (_loadedSupply > 0) then {
 					hintSilent "Supply tip: loaded supply vehicles need the Command Center (C marker). Deliver before the cargo is lost.";
 				} else {
-					hintSilent "Supply tip: collect from friendly [+SUPPLY] towns, then deliver the cargo to your Command Center (C marker).";
+					hintSilent "Supply tip: collect from friendly towns showing a + after their SV (SpecOps sees the SUPPLY label), then deliver the cargo to your Command Center (C marker).";
 				};
 				_supplyNudgeDone = true;
 				_nudgeShown = true;

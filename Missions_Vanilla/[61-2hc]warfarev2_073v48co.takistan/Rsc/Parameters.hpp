@@ -81,7 +81,7 @@
 		default = 1; //--- feat/ai-commander: default-ON (admins can still disable in the lobby).
 	};
 	class WFBE_C_AI_COMMANDER_LEVEL {
-		title = "AI Commander difficulty";
+		title = "AI Commander economy tuning (affects AI cash budget only, not combat AI or supply)";
 		values[] = {0,1,2};
 		texts[] = {"Easy","Normal","Hard"};
 		default = 1; //--- V0.5: tunes the AI's synthetic MONEY only - supply stays real on every level.
@@ -113,7 +113,7 @@
 	class WFBE_C_STRUCTURES_CONSTRUCTION_MODE {
 		title = "$STR_WF_PARAMETER_ConstructionMode";
 		values[] = {0};
-		texts[] = {"$STR_WF_PARAMETER_Time"};
+		texts[] = {"$STR_WF_PARAMETER_Time"}; //--- text-audit 20260808: single-option by design - the alternate construction mode was retired; kept as a no-op selector for backward-compat lobby configs.
 		default = 0;
 	};
 	class WFBE_C_STRUCTURES_HQ_COST_DEPLOY {
@@ -326,7 +326,7 @@
 		default = 2000;
 	};
 	class WFBE_C_GAMEPLAY_BOMBS_DISTANCE_RESTRICTION {
-		title = "$STR_WF_PARAMETER_BombAltitude";
+		title = "$STR_WF_PARAMETER_BombDistance";
 		values[] = {0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,7500,8000,8500,9000,9500,10000};
 		texts[] = {"$STR_WF_Disabled","500m","1000m","1500m","2000m","2500m","3000m","3500m","4000m","4500m","5000m","5500m","6000m","6500m","7000m","7500m","8000m","8500m","9000m","9500m","10000m"};
 		default = 2000;
