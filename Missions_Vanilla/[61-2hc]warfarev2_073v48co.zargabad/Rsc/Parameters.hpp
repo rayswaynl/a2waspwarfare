@@ -81,7 +81,7 @@
 		default = 1; //--- feat/ai-commander: default-ON (admins can still disable in the lobby).
 	};
 	class WFBE_C_AI_COMMANDER_LEVEL {
-		title = "AI Commander economy tuning (affects AI cash budget only, not combat AI or supply)";
+		title = "AI Commander economy tuning (AI cash budget only)";
 		values[] = {0,1,2};
 		texts[] = {"Easy","Normal","Hard"};
 		default = 1; //--- V0.5: tunes the AI's synthetic MONEY only - supply stays real on every level.
