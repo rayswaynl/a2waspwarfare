@@ -34,11 +34,11 @@ _wreckSideID = _x getVariable ["wfbe_side_id", -1];
 if (_wreckSideID < 0) then {_wreckSideID = _x getVariable ["sideID", -1]};
 _isNeeded = _x getVariable 'keepAlive';
 
-//--- r101 salvage-claim integrity: honor the wfbe_trash_reap claim stamp (set by our own remote-delete
-//--- dispatch AND by Common_TrashObject's HC-local reap) so a wreck queued for deletion is never credited
-//--- twice, and exempt slung wrecks (wfbe_airlifted) like every other reaper does.
+//--- r101/r191 salvage-claim integrity: publish wfbe_trash_reap before credit or delete so a wreck
+//--- cannot be paid twice, and exempt slung wrecks (wfbe_airlifted) like every other reaper does.
 if ((isNil '_isNeeded') && {(_wreckSideID < 0) || {_wreckSideID != _playerSideID}} && {!(_x getVariable ["wfbe_trash_reap", false])} && {!(_x getVariable ["wfbe_airlifted", false])}) then {
-_get = missionNamespace getVariable (typeOf _x);
+_x setVariable ["wfbe_trash_reap", true, true];
+	_get = missionNamespace getVariable (typeOf _x);
 _salvageCost = 250;
 if !(isNil '_get') then {
 _salvageCost = round(((_get select QUERYUNITPRICE)*_percentage) / 100);
@@ -55,7 +55,6 @@ _overAllCost = _overAllCost + _salvageCost;
 if (local _x) then {
 deleteVehicle _x;
 } else {
-_x setVariable ["wfbe_trash_reap", true, true];
 if (isServer) then {
 [_x, "HandleSpecial", ["cleanup-trash-object", _x]] Call WFBE_CO_FNC_SendToClient;
 } else {
