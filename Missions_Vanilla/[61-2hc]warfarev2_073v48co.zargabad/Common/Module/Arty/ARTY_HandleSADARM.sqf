@@ -24,7 +24,7 @@ _impactAreaSimulation = objNull;
 _shell setVelocity [0,0,-_velocity];
 
 //--- Wait before deploying. Shell can be deleted/cleaned mid-fall — bare getPos is crash class.
-waitUntil {isNull _shell || {(getPos _shell select 2) < 600}};
+waitUntil {sleep 0.05; isNull _shell || {(getPos _shell select 2) < 600}};
 if (isNull _shell) exitWith {};
 
 //--- Retrieve the shell position.
