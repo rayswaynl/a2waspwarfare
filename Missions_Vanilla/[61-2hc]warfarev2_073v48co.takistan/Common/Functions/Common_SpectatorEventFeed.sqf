@@ -65,7 +65,7 @@ if (isServer) then {
 				_ri = _wi;
 				if ((count _batch) > 0) then {
 					_seq = _seq + 1;
-					WFBE_SPECTATOR_EVENTS = [_seq, time, _batch];
+					WFBE_SPECTATOR_EVENTS = [_seq, serverTime, _batch];
 					publicVariable "WFBE_SPECTATOR_EVENTS";
 				};
 			};
@@ -116,7 +116,7 @@ if (_isHC) then {
 							_u2 setVariable ["wfbe_sev_lf", time];
 							if (alive _u2 && {!(captive _u2)}) then {
 								_p2 = getPos _u2;
-								[time, _p2 select 0, _p2 select 1, _u2 getVariable ["wfbe_sev_sid", -1], 0] Call WFBE_CO_FNC_SpectatorEvEnqueue;
+								[serverTime, _p2 select 0, _p2 select 1, _u2 getVariable ["wfbe_sev_sid", -1], 0] Call WFBE_CO_FNC_SpectatorEvEnqueue;
 							};
 						};
 					}];
@@ -125,7 +125,7 @@ if (_isHC) then {
 						_u2 = _this select 0;
 						if (!isNull _u2 && {!(captive _u2)}) then {
 							_p2 = getPos _u2;
-							[time, _p2 select 0, _p2 select 1, _u2 getVariable ["wfbe_sev_sid", -1], 1] Call WFBE_CO_FNC_SpectatorEvEnqueue;
+							[serverTime, _p2 select 0, _p2 select 1, _u2 getVariable ["wfbe_sev_sid", -1], 1] Call WFBE_CO_FNC_SpectatorEvEnqueue;
 						};
 					}];
 				};
@@ -140,7 +140,7 @@ if (_isHC) then {
 							if ((time - (_u2 getVariable ["wfbe_sev_lf", -99])) > 1) then {
 								_u2 setVariable ["wfbe_sev_lf", time];
 								_p2 = getPos _u2;
-								[time, _p2 select 0, _p2 select 1, _u2 getVariable ["wfbe_sev_sid", -1], 0] Call WFBE_CO_FNC_SpectatorEvEnqueue;
+								[serverTime, _p2 select 0, _p2 select 1, _u2 getVariable ["wfbe_sev_sid", -1], 0] Call WFBE_CO_FNC_SpectatorEvEnqueue;
 							};
 						}];
 						_v addEventHandler ["Killed", {
@@ -148,7 +148,7 @@ if (_isHC) then {
 							_u2 = _this select 0;
 							if (!isNull _u2) then {
 								_p2 = getPos _u2;
-								[time, _p2 select 0, _p2 select 1, _u2 getVariable ["wfbe_sev_sid", -1], 1] Call WFBE_CO_FNC_SpectatorEvEnqueue;
+								[serverTime, _p2 select 0, _p2 select 1, _u2 getVariable ["wfbe_sev_sid", -1], 1] Call WFBE_CO_FNC_SpectatorEvEnqueue;
 							};
 						}];
 					};
