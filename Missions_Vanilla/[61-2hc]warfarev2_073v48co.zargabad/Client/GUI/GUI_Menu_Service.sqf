@@ -551,7 +551,7 @@ while {true} do {
 		if (MenuAction == 1) then {
 			MenuAction = -1;
 			if ((_curSel != -1) && {[_veh,_nearSupport select _curSel] Call _martyRearmBlockedAirDepot}) then {
-				hint "You can't rearm air in town"; //--- fix(hunt): precondition BEFORE the charge - SupportRearm hard-aborts this case AFTER the money is taken (no refund path).
+				hint "You can't rearm aircraft at a town depot."; //--- fix(hunt): precondition BEFORE the charge - SupportRearm hard-aborts this case AFTER the money is taken (no refund path).
 			} else {
 				if (_funds >= _rearmPrice) then { //--- QoL: affordability guard (parity with repair/heal)
 				-_rearmPrice Call ChangePlayerFunds;

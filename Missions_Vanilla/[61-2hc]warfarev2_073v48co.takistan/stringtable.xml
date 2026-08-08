@@ -186,7 +186,7 @@
         <Russian>Ваше снаряжение сброшено: пользовательское снаряжение отключено (режим 1).</Russian>
       </Key>
       <Key ID="STR_WF_CHAT_Gear_RespawnCharge">
-        <English>You were deducted from $%1 due to your gear</English>
+        <English>You were charged $%1 for your custom gear.</English>
         <Russian>У вас изъято $%1 за ваше снаряжение</Russian>
       </Key>
       <Key ID="STR_WF_CHAT_Gear_CampKept">
@@ -454,7 +454,7 @@
 
 <!--EASA Menu - ALL DONE-->
       <Key ID="STR_WF_EASA">
-        <English>EASA</English>
+        <English>WEAPON LOADOUT</English>
         <Russian>EASA</Russian>
       </Key>
 
@@ -582,7 +582,7 @@
         <Russian>Информация:\n\n текущее задание отменено.</Russian>
       </Key>
       <Key ID="STR_WF_INFO_NoArty"><!--need rework -0.71-->
-        <English>Information:\n\n You need at last one artillery in order to call a Fire Mission.</English>
+        <English>Information:\n\n You need at least one artillery piece in order to call a Fire Mission.</English>
         <Russian>Информация:\n\n для вызова артиллерии у Вас должна быть хотя бы одна арт. установка.</Russian>
       </Key>
       <Key ID="STR_WF_INFO_Paratroop_Info">
@@ -1890,7 +1890,7 @@
       </Key>
       <!-- respawn-ui-v2: footer legend (IDC 511005) -->
       <Key ID="STR_WF_RESPAWN_Legend">
-        <English>Click a marker to choose your spawn. Green = safe, amber = contested.</English>
+        <English>Click a marker to choose your spawn. Green = safe, amber = contested. Your squad leader is the triangle marker.</English>
         <Russian>Нажмите на маркер для выбора точки возрождения. Зелёный = безопасно, жёлтый = оспаривается.</Russian>
       </Key>
       <Key ID="STR_WF_RESPAWN_Status">
@@ -1997,7 +1997,7 @@
         <Russian>Артиллерия:</Russian>
       </Key>
       <Key ID="STR_WF_TACTICAL_ArtilleryMinimapInfo">
-        <English>An Artillery Minimap display fitler has been toggled</English>
+        <English>The Artillery Minimap display filter has been toggled</English>
         <Russian>Режим фильтра на артиллерийском дисплее был сменен</Russian>
       </Key>
 	  <Key ID="STR_WF_TACTICAL_ArtilleryInRange">
@@ -2272,7 +2272,7 @@
         <Russian>Открыть сохранённые комплекты снаряжения</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_RespawnST">
-        <English>Respawn stucked Supply Trucks. ATTENTION => ALL Trucks will be destroyed!</English>
+        <English>Respawn stuck Supply Trucks. Warning: this destroys ALL of your team's Supply Trucks!</English>
         <Russian>Возродить застрявший грузовик. ВНИМАНИЕ => Все грузовики будут уничтожены!</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_TeamOrders_Con1">
@@ -2308,7 +2308,7 @@
         <Russian>Покупка тяжелой техники (Танки, Артиллерия и т.д.)</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_UnitPurchase_Con4">
-        <English>Purchase Aircarft (Gunship, Helicopter,Plane)</English>
+        <English>Purchase Aircraft (Gunship, Helicopter, Plane)</English>
         <Russian>Покупка Авиации (Ветролеты, Самолеты)</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_UnitPurchase_Con5">

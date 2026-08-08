@@ -46,7 +46,7 @@ switch (_classType) do {
     };
     case "SpecOps": {
         _txt = "<t size='1.1' color='#00CFFF'>SpecOps</t><br/>" +
-               "- Lockpick enemy vehicles<br/>" +
+               "- Light repair on vehicles<br/>" +
                "- Run supply missions";
     };
     case "Spotter": {

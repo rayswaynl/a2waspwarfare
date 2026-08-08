@@ -103,7 +103,7 @@ if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C
 		lnbAddRow [504001, ["--", "Main Battle (T2)", ""]];
 		lnbAddRow [504001, ["--", "Heavy Armor (T3)", ""]];
 		if (_xlink) then {
-			lnbAddRow [504001, [">>", "[ Commission Panel ]", ""]];
+			lnbAddRow [504001, [">>", "[ Commissar Panel ]", ""]];
 		};
 		lnbSetCurSelRow [504001, 0];
 		((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504006) ctrlSetStructuredText (parseText "<t>GUER FIELD TECH - earned by kills (read-only). Select a tier for details.</t>");
@@ -149,7 +149,7 @@ if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C
 					ctrlEnable [504007, true];
 					ctrlSetText [504007, "Open Panel"];
 					_barHtml = "<t color='#F5D363'>Double-click or press 'Open Panel' to open the Commissar Panel.</t>";
-					_detHtml = "<t color='#42b6ff' underline='1'>Commission Panel</t><br/><br/>Opens the GUER Director town-action panel. Spend kill income on reinforcements, QRF, and supply actions for captured towns.<br/><br/><t color='#F56363'>Requires: GUER Director active and Commissar Panel enabled.</t>";
+					_detHtml = "<t color='#42b6ff' underline='1'>Commissar Panel</t><br/><br/>Opens the GUER Director town-action panel. Spend kill income on reinforcements, QRF, and supply actions for captured towns.<br/><br/><t color='#F56363'>Requires: GUER Director active and Commissar Panel enabled.</t>";
 				} else {
 					ctrlEnable [504007, false];
 					ctrlSetText [504007, "Upgrade"];
@@ -215,7 +215,7 @@ if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C
 				WFBE_MenuAction = -1;
 				if (!(((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0) && {(missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0})) then {
 					_xlinkClicked = false;
-					hint parseText "<t color='#F56363'>Commission Panel is not available (GUER Director inactive).</t>";
+					hint parseText "<t color='#F56363'>Commissar Panel is not available (GUER Director inactive).</t>";
 				};
 			};
 			if (_xlinkClicked) exitWith {closeDialog 0; createDialog "WFBE_GDirCommissarMenu"};
@@ -576,7 +576,7 @@ while {alive player && dialog} do {
 						hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t> There is not enough resources to process this upgrade (<t color='#F56363'>Funds</t> or <t color='#F56363'>Supply</t>)</t>",_upgrade_labels select _id,_upgrade_current]);
 					};
 				} else {
-					hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The upgrade has reached it's <t color='#76F563'>maximum level</t></t>");
+					hint parseText("<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>The upgrade has reached its <t color='#76F563'>maximum level</t>.</t>");
 				};
 			} else {
 				// Marty: Name the running upgrade when another purchase is attempted.

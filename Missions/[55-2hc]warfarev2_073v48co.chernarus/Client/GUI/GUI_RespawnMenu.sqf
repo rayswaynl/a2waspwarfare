@@ -123,8 +123,7 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 			_capPis = _capParsed select 2;
 			player setVariable ["wfbe_custom_gear", [(weapons player) - [_capBp], magazines player, _capBp, _capBpContent, [_capPri, _capPis, _capSec]]];
 			player setVariable ["wfbe_custom_gear_cost", 0];
-			hint "Current kit captured for respawn.
-Open the Team Menu -> Save Gear to store it as a preset.";
+			hint "Current kit captured for respawn. Open the Team Menu and press one of the Save slots to store it as a preset.";
 		};
 		if (_uiV2 > 0) then {
 			ctrlSetText [511004, if (WFBE_RespawnDefaultGear) then {localize "STR_WF_RESPAWN_GearV2Default"} else {localize "STR_WF_RESPAWN_GearV2Current"}];
