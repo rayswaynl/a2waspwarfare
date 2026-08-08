@@ -1453,6 +1453,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_TIPS_ENABLE")                   then {WFBE_C_TIPS_ENABLE = 1};                   //--- cmdcon42-q: master on/off for the rotating chat-tip feed (0 = no tips at all).
 	if (isNil "WFBE_C_TIPS_PERIOD")                   then {WFBE_C_TIPS_PERIOD = 900};                 //--- cmdcon42-q: seconds between tips (Ray: 15 min; floored to 30s in the client). 50-tip deck = a full cycle every ~12.5 h.
 	if (isNil "WFBE_C_TIPS_INITIAL")                  then {WFBE_C_TIPS_INITIAL = 420};                //--- cmdcon42-q: seconds a fresh/JIP client waits before the FIRST tip, so it doesn't overlap the onboarding cards.
+	if (isNil "WFBE_C_TIPS_SESSION_CAP")              then {WFBE_C_TIPS_SESSION_CAP = 8};               //--- tutorial-pacing pass 2026-08-08: stop the feed after this many VISIBLE tips instead of running unbounded for the whole match.
 	//--- Lane 181: late-join catch-up card. DEFAULT ON (Ray pick 2026-07-04 "visually nice" pass):
 	//--- side-coloured hint card for true late joiners only (round age >= MIN_AGE); reads only local or
 	//--- join-seeded state (towns, wfbe_funds, wfbe_upgrades, WFBE_AICOM_* PVs). Self-clears after DURATION s.
