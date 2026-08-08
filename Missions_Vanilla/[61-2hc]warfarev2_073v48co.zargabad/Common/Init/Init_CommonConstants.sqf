@@ -3971,5 +3971,10 @@ if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN") then {WFBE_C_AICOM_ENDGAME_T
 if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK = 0};
 if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST = 0};
 
+//--- fix0807e (chute-occupant-teardown, Server_GuerAirDef.sqf) BEGIN - keep this block intact/together
+//--- at fold time if a concurrent lane's own append lands nearby; do not interleave.
+if (isNil "WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING") then {WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING = 240}; //--- hard ceiling (seconds since drop registration) after which the drop-prune defer guard gives up waiting for wfbe_guer_drop_landed and lets a non-"wiped" recall through anyway; generous over the ~97s worst-case paradrop descent so it never fires in normal play.
+//--- fix0807e END
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

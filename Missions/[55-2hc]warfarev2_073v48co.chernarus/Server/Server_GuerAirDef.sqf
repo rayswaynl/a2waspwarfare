@@ -463,7 +463,7 @@ while {!WFBE_GameOver} do {
 	private ["_keptDrops","_dropAlive"];
 	_keptDrops = [];
 	{
-		private ["_dEntry","_dTown","_dGrp","_dSpawn","_dLastEnemy","_dDrop","_dReason","_dLiving","_dEnemiesNow","_dTownSide","_dTownActive"];
+		private ["_dEntry","_dTown","_dGrp","_dSpawn","_dLastEnemy","_dDrop","_dReason","_dLiving","_dEnemiesNow","_dTownSide","_dTownActive","_dLanded"];
 		_dEntry     = _x;
 		_dTown      = _dEntry select 0;
 		_dGrp       = _dEntry select 1;
@@ -495,6 +495,26 @@ while {!WFBE_GameOver} do {
 		//--- Quiet too long / lifetime exceeded => recall (anti-accumulation).
 		if (!_dDrop && {(_now - _dLastEnemy) > _quiet}) then { _dDrop = true; _dReason = "quiet"; };
 		if (!_dDrop && {(_now - _dSpawn) > _lifetime}) then { _dDrop = true; _dReason = "lifetime"; };
+
+		//--- fix0807e (chute-occupant-teardown): a paradropped stick can still be MID-DESCENT here - units
+		//--- are already createUnit'd into _dGrp by Phase 1, each possibly riding a live ParachuteC the
+		//--- sub-thread tracks in its own LOCAL _chutes array (invisible to this prune pass). Deleting
+		//--- (units _dGrp) for a recall reason other than "wiped" while that is true orphans a live chute
+		//--- mid-air and yanks a trooper for a reason (town_lost/town_inactive/quiet/lifetime) that does not
+		//--- need to happen mid-fall - letting the squad land and fight on before the NEXT sweep re-applies
+		//--- the same recall is the immersive/safe outcome (owner: "town_lost ... acceptable+immersive").
+		//--- "wiped" (0 living units) is exempt - nobody is left to protect. The sub-thread stamps
+		//--- wfbe_guer_drop_landed=false synchronously at registration (below, before it Spawns) and only
+		//--- flips it true once every chute in the stick has been fully processed. A hard ceiling
+		//--- (WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING, default 240s - generous over the ~97s worst-case
+		//--- descent) guarantees this can never defer forever even if the landed stamp were somehow lost.
+		if (_dDrop && {_dReason != "wiped"}) then {
+			_dLanded = [_dGrp, "wfbe_guer_drop_landed", false] Call WFBE_CO_FNC_GroupGetBool;
+			if (!_dLanded && {(_now - _dSpawn) < (missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING", 240])}) then {
+				diag_log format ["GUERAIRDEF|DROPDEFER|town=%1|reason=%2", (if (isNull _dTown) then {"?"} else {_dTown getVariable ["name","?"]}), _dReason];
+				_dDrop = false;
+			};
+		};
 
 		if (_dDrop) then {
 			//--- Player-safe teardown: only delete non-player bodies; then drop the group.
@@ -935,6 +955,10 @@ while {!WFBE_GameOver} do {
 								_drops     = _drops + [[_town, _dropGrp, time, time]];
 								_dropAlive = _dropAlive + 1;
 								_registered = true;
+								//--- fix0807e (chute-occupant-teardown): stamp NOT-landed synchronously, in this main thread,
+								//--- before the sub-thread below is even Spawned - so the prune-pass defer guard above can never
+								//--- observe a torn (unset) flag for a freshly-registered drop.
+								_dropGrp setVariable ["wfbe_guer_drop_landed", false];
 
 								[_town, _pos, _dropGrp, _dropRoster, _dropCount, _dropChute, _flyHeight] Spawn {
 									private ["_t","_tPos","_g","_roster","_count","_chuteModel","_baseH","_type","_ux","_uy","_uz","_uPos","_u","_chute","_wtr","_built","_ctr","_chutes","_pair","_cu","_cc"];
@@ -1016,11 +1040,47 @@ while {!WFBE_GameOver} do {
 									};
 
 									//--- Phase 3: dismount + clean every chute (leave the troopers on the ground).
+									//--- fix0807e (chute-occupant-teardown): "_cu action ['getOut', _cc]" only QUEUES
+									//--- the disembark - it is not synchronous. Live RPT evidence (VEHDEL|v1|reason=
+									//--- guerairdef-L621|alive=true|crew=[GUE_Soldier_AR/p:false]) showed the
+									//--- immediate deleteVehicle that used to follow firing while _cu was STILL
+									//--- seated, yanking the chute out from under a live trooper -> the owner-reported
+									//--- "paratroopers falling without parachutes." Bounded poll (<=5s @ 0.25s) for the
+									//--- seat to actually clear (vehicle _cu != _cc) before the chute is torn down.
+									//--- B66 doctrine: never touch a player-occupied chute (should be impossible here -
+									//--- script-spawned GUER AI only - guarded anyway). If a live non-player is
+									//--- somehow STILL seated after the bounded wait, skip only THIS chute's delete
+									//--- (not wfbe_persistent, no cleanup debt) and log a loud CHUTEGUARD tripwire so a
+									//--- regression is visible in soak grading, instead of risking an occupied delete.
 									{
+										private ["_cwtr"];
 										_cu = _x select 0; _cc = _x select 1;
-										if (!isNull _cu && {alive _cu} && {!isNull _cc}) then { _cu action ["getOut", _cc]; };
-										if (!isNull _cc) then { ["guerairdef-L621", _cc, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _cc; };
+										if (!isNull _cu && {isPlayer _cu}) then {
+											diag_log format ["GUERAIRDEF|CHUTEGUARD|reason=player-occupant|chute=%1|unit=%2", _cc, _cu];
+										} else {
+											if (!isNull _cu && {alive _cu} && {!isNull _cc}) then { _cu action ["getOut", _cc]; };
+											if (!isNull _cc && {!isNull _cu} && {alive _cu}) then {
+												_cwtr = 0;
+												waitUntil {
+													sleep 0.25;
+													_cwtr = _cwtr + 1;
+													(isNull _cu) || {!(alive _cu)} || {(vehicle _cu) != _cc} || {_cwtr >= 20}
+												};
+											};
+											if (!isNull _cc) then {
+												if (!isNull _cu && {alive _cu} && {(vehicle _cu) == _cc}) then {
+													diag_log format ["GUERAIRDEF|CHUTEGUARD|reason=getout-timeout|chute=%1|unit=%2", _cc, _cu];
+												} else {
+													["guerairdef-L621", _cc, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _cc;
+												};
+											};
+										};
 									} forEach _chutes;
+									//--- fix0807e: stamp landed AFTER every chute in the stick has been fully processed
+									//--- above (deleted or guarded), so the main maintain-loop prune pass (L302) never
+									//--- sees this squad as safe-to-recall while any trooper could still be mid-descent
+									//--- (or mid the bounded getOut wait just above).
+									_g setVariable ["wfbe_guer_drop_landed", true];
 
 									//--- Order the landed squad to hold/defend the town: patrol first (it re-sets AWARE/YELLOW),
 									//--- then stamp COMBAT/RED last so they actually engage the attackers (same order fix as the air).
