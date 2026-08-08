@@ -498,7 +498,13 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	_soldier = [_crew,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
 	if (isNull _soldier) then {
 		diag_log Format ["BUYFAIL|v1|aicom-crew|side=%1|class=%2|seat=driver|spawnPos=%3", _sideText, _unitType, _position];
-		["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI crew [%1] for [%2] was objNull at driver seat; driver remains empty.", _crew, _unitType]] Call WFBE_CO_FNC_LogContent;
+		//--- A vehicle without its mandatory driver is not a usable AICOM delivery.  Do not leave the
+		//--- paid, team-registered hull for the empty-vehicle reaper: remove it now and return the exact
+		//--- pre-charged amount so Produce can retry on its next pass.
+		emptyQueu = emptyQueu - [_vehicle];
+		deleteVehicle _vehicle;
+		if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+		["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI driver [%1] for [%2] was objNull; vehicle rolled back and refunded %3 to side [%4].", _crew, _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
 	} else {
 		[_soldier] allowGetIn true;
 		[_soldier] orderGetIn true;
