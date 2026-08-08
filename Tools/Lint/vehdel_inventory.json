@@ -356,8 +356,8 @@
   "total": 2
  },
  "Server/Server_GarrisonSortie.sqf": {
-  "probed": 3,
-  "total": 2
+  "probed": 6,
+  "total": 3
  },
  "Server/Server_GuerAirDef.sqf": {
   "probed": 29,
