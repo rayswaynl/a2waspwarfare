@@ -54,6 +54,7 @@ if (random 100 <= (_get select 0)) then {
 
 		_calculated = 25+(((_vdx^2) + (_vdy^2) + (_vdz))^(1/3));
 		if !(alive _missile) exitWith {};
+		sleep 0.01;
 	};
 	
 	_count = 0;
