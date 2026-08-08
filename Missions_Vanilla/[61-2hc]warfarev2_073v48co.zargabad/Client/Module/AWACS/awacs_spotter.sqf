@@ -22,13 +22,15 @@ _minSpeed = missionNamespace getVariable ["WFBE_C_AWACS_GROUND_MINSPEED", 5];
 
 diag_log Format ["AWACS: ground sweep ENGAGED on %1 (range %2m, every %3s, MTI >%4km/h)", typeOf _awacs, _range, _delay, _minSpeed];
 
-while {alive _awacs && {vehicle player == _awacs} && {driver _awacs == player}} do {
+while {alive _awacs && {vehicle player == _awacs} && {driver _awacs == player} && {!gameOver}} do {
 	if (((getPosATL _awacs) select 2) > _minAlt) then {
 		{
 			_target = _x;
 			if (!isNull _target && {alive _target} && {!(side _target in [sideJoined, civilian])} && {abs (speed _target) > _minSpeed}) then {
 				sleep (0.05 + random 0.05);
-				[sideJoined, "HandleSpecial", ["uav-reveal", _awacs, _target]] Call WFBE_CO_FNC_SendToClients;
+				if (!gameOver) then {
+					[sideJoined, "HandleSpecial", ["uav-reveal", _awacs, _target]] Call WFBE_CO_FNC_SendToClients;
+				};
 			};
 		} forEach (_awacs nearEntities [["Car","Motorcycle","Tank","Ship"], _range]);
 	};

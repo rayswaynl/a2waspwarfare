@@ -16,8 +16,9 @@ if (count _types == 0) exitWith {diag_log "AWACS: pilot watch NOT armed (empty W
 diag_log Format ["AWACS: pilot watch armed for %1", _types];
 _handle = [] Spawn {};
 
-while {true} do {
+while {!gameOver} do {
 	sleep 5;
+	if (gameOver) exitWith {};
 	if (alive player) then {
 		_veh = vehicle player;
 		if (_veh != player) then {
