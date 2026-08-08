@@ -235,10 +235,10 @@ PerformanceAudit_Run = {
 
 	while {true} do {
 		sleep (missionNamespace getVariable ["PerformanceAuditFlushInterval", 60]);
-		[_scope] call PerformanceAudit_Flush;
 		if !(isNil "gameOver") then {
 			if (gameOver) exitWith {};
 		};
+		[_scope] call PerformanceAudit_Flush;
 	};
 
 	[_scope] call PerformanceAudit_Flush;
