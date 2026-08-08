@@ -21,7 +21,7 @@ while {!gameOver && (alive _vehicle)} do { //--- wiki-wins: exit when the truck 
 
 		_wrecks = [];
 		{
-			if !(alive _x) then {_wrecks = _wrecks + [_x]};
+			if !(alive _x) then {[_wrecks, _x] Call WFBE_CO_FNC_ArrayPush};
 		} forEach _vehicles;
 		_perfWrecks = count _wrecks;
 
