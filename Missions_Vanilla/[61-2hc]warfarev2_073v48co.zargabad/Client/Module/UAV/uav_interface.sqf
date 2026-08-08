@@ -266,7 +266,7 @@ _mapEH_mousebttondown = ((findDisplay 12) displayCtrl 51) ctrladdeventhandler ["
 	if (_button == 0) then {
 		_uav = BIS_UAV_PLANE;
 
-		while {count (waypoints _uav) > 0} do {deletewaypoint ((waypoints _uav) select 0)};
+		while {count (waypoints (group _uav)) > 0} do {deletewaypoint ((waypoints (group _uav)) select 0)};
 
 		_worldpos = (_this select 0) posscreentoworld [_this select 2,_this select 3];
 		_wp = (group _uav) addwaypoint [_worldpos,0];
