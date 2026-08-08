@@ -1254,7 +1254,8 @@ if (_strikeOn) then {
 						//--- [name,default] form returns nil (not the default) on GROUP receivers when the var is unset (G1 trap),
 						//--- which nil-poisoned these chains for never-stamped teams.
 						//--- A2-OA 1.64: plain getVariable 2-arg + isNil, typeName OBJECT, numeric compare only, no Boolean ==/!=.
-						private ["_scSkip","_scRecycle","_scStrk","_scOrd","_scTgt","_scBc","_scProg"];
+						private ["_scSkip","_scRecycle","_scStrk","_scOrd","_scTgt","_scBc","_scProg","_svcStateStrike"];
+						_svcStateStrike = _team getVariable "wfbe_aicom_svcstate";
 						_scSkip = false;
 						if ((missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_COMMIT", 0]) > 0) then {
 							_scRecycle = [_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool;
@@ -1276,7 +1277,7 @@ if (_strikeOn) then {
 								};
 							};
 						};
-						if (!_scSkip) then {
+						if (!_scSkip && {isNil "_svcStateStrike" || {_svcStateStrike != "enroute"}}) then { //--- service enroute is an exclusive logistics commitment; do not replace its depot move with an HQ strike.
 							//--- B69 (hqstrike-picker-weight-vehicle-punch): rank by PUNCH score, not raw bodycount. Heavy-detect idiom matches Common_AICOMServiceTick.sqf:103 (A2-OA-safe). _bestN now carries a score; inf 2 scores 2>1 (passes), 1-man remnant scores 1 (rejected), armour/attack-heli gets +bonus and outranks infantry.
 							private ["_hasHeavy","_score"];
 							_hasHeavy = {alive _x && {(vehicle _x) != _x} && {((vehicle _x) isKindOf "Tank") || {(vehicle _x) isKindOf "APC"} || {(vehicle _x) isKindOf "Air"}}} count (units _team);
