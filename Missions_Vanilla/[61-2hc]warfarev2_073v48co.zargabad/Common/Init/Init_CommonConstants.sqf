@@ -3971,5 +3971,18 @@ if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN") then {WFBE_C_AICOM_ENDGAME_T
 if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK = 0};
 if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST = 0};
 
+//--- fix0807e (chute-occupant-teardown, Server_GuerAirDef.sqf) BEGIN - keep this block intact/together
+//--- at fold time if a concurrent lane's own append lands nearby; do not interleave.
+if (isNil "WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING") then {WFBE_C_GUER_AIRDEF_DROP_LANDED_CEILING = 240}; //--- hard ceiling (seconds since drop registration) after which the drop-prune defer guard gives up waiting for wfbe_guer_drop_landed and lets a non-"wiped" recall through anyway; generous over the ~97s worst-case paradrop descent so it never fires in normal play.
+//--- fix0807e END
+
+//--- fix0807e (Mi-24 IFF-aware airframe selection, Server_GuerAirDef.sqf) BEGIN - owner-approved
+//--- same-lane addition 2026-08-08 - keep this block intact/together at fold time if a concurrent
+//--- lane's own append lands nearby; do not interleave.
+if (isNil "WFBE_C_GUER_AIRDEF_IFF_AWARE") then {WFBE_C_GUER_AIRDEF_IFF_AWARE = 1}; //--- master switch: pick the Mi-24 airframe by dominant attacker side so it never radar-spoofs FRIENDLY to the side actually attacking it (A2 pre-identification colors by the airframe's own CfgVehicles side). 0 restores the single-class WFBE_C_GUER_AIRDEF_CLASS_MI24 behaviour.
+if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24_VSWEST") then {WFBE_C_GUER_AIRDEF_CLASS_MI24_VSWEST = "Mi24_P"}; //--- airframe when the detected attackers are WEST (EAST-config hull so it reads hostile to them); unchanged from today's single-class default.
+if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24_VSEAST") then {WFBE_C_GUER_AIRDEF_CLASS_MI24_VSEAST = "Mi24_D_CZ_ACR"}; //--- airframe when the detected attackers are EAST (WEST-config ACR hull so it reads hostile to them); already spawned/rostered elsewhere in this repo (Core_ACR.sqf, EASA_Init.sqf, Common_BalanceInit.sqf, Units_CO_US.sqf/Units_USMC.sqf) - no new/unverified classname.
+//--- fix0807e END
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
