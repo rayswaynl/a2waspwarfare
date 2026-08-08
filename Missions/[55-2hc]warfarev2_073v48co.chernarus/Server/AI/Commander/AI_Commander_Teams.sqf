@@ -23,7 +23,7 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
               "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield",
-              "_foundFwdOn","_gateFacObj","_pendingIds","_pendingNext","_pendingEntry","_pendingNew"]; //--- B66 + fable/founding-placement-20260802
+              "_foundFwdOn","_gateFacObj","_factoryGateSkip","_pendingIds","_pendingNext","_pendingEntry","_pendingNew"]; //--- B66 + fable/founding-placement-20260802
 
 //--- Epilogue nil-seed (live RPT fix 2026-07-29): the server-local founding path (no live HC)
 //--- reaches the TEAM_FOUNDED diag_log + PerformanceAudit epilogue without ever assigning
@@ -70,6 +70,9 @@ _sliceYield = {
 	private ["_sliceLabel"];
 	_sliceLabel = "";
 	if (typeName _this == "STRING") then {_sliceLabel = _this};
+	if (typeName _this == "ARRAY" && {count _this > 0}) then {
+		if (typeName (_this select 0) == "STRING") then {_sliceLabel = _this select 0};
+	};
 	if (_scanChunkOn) then {
 		Call _sliceCut;
 		_perfSlices = _perfSlices + 1;
@@ -1527,6 +1530,7 @@ if (count _live > 0) then {
 	//--- makes no difference (nothing to snap to) and the HQ-fallback below still applies exactly as for flag 0, so
 	//--- an early-game side with only its HQ is never starved. A2-OA-safe: same STRUCTURES/typeOf scan idiom as the
 	//--- factory finder above; plain if/else, getVariable-with-default, no A3 commands.
+	_factoryGateSkip = false;
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_FOUND_REQUIRE_FACTORY", 0]) != 0) then {
 		private ["_ownBarracks","_ownLight","_ownHeavy","_ownAircraft","_ownAny","_wantType","_typeOK","_gateFacObj"];
 		//--- Ownership booleans by factory type (alive structure of the matching STRUCTURES class this side holds).
@@ -1568,7 +1572,7 @@ if (count _live > 0) then {
 
 		//--- STARVATION-SAFE: owning a Barracks always permits infantry regardless of the picked type; and if the
 		//--- side owns ANY factory, only SKIP when it also owns a DIFFERENT factory (a real path remains next cycle).
-		if (!_typeOK && _ownAny) exitWith {
+		if (!_typeOK && _ownAny) then {
 			if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
 				[_side, "reject-factory", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _wantType, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
 			};
@@ -1576,6 +1580,7 @@ if (count _live > 0) then {
 			diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOUND_GATE_SKIP|type=" + str _wantType + "|ownAny=" + str _ownAny);
 			//--- No funds were deducted and no pending slot claimed yet (both happen below), so simply ending the
 			//--- founding cycle here leaks nothing. The commander re-picks a buildable type next cycle.
+			_factoryGateSkip = true;
 		};
 		//--- Anchor the spawn to the matching owned factory when _facObj (doctrine walk) landed on a non-matching
 		//--- one - so a produced team exits the RIGHT structure. Only re-anchor when a matching factory is owned.
@@ -1606,6 +1611,8 @@ if (count _live > 0) then {
 			if (!isNull _gateFacObj) then {_facObj = _gateFacObj};
 		};
 	};
+	//--- The owned-factory rejection is terminal: do not fall through to the HQ fallback or HC dispatch.
+	if (_factoryGateSkip) exitWith {};
 
 	if (isNull _facObj) then {_facObj = (_side) Call WFBE_CO_FNC_GetSideHQ};
 	//--- Reserve every body this HC template can materialize before committing its pending slot.
