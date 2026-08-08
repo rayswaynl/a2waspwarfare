@@ -4,6 +4,9 @@ _artillery = _this select 0;
 _destination = _this select 1;
 _side = _this select 2;
 _radius = _this select 3;
+//--- Mobile AICOM batteries admit close assault targets at 80m; retain the legacy 400m clearance for every existing four-argument caller.
+_ffRad = if ((count _this) > 4) then {_this select 4} else {400};
+if (typeName _ffRad != "SCALAR" || {_ffRad < 0}) then {_ffRad = 400};
 _index = [typeOf _artillery, _side] Call IsArtillery;
 
 _gunner = gunner _artillery;
@@ -122,7 +125,6 @@ if !(alive _artillery) exitWith {
 //--- Strategy/PlayerArty gate friendlies at decision time (~400m) then Spawn this script, which
 //--- sleeps 10+s before the first shot - advancing own squads can enter the impact zone meanwhile.
 //--- Measure from _destination (impact), not the battery. Abort with full teardown (restricted clear).
-_ffRad = 400;
 _ffNear = 0;
 { if (alive _x && {side _x == _side}) then {_ffNear = _ffNear + 1} } forEach (_destination nearEntities [["Man","Car","Tank","Air"], _ffRad]);
 if (_ffNear > 0) exitWith {
