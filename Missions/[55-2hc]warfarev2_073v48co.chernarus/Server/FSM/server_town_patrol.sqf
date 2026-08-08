@@ -73,6 +73,46 @@ while {!WFBE_GameOver && _aliveTeam} do {
 			_team setCombatMode "RED";
 		};
 	};
+
+	//--- TOWN-VEHICLE-SELFREPAIR: town garrisons create Motorized/Mechanized/Armored
+	//--- templates through Common_CreateTownUnits, but unlike commander teams they never enter
+	//--- Common_RunCommanderTeam's self-repair tick. A living crew in a wheel/track/engine-
+	//--- damaged hull otherwise keeps receiving patrol waypoints while permanently unable to move.
+	//--- Repair only a local, crewed, non-static LandVehicle after the established safe window;
+	//--- reset each configured hitpoint because setDamage alone leaves broken parts immobile.
+	private ["_tvDelay","_tvHp","_tvHpCfg","_tvHpName","_tvI","_tvSafe","_tvStamp","_tvThreat","_tvVeh"];
+	_tvSafe = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_SAFE_DIST", 250];
+	_tvDelay = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_DELAY", 30];
+	{
+		_tvVeh = vehicle _x;
+		if (!isNull _tvVeh && {_tvVeh != _x} && {alive _tvVeh} && {local _tvVeh} && {_tvVeh isKindOf "LandVehicle"} && {!(_tvVeh isKindOf "StaticWeapon")} && {!(canMove _tvVeh)} && {({alive _x} count (crew _tvVeh)) > 0}) then {
+			_tvThreat = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_tvVeh nearEntities [["Man","LandVehicle"], _tvSafe]);
+			if (_tvThreat == 0 && {behaviour (leader _team) != "COMBAT"}) then {
+				_tvStamp = _tvVeh getVariable "wfbe_town_repair_at";
+				if (isNil "_tvStamp") then {
+					_tvVeh setVariable ["wfbe_town_repair_at", time];
+				} else {
+					if ((time - _tvStamp) >= _tvDelay) then {
+						_tvVeh setDamage 0;
+						_tvHp = configFile >> "CfgVehicles" >> (typeOf _tvVeh) >> "HitPoints";
+						if (isClass _tvHp && {(count _tvHp) > 0}) then {
+							for "_tvI" from 0 to ((count _tvHp) - 1) do {
+								_tvHpCfg = _tvHp select _tvI;
+								_tvHpName = getText (_tvHpCfg >> "name");
+								if !(_tvHpName in [""]) then {_tvVeh setHit [_tvHpName, 0]};
+							};
+						};
+						_tvVeh setVariable ["wfbe_town_repair_at", nil];
+						["INFORMATION", Format ["TOWNVEHSELFREPAIR|town=%1|veh=%2", _location getVariable ["name","?"], typeOf _tvVeh]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				};
+			} else {
+				_tvVeh setVariable ["wfbe_town_repair_at", nil];
+			};
+		} else {
+			if (!isNull _tvVeh) then {_tvVeh setVariable ["wfbe_town_repair_at", nil]};
+		};
+	} forEach (units _team);
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 			_perfScope = if (isServer && !hasInterface) then {"SERVER"} else {"CLIENT"};
