@@ -425,7 +425,7 @@ _findBuildPos = {
 			//--- is NOT consulted here on purpose - paved or dirt, we want it clear. The same
 			//--- count(_p nearRoads N) idiom is already live in the HQ-deploy block, so the gate
 			//--- is a proven A2-OA pattern (no isOnRoad/getRoadInfo - those are A3-only).
-			_p = [_p, 30] Call WFBE_CO_FNC_GetEmptyPosition;
+			_p = [_p, 30, 32] Call WFBE_CO_FNC_GetEmptyPosition;
 			if (!(surfaceIsWater _p)) then {
 				if (!_haveDry) then {_best = _p; _haveDry = true};
 				//--- cmdcon41-w3k ROAD-BUFFER GATE (off-road path): the existing nearRoads 22 gate below already

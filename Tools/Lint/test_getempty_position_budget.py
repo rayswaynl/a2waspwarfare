@@ -33,6 +33,12 @@ def test_factory_road_settle_uses_the_outer_try_loop_as_the_retry_budget() -> No
         assert '[_cand, 8, 32] Call WFBE_CO_FNC_GetEmptyPosition' in source
 
 
+def test_factory_offroad_probes_use_a_bounded_retry_budget() -> None:
+    for mission in MISSIONS:
+        source = _read(mission, BASE)
+        assert '[_p, 30, 32] Call WFBE_CO_FNC_GetEmptyPosition' in source
+
+
 def test_bounded_getempty_mirrors_are_byte_identical() -> None:
     for relative in (EMPTY, BASE):
         contents = [(ROOT / mission / relative).read_bytes() for mission in MISSIONS]
