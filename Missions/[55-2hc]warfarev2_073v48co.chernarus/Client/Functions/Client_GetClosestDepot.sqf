@@ -19,8 +19,9 @@
 //--- friendly town then reads -1, which is neither WEST nor EAST, so it stays eligible). WEST/EAST buyers are
 //--- UNCHANGED - they keep the strict own-side gate (byte-for-byte stock behaviour). A2-OA-1.64 safe: nearEntities,
 //--- getVariable [name,default], explicit numeric == / != (never on booleans), private decls, no A3 commands.
-Private ["_closest","_near","_pos","_range","_guerFriendly","_sid","_westId","_eastId"];
+Private ["_closest","_closestDistance","_candidateDistance","_near","_pos","_range","_guerFriendly","_sid","_westId","_eastId"];
 _closest = objNull;
+_closestDistance = 1e12;
 _pos = _this select 0;
 _range = _this select 1;
 _near = _pos nearEntities [WFBE_Logic_Depot, _range];
@@ -32,10 +33,16 @@ _eastId = missionNamespace getVariable ["WFBE_C_EAST_ID", 1];
 		if (_guerFriendly) then {
 			//--- GUER buyer: accept GUER-held OR neutral (any town not WEST-held, not EAST-held).
 			_sid = _x getVariable ["sideID", -1];
-			if ((_sid != _westId) && {_sid != _eastId}) then {_closest = _x};
+			if ((_sid != _westId) && {_sid != _eastId}) then {
+				_candidateDistance = _x distance _pos;
+				if (_candidateDistance < _closestDistance) then {_closest = _x; _closestDistance = _candidateDistance};
+			};
 		} else {
 			//--- WEST/EAST buyer (or GUER with the widening flag off): strict own-side depot only (stock behaviour).
-			if (!(isNil {_x getVariable "sideID"}) && {(_x getVariable "sideID") == sideID}) then {_closest = _x};
+			if (!(isNil {_x getVariable "sideID"}) && {(_x getVariable "sideID") == sideID}) then {
+				_candidateDistance = _x distance _pos;
+				if (_candidateDistance < _closestDistance) then {_closest = _x; _closestDistance = _candidateDistance};
+			};
 		};
 	};
 } forEach _near;
