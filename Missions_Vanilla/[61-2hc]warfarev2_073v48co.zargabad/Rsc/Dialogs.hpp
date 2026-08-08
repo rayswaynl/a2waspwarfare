@@ -393,7 +393,7 @@ class WFBE_RespawnMenu {
 			ShowCountourInterval = 1;
 			
 			onMouseMoving = "mouseX = (_this Select 1);mouseY = (_this Select 2)";
-			onMouseButtonDown = "mouseButtonDown = _this select 1;";
+			onMouseButtonDown = "mouseX = (_this select 2);mouseY = (_this select 3);mouseButtonDown = _this select 1;";
 			onMouseButtonUp = "mouseButtonUp = _this select 1;";
 		};
 		class CA_RespawnDetails : RscStructuredText {
