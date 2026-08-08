@@ -864,6 +864,29 @@ while {!WFBE_GameOver} do {
 
 			if((_town getVariable "wfbe_active") || (_town getVariable "wfbe_active_air")) then {
 
+				//--- A town static survives an entire active episode, but its turret magazines are finite.
+				//--- Refresh only server-local, AI-manned town hulls on a bounded cadence: this avoids
+				//--- persistent silent disarmament without touching player-operated or non-town statics.
+				private ["_defenseRearmAt","_townDefenses","_defense","_rearmedDefenses"];
+				_defenseRearmAt = _town getVariable ["wfbe_town_defense_rearm_at", 0];
+				if (time >= _defenseRearmAt) then {
+					_town setVariable ["wfbe_town_defense_rearm_at", time + 300];
+					_townDefenses = _town getVariable ["wfbe_town_defenses", []];
+					_rearmedDefenses = 0;
+					if (typeName _townDefenses == "ARRAY") then {
+						{
+							_defense = _x getVariable "wfbe_defense";
+							if (!isNil "_defense" && {!isNull _defense} && {alive _defense} && {local _defense} && {_defense getVariable ["WFBE_IsTownDefenderAI", false]} && {!(isPlayer (gunner _defense))}) then {
+								_defense setVehicleAmmo 1;
+								_rearmedDefenses = _rearmedDefenses + 1;
+							};
+						} forEach _townDefenses;
+					};
+					if (_rearmedDefenses > 0) then {
+						["INFORMATION", Format ["server_town_ai.sqf: rearmed %1 AI town static(s) at [%2].", _rearmedDefenses, _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogContent;
+					};
+				};
+
 				//--- cmdcon41-w3 GARRISON SORTIES: the encounter-rate win. When a GROUND garrison is awake
 				//--- (wfbe_active), rotate ONE 4-man-ish patrol element out of the EXISTING town groups on a
 				//--- 300-800m ring around the town, then rotate it back after WFBE_C_TOWNS_SORTIE_MINS min so a
