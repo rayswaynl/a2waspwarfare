@@ -17,7 +17,7 @@ while { !WFBE_GameOver } do {
     _timeBefore = time;
     {
         // Optimize by skipping crunching the data of enemy groups
-        if (side _x != side player) exitWith {};
+        if (side _x == side player) then {
 
         // Marty: Performance Audit counters for scanned groups and units.
         _perfGroups = _perfGroups + 1;
@@ -189,6 +189,7 @@ while { !WFBE_GameOver } do {
             };
         } forEach _groupArray;
 
+        };
     } forEach clientTeams;
 
     if (side player == west) then {
