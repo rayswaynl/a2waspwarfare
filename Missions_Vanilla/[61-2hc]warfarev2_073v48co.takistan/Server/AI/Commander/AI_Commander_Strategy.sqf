@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_inRange","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart","_syncAicomState","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_inRange","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart","_syncAicomState","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -74,7 +74,6 @@ _sliceYield = {
 _enemySide = if (_side == west) then {east} else {west};
 if (!(_enemySide in WFBE_PRESENTSIDES)) exitWith {};
 _enemyID = (_enemySide) Call WFBE_CO_FNC_GetSideID;
-_enemyLogik = (_enemySide) Call WFBE_CO_FNC_GetSideLogic;
 
 //--- War state metrics. AICOM2_Snapshot is refreshed immediately before Strategy in
 //--- AI_Commander.sqf; consume its town census here so legacy Strategy no longer
@@ -116,7 +115,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0) then 
 //--- Exclude stranded lone-survivor remnants (alive < N AND far from HQ) and in-refit teams so a few far-flung
 //--- survivors do not deflate strength below the enemy and falsely trip the defensive gates (the b67 "EAST amasses
 //--- but never attacks" stall). A2-OA: plain get + isNil for the GROUP refit var ([name,default] is unreliable on groups).
-private ["_myHQ","_enHQfb","_loneAlive","_loneFar","_tAlive","_rf","_isRemnant"];
+private ["_myHQ","_loneAlive","_loneFar","_tAlive","_rf","_isRemnant"];
 if (!_snapOk) then {
 	_myHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
 	_loneAlive = missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_ALIVE", 2];
@@ -135,23 +134,10 @@ if (!_snapOk) then {
 		};
 	} forEach _teams;
 	Call _sliceYield;
-	//--- r100 (force-strength symmetry): same enemy-side policy as AICOM2_Snapshot - exclude enemy
-	//--- in-refit teams + stranded lone remnants from _enStr, mirroring the _myStr rules above, so the
-	//--- fallback path does not over-rate the enemy by its refit pool (see Snapshot r100 note).
-	_enHQfb = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
+	//--- Fog-of-war boundary (r205): no current contact/intel feed can legally
+	//--- contribute hidden enemy bodies. Keep the fallback aligned with Snapshot:
+	//--- _enEff uses only the public held-town credit below.
 	_enStr = 0;
-	{
-		if (!isNull _x) then {
-			_tAlive = {alive _x} count (units _x);
-			if (_tAlive > 0) then {
-				_isRemnant = false;
-				_rf = _x getVariable "wfbe_aicom_refit";
-				if (!isNil "_rf" && {_rf}) then {_isRemnant = true};
-				if (!_isRemnant && {_tAlive < _loneAlive} && {_loneFar > 0} && {!isNull (leader _x)} && {!isNull _enHQfb} && {((leader _x) distance _enHQfb) > _loneFar}) then {_isRemnant = true};
-				if (!_isRemnant) then {_enStr = _enStr + _tAlive};
-			};
-		};
-	} forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 };
 
 //--- 0) LAST-STAND: fewer than 2 own towns AND clearly outnumbered - recall all, skip attack.

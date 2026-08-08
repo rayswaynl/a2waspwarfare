@@ -27,7 +27,7 @@
 	WFBE_CO_FNC_GroupGetBool for group bools, plain-get+isNil for group vars, no A3 commands.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik",
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID",
 	"_myTowns","_enemyTowns","_neutTowns","_totTowns","_ownTownObjs","_tgtTownObjs",
 	"_myHQ","_enemyHQ","_myStr","_enStr","_loneAlive","_loneFar","_townStr","_myEff","_enEff",
 	"_funds","_supply","_players","_myPlayers","_hcUnits","_teamDigests","_team","_tAlive",
@@ -47,7 +47,6 @@ if ((count towns) < 1) exitWith {["WARNING", "AI_Commander_Snapshot: towns globa
 _enemySide = if (_side == west) then {east} else {west};
 if (!(_enemySide in WFBE_PRESENTSIDES)) exitWith {};
 _enemyID = (_enemySide) Call WFBE_CO_FNC_GetSideID;
-_enemyLogik = (_enemySide) Call WFBE_CO_FNC_GetSideLogic;
 
 //--- TOWN CENSUS: my / enemy / neutral counts + the two candidate lists the allocator needs.
 _myTowns = 0; _enemyTowns = 0; _neutTowns = 0; _totTowns = 0;
@@ -89,24 +88,12 @@ _myStr = 0;
 		};
 	};
 } forEach _teams;
-//--- r100 (force-strength symmetry): the enemy sum must use the SAME maneuver-strength policy as _myStr
-//--- above (exclude in-refit teams + stranded lone remnants). The legacy asymmetric form counted enemy
-//--- refit/straggler bodies while excluding our own, so every _myStr-vs-_enStr gate over-rated the enemy
-//--- by its refit pool (a refit team is 8-12 bodies for the whole walk home + top-up) and both
-//--- commanders systematically read themselves as the weaker side. Enemy HQ anchors the lone-far check.
+//--- Fog-of-war boundary (r205): the planner has no current enemy contact/intel
+//--- feed that can legally contribute a body count. Do not enumerate the enemy
+//--- side's team registry here: that is perfect hidden composition knowledge.
+//--- _enEff still receives the public held-town credit below; a future contact
+//--- lane may add observed strength without reopening this global scan.
 _enStr = 0;
-{
-	if (!isNull _x) then {
-		_tAlive = {alive _x} count (units _x);
-		if (_tAlive > 0) then {
-			_isRemnant = false;
-			_rf = _x getVariable "wfbe_aicom_refit";
-			if (!isNil "_rf" && {_rf}) then {_isRemnant = true};
-			if (!_isRemnant && {_tAlive < _loneAlive} && {_loneFar > 0} && {!isNull (leader _x)} && {!isNull _enemyHQ} && {((leader _x) distance _enemyHQ) > _loneFar}) then {_isRemnant = true};
-			if (!_isRemnant) then {_enStr = _enStr + _tAlive};
-		};
-	};
-} forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 
 //--- EFFECTIVE STRENGTH = maneuver + held-town credit. This (NOT raw _myStr) is what the v2
 //--- stance machine and closer decide on, so a territory-winning side never flips itself into
