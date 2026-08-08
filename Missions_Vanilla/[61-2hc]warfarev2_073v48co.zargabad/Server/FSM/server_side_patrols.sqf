@@ -18,7 +18,7 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
 	"_perfProbe","_perfCap","_perfReason","_perfPopTier",
 	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp",
-	"_pwEnabled","_pwLastSample","_pwMins","_pwDist","_pwWpDist","_pwMaxStrikes","_pwEntry","_pwLdr","_pwSideID","_pwGrp","_pwVeh","_pwPos","_pwWpPos","_pwLastPos","_pwStrikes","_pwSide","_pwTier","_pwUnits","_pwVehicles","_pwV","_pwFound","_pwWpIdx","_pwSample"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix). Grok idea #8 (side-patrol stuck watchdog): +_pw* (see WFBE_C_SIDE_PATROL_UNSTUCK block below).
+	"_pwEnabled","_pwLastSample","_pwMins","_pwDist","_pwWpDist","_pwMaxStrikes","_pwEntry","_pwLdr","_pwSideID","_pwGrp","_pwVeh","_pwPos","_pwWpPos","_pwLastPos","_pwStrikes","_pwSide","_pwTier","_pwUnits","_pwVehicles","_pwV","_pwFound","_pwWpIdx","_pwSample","_guerEarlyWindow","_guerEarlyMultMax","_guerEarlyMult","_maxSideBoosted","_delayEff"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix). Grok idea #8 (side-patrol stuck watchdog): +_pw* (see WFBE_C_SIDE_PATROL_UNSTUCK block below).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -300,6 +300,27 @@ while {!WFBE_GameOver} do {
 		_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 		//--- GUER GROUP-CONDENSE (task #12): defender/resistance gets a lower concurrent patrol cap.
 		_maxSide = if (_side == WFBE_DEFENDER) then {if (({(_x getVariable "sideID") == _sideID} count towns) < 20) then {3} else {missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_DEFENDER", 1]}} else {_max};
+		//--- w807e-L17 (owner-approved 2026-08-08): early-window GUER patrol density boost. Time-
+		//--- decaying multiplier on the GUER-only side-patrol concurrent cap + spawn cadence for the
+		//--- first WFBE_C_GUER_PATROL_EARLY_WINDOW seconds of a mission, linearly tapering to 1.0
+		//--- (baseline, unmodified). Boost applies ONLY within the resistance/defender branch -
+		//--- WEST/EAST _maxSide and the shared _delay read are untouched, so this stays byte-identical
+		//--- for W/E at every flag/time state. Multiplies the EARLY budget only: past the window (or
+		//--- with the flag off) _guerEarlyMult is exactly 1 and _maxSide/_delayEff collapse back to the
+		//--- pre-existing values - no permanent change to the global AI ceilings this file already caps.
+		_guerEarlyMult = 1;
+		_delayEff = _delay;
+		if (_side == WFBE_DEFENDER && {(missionNamespace getVariable ["WFBE_C_GUER_PATROL_EARLY_ENABLE", 1]) > 0}) then {
+			_guerEarlyWindow = missionNamespace getVariable ["WFBE_C_GUER_PATROL_EARLY_WINDOW", 3600];
+			_guerEarlyMultMax = missionNamespace getVariable ["WFBE_C_GUER_PATROL_EARLY_MULT", 2.0];
+			if (_guerEarlyWindow > 0 && {time < _guerEarlyWindow} && {_guerEarlyMultMax > 1}) then {
+				_guerEarlyMult = _guerEarlyMultMax - ((_guerEarlyMultMax - 1) * (time / _guerEarlyWindow));
+				if (_guerEarlyMult < 1) then {_guerEarlyMult = 1};
+				_maxSideBoosted = floor ((_maxSide * _guerEarlyMult) + 0.999);
+				if (_maxSideBoosted > _maxSide) then {_maxSide = _maxSideBoosted};
+				_delayEff = _delay / _guerEarlyMult;
+			};
+		};
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _logik) then {
 			_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
@@ -338,7 +359,7 @@ while {!WFBE_GameOver} do {
 						};
 					};
 				};
-				if (_active < (_maxSide min _lvl) && {time - _last > _delay}) then {  //--- B36.1 (Ray 2026-06-15): EFFECTIVE patrol cap is level-aware = min(side cap, patrol level). patrol-1 => 1, patrol-2+ => 2 (side cap is 2 for W/E, 2/1 for GUER). HQ teams scale via the curve; patrols stay low.
+				if (_active < (_maxSide min _lvl) && {time - _last > _delayEff}) then {  //--- B36.1 (Ray 2026-06-15): EFFECTIVE patrol cap is level-aware = min(side cap, patrol level). patrol-1 => 1, patrol-2+ => 2 (side cap is 2 for W/E, 2/1 for GUER). HQ teams scale via the curve; patrols stay low. w807e-L17: _delayEff collapses to _delay outside the GUER early-boost window (see block above).
 					_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 					_owned = [];
 					{if ((_x getVariable "sideID") == _sideID) then {_owned = _owned + [_x]}} forEach towns;
@@ -493,6 +514,8 @@ while {!WFBE_GameOver} do {
 							};
 							_logik setVariable ["wfbe_patrol_waitlog", false];
 							["INFORMATION", Format["server_side_patrols.sqf: [%1] %2 patrol dispatched from [%3] (active %4/%5, HC:%6).", _side, _tier, _home getVariable "name", _active + 1, (_maxSide min _lvl), !isNull _hcUnit]] Call WFBE_CO_FNC_AICOMLog;
+							//--- w807e-L17: PATROLBOOST telemetry (spawned count, active multiplier, window remaining) so soak grading can see the early-window boost. GUER/resistance only; W/E dispatches never emit this line.
+							if (_side == WFBE_DEFENDER) then {diag_log format ["PATROLBOOST|v1|side=%1|spawned=%2|mult=%3|windowRemaining=%4|tier=%5|home=%6", _side, _active + 1, _guerEarlyMult, round (((missionNamespace getVariable ["WFBE_C_GUER_PATROL_EARLY_WINDOW", 3600]) - time) max 0), _tier, _home getVariable "name"]};
 							if (!isNil "PerformanceAudit_Record") then {
 								if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 									["side_patrol_spawn", 0, Format["side:%1;tier:%2;active:%3;hc:%4", _side, _tier, _active + 1, !isNull _hcUnit], "SERVER"] Call PerformanceAudit_Record;
