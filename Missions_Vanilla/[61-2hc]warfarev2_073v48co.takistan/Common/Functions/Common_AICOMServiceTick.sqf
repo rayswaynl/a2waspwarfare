@@ -50,11 +50,10 @@ _enemySide = if (_side == west) then {east} else {if (_side == east) then {west}
 _state = _team getVariable "wfbe_aicom_svcstate";
 if (isNil "_state") then {_state = ""};
 
-//--- live enemy presence near the leader (never-pull-out-of-contact / abort guard)
-_enemyNear = {alive _x && {side _x == _enemySide}} count ((getPos _ldr) nearEntities [["Man","LandVehicle","Air"], _safeDist]);
-
 if (_state == "enroute") then {
 	//--- ============ EN-ROUTE: driving to the service point ============
+	//--- The 600 m abort guard is only needed while travelling; idle uses the narrower trigger scan below.
+	_enemyNear = {alive _x && {side _x == _enemySide}} count ((getPos _ldr) nearEntities [["Man","LandVehicle","Air"], _safeDist]);
 	_svcPos   = _team getVariable "wfbe_aicom_svcpos";
 	_deadline = _team getVariable "wfbe_aicom_svcdeadline";
 	if (isNil "_svcPos" || {isNil "_deadline"}) exitWith {
