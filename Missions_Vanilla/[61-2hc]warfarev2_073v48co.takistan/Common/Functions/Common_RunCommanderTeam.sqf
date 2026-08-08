@@ -3452,7 +3452,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- pick + load a situational round (illum at night, cluster vs armour) from ONLY the types the side has
 						//--- researched (the helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
 						[_artyHull, _side, _idx2, _tgtP] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
-						[_artyHull, _tgtP, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
+						[_artyHull, _tgtP, _side, 60, 80] Spawn WFBE_CO_FNC_FireArtillery;
 						_artyHull setVariable ["wfbe_aicom_arty_last", time];
 						diag_log ("AICOMSTAT|v1|EVENT|" + _artyText + "|" + str (round (time / 60)) + "|FIRE_MISSION_MOBILE|" + (typeOf _artyHull) + "|tier=" + str _upLvl);
 					};
