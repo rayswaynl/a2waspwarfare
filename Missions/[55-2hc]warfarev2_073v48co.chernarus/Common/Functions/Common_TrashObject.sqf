@@ -24,7 +24,15 @@ if (true) then {
 	//--- ~8s after the eject while the engine's move-out bookkeeping still held the pointer (fault
 	//--- registers: ESI = this corpse). Seat state sampled only AFTER the sleep never sees that
 	//--- transition - remember it was seated NOW; the post-eject cooldown below acts on this stamp.
-	if (_isMan && {vehicle _object != _object}) then {_object setVariable ["wfbe_seatSeen", true]};
+	if (_isMan && {vehicle _object != _object}) then {
+		_object setVariable ["wfbe_seatSeen", true];
+		//--- crash 014EFCF4 #7 (2026-08-08 18:09 live, wave0808i): wfbe_seatSeen is machine-local
+		//--- (never publicVariable'd), so a re-queued corpse or a REMOTE (HC-owned) corpse dispatched
+		//--- for delete cannot see it. Mirror the same signal as a PUBLIC, timestamped deadline so the
+		//--- cooldown decision survives a re-queue and crosses the server->HC boundary. See the dispatch
+		//--- gate and the HC executor guard below/downstream for the readers.
+		_object setVariable ["wfbe_trash_posteject_until", diag_tickTime + (missionNamespace getVariable ["WFBE_C_UNITS_BODIES_TIMEOUT", 60]), true];
+	};
 
 	//--- B35 (claude-gaming 2026-06-15): man bodies -> fixed BODIES_TIMEOUT (60s); vehicle wrecks -> lobby-tunable CLEAN_TIMEOUT.
 	//--- Prior bug: this read BODIES_TIMEOUT for BOTH then x2'd vehicles, so the lobby "Bodies Timeout" slider was silently ignored (wrecks pinned at 120s).
@@ -75,6 +83,7 @@ if (true) then {
 		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
 		_object setVariable ["wfbe_trashed", nil]; //--- crash 014EFCF4 review: without this reset the collector NEVER re-queues the deferred body (server_collector_garbage only re-spawns TrashObject when wfbe_trashed is nil), so the defer traded the crash for a permanent body leak. Established idiom: server_groupsGC.sqf.
 		_object setVariable ["wfbe_seatSeen", true]; //--- crash 014EFCF4 #6: seated at THIS check too - keep the post-eject cooldown armed for the retry.
+		_object setVariable ["wfbe_trash_posteject_until", diag_tickTime + (missionNamespace getVariable ["WFBE_C_UNITS_BODIES_TIMEOUT", 60]), true]; //--- crash 014EFCF4 #7: same public re-arm as the queue-time stamp above.
 		["INFORMATION", Format["Common_TrashObject.sqf: deferring corpse [%1] still seated in live vehicle [%2].", _object, vehicle _object]] Call WFBE_CO_FNC_LogContent;
 	};
 
@@ -90,6 +99,24 @@ if (true) then {
 		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
 		_object setVariable ["wfbe_trashed", nil]; //--- same re-queue reset as the branches above - the hold must not leak the body.
 		["INFORMATION", Format["Common_TrashObject.sqf: post-eject cooldown - holding corpse [%1] one more cycle.", _object]] Call WFBE_CO_FNC_LogContent;
+	};
+
+	//--- crash 014EFCF4 #7 (2026-08-08 18:09 live, wave0808i, register-proven: fault ESI held this exact
+	//--- corpse's pointer): the #6 guard directly above already held THIS invocation once, but its stamp
+	//--- (wfbe_seatSeen) is local-only and gets consumed the moment it fires - a re-queued pass, or the
+	//--- REMOTE (HC-owned) case which is about to be dispatched below, cannot see that a cooldown window is
+	//--- still open. Re-check the PUBLIC, timestamped deadline stamped alongside every wfbe_seatSeen=true
+	//--- above: while it has not elapsed, defer - same release idiom as the two guards above - so a corpse
+	//--- can never reach the dispatch decision below still inside its post-eject grace window, regardless of
+	//--- which invocation or which machine is asking. This is the single point of authority for the
+	//--- server->HC dispatch gate; the HC executor (Client/PVFunctions/HandleSpecial.sqf) re-checks the same
+	//--- public stamp as defense-in-depth only, since it lacks wfbe_seatSeen itself.
+	if (_isMan && {!isNull _object} && {(_object getVariable ["wfbe_trash_posteject_until", -1]) > diag_tickTime}) exitWith {
+		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
+		_object setVariable ["wfbe_trashed", nil];
+		diag_log Format ["WASPCRASH014E|DISPATCH|obj=%1|decision=DISPATCH-HELD|reason=posteject-cooldown|remaining=%2|t=%3",
+			_object, round ((_object getVariable ["wfbe_trash_posteject_until", diag_tickTime]) - diag_tickTime), diag_tickTime];
+		["INFORMATION", Format["Common_TrashObject.sqf: post-eject cooldown (public) - deferring dispatch of corpse [%1], %2s remaining.", _object, round ((_object getVariable ["wfbe_trash_posteject_until", diag_tickTime]) - diag_tickTime)]] Call WFBE_CO_FNC_LogContent;
 	};
 
 	//--- crash 014EFCF4 instrumentation (always-on, unconditional diag_log): captures seat state at the
@@ -131,6 +158,15 @@ if (true) then {
 		//--- owner() can be zero while HC locality is transferring. Common_SendToClient drops that
 		//--- packet by design; keep the retry state but avoid constructing an impossible PVF.
 		if (_remoteOwner > 0) then {
+			//--- crash 014EFCF4 #7 diag: the cooldown gate above already cleared this corpse for dispatch -
+			//--- record that the delete decision now belongs to the HC executor, with the seat state as-sent.
+			diag_log Format ["WASPCRASH014E|DISPATCH|obj=%1|decision=DISPATCH-SENT|owner=%2|seat=%3|seatAlive=%4|seatCrewAlive=%5|t=%6",
+				_object, _remoteOwner,
+				(if (_isMan) then {vehicle _object} else {objNull}),
+				(if (_isMan && {vehicle _object != _object}) then {str (alive (vehicle _object))} else {"-"}),
+				(if (_isMan && {vehicle _object != _object}) then {str ({alive _x} count crew (vehicle _object))} else {"-"}),
+				diag_tickTime
+			];
 			[_object, "HandleSpecial", ["cleanup-trash-object", _object]] Call WFBE_CO_FNC_SendToClient;
 		};
 		//--- crash 014EFCF4 #4: release the dispatched body back to the collector. If the owner-side executor
@@ -147,7 +183,16 @@ if (true) then {
 			{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { _crewDead set [count _crewDead, _x] } } forEach (crew _object);
 			{ if (!isNull _x) then { ["trash-crew", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0; } } forEach _crewDead;
 		};
-		if (!isNull _object) then { ["trash-object", _object, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _object };
+		if (!isNull _object) then {
+			diag_log Format ["WASPCRASH014E|DISPATCH|obj=%1|decision=DISPATCH-LOCAL|seat=%2|seatAlive=%3|seatCrewAlive=%4|t=%5",
+				_object,
+				(if (_isMan) then {vehicle _object} else {objNull}),
+				(if (_isMan && {vehicle _object != _object}) then {str (alive (vehicle _object))} else {"-"}),
+				(if (_isMan && {vehicle _object != _object}) then {str ({alive _x} count crew (vehicle _object))} else {"-"}),
+				diag_tickTime
+			];
+			["trash-object", _object, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _object;
+		};
 	};
 
 	if (_isMan) then {
