@@ -18,7 +18,7 @@ for [{_z = 0},{_z < 5},{_z = _z + 1}] do {
 	sleep 0.5;
 	player playMove "AinvPknlMstpSlayWrflDnon_medic";
 	sleep 0.5;
-	waitUntil {animationState player == "ainvpknlmstpslaywrfldnon_amovpknlmstpsraswrfldnon" || !alive player || vehicle player != player || !alive _vehicle || _vehicle distance player > 5};
+	waitUntil {sleep 0.05; animationState player == "ainvpknlmstpslaywrfldnon_amovpknlmstpsraswrfldnon" || !alive player || vehicle player != player || !alive _vehicle || _vehicle distance player > 5};
 	if (!alive player || vehicle player != player || !alive _vehicle || _vehicle distance player > 5) exitWith {_skip = true};
 };
 
