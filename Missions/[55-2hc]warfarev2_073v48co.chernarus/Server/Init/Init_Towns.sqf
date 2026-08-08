@@ -1,6 +1,19 @@
-Private ['_boundaries','_camps','_eStart','_half','_initied','_limit','_minus','_near','_nearTownsE','_nearTownsW','_require','_resTowns','_total','_town','_towns','_wStart','_z'];
+Private ['_boundaries','_camps','_eStart','_half','_initied','_limit','_minus','_near','_nearTownsE','_nearTownsW','_require','_resTowns','_total','_town','_townExpected','_towns','_wStart','_wTownReady','_z'];
 
 waitUntil {townInit};
+
+//--- Town starting modes must see the complete server registration, not the first
+//--- workers that happened to append to towns[] while the common census released townInit.
+//--- Init_Town.sqf publishes camps before its server-side townInitServer gate, so wait
+//--- for both the expected registration count and the camp payload before assigning sides.
+_townExpected = missionNamespace getVariable ["totalTowns", 0];
+_wTownReady = 0;
+while {(_wTownReady < 240) && {((count towns) < _townExpected || {({isNil {_x getVariable "camps"}} count towns) > 0})}} do { uiSleep 0.25; _wTownReady = _wTownReady + 1; };
+if ((count towns) < _townExpected || {({isNil {_x getVariable "camps"}} count towns) > 0}) exitWith {
+	townInitServer = true;
+	diag_log format ["TOWNINIT|v1|START_MODE_DEFER|registered=%1|expected=%2|wait=%3s", count towns, _townExpected, _wTownReady / 4];
+	["WARNING", Format ["Init_Towns.sqf: starting mode deferred; registered=%1 expected=%2 after %3s.", count towns, _townExpected, _wTownReady / 4]] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- Special Towns mode.
 switch (missionNamespace getVariable "WFBE_C_TOWNS_STARTING_MODE") do {
