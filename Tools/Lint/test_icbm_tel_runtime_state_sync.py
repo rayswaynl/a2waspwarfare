@@ -65,6 +65,20 @@ class IcbmTelRuntimeStateSyncTests(unittest.TestCase):
                 )
                 self.assertNotIn('_steps', source)
 
+    def test_tel_replacement_retries_until_an_hq_exists_or_the_match_ends(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            source = mask_comments(read(root, TEL_INIT))
+            with self.subTest(root=root):
+                self.assertRegex(
+                    source,
+                    r'(?s)WFBE_SE_FNC_ScheduleIcbmTelRespawn\s*=\s*\{.*?'
+                    r'while\s*\{\s*!WFBE_GameOver\s*&&\s*\{isNull _tel\}\s*\}\s*do\s*\{.*?'
+                    r'_tel\s*=\s*\[_rs\]\s*Call\s*WFBE_SE_FNC_SpawnIcbmTel;.*?'
+                    r'if\s*\(isNull _tel\s*&&\s*\{!WFBE_GameOver\}\)\s*then\s*\{.*?sleep 30;',
+                )
+                self.assertIn('[_dSide] Call WFBE_SE_FNC_ScheduleIcbmTelRespawn;', source)
+                self.assertRegex(source, r'\[_side\] Call WFBE_SE_FNC_ScheduleIcbmTelRespawn\s*\}')
+
 
 if __name__ == "__main__":
     unittest.main()

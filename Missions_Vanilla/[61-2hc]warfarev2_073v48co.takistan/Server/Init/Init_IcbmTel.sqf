@@ -134,14 +134,8 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 			{ [_x, "HandleSpecial", ["icbm-tel-msg", "Enemy ICBM TEL destroyed - their strike was aborted!"]] Call WFBE_CO_FNC_SendToClients } forEach (WFBE_PRESENTSIDES - [_dSide]);
 			diag_log (Format ["ICBMTEL|v1|CANCEL-ON-DESTROY|%1|countdown aborted, no refund.", _dSideText]);
 		};
-		//--- schedule respawn.
-		[_dSide] spawn {
-			private ["_rs","_delay"];
-			_rs = _this select 0;
-			_delay = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600];
-			sleep _delay;
-			if (!WFBE_GameOver) then { [_rs] Call WFBE_SE_FNC_SpawnIcbmTel };
-		};
+		//--- Schedule respawn. The worker retries if the side is temporarily without an HQ.
+		[_dSide] Call WFBE_SE_FNC_ScheduleIcbmTelRespawn;
 		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL destroyed — respawn in %2s.", _dSideText, (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600])]] Call WFBE_CO_FNC_LogContent;
 	}];
 
@@ -152,6 +146,27 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 	["INITIALIZATION", Format ["Init_IcbmTel.sqf : [%1] TEL spawned (empty+locked, destroyable) at %2.", _sideText, _pos]] Call WFBE_CO_FNC_LogContent;
 	diag_log (Format ["ICBMTEL|v1|SPAWN|%1|pos=%2", _sideText, [round (_pos select 0), round (_pos select 1)]]);
 	_tel
+};
+
+//--- A destroyed TEL may reach its return deadline while its side is rebuilding an HQ. Keep the
+//--- one server-side worker alive until the idempotent spawner can place the replacement or the match ends.
+WFBE_SE_FNC_ScheduleIcbmTelRespawn = {
+	private ["_side"];
+	_side = _this select 0;
+	[_side] spawn {
+		private ["_rs","_delay","_tel"];
+		_rs = _this select 0;
+		_delay = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600];
+		sleep _delay;
+		_tel = objNull;
+		while {!WFBE_GameOver && {isNull _tel}} do {
+			_tel = [_rs] Call WFBE_SE_FNC_SpawnIcbmTel;
+			if (isNull _tel && {!WFBE_GameOver}) then {
+				["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL return delayed - waiting for an HQ.", str _rs]] Call WFBE_CO_FNC_LogContent;
+				sleep 30;
+			};
+		};
+	};
 };
 
 //------------------------------------------------------------------------------------
@@ -668,7 +683,7 @@ WFBE_SE_FNC_IcbmTelFire = {
 		//--- No launch platform. NUKE: refuse + ensure a research-TEL replacement is scheduled. Conventional: no platform at all.
 		if (_muni == "NUKE") then {
 			[_side, "HandleSpecial", ["icbm-tel-msg", "ICBM refused: your TEL is destroyed. A replacement is inbound."]] Call WFBE_CO_FNC_SendToClients;
-			if (isNull _tel) then { [_side] spawn { sleep (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RESPAWN", 600]); if (!WFBE_GameOver) then {[_this select 0] Call WFBE_SE_FNC_SpawnIcbmTel} } };
+			if (isNull _tel) then { [_side] Call WFBE_SE_FNC_ScheduleIcbmTelRespawn };
 		} else {
 			[_side, "HandleSpecial", ["icbm-tel-msg", "That munition refused: no launch platform (TEL or SCUD) is alive."]] Call WFBE_CO_FNC_SendToClients;
 		};
