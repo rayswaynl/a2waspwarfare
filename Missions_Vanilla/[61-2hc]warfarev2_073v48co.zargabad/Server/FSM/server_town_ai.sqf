@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince","_sortieDefR","_sortiePatR"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_townAiGroupCap","_townAiGroupCount","_townAiPlannedGroups","_townAiPlanReason","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince","_sortieDefR","_sortiePatR"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
@@ -506,11 +506,45 @@ while {!WFBE_GameOver} do {
 								diag_log Format ["GARRISON_CAP_DEFER|town=%1|side=%2|sideAI=%3|tierCap=%4", _town getVariable ["name", "?"], _side, _garrisonSideAIPre, _garrisonCapPre];
 							};
 						};
-						if (!_activationDeferred && {_enemies_ground > 0} && {{side _x == _side} count allGroups >= 144}) then {
+						if (!_activationDeferred && {_enemies > 0} && {{side _x == _side} count allGroups >= 144}) then {
 							_activationDeferred = true;
 							_enemies_ground = 0;
 							_enemies = 0;
 							diag_log Format ["TOWN_AI_GROUP_CAP_DEFER|town=%1|side=%2|groups=%3|cap=144", _town getVariable ["name", "?"], _side, {side _x == _side} count allGroups];
+						};
+
+						//--- Wave admission must reserve the complete planned group batch before the active/episode
+						//--- latches. A below-cap side can still cross the engine's 144-group ceiling when one town
+						//--- plans several groups; an empty planner result must also remain retryable instead of
+						//--- claiming an active town slot with no population.
+						if (!_activationDeferred && {_enemies > 0}) then {
+							_townAiGroupCap = 144;
+							_townAiGroupCount = {side _x == _side} count allGroups;
+							_groups = [];
+							if (_enemies_ground > 0) then {
+								if (_side == WFBE_DEFENDER) then {
+									_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
+								} else {
+									_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroups;
+								};
+							} else {
+								if (_side == WFBE_DEFENDER) then {
+									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroupsDefender
+								} else {
+									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroups;
+								};
+							};
+							if (isNil "_groups" || {typeName _groups != "ARRAY"}) then {_groups = []};
+							_townAiPlannedGroups = count _groups;
+							_townAiPlanReason = "";
+							if (_townAiPlannedGroups < 1) then {_townAiPlanReason = "empty-wave"};
+							if ((_townAiGroupCount + _townAiPlannedGroups) > _townAiGroupCap) then {_townAiPlanReason = "group-headroom"};
+							if (_townAiPlanReason != "") then {
+								_activationDeferred = true;
+								_enemies_ground = 0;
+								_enemies = 0;
+								diag_log Format ["TOWN_AI_WAVE_DEFER|town=%1|side=%2|groups=%3|planned=%4|cap=%5|reason=%6", _town getVariable ["name", "?"], _side, _townAiGroupCount, _townAiPlannedGroups, _townAiGroupCap, _townAiPlanReason];
+							};
 						};
 
 						if(_enemies_ground > 0) then {
@@ -539,11 +573,6 @@ while {!WFBE_GameOver} do {
 								_town setVariable ["wfbe_ctl_wave_side", _side];
 							};
 
-							if (_side == WFBE_DEFENDER) then {
-								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
-							} else {
-								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroups;
-							};
 							//--- CTL garrison-link episode telemetry (kimi/ctl-telemetry-20260725, flag
 							//--- WFBE_C_CTL_TELEMETRY default 0): one ACT line per WEST/EAST GROUND activation
 							//--- episode. TELEMETRY ONLY - no spawn/activation/ledger rule is touched; every
@@ -603,11 +632,6 @@ while {!WFBE_GameOver} do {
 									_town setVariable ["wfbe_ctl_wave_side", _side];
 								};
 
-								if (_side == WFBE_DEFENDER) then {
-									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroupsDefender
-								} else {
-									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroups;
-								};
 							};
 						};
 						//--- Budget/GUER-cap deferrals must not fall through into creation side effects.

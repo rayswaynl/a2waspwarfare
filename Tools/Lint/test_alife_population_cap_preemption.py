@@ -36,6 +36,19 @@ def test_full_group_cap_defers_a_garrison_before_empty_group_allocation() -> Non
     assert text.index('TOWN_AI_GROUP_CAP_DEFER') < text.index('wfbe_active", true')
 
 
+def test_town_wave_reserves_planned_groups_before_activation() -> None:
+    """A below-cap wave may not reserve more groups than the engine can accept."""
+    text = TOWN_AI.read_text(encoding="utf-8-sig")
+
+    assert "_townAiGroupCap = 144;" in text
+    assert "_townAiGroupCount = {side _x == _side} count allGroups;" in text
+    assert "_townAiPlannedGroups = count _groups;" in text
+    assert "if (_townAiPlannedGroups < 1) then {_townAiPlanReason = \"empty-wave\"};" in text
+    assert "if ((_townAiGroupCount + _townAiPlannedGroups) > _townAiGroupCap) then {" in text
+    assert "TOWN_AI_WAVE_DEFER" in text
+    assert text.index("_townAiPlannedGroups = count _groups;") < text.index('wfbe_active", true')
+
+
 def test_hc_founding_reserves_the_full_template_population_before_pending() -> None:
     """A full-team HC request cannot consume more bodies than the side cap has left."""
     text = TEAMS.read_text(encoding="utf-8-sig")
