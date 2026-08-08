@@ -2251,28 +2251,43 @@ foreach ($s in @($out.currentRound.sides.Keys)) {
 $out['dataDelaySeconds'] = 120
 $pubJson = $out | ConvertTo-Json -Depth 8
 
+$pubPath = Join-Path $WebDir 'stats.json'
 $DELAY_SECONDS = 120
 $histDir = Join-Path $WebDir 'history'
 if (-not (Test-Path $histDir)) { New-Item -ItemType Directory -Force -Path $histDir | Out-Null }
-$nowE = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-Write-AtomicUtf8 (Join-Path $histDir "snap-$nowE.json") $pubJson
 
-$snaps = @(Get-ChildItem (Join-Path $histDir 'snap-*.json') -ErrorAction SilentlyContinue | ForEach-Object {
-    if ($_.Name -match 'snap-(\d+)\.json') { [pscustomobject]@{ epoch = [int]$Matches[1]; path = $_.FullName } }
-} | Sort-Object epoch)
-$pub = @($snaps | Where-Object { $_.epoch -le ($nowE - $DELAY_SECONDS) } | Select-Object -Last 1)
-$pubPath = Join-Path $WebDir 'stats.json'
-if ($pub.Count -gt 0) {
-    Write-AtomicUtf8 $pubPath ([IO.File]::ReadAllText($pub[0].path))
-    Write-Output "published snapshot from $($nowE - $pub[0].epoch)s ago (2-min delay) $(Get-Date -Format 'HH:mm:ss')"
+# A temporary/rotated RPT can be readable while it has no current MISSINIT boundary.
+# Its parsed fields are deliberately empty, so it must never enter the delayed history
+# stream: after 120 seconds that empty snapshot would otherwise replace real public data.
+$hasCurrentWindow = $missIdx -ge 0
+if ($hasCurrentWindow) {
+    $nowE = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    Write-AtomicUtf8 (Join-Path $histDir "snap-$nowE.json") $pubJson
+
+    $snaps = @(Get-ChildItem (Join-Path $histDir 'snap-*.json') -ErrorAction SilentlyContinue | ForEach-Object {
+        if ($_.Name -match 'snap-(\d+)\.json') { [pscustomobject]@{ epoch = [int]$Matches[1]; path = $_.FullName } }
+    } | Sort-Object epoch)
+    $pub = @($snaps | Where-Object { $_.epoch -le ($nowE - $DELAY_SECONDS) } | Select-Object -Last 1)
+    if ($pub.Count -gt 0) {
+        Write-AtomicUtf8 $pubPath ([IO.File]::ReadAllText($pub[0].path))
+        Write-Output "published snapshot from $($nowE - $pub[0].epoch)s ago (2-min delay) $(Get-Date -Format 'HH:mm:ss')"
+    } elseif (-not (Test-Path $pubPath)) {
+        # First ~2 min after a fresh deploy: nothing old enough yet. Publish a warming-up
+        # placeholder so the page renders rather than 404s; real data appears once aged.
+        $warm = [ordered]@{ generatedAt = $out.generatedAt; dataDelaySeconds = 120; warmingUp = $true; server = $out.server } | ConvertTo-Json -Depth 4
+        Write-AtomicUtf8 $pubPath $warm
+        Write-Output "warming up - no snapshot >= ${DELAY_SECONDS}s old yet $(Get-Date -Format 'HH:mm:ss')"
+    } else {
+        Write-Output "no fresh-enough snapshot; left existing stats.json in place $(Get-Date -Format 'HH:mm:ss')"
+    }
+    # Prune snapshots older than 15 min.
+    foreach ($old in @($snaps | Where-Object { $_.epoch -lt ($nowE - 900) })) { Remove-Item -LiteralPath $old.path -Force -ErrorAction SilentlyContinue }
 } elseif (-not (Test-Path $pubPath)) {
-    # First ~2 min after a fresh deploy: nothing old enough yet. Publish a warming-up
-    # placeholder so the page renders rather than 404s; real data appears once aged.
+    # No current MISSINIT means there is no trustworthy public window. Keep the page
+    # renderable on first boot, but do not create a snapshot that can age into publication.
     $warm = [ordered]@{ generatedAt = $out.generatedAt; dataDelaySeconds = 120; warmingUp = $true; server = $out.server } | ConvertTo-Json -Depth 4
     Write-AtomicUtf8 $pubPath $warm
-    Write-Output "warming up - no snapshot >= ${DELAY_SECONDS}s old yet $(Get-Date -Format 'HH:mm:ss')"
+    Write-Output "warming up - no current MISSINIT window $(Get-Date -Format 'HH:mm:ss')"
 } else {
-    Write-Output "no fresh-enough snapshot; left existing stats.json in place $(Get-Date -Format 'HH:mm:ss')"
+    Write-Output "no current MISSINIT window; left existing stats.json in place $(Get-Date -Format 'HH:mm:ss')"
 }
-# Prune snapshots older than 15 min.
-foreach ($old in @($snaps | Where-Object { $_.epoch -lt ($nowE - 900) })) { Remove-Item -LiteralPath $old.path -Force -ErrorAction SilentlyContinue }
