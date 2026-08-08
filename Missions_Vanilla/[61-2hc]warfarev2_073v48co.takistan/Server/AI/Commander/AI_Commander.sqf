@@ -1152,20 +1152,24 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		_arrDisp = _logik getVariable ["wfbe_aicom_arrival_dispatched", 0];
 		//--- F1 fable/aicom-econ-triad (2026-08-02): full per-window outcome accounting. stranded/retarget/died/
 		//--- cleared are bumped at the AssignTowns/Strategy resolution sites; inflight = live open-latch count at
-		//--- emit. Identity: dispatched ~= fast+med+slow+stranded+retarget+died+cleared+delta-inflight; residual =
-		//--- closes this ledger cannot see (HC-local ServiceTick detours; groups nulled by groupsGC pre-watcher).
-		private ["_arrStr","_arrRtg","_arrDie","_arrClr","_arrInf"];
+		//--- emit. Same-target reissues remain in dispatched for trace parity but do not create another open latch;
+		//--- use dispatched - reissue for the terminal-outcome identity: effective dispatch ~= fast+med+slow+
+		//--- stranded+retarget+died+cleared+delta-inflight; residual = closes this ledger cannot see (HC-local
+		//--- ServiceTick detours; groups nulled by groupsGC pre-watcher).
+		private ["_arrStr","_arrRtg","_arrDie","_arrClr","_arrInf","_arrReissue"];
 		_arrStr = _logik getVariable ["wfbe_aicom_arrival_stranded", 0];
 		_arrRtg = _logik getVariable ["wfbe_aicom_arrival_retarget", 0];
 		_arrDie = _logik getVariable ["wfbe_aicom_arrival_died", 0];
 		_arrClr = _logik getVariable ["wfbe_aicom_arrival_cleared", 0];
+		_arrReissue = _logik getVariable ["wfbe_aicom_arrival_reissue", 0];
 		_arrInf = 0;
 		{ if (!isNull _x && {[_x, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool}) then {_arrInf = _arrInf + 1} } forEach (_logik getVariable ["wfbe_teams", []]);
-		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp + "|stranded=" + str _arrStr + "|retarget=" + str _arrRtg + "|died=" + str _arrDie + "|cleared=" + str _arrClr + "|inflight=" + str _arrInf);
+		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp + "|reissue=" + str _arrReissue + "|stranded=" + str _arrStr + "|retarget=" + str _arrRtg + "|died=" + str _arrDie + "|cleared=" + str _arrClr + "|inflight=" + str _arrInf);
 		_logik setVariable ["wfbe_aicom_arrival_fast", 0];
 		_logik setVariable ["wfbe_aicom_arrival_med", 0];
 		_logik setVariable ["wfbe_aicom_arrival_slow", 0];
 		_logik setVariable ["wfbe_aicom_arrival_dispatched", 0];
+		_logik setVariable ["wfbe_aicom_arrival_reissue", 0];
 		_logik setVariable ["wfbe_aicom_arrival_stranded", 0];
 		_logik setVariable ["wfbe_aicom_arrival_retarget", 0];
 		_logik setVariable ["wfbe_aicom_arrival_died", 0];

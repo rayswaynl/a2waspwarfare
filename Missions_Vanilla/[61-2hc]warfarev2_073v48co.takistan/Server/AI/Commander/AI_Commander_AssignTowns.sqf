@@ -1503,10 +1503,15 @@ _waterBlocks = {
 							};
 						};
 						//--- fable/assault-retarget-telemetry (2026-07-10): when a team with an OPEN dispatch is re-aimed at a
-						//--- DIFFERENT town (_priorOpen && !_sameTgt), the old dispatch's outcome-watcher (Hook B) is silently
-						//--- overwritten below and never logs ARRIVED/STRANDED - which is why ~84% of dispatches had no terminal
-						//--- outcome (mostly legitimate re-targeting, NOT failed attacks). Log RETARGET so the accounting closes:
-						//--- DISPATCH = ARRIVED + STRANDED + RETARGET + (in-flight). Pure telemetry, zero behaviour change.
+						//--- A SAME-target re-issue keeps the existing open latch; count it separately so raw DISPATCH remains
+						//--- trace-parity complete without making the terminal-outcome identity double-count the open team.
+						//--- For a DIFFERENT town (_priorOpen && !_sameTgt), the old dispatch's outcome-watcher (Hook B) is
+						//--- silently overwritten below and never logs ARRIVED/STRANDED - mostly legitimate re-targeting, NOT
+						//--- failed attacks. Effective DISPATCH = ARRIVED + STRANDED + RETARGET + (in-flight), while raw
+						//--- dispatched = effective dispatch + reissue. Pure telemetry, zero behaviour change.
+						if (_priorOpen && {_sameTgt}) then {
+							_logik setVariable ["wfbe_aicom_arrival_reissue", (_logik getVariable ["wfbe_aicom_arrival_reissue", 0]) + 1];
+						};
 						if (_priorOpen && {!_sameTgt} && {count _priorOrd >= 1} && {(typeName (_priorOrd select 0)) == "OBJECT"} && {!isNull (_priorOrd select 0)}) then {
 							_logik setVariable ["wfbe_aicom_arrival_retarget", (_logik getVariable ["wfbe_aicom_arrival_retarget", 0]) + 1]; //--- F1: window outcome counter (ARRIVAL_BANDS retarget=)
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_RETARGET|team=" + (str _team) + "|from=" + ((_priorOrd select 0) getVariable ["name","town"]) + "|to=" + (_target getVariable ["name","town"]) + "|elapsed=" + str (round (time - _priorDispT0)));
