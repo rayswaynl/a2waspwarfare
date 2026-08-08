@@ -15,7 +15,7 @@ _prefix = toArray _uid; _idx = -1;
 if (_idx < 0) exitWith {_building setVariable ["wfbe_cancel_queue_lock", nil]; [_player, false, 0, _factory, 0] call _reply};
 _token = _queu select _idx; _paid = if (_idx < count _costs) then {_costs select _idx} else {0}; _cpt = if (_idx < count _cpts) then {_cpts select _idx} else {1};
 _refund = _paid; if (ATTACK_WAVE_PRICE_MODIFIER < 1.0 && {UNIT_COST_MODIFIER > 0}) then {_base = _paid / (ATTACK_WAVE_PRICE_MODIFIER * UNIT_COST_MODIFIER); _maxRefund = round (_base * 0.5); if (_refund > _maxRefund) then {_refund = _maxRefund}};
-_queu = _queu - [_token];
+_new=[]; _i=0; {if (_i != _idx) then {_new=_new+[_x]}; _i=_i+1} forEach _queu; _queu=_new;
 _new=[]; _i=0; {if (_i != _idx) then {_new=_new+[_x]}; _i=_i+1} forEach _costs; _costs=_new;
 _new=[]; _i=0; {if (_i != _idx) then {_new=_new+[_x]}; _i=_i+1} forEach _cpts; _cpts=_new;
 _new=[]; _i=0; {if (_i != _idx) then {_new=_new+[_x]}; _i=_i+1} forEach _labels; _labels=_new;

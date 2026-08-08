@@ -359,7 +359,7 @@ WFBE_CL_QUEUE_HUD_TS = time;
 _queu = _building getVariable "queu";
 private ["_qIdx"];
 _qIdx = _queu find _unique;
-_queu = _queu - [_unique];
+if (_qIdx >= 0) then {private ["_qNew","_qI"]; _qNew = []; _qI = 0; {if (_qI != _qIdx) then {_qNew = _qNew + [_x]}; _qI = _qI + 1} forEach _queu; _queu = _qNew};
 _building setVariable ["queu",_queu,true];
 //--- QoL cancel: keep parallel arrays in sync when the unit actually spawns.
 if (_qIdx >= 0) then {
