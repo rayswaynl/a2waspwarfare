@@ -6,7 +6,18 @@ for [{_i = 0},{_i < (count (missionConfigFile/"Params"))},{_i = _i + 1}]  do {
 	_values = getArray (missionConfigFile >> "Params" >> _paramName >> "values");
 	_texts = getArray (missionConfigFile >> "Params" >> _paramName >> "texts");
 	
-	_value = if (isMultiplayer) then {paramsArray select _i} else {getNumber (missionConfigFile >> "Params" >> _paramName >> "default")};
+	_value = if (isMultiplayer) then {
+		if (_i < count paramsArray) then {
+			paramsArray select _i
+		} else {
+			getNumber (missionConfigFile >> "Params" >> _paramName >> "default")
+		}
+	} else {
+		getNumber (missionConfigFile >> "Params" >> _paramName >> "default")
+	};
+	if (isNil "_value") then {
+		_value = getNumber (missionConfigFile >> "Params" >> _paramName >> "default")
+	};
 	_idx = _values find _value;
 	_status = if (_idx > -1) then {_texts select _idx} else {str _value};
 
