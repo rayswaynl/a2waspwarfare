@@ -73,12 +73,13 @@ BIS_UAV_HELI_keydown = {
 			_id = _id + 1;
 		};
 		_worldpos = screentoworld [0.5,0.5];
-		_marker = createmarker [format ['_user_defined_UAV_MARKER_%1',_id],_worldpos];
-		_marker setmarkertype 'mil_destroy';
-		_marker setmarkercolor 'colorred';
-		_marker setmarkersize [0.5,0.5];
+		//--- Operator HUD annotation: never replicate this client-local screen mark to other sides.
+		_marker = createMarkerLocal [format ['_user_defined_UAV_MARKER_%1',_id],_worldpos];
+		_marker setMarkerTypeLocal 'mil_destroy';
+		_marker setMarkerColorLocal 'colorred';
+		_marker setMarkerSizeLocal [0.5,0.5];
 		_markertime = [daytime] call bis_fnc_timetostring;
-		_marker setmarkertext format ['UAV %1: %2',_id,_markertime];
+		_marker setMarkerTextLocal format ['UAV %1: %2',_id,_markertime];
 	};
 
 	//--- UP
@@ -156,7 +157,7 @@ if (!isNull _uav) then {_uav removeaction _action_leave};
 _mkId = 1;
 _mkName = format ['_user_defined_UAV_MARKER_%1',_mkId];
 while {markerType _mkName != ''} do {
-	deleteMarker _mkName;
+	deleteMarkerLocal _mkName;
 	_mkId = _mkId + 1;
 	_mkName = format ['_user_defined_UAV_MARKER_%1',_mkId];
 };
