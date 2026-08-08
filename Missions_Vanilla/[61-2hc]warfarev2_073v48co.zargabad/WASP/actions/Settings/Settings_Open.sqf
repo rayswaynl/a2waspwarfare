@@ -194,7 +194,7 @@ while {alive player && dialog} do {
 		WFBE_MenuAction = -1;
 		_kill = !(missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]);
 		missionNamespace setVariable ["WFBE_KILL_MESSAGES", _kill];
-		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_KILL_MESSAGES_ENABLED", _kill] Call WFBE_CO_FNC_SetProfileVariable};
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_KILL_MESSAGES_ENABLED_V2", _kill] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
 	//--- Auto IR smoke (IRS_OnIncomingMissile reads it client-side; nil on server -> AI vehicles unaffected).

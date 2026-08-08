@@ -357,7 +357,7 @@ if (worldName == "Zargabad") then {
 	WFBE_C_AI_COMMANDER_TYPES_INTERVAL = 30;
 	WFBE_C_AI_COMMANDER_TICK = 15;             //--- Supervisor base tick (s); how often the order-executor runs (hybrid responsiveness).
 	WFBE_C_AI_COMMANDER_BASE_INTERVAL = 60;    //--- V0.2: base worker cadence (HQ deploy -> doctrine build order -> defenses).
-	WFBE_C_AI_COMMANDER_TEAMS_INTERVAL = 90;   //--- V0.2: team-founding cadence.
+	WFBE_C_AI_COMMANDER_TEAMS_INTERVAL = 60;   //--- fix0808h (owner 2026-08-08): 90 -> 60. Faster HQ team founding; stays above the 45s produce tick. Rollback: 90.
 	WFBE_C_AI_COMMANDER_TEAMS_TARGET = 2;      //--- B36 (Ray 2026-06-15): HALVED 4->2 to cut HC saturation + group count. With MAX_EXTRA 1 the founding cap is 3 teams/side (was 6); teams stay big via AI_MAX 12. Rollback: 4.
 	//--- B36 (Ray 2026-06-15): seconds with NO human commander (from start, re-armed when a human leaves) before the AI builds/spends.
 	WFBE_C_AI_COMMANDER_BUILD_GRACE = 300;
