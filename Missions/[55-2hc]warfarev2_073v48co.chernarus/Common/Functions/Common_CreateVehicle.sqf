@@ -45,6 +45,13 @@ if(_vehicle isKindOf "Tank" || _vehicle isKindOf "APC")then{ [_vehicle] Call WFB
 
 //["DEBUG (Common_CreateVehicle)", Format ["Before calling"]] Call WFBE_CO_FNC_LogContent;
 if(_vehicle isKindOf "Air")then{ [_vehicle] Call WFBE_CO_FNC_ModifyAirVehicle;};
+
+//--- Install the single central jet damage handler for every creation path.
+//--- The generated aircraft rearmor EH defers while this flag is active, so its return value
+//--- cannot overwrite the JetAA result.
+if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) > 0) then {
+	_vehicle addEventHandler ["HandleDamage", {_this Call HandleJetAADamage}];
+};
 //["DEBUG (Common_CreateVehicle2)", Format ["After calling"]] Call WFBE_CO_FNC_LogContent;
 
 //--- GUER improvised armour (#109, gate WFBE_C_GUER_IMPROVISED_ARMOR, default 0 = OFF): resistance light

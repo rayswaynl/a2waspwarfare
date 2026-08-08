@@ -188,6 +188,7 @@ public class SqfFileGenerator
 
             string sqfCode = @"
 case """ + vehicleName + @""":{
+    _vehicle setVariable [""wfbe_air_aa_rearmor"", true, true];
     _rearmor = {
         _ammo = _this select 4;
         _result = 0;
@@ -198,7 +199,9 @@ case """ + vehicleName + @""":{
         };
         _result
     };
-    _vehicle addeventhandler [""HandleDamage"", format[""_this Call %1"", _rearmor]];
+    if ((missionNamespace getVariable [""WFBE_C_JET_AA_SURVIVE"", 1]) <= 0) then {
+        _vehicle addeventhandler [""HandleDamage"", format[""_this Call %1"", _rearmor]];
+    };
 };
 ";
             properties.modded += sqfCode;
