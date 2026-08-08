@@ -156,6 +156,12 @@ _caller = leader _playerTeam;
 
 	sleep _travelTime;
 
+	//--- Round-end cancellation: victory sets both flags before the 45s outro hold.
+	//--- The Chukar is exempt from generic vehicle GC, so explicitly reap it on abort.
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
+	};
+
 	//--- Acquire enemy armour/static in the zone for the SADARM top-attack rounds.
 	_armour = [];
 	{
@@ -185,9 +191,13 @@ _caller = leader _playerTeam;
 			};
 		} forEach (nearestObjects [_dest, ["Man"], _zoneR]);
 	};
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
+	};
 
 	//--- SADARM x2: top-attack drop from altitude on the two best targets (scatter if none).
 	for "_i" from 0 to 1 do {
+		if (gameOver || {WFBE_GameOver}) exitWith {};
 		if (_i < count _armour) then {
 			_veh = _armour select _i;
 			if (!isNull _caller) then { _veh setVariable ["wfbe_lasthitby", _caller, true]; _veh setVariable ["wfbe_lasthittime", time, true]; };
@@ -198,19 +208,30 @@ _caller = leader _playerTeam;
 		};
 		sleep 0.4;
 	};
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
+	};
 
 	//--- HE x3: scattered area bursts across the zone.
 	for "_i" from 0 to 2 do {
+		if (gameOver || {WFBE_GameOver}) exitWith {};
 		_ang = random 360; _r = random _zoneR;
 		_warHE createVehicle [(_dest select 0) + _r * sin _ang, (_dest select 1) + _r * cos _ang, 0];
 		sleep 0.3;
 	};
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
+	};
 
 	//--- WP x3: incendiary / obscuring burn layer.
 	for "_i" from 0 to 2 do {
+		if (gameOver || {WFBE_GameOver}) exitWith {};
 		_ang = random 360; _r = random (_zoneR * 0.7);
 		_warWP createVehicle [(_dest select 0) + _r * sin _ang, (_dest select 1) + _r * cos _ang, 0];
 		sleep 0.2;
+	};
+	if (gameOver || {WFBE_GameOver}) exitWith {
+		if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; };
 	};
 
 	["INFORMATION", Format ["Support_ScudStrike.sqf : saturation delivered at %1 (%2 armour targets).", _dest, count _armour]] Call WFBE_CO_FNC_LogContent;
