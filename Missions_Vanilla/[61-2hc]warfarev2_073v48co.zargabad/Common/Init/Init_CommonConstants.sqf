@@ -3015,6 +3015,8 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GARRISON_SORTIE_PATROL_MAX")    then {WFBE_C_GARRISON_SORTIE_PATROL_MAX = 800};   //--- m: maximum patrol radius around the home town.
 	if (isNil "WFBE_C_GARRISON_SORTIE_SIZE")          then {WFBE_C_GARRISON_SORTIE_SIZE = 4};           //--- Infantry per sortie group.
 	if (isNil "WFBE_C_GARRISON_SORTIE_MAX_ACTIVE")    then {WFBE_C_GARRISON_SORTIE_MAX_ACTIVE = 4};     //--- Hard global cap on concurrently active sorties across the whole map.
+	if (isNil "WFBE_C_GARRISON_SORTIE_BATCHED")      then {WFBE_C_GARRISON_SORTIE_BATCHED = 0};        //--- fable/slice-bound-sweeps-0808: 0=unbounded forEach towns (HEAD-identical); >0=bounded-window+cursor MAINTAIN sweep to bound the per-tick frame spike on the 40+ town live map.
+	if (isNil "WFBE_C_GARRISON_SORTIE_TOWN_BATCH")    then {WFBE_C_GARRISON_SORTIE_TOWN_BATCH = 15};    //--- Towns processed per MAINTAIN pass when WFBE_C_GARRISON_SORTIE_BATCHED > 0.
 
 //--- AIRFIELD-OWNERSHIP GATE (fable/airfield-ownership-gate, GR-2026-07-06a):
 //--- When >0, players may only purchase/spawn aircraft at an airfield the player's own side holds.

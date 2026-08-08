@@ -34,7 +34,7 @@
 if !(isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE", 0]) < 1) exitWith {};
 
-Private ["_interval","_ttl","_playerRange","_patrolMin","_patrolMax","_size","_maxActive","_sorties"];
+Private ["_interval","_ttl","_playerRange","_patrolMin","_patrolMax","_size","_maxActive","_sorties","_batchSize","_gsBatched","_numBatches","_batchInterval","_cursor"];
 
 _interval    = missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_INTERVAL", 120];
 _ttl         = missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_TTL", 300];
@@ -44,10 +44,24 @@ _patrolMax   = missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_PATROL_MAX"
 if (_patrolMax < _patrolMin) then { _patrolMax = _patrolMin; }; //--- guard MAX>=MIN.
 _size        = missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_SIZE", 4];
 _maxActive   = missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_MAX_ACTIVE", 4];
+//--- frame-spike slice bounding (flag WFBE_C_GARRISON_SORTIE_BATCHED, default 0; see the towns-forEach
+//--- block below). Flag-off: byte-identical to HEAD (batchSize/cursor unused).
+_batchSize   = missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_TOWN_BATCH", 15];
+if (_batchSize < 1) then {_batchSize = 1;}; //--- guard: used as a divisor below (same idiom as this file's MIN/MAX guard and Server_AmbientSkirmish.sqf/Server_GuerAirDef.sqf/Server_Oilfields.sqf).
 
 //--- Wait for towns to exist (mirrors GuerAirDef/GarrisonDressing startup gate).
 waitUntil { (!isNil "towns") && {(count towns) > 0} };
 sleep 45;
+
+//--- frame-spike slice-bounding setup (flag WFBE_C_GARRISON_SORTIE_BATCHED, default 0): primes the
+//--- FIRST sleep only. Every cycle after that recomputes _numBatches/_batchInterval from the CURRENT
+//--- town count (see the towns-forEach block below), so a changing town count keeps the intended
+//--- full-sweep cadence instead of drifting. Flag-off keeps _numBatches=1 so _batchInterval==_interval
+//--- and the per-pass sleep is unchanged from HEAD.
+_gsBatched     = (missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE_BATCHED", 0]) > 0;
+_numBatches    = if (_gsBatched) then {ceil ((count towns) / _batchSize) max 1} else {1};
+_batchInterval = _interval / _numBatches;
+_cursor        = 0;
 
 //--- Live registry. Script-local (NOT on missionNamespace, NOT wfbe_persistent) so it can't
 //--- outlive a despawn or leak groups.
@@ -61,7 +75,7 @@ while {!WFBE_GameOver} do {
 	//--- can hit 'Undefined variable wfbe_co_fnc_logvehdelete' mid-match even though Init_Common.sqf
 	//--- compiles it unconditionally. Re-stub per tick so cleanup NEVER depends on it being set.
 	if (isNil "WFBE_CO_FNC_LogVehDelete") then { WFBE_CO_FNC_LogVehDelete = {}; };
-	sleep _interval;
+	sleep _batchInterval;
 
 	Private ["_now","_kept","_townsWithSortie","_perfStart"];
 	_perfStart = diag_tickTime;
@@ -112,6 +126,36 @@ while {!WFBE_GameOver} do {
 	} forEach _sorties;
 	_sorties = _kept;
 
+	//--- frame-spike slice bounding (flag WFBE_C_GARRISON_SORTIE_BATCHED, default 0): flag-off builds
+	//--- _gsTownList as the full towns array (byte-identical to the old unbounded forEach towns).
+	//--- Flag-on walks a sequential, contiguous _batchSize window from the persistent _cursor and wraps
+	//--- to 0 only at the end of the array (never mod-wraps mid-batch), so every town is visited exactly
+	//--- once per full sweep with no double-hits and no gaps - same per-town body below either way, only
+	//--- the enumerated collection changes. _numBatches/_batchInterval are recomputed here from the
+	//--- CURRENT town count (used for the NEXT sleep) so a changing town count keeps the intended cadence.
+	Private ["_gsTownsCount","_gsI","_gsIdx","_gsTownList","_gsBatchLen"];
+	_gsTownsCount = count towns;
+	_gsTownList = towns;
+	if (_gsBatched) then {
+		_numBatches    = ceil (_gsTownsCount / _batchSize) max 1;
+		_batchInterval = _interval / _numBatches;
+	} else {
+		_numBatches    = 1;
+		_batchInterval = _interval;
+	};
+	if (_gsBatched && {_gsTownsCount > 0}) then {
+		//--- town count may have shrunk since the cursor last advanced; a stale cursor past the current
+		//--- end restarts the sweep at 0 instead of reading out of range.
+		if (_cursor >= _gsTownsCount) then { _cursor = 0; };
+		_gsBatchLen = (_batchSize min (_gsTownsCount - _cursor)) max 1;
+		_gsTownList = [];
+		for "_gsI" from 0 to (_gsBatchLen - 1) do {
+			_gsIdx = _cursor + _gsI;
+			_gsTownList set [count _gsTownList, towns select _gsIdx];
+		};
+		_cursor = _cursor + _gsBatchLen;
+		if (_cursor >= _gsTownsCount) then { _cursor = 0; };
+	};
 	//=== (2) MAINTAIN: spawn one sortie per eligible town, under the global active cap =========
 	{
 		Private ["_town","_hasSortie","_hasPlayerNear","_sideID","_side","_radius","_ang","_townPos","_spawnPos","_fallbackClass","_soldierClass","_grp","_built","_i","_u"];
@@ -195,7 +239,7 @@ while {!WFBE_GameOver} do {
 				};
 			};
 		};
-	} forEach towns;
+	} forEach _gsTownList;
 
 	if !(isNil "PerformanceAudit_Record") then {
 		["garrison_sortie_cycle", diag_tickTime - _perfStart, Format["towns:%1;active:%2;cap:%3", count towns, count _sorties, _maxActive], "SERVER"] Call PerformanceAudit_Record;
