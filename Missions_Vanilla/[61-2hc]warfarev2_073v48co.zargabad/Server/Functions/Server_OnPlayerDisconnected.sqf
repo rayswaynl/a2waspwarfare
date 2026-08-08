@@ -18,7 +18,7 @@ sleep 0.5;
 //--- Wait for a proper common & server initialization before going any further.
 waitUntil {commonInitComplete && serverInitFull};
 
-if (_name == '__SERVER__' || local player) exitWith {};
+if (_name == '__SERVER__') exitWith {};
 
 //--- cmdcon30 (Ray's stuck-join, 2026-06-30): clear the UID-keyed enrollment retry counter on disconnect.
 //--- WFBE_CONNECT_RETRY_<uid> (Server_OnPlayerConnected) is cleared on enrollment SUCCESS but NEVER on
