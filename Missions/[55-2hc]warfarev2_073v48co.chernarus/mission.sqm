@@ -102,7 +102,6 @@ class Mission
 			};
 			id=9006;
 		};
-
 		class Item3
 		{
 			side="LOGIC";
@@ -3341,6 +3340,26 @@ class Mission
 				items=1;
 				class Item0
 				{
+					position[]={10.0,0,10.0};
+					id=231;
+					side="WEST";
+					vehicle="USMC_Soldier_TL";
+					player="PLAY CDG";
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client 1 - AI CONTROL - DO NOT TAKE";
+				};
+			};
+		};
+		class Item58
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
 					position[]={2265.4153,513.08765,15296.825};
 					id=240;
 					side="WEST";
@@ -3355,7 +3374,7 @@ class Mission
 				};
 			};
 		};
-		class Item58
+		class Item59
 		{
 			side="WEST";
 			class Vehicles
@@ -3377,7 +3396,7 @@ class Mission
 				};
 			};
 		};
-		class Item59
+		class Item60
 		{
 			side="WEST";
 			class Vehicles
@@ -3398,7 +3417,7 @@ class Mission
 				};
 			};
 		};
-		class Item60
+		class Item61
 		{
 			side="WEST";
 			class Vehicles
@@ -3420,7 +3439,7 @@ class Mission
 				};
 			};
 		};
-		class Item61
+		class Item62
 		{
 			side="WEST";
 			class Vehicles
@@ -3442,7 +3461,7 @@ class Mission
 				};
 			};
 		};
-		class Item62
+		class Item63
 		{
 			side="WEST";
 			class Vehicles
@@ -3464,7 +3483,7 @@ class Mission
 				};
 			};
 		};
-		class Item63
+		class Item64
 		{
 			side="WEST";
 			class Vehicles
@@ -3486,7 +3505,7 @@ class Mission
 				};
 			};
 		};
-		class Item64
+		class Item65
 		{
 			side="WEST";
 			class Vehicles
@@ -3508,7 +3527,7 @@ class Mission
 				};
 			};
 		};
-		class Item65
+		class Item66
 		{
 			side="WEST";
 			class Vehicles
@@ -3530,7 +3549,7 @@ class Mission
 				};
 			};
 		};
-		class Item66
+		class Item67
 		{
 			side="WEST";
 			class Vehicles
@@ -3551,7 +3570,7 @@ class Mission
 				};
 			};
 		};
-		class Item67
+		class Item68
 		{
 			side="WEST";
 			class Vehicles
@@ -3573,7 +3592,7 @@ class Mission
 				};
 			};
 		};
-		class Item68
+		class Item69
 		{
 			side="WEST";
 			class Vehicles
@@ -3595,7 +3614,7 @@ class Mission
 				};
 			};
 		};
-		class Item69
+		class Item70
 		{
 			side="WEST";
 			class Vehicles
@@ -3616,7 +3635,7 @@ class Mission
 				};
 			};
 		};
-		class Item70
+		class Item71
 		{
 			side="WEST";
 			class Vehicles
@@ -3638,7 +3657,27 @@ class Mission
 				};
 			};
 		};
-		class Item71
+		class Item72
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={20.0,0,10.0};
+					id=232;
+					side="EAST";
+					vehicle="RUS_Soldier1";
+					player="PLAY CDG";
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client 2 - AI CONTROL - DO NOT TAKE";
+				};
+			};
+		};
+		class Item73
 		{
 			side="EAST";
 			class Vehicles
@@ -3660,7 +3699,7 @@ class Mission
 				};
 			};
 		};
-		class Item72
+		class Item74
 		{
 			side="EAST";
 			class Vehicles
@@ -3682,7 +3721,7 @@ class Mission
 				};
 			};
 		};
-		class Item73
+		class Item75
 		{
 			side="EAST";
 			class Vehicles
@@ -3703,7 +3742,7 @@ class Mission
 				};
 			};
 		};
-		class Item74
+		class Item76
 		{
 			side="EAST";
 			class Vehicles
@@ -3725,7 +3764,7 @@ class Mission
 				};
 			};
 		};
-		class Item75
+		class Item77
 		{
 			side="EAST";
 			class Vehicles
@@ -3747,7 +3786,7 @@ class Mission
 				};
 			};
 		};
-		class Item76
+		class Item78
 		{
 			side="EAST";
 			class Vehicles
@@ -3769,7 +3808,7 @@ class Mission
 				};
 			};
 		};
-		class Item77
+		class Item79
 		{
 			side="EAST";
 			class Vehicles
@@ -3790,7 +3829,7 @@ class Mission
 				};
 			};
 		};
-		class Item78
+		class Item80
 		{
 			side="EAST";
 			class Vehicles
@@ -3812,7 +3851,7 @@ class Mission
 				};
 			};
 		};
-		class Item79
+		class Item81
 		{
 			side="EAST";
 			class Vehicles
@@ -3834,7 +3873,7 @@ class Mission
 				};
 			};
 		};
-		class Item80
+		class Item82
 		{
 			side="EAST";
 			class Vehicles
@@ -3856,7 +3895,7 @@ class Mission
 				};
 			};
 		};
-		class Item81
+		class Item83
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3875,7 +3914,7 @@ class Mission
 				};
 			};
 		};
-		class Item82
+		class Item84
 		{
 			side="LOGIC";
 			class Vehicles
@@ -3894,7 +3933,7 @@ class Mission
 				};
 			};
 		};
-		class Item83
+		class Item85
 		{
 			side="WEST";
 			class Vehicles
@@ -3915,7 +3954,7 @@ class Mission
 				};
 			};
 		};
-		class Item84
+		class Item86
 		{
 			side="WEST";
 			class Vehicles
@@ -3936,7 +3975,7 @@ class Mission
 				};
 			};
 		};
-		class Item85
+		class Item87
 		{
 			side="EAST";
 			class Vehicles
@@ -3958,7 +3997,7 @@ class Mission
 				};
 			};
 		};
-		class Item86
+		class Item88
 		{
 			side="WEST";
 			class Vehicles
@@ -3979,7 +4018,7 @@ class Mission
 				};
 			};
 		};
-		class Item87
+		class Item89
 		{
 			side="WEST";
 			class Vehicles
@@ -4000,7 +4039,7 @@ class Mission
 				};
 			};
 		};
-		class Item88
+		class Item90
 		{
 			side="EAST";
 			class Vehicles
@@ -4022,7 +4061,7 @@ class Mission
 				};
 			};
 		};
-		class Item89
+		class Item91
 		{
 			side="EAST";
 			class Vehicles
@@ -4044,7 +4083,7 @@ class Mission
 				};
 			};
 		};
-		class Item90
+		class Item92
 		{
 			side="EAST";
 			class Vehicles
@@ -4065,7 +4104,7 @@ class Mission
 				};
 			};
 		};
-		class Item91
+		class Item93
 		{
 			side="EAST";
 			class Vehicles
@@ -4086,7 +4125,7 @@ class Mission
 				};
 			};
 		};
-		class Item92
+		class Item94
 		{
 			side="EAST";
 			class Vehicles
@@ -4107,7 +4146,7 @@ class Mission
 				};
 			};
 		};
-		class Item93
+		class Item95
 		{
 			side="EAST";
 			class Vehicles
@@ -4129,7 +4168,7 @@ class Mission
 				};
 			};
 		};
-		class Item94
+		class Item96
 		{
 			side="WEST";
 			class Vehicles
@@ -4151,7 +4190,7 @@ class Mission
 				};
 			};
 		};
-		class Item95
+		class Item97
 		{
 			side="EAST";
 			class Vehicles
@@ -4173,7 +4212,7 @@ class Mission
 				};
 			};
 		};
-		class Item96
+		class Item98
 		{
 			side="WEST";
 			class Vehicles
@@ -4194,7 +4233,7 @@ class Mission
 				};
 			};
 		};
-		class Item97
+		class Item99
 		{
 			side="EAST";
 			class Vehicles
@@ -4215,7 +4254,7 @@ class Mission
 				};
 			};
 		};
-		class Item98
+		class Item100
 		{
 			side="EAST";
 			class Vehicles
@@ -4236,7 +4275,7 @@ class Mission
 				};
 			};
 		};
-		class Item99
+		class Item101
 		{
 			side="WEST";
 			class Vehicles
@@ -4257,7 +4296,7 @@ class Mission
 				};
 			};
 		};
-		class Item100
+		class Item102
 		{
 			side="WEST";
 			class Vehicles
@@ -4278,7 +4317,7 @@ class Mission
 				};
 			};
 		};
-		class Item101
+		class Item103
 		{
 			side="EAST";
 			class Vehicles
@@ -4299,7 +4338,7 @@ class Mission
 				};
 			};
 		};
-		class Item102
+		class Item104
 		{
 			side="EAST";
 			class Vehicles
@@ -4320,7 +4359,7 @@ class Mission
 				};
 			};
 		};
-		class Item103
+		class Item105
 		{
 			side="EAST";
 			class Vehicles
@@ -4341,7 +4380,7 @@ class Mission
 				};
 			};
 		};
-		class Item104
+		class Item106
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4359,7 +4398,7 @@ class Mission
 				};
 			};
 		};
-		class Item105
+		class Item107
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4377,7 +4416,7 @@ class Mission
 				};
 			};
 		};
-		class Item106
+		class Item108
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4395,7 +4434,7 @@ class Mission
 				};
 			};
 		};
-		class Item107
+		class Item109
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4413,7 +4452,7 @@ class Mission
 				};
 			};
 		};
-		class Item108
+		class Item110
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4431,7 +4470,7 @@ class Mission
 				};
 			};
 		};
-		class Item109
+		class Item111
 		{
 			side="WEST";
 			class Vehicles
@@ -4452,7 +4491,7 @@ class Mission
 				};
 			};
 		};
-		class Item110
+		class Item112
 		{
 			side="EAST";
 			class Vehicles
@@ -4473,7 +4512,7 @@ class Mission
 				};
 			};
 		};
-		class Item111
+		class Item113
 		{
 			side="WEST";
 			class Vehicles
@@ -4494,7 +4533,7 @@ class Mission
 				};
 			};
 		};
-		class Item112
+		class Item114
 		{
 			side="WEST";
 			class Vehicles
@@ -4515,7 +4554,7 @@ class Mission
 				};
 			};
 		};
-		class Item113
+		class Item115
 		{
 			side="WEST";
 			class Vehicles
@@ -4536,7 +4575,7 @@ class Mission
 				};
 			};
 		};
-		class Item114
+		class Item116
 		{
 			side="EAST";
 			class Vehicles
@@ -4557,7 +4596,7 @@ class Mission
 				};
 			};
 		};
-		class Item115
+		class Item117
 		{
 			side="EAST";
 			class Vehicles
@@ -4578,7 +4617,7 @@ class Mission
 				};
 			};
 		};
-		class Item116
+		class Item118
 		{
 			side="EAST";
 			class Vehicles
@@ -4599,7 +4638,7 @@ class Mission
 				};
 			};
 		};
-		class Item117
+		class Item119
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4618,7 +4657,7 @@ class Mission
 				};
 			};
 		};
-		class Item118
+		class Item120
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4688,7 +4727,7 @@ class Mission
 				};
 			};
 		};
-		class Item119
+		class Item121
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4707,7 +4746,7 @@ class Mission
 				};
 			};
 		};
-		class Item120
+		class Item122
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4724,7 +4763,7 @@ class Mission
 				};
 			};
 		};
-		class Item121
+		class Item123
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4742,7 +4781,7 @@ class Mission
 				};
 			};
 		};
-		class Item122
+		class Item124
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4761,7 +4800,7 @@ class Mission
 				};
 			};
 		};
-		class Item123
+		class Item125
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4778,7 +4817,7 @@ class Mission
 				};
 			};
 		};
-		class Item124
+		class Item126
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4795,7 +4834,7 @@ class Mission
 				};
 			};
 		};
-		class Item125
+		class Item127
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4813,7 +4852,7 @@ class Mission
 				};
 			};
 		};
-		class Item126
+		class Item128
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4847,7 +4886,7 @@ class Mission
 				};
 			};
 		};
-		class Item127
+		class Item129
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4881,7 +4920,7 @@ class Mission
 				};
 			};
 		};
-		class Item128
+		class Item130
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4915,7 +4954,7 @@ class Mission
 				};
 			};
 		};
-		class Item129
+		class Item131
 		{
 			side="EAST";
 			class Vehicles
@@ -4937,7 +4976,7 @@ class Mission
 				};
 			};
 		};
-		class Item130
+		class Item132
 		{
 			side="LOGIC";
 			class Vehicles
@@ -4956,7 +4995,7 @@ class Mission
 				};
 			};
 		};
-		class Item131
+		class Item133
 		{
 			side="GUER";
 			class Vehicles
@@ -4978,7 +5017,7 @@ class Mission
 				};
 			};
 		};
-		class Item132
+		class Item134
 		{
 			side="GUER";
 			class Vehicles
@@ -5000,7 +5039,7 @@ class Mission
 				};
 			};
 		};
-		class Item133
+		class Item135
 		{
 			side="GUER";
 			class Vehicles
@@ -5022,7 +5061,7 @@ class Mission
 				};
 			};
 		};
-		class Item134
+		class Item136
 		{
 			side="GUER";
 			class Vehicles
@@ -5044,7 +5083,7 @@ class Mission
 				};
 			};
 		};
-		class Item135
+		class Item137
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5061,7 +5100,7 @@ class Mission
 				};
 			};
 		};
-	class Item136
+		class Item138
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5078,7 +5117,7 @@ class Mission
 				};
 			};
 		};
-	class Item137
+		class Item139
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5095,7 +5134,7 @@ class Mission
 				};
 			};
 		};
-	class Item138
+		class Item140
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5112,7 +5151,7 @@ class Mission
 				};
 			};
 		};
-	class Item139
+		class Item141
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5129,7 +5168,7 @@ class Mission
 				};
 			};
 		};
-	class Item140
+		class Item142
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5146,7 +5185,7 @@ class Mission
 				};
 			};
 		};
-	class Item141
+		class Item143
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5163,7 +5202,7 @@ class Mission
 				};
 			};
 		};
-	class Item142
+		class Item144
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5180,7 +5219,7 @@ class Mission
 				};
 			};
 		};
-	class Item143
+		class Item145
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5197,7 +5236,7 @@ class Mission
 				};
 			};
 		};
-		class Item144
+		class Item146
 		{
 			side="WEST";
 			class Vehicles
@@ -5219,7 +5258,7 @@ class Mission
 				};
 			};
 		};
-		class Item145
+		class Item147
 		{
 			side="WEST";
 			class Vehicles
@@ -5238,46 +5277,6 @@ class Mission
 					init="removeAllWeapons this";
 					description="Soldier (Double team size, Camps restore)";
 					synchronizations[]={255};
-				};
-			};
-		};
-		class Item146
-		{
-			side="WEST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={10.0,0,10.0};
-					id=231;
-					side="WEST";
-					vehicle="USMC_Soldier_TL";
-					player="PLAY CDG";
-					leader=1;
-					skill=0.60000002;
-					init="this allowdamage false;";
-					description="Headless Client 1 - AI CONTROL - DO NOT TAKE";
-				};
-			};
-		};
-		class Item147
-		{
-			side="EAST";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={20.0,0,10.0};
-					id=232;
-					side="EAST";
-					vehicle="RUS_Soldier1";
-					player="PLAY CDG";
-					leader=1;
-					skill=0.60000002;
-					init="this allowdamage false;";
-					description="Headless Client 2 - AI CONTROL - DO NOT TAKE";
 				};
 			};
 		};
