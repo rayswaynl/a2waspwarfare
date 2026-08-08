@@ -148,6 +148,13 @@ EVENT_SOURCE_POLICY = {
     "MHQRELOC": {"server"},
     "TARGET_ESCALATE": set(),  # no emitter in the maintained mission tree
     "STAGE": {"server"},
+    # Common_AICOM_AutoFlip/HighClimb run wherever the vehicle is local and
+    # serialize ``str isServer`` (lower-case true/false) in the identity slot.
+    "AUTOFLIP": {"server", "hc"},
+    "AUTOFLIP_HB": {"server", "hc"},
+    "HIGHCLIMB": {"server", "hc"},
+    "HIGHCLIMB_PULSE": {"server", "hc"},
+    "HIGHCLIMB_HB": {"server", "hc"},
 }
 
 EVENT_FAMILY_ALIASES = {
@@ -283,7 +290,7 @@ RE_V2_EVENT = re.compile(
     r"AICOMSTAT\|v2\|EVENT\|([A-Z]+)\|(\d+)\|([A-Z_][A-Z0-9_]*)\|?(.*)$"
 )
 RE_V1_EVENT = re.compile(
-    r"AICOMSTAT\|v1\|EVENT\|([A-Z]+)\|(\d+)\|([A-Z_][A-Z0-9_]*)\|?(.*)$"
+    r"AICOMSTAT\|v1\|EVENT\|(true|false|[A-Z]+)\|(\d+)\|([A-Z_][A-Z0-9_]*)\|?(.*)$"
 )
 RE_POSTURE = re.compile(
     r"AICOMSTAT\|v1\|POSTURE\|([A-Z]+)\|(\d+)\|([A-Z_]+)\|(.*)$"

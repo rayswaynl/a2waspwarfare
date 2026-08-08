@@ -126,6 +126,14 @@ class AnalyzeSoakCanonicalTests(unittest.TestCase):
 class AnalyzeSoakRoutingTests(unittest.TestCase):
     """Routing regressions for server workers versus local team drivers."""
 
+    MACHINE_EVENT_TYPES = (
+        "AUTOFLIP",
+        "AUTOFLIP_HB",
+        "HIGHCLIMB",
+        "HIGHCLIMB_PULSE",
+        "HIGHCLIMB_HB",
+    )
+
     SERVER = """\
 MISSINIT: server
 AICOMSTAT|v2|EVENT|EAST|10|ASSAULT_DISPATCH|team=O 1-1-H|town=Vybor|dist=900|reissue=false
@@ -180,6 +188,36 @@ Common_RunCommanderTeam.sqf: team CAPTURED [HCTown] - holding center.
         self.assertEqual(soak.routing_status("RALLY_ARRIVED")["status"], "not measured")
         self.assertEqual(soak.routing_status("TEAM_RECYCLE")["count"], None)
         self.assertEqual(soak.routing_status("TEAM_RECYCLE")["status"], "no source")
+
+    def test_machine_events_accept_lowercase_server_identity(self):
+        lines = ["MISSINIT: server\n"]
+        lines.extend(
+            "AICOMSTAT|v1|EVENT|true|10|%s|machine=SERVER\n" % event
+            for event in self.MACHINE_EVENT_TYPES
+        )
+        soak = analyze_soak.Soak()
+        soak.ingest_server(lines)
+
+        for event in self.MACHINE_EVENT_TYPES:
+            records = soak.event_records(event)
+            self.assertEqual(len(records), 1, event)
+            self.assertEqual(records[0][0], "true", event)
+            self.assertEqual(soak.event_sources[event]["server"], 1, event)
+
+    def test_machine_events_are_valid_from_hc_rpts(self):
+        lines = ["MISSINIT: hc\n"]
+        lines.extend(
+            "AICOMSTAT|v1|EVENT|false|10|%s|machine=HC\n" % event
+            for event in self.MACHINE_EVENT_TYPES
+        )
+        soak = analyze_soak.Soak()
+        soak.ingest_hc(lines)
+
+        for event in self.MACHINE_EVENT_TYPES:
+            records = soak.event_records(event)
+            self.assertEqual(len(records), 1, event)
+            self.assertEqual(records[0][0], "false", event)
+            self.assertEqual(soak.event_sources[event]["hc"], 1, event)
 
 
 class AnalyzeSoakAicom2Tests(unittest.TestCase):
