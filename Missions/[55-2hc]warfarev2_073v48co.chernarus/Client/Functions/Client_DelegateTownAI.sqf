@@ -28,10 +28,20 @@ _epoch = if (count _this > 5) then {_this select 5} else {-1};
 //--- each fanning 2-8 delegate-townai messages onto 2 HCs; each spawns a heavy CreateTownUnits batch
 //--- (createUnit/setSkill/addWeapon per unit). Dozens running at once starve the HC's SQF scheduler and it
 //--- freezes its whole owned AI population. The old `sleep (random 1)` only jittered START time, it did NOT
-//--- cap concurrency. Acquire an in-flight slot (max 3 concurrent batches/HC, ~10s safety timeout) before the
+//--- cap concurrency. Acquire an in-flight slot (max 3 concurrent batches/HC) before the
 //--- heavy body; released at end-of-file. Counter is per-HC (missionNamespace is machine-local).
-private "_qWait"; _qWait = 0;
-while {((missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) >= 3) && {_qWait < 100}} do {sleep 0.1; _qWait = _qWait + 1};
+private "_qQueued";
+_qQueued = false;
+//--- Never bypass the concurrency ceiling after a wall-clock timeout: a heavy batch can legitimately
+//--- outlast 10s under load, and starting another batch at that point defeats the throttle precisely
+//--- when it is needed. Sleeping requests are the queue; the round-end guard below drops them safely.
+while {(missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) >= 3} do {
+	if (!_qQueued) then {
+		_qQueued = true;
+		["INFORMATION", Format ["Client_DelegateTownAI.sqf: queueing town delegation for %1 - HC creation limit 3 is occupied.", _town getVariable ["name", "?"]]] Call WFBE_CO_FNC_LogContent;
+	};
+	sleep 0.1;
+};
 //--- round-end guard: a delegation queued behind other batches (or received just before gameOver) must
 //--- not land a full town-AI batch after the round ended - no cleanup-townai follows a post-flag spawn.
 if (missionNamespace getVariable ["WFBE_GameOver", false]) exitWith {
