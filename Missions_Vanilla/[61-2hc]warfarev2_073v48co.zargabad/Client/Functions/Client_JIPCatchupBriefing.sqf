@@ -110,7 +110,11 @@ if !(isNil "WFBE_Client_Logic") then {
 
 //--- Card: side-coloured header, grey label column, and only fog-safe town counts.
 _msg = Format ["<t color='%1' size='1.25'>CATCH-UP BRIEFING</t><br/><t color='#9aa7b0' size='0.9'>Joined %2 - round %3 in progress</t><br/><br/>", _sideColor, _sideName, _ageText];
-_msg = _msg + Format ["<t color='#9aa7b0'>Towns  </t><t color='#b8c4cc'>Own %1</t>  <t color='#7ed37e'>GUER %2</t>  <t color='#b8b8b8'>Free %3</t><br/>", _owned, _guer, _neutral];
+if (_myID == WFBE_C_GUER_ID) then {
+	_msg = _msg + Format ["<t color='#9aa7b0'>Towns  </t><t color='#b8c4cc'>Own %1</t>  <t color='#b8b8b8'>Free %2</t><br/>", _owned, _neutral];
+} else {
+	_msg = _msg + Format ["<t color='#9aa7b0'>Towns  </t><t color='#b8c4cc'>Own %1</t>  <t color='#7ed37e'>GUER %2</t>  <t color='#b8b8b8'>Free %3</t><br/>", _owned, _guer, _neutral];
+};
 _msg = _msg + Format ["<t color='#9aa7b0'>Team   </t>%1  <t color='#e0b94f'>$%2</t><br/>", _teamName, _funds];
 _msg = _msg + Format ["<t color='#9aa7b0'>Tech   </t>%1 upgrades researched<br/>", _tech];
 _msg = _msg + Format ["<t color='#9aa7b0'>Order  </t>%1<br/>", _intent];
