@@ -3939,7 +3939,15 @@ WFBE_ANCHOR_PREVIEW_MAP = [
 	['Land_Ind_TankSmall', 'Land_Ind_IlluminantTower'],		//--- Flak Tower -> WFBE_C_DEF_FLAKTOWER_STRUCTURE default host
 	['Misc_cargo_cont_net1', 'Concrete_Wall_EP1'],		//--- Wall Row -> real WFBE_NEURODEF_FORTIF_WALL_ROW child
 	['Misc_cargo_cont_net2', 'Base_WarfareBBarrier5x'],		//--- Wall Corner -> validated wall segment (composition is 10x Concrete_Wall_EP1, already Wall Row's preview - respawn check needs a distinct class)
-	['Misc_cargo_cont_net3', 'Base_WarfareBBarrier10xTall'],	//--- LoS Screen -> real WFBE_NEURODEF_FORTIF_LOS_SCREEN child
+	//--- fable/placement-preview-fix (owner 2026-08-08 "LoS Screen has NO preview at all"):
+	//--- Base_WarfareBBarrier10xTall (the LOS_SCREEN composition's real child) has NO other
+	//--- reference anywhere in this mission tree - unlike Base_WarfareBBarrier5x/10x (this
+	//--- entry's own neighbours), which are proven via long-standing barracks/artyradar/HQ wall
+	//--- rings (Init_Defenses.sqf). The "Tall" variant was never independently verified before
+	//--- this composition was authored. Stand in with the proven 10x sibling (same barrier
+	//--- family, still a solid wall segment) - coin_interface.sqf also gains a runtime
+	//--- preview-override fallback as a safety net on top of this.
+	['Misc_cargo_cont_net3', 'Base_WarfareBBarrier10x'],	//--- LoS Screen -> proven barrier segment (Base_WarfareBBarrier10xTall unproven, see comment above)
 	['Misc_cargo_cont_tiny', 'Land_HBarrier_large'],		//--- HESCO Line -> real WFBE_NEURODEF_FORTIF_HESCO_LINE child
 	['Misc_concrete_High', 'Land_CncBlock_Stripes']	//--- Gate Complex -> proven gate-mouth block (Land_BarGate2 is A2-only/unverified in this tree - see Init_Defenses.sqf Bank precedent)
 ];
@@ -3948,6 +3956,24 @@ WFBE_ANCHOR_PREVIEW_MAP = [
 //--- A2-safe: forEach (never A3 apply).
 WFBE_ANCHOR_PREVIEW_CLASSES = [];
 {WFBE_ANCHOR_PREVIEW_CLASSES = WFBE_ANCHOR_PREVIEW_CLASSES + [_x select 1]} forEach WFBE_ANCHOR_PREVIEW_MAP;
+
+//--- fable/placement-preview-fix (owner 2026-08-08: "ALL NEW structure previews render RED,
+//--- game does not allow placement" - simplify criteria for these structures). Named subset of
+//--- WFBE_ANCHOR_PREVIEW_CLASSES: only the 5 Fortification Pack pieces (Wall Row, Wall Corner,
+//--- LoS Screen, HESCO Line, Gate Complex) - 22-43 m linear structures meant to run close to/
+//--- around the base's own factories. Hedgehog Line and Flak Tower are deliberately excluded:
+//--- they are compact, pre-existing (cmdcon42-g) buildables, not the newly-reported broken set.
+//--- Used by Init_Client.sqf's WFBE_C_STRUCTURES_PLACEMENT_METHOD to relax the factory-clearance
+//--- ring check (see WFBE_C_FORTIF_PACK_FACTORY_CLEARANCE below) for just these 5 classnames.
+WFBE_FORTIF_PACK_PREVIEW_CLASSES = ['Concrete_Wall_EP1','Base_WarfareBBarrier5x','Base_WarfareBBarrier10x','Land_HBarrier_large','Land_CncBlock_Stripes'];
+
+//--- Factory-clearance distance (metres) used ONLY for WFBE_FORTIF_PACK_PREVIEW_CLASSES items,
+//--- replacing the factory-footprint-scaled clearance (0.54-1.0x the nearest factory's own
+//--- bounding box, e.g. ~12-20 m from a typical HQ) that block-LoS/wall structures are supposed
+//--- to hug, not avoid. Small enough to stop the anchor point spawning literally inside the
+//--- factory's own model (the real "stuck placement" hazard the owner asked to keep), far
+//--- smaller than the factory-scaled distance every other defense still uses.
+if (isNil "WFBE_C_FORTIF_PACK_FACTORY_CLEARANCE") then {WFBE_C_FORTIF_PACK_FACTORY_CLEARANCE = 3};
 
 //--- TICK-INCREMENT PLACEMENT ROTATION (same owner report). coin_interface.sqf's rotate hint
 //--- ("ROTATE=[Ctrl]", str_coin_rotate) had never been wired to any setDir call - _ctrl was
