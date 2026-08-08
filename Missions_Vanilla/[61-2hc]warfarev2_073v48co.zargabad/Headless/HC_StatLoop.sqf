@@ -15,10 +15,11 @@ private ["_units", "_groups", "_hcId"];
 //--- The server/generator relabels these to HC1/HC2 by sort order.
 _hcId = format ["HC-%1", netId player];
 
-while {true} do {
+while {!WFBE_GameOver} do {
 	_units = {local _x} count allUnits;
 	//--- A2: 'local' accepts OBJECT only - a GROUP argument throws. Use the leader as proxy.
 	_groups = {local (leader _x)} count allGroups;
 	["HCStat", [_hcId, round diag_fps, _units, _groups, name player]] Call WFBE_CO_FNC_SendToServer;
 	sleep 60;
+	if (gameOver || {WFBE_GameOver}) exitWith {};
 };
