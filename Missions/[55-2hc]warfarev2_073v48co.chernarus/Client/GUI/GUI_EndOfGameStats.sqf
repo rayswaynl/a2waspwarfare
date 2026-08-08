@@ -54,8 +54,9 @@ if (_guerPanel) then {
 };
 
 //--- r76b: wait for cut display, then pin once; abort if still null before DisplayCtrl throws.
-waitUntil {!isNull (["currentCutDisplay"] call BIS_FNC_GUIget)};
-private ["_cutDisp"];
+private ["_cutDisp", "_cutWaitDeadline"];
+_cutWaitDeadline = diag_tickTime + 5;
+waitUntil {sleep 0.05; !isNull (["currentCutDisplay"] call BIS_FNC_GUIget) || diag_tickTime > _cutWaitDeadline};
 _cutDisp = ["currentCutDisplay"] call BIS_FNC_GUIget;
 if (isNull _cutDisp) exitWith {};
 (_cutDisp DisplayCtrl 90001) CtrlSetText _sideName;
