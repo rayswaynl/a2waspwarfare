@@ -27,6 +27,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev",
          "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass","_hasIdleTransport","_idleRtbEnabled","_hullVeh","_hullV","_corpse","_lastDest","_ordDrift","_gaBlocked","_gaDangerR","_gaAX","_gaAY","_gaBX","_gaBY","_gaDX","_gaDY","_gaL2","_gaTX","_gaTY","_gaProj","_gaCX","_gaCY","_gaD","_gaKicked","_pendingId"];
 Private ["_egtLastTp","_egtSig","_egtPos","_egtStamp","_egtLdr","_egtGuardR","_egtPlayerNear","_egtNearResult","_egtHulls","_egtH","_egtScat","_egtFlushOrder","_egtFlushSeq","_egtFlushMode","_egtFlushDest","_egtFlushTail","_egtFromDist"];
+Private ["_foundOrder","_foundOrderSeq"];
 _sideID = _this select 0;
 _template = _this select 1;
 _pos = _this select 2;
@@ -133,6 +134,17 @@ _team setVariable ["wfbe_aicom_lossretreat_prevtime", nil];
 _team setVariable ["wfbe_aicom_lossretreat_cooldown_until", nil];
 _team setVariable ["wfbe_aicom_overrun_mopup", false, true];   //--- overrunrazer: same group-slot-recycle hazard - a re-founded team must never inherit a stale mop-up stamp from its slot's previous occupant
 if ((missionNamespace getVariable ["WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE", 0]) > 0) then {_team setVariable ["wfbe_aicom_endgame_tp", [], true]}; //--- clear a recycled group slot's old teleport signal only when the feature is armed.
+
+//--- r186 ORDER-INCARNATION WATERMARK: A2 can recycle a deleted group slot with its custom
+//--- variables intact. Preserve the inherited sequence as already consumed so this new driver never
+//--- executes the previous occupant's payload; do NOT clear the record, because every publisher
+//--- derives its next generation from this sequence and clearing it would create real seq reuse.
+//--- Capture before registration: that callback may publish this incarnation's first valid order.
+_foundOrderSeq = -1;
+_foundOrder = _team getVariable "wfbe_aicom_order";
+if (!isNil "_foundOrder" && {typeName _foundOrder == "ARRAY"} && {count _foundOrder > 0} && {typeName (_foundOrder select 0) == "SCALAR"}) then {
+	_foundOrderSeq = _foundOrder select 0;
+};
 
 if (_pendingId >= 0) then {_team setVariable ["wfbe_aicom_pending_id", _pendingId, true]};
 if (isServer) then {
@@ -441,7 +453,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 };
 
 //--- Order-execution loop: apply each new order seq from the server brain.
-_lastSeq = -1;
+_lastSeq = _foundOrderSeq;
 _egtLastTp = -1;
 _lastDest = [];   //--- r108 order-clobber guard: dest accepted on the last fresh-order pass (drift re-accept below).
 _arrived = false;
