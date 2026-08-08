@@ -30,7 +30,7 @@ class SupportServiceTerminalLifecycleTests(unittest.TestCase):
                 text = (root / relative_path).read_text(encoding="utf-8-sig")
                 sources.append(text)
 
-                loop = text.index("while {true} do {")
+                loop = text.index("while {") #--- wave0808a fold: master already renamed the service loop header (2bf80cc534 stop-at-round-end); anchor on the loop start generically, the semantic assertions below carry the contract
                 sleep = text.index("sleep 1;", loop)
                 guard = text.index(ROUND_END_GUARD, sleep)
                 support_scan = text.index("//--- Check the distance & alive.", loop)
