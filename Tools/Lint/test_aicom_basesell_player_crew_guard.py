@@ -22,6 +22,20 @@ def code(path: Path) -> str:
 
 
 class BaseSellPlayerCrewGuardContract(unittest.TestCase):
+    def test_type_tags_use_the_parallel_type_roster_for_cost_and_live_count(self) -> None:
+        base_sell = code(BASE_SELL)
+        self.assertIn(
+            '"WFBE_%1STRUCTURES", _sideText',
+            base_sell,
+            "BaseSell must index wfbe_structure_type tags against the type roster",
+        )
+        self.assertNotIn(
+            "STRUCTURENAMES",
+            base_sell,
+            "class-name roster cannot be used to index logical structure type tags",
+        )
+        self.assertEqual(base_sell.count('_idx = _types find _stype;'), 3)
+
     def test_player_boarding_vetoes_sale_before_refund_or_reap(self) -> None:
         base_sell = code(BASE_SELL)
         sell_block = base_sell[base_sell.index('if (_victimType == "CommanderArtillery") then {'):]
