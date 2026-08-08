@@ -693,6 +693,21 @@ playerType = typeOf player;
 playerDead = false;
 paramBoundariesRunning = false;
 
+//--- fix(boundary-monitor-wiring 2026-08-05): Client_HandleOnMap.sqf was compiled but had no
+//--- call site, so the enabled boundary timeout never ran. Keep one cheap client-local supervisor
+//--- alive for the round: it starts the existing one-shot countdown only while an alive player is
+//--- actually outside the configured boundary, and re-arms it after returning/respawning.
+if ((missionNamespace getVariable ["WFBE_C_GAMEPLAY_BOUNDARIES_ENABLED", 0]) > 0) then {
+	[] spawn {
+		while {!(missionNamespace getVariable ["WFBE_GameOver", false])} do {
+			if (alive player && {!paramBoundariesRunning} && {!(call BoundariesIsOnMap)}) then {
+				[] spawn BoundariesHandleOnMap;
+			};
+			sleep 1;
+		};
+	};
+};
+
 // View distance timer stuff
 timerInstanceCount = 0;
 newViewDistance = 0;
