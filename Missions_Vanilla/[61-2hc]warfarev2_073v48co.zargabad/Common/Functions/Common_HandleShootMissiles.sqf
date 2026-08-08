@@ -16,7 +16,6 @@ Private [
 	"_fromPos",
 	"_targetPos",
 	"_terrainMasked",
-	"_toleranceAboveGround",
 	"_isRestrictedMissileAmmo"
 ];
 
@@ -116,17 +115,10 @@ if (_distance_target_player > _limit_distance) exitWith {};
 systemChat format ["point passage 3"];
 */
 
-// Marty:
-// Check if terrain blocks the line between the firing vehicle and the target.
-// Slight vertical offsets are added to avoid detecting tiny ground contact near the vehicle or target.
-// It adds a small vertical tolerance to avoid false terrain masking detection.
-_toleranceAboveGround = 2.5; // tolerance in meters added above ground, corresponding roughly to visual sight height of a tank.
-
-_fromPos = getPosASL _vehicle;
-_fromPos set [2, (_fromPos select 2) + _toleranceAboveGround]; // tolerance only on the z axis (= altitude), in meters.
-
-_targetPos = getPosASL _unit_targeted;
-_targetPos set [2, (_targetPos select 2) + _toleranceAboveGround];
+// Check terrain between the operator's actual ASL eye point and the target's A2 OA aim point.
+// Object origins can sit below an exposed turret or optic on a ridge and falsely mask a clear shot.
+_fromPos = eyePos player;
+_targetPos = aimPos _unit_targeted;
 
 _terrainMasked = terrainIntersectASL [_fromPos, _targetPos];
 
