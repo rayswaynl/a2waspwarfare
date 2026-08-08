@@ -111,7 +111,7 @@ if !(_spawnInside) then {
 		{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_owned = _owned + [_x]} } forEach towns;
 		//--- B75 (guer-tech FOB): a selected FOB delivery truck is a valid MOBILE spawn candidate ("freely like any
 		//--- town"). Add it so the _spawn-in-_owned preference below picks it and setPos lands the player beside it.
-		if (!isNull _spawn && {alive _spawn} && {_spawn getVariable ["wfbe_is_guer_fob", false]}) then {_owned = _owned + [_spawn]};
+		if (!isNull _spawn && {alive _spawn} && {_spawn getVariable ["wfbe_is_guer_fob", false]} && {(_spawn getVariable ["wfbe_side_id", -1]) == WFBE_C_GUER_ID} && {({(side (group _x)) == resistance} count (crew _spawn)) == count (crew _spawn)}) then {_owned = _owned + [_spawn]};
 		//--- B75 (guer-tech FOB): a selected BUILT GUER FOB factory is also a valid forward spawn. It is registered in
 		//--- the GUER side structures by the construction path (so GetFactories already OFFERS it in
 		//--- Client_GetRespawnAvailable), but it carries no wfbe_is_guer_fob flag - so add it here too, or the

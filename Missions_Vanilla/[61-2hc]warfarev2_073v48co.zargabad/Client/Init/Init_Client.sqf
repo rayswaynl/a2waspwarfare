@@ -1519,8 +1519,13 @@ if (sideJoined == civilian) then {
 if (sideJoined == resistance) then {
 	private ["_fr"]; _fr = [];
 	{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_fr = _fr + [_x]} } forEach towns;
-	if (count _fr == 0) then {_fr = towns};
-	_base = if (count _fr > 0) then { getPos (_fr select (floor (random (count _fr)))) } else { getMarkerPos "GuerTempRespawnMarker" };
+	if (count _fr > 0) then {
+		_base = getPos (_fr select (floor (random (count _fr))));
+	} else {
+		//--- r207: never widen an empty safe-haven list to WEST/EAST-held towns; mirror the death-respawn fallback.
+		_base = WFBE_Client_Logic getVariable "wfbe_startpos";
+		if (isNil "_base") then {_base = getMarkerPos "GuerTempRespawnMarker"};
+	};
 } else {
 if (time < 30) then {
 	waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}}}; //--- B76: || civilian so a CIV client never hangs on objNull logic
