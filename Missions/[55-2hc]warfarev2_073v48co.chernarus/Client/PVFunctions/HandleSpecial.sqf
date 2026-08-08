@@ -250,8 +250,9 @@ switch (_request) do {
 		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
 		if (count _args < 1) exitWith {};
 		_emptyVehicle = _args select 0;
-		//--- r66: purge dead non-player crew before deleting an empty hull; living-crew and FOB guards remain.
-		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {!(_emptyVehicle getVariable ["wfbe_is_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {
+		//--- r66: purge dead non-player crew before deleting an empty hull; living-crew, ownership,
+		//--- and FOB guards remain valid on the owner after a delayed PVF dispatch.
+		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {!(_emptyVehicle getVariable ["wfbe_is_fob", false])} && {!(_emptyVehicle getVariable ["wfbe_defense", false])} && {!(_emptyVehicle getVariable ["keepAlive", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {
 			{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { deleteVehicle _x } } forEach (crew _emptyVehicle);
 			if (!isNull _emptyVehicle) then { deleteVehicle _emptyVehicle };
 		};
