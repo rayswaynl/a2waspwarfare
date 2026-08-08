@@ -381,6 +381,12 @@ Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_Special.sqf'
 //--- QoL trio feat.3: advisor nudge function.
 WFBE_CL_FNC_QOL_Advisor = Compile preprocessFileLineNumbers 'Client\Functions\Client_QOL_Advisor.sqf';
 WFBE_CL_FNC_AutoRunAttach = Compile preprocessFileLineNumbers "Client\Functions\Client_AutoRun.sqf";
+//--- Tutorial hint coordinator (tutorial-pacing pass, claude-gaming 2026-08-08): shared gate so
+//--- Common_Onboarding.sqf, Client_JIPCatchupBriefing.sqf and Client_QOL_Advisor.sqf never fire a
+//--- hint/hintSilent over each other's dwell window. Compiled early so it is ready before the
+//--- QOL-Advisor spawn below and the onboarding/JIP-catchup spawns near clientInitComplete.
+WFBE_CL_FNC_HintGateAcquire = Compile preprocessFileLineNumbers "Client\Functions\Client_HintGateAcquire.sqf";
+WFBE_CL_FNC_HintGateRelease = Compile preprocessFileLineNumbers "Client\Functions\Client_HintGateRelease.sqf";
 //--- fix/marker-loop-siblings-watchdog: central supervisor for the 8 one-shot client marker/HUD
 //--- loops that have no per-event registrar to piggyback a respawn check on (unlike
 //--- Common_MarkerLoop.sqf, which the Common_MarkerUpdate/Common_AARadarMarkerUpdate registrars
