@@ -3396,7 +3396,7 @@ if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {
 //--- WFBE_C_FPS_GOVERNOR (default 0) - flag off is byte-identical to HEAD (WFBE_FpsGovMultiplier
 //--- stays seeded at 1 and no consumer ever reads it). NEVER deletes/disbands an existing team or
 //--- group; only throttles NEW production/founding/top-up/garrison-materialization volume.
-if (isNil "WFBE_C_FPS_GOVERNOR") then {WFBE_C_FPS_GOVERNOR = 0};
+if (isNil "WFBE_C_FPS_GOVERNOR") then {WFBE_C_FPS_GOVERNOR = 1}; //--- ARMED wave0808c (owner order 2026-08-08 13:01): throttle-only governor live; watch FPSGOV|v1| telemetry.
 if (isNil "WFBE_FpsGovMultiplier") then {WFBE_FpsGovMultiplier = 1};      //--- neutral seed; Server_FpsGovernor.sqf (flag-on only) is the sole writer after boot.
 if (isNil "WFBE_C_FPS_GOVERNOR_TICK_SEC")    then {WFBE_C_FPS_GOVERNOR_TICK_SEC    = 10};   //--- diag_fps sample cadence (s).
 if (isNil "WFBE_C_FPS_GOVERNOR_EMA_SEC")     then {WFBE_C_FPS_GOVERNOR_EMA_SEC     = 90};   //--- EMA smoothing window (s); alpha = tick/EMA_SEC per sample (60-120s owner ask).
