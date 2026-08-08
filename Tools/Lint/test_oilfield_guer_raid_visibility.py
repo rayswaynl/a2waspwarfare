@@ -58,6 +58,24 @@ def test_oilfield_raid_player_radius_is_declared_in_all_terrain_constants() -> N
         ) in source
 
 
+def test_oilfield_raiders_do_not_receive_town_defender_marker() -> None:
+    """The non-town oilfield encounter must remain visible to town activation scans."""
+    for terrain_root in TERRAIN_ROOTS:
+        source = (ROOT / terrain_root / "Server/Server_Oilfields.sqf").read_text(
+            encoding="utf-8"
+        )
+        raid_start = source.index("WFBE_FNC_OilfieldTryGuerRaid = {")
+        raid_end = source.index(
+            "//------------------------------------------------------------------------------------\n"
+            "//--- (3)+(4)+(5)+(6)+(7)+(8) LIVE LOOP",
+            raid_start,
+        )
+        raid_source = source[raid_start:raid_end]
+
+        assert "WFBE_IsTownDefenderAI" not in raid_source
+
+
 if __name__ == "__main__":
     test_oilfield_raid_checks_actual_ring_position_before_group_creation()
     test_oilfield_raid_player_radius_is_declared_in_all_terrain_constants()
+    test_oilfield_raiders_do_not_receive_town_defender_marker()

@@ -632,7 +632,6 @@ WFBE_FNC_OilfieldTryGuerRaid = {
 		_sp = [(_ringPos select 0) + (random 20) - 10, (_ringPos select 1) + (random 20) - 10, 0];
 		_u = [_cls, _grp, _sp, resistance] Call WFBE_CO_FNC_CreateUnit;
 		if (!isNull _u) then {
-			_u setVariable ["WFBE_IsTownDefenderAI", true, true];
 			_created = _created + 1;
 		};
 	};
