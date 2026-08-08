@@ -296,6 +296,15 @@ _testTeamCap = missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1];
 	//--- side-patrols, the per-player AI buy-cap) scales off ONE source. 0=LOW(0-2)/1=MID(3-5)/2=HIGH(6-9)/3=FULL(10+).
 	private "_popTier";
 	_popTier = switch (true) do { case (_pcN <= 2): {0}; case (_pcN <= 5): {1}; case (_pcN <= 9): {2}; default {3} };
+	//--- FPS-DOWNSCALE (diagnosis wasp-waspscale-poptier-fps-gap-20260808): when WFBE_C_FPS_DOWNSCALE is
+	//--- armed and AI_Commander.sqf's sustained-low-fps sampler has latched WFBE_FpsThrottleActive, push
+	//--- the PUBLISHED tier index up by WFBE_C_FPS_DOWNSCALE_STEP (clamped to 3=FULL, the last array index
+	//--- every consumer already clamps its select to) so the low-pop/high-AI-cap case this gap was found
+	//--- under sheds cap the same way a busier lobby already does. Flag off (default) = _popTier unchanged
+	//--- = byte-identical to HEAD.
+	if ((missionNamespace getVariable ["WFBE_C_FPS_DOWNSCALE", 0]) > 0 && {missionNamespace getVariable ["WFBE_FpsThrottleActive", false]}) then {
+		_popTier = (_popTier + (missionNamespace getVariable ["WFBE_C_FPS_DOWNSCALE_STEP", 1])) min 3;
+	};
 	if (_popTier != (missionNamespace getVariable ["WFBE_PopTier", -1])) then {
 		WFBE_PopTier = _popTier; publicVariable "WFBE_PopTier";
 		diag_log format ["[POPTIER] humans=%1 tier=%2 (0=LOW 1=MID 2=HIGH 3=FULL)", _pcN, _popTier];
