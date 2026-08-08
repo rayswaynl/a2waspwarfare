@@ -53,7 +53,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_destroyedCooldown","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_sliceCut","_sliceYield"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_destroyedCooldown","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_sliceCut","_sliceYield","_iffAware","_classMi24VsWest","_classMi24VsEast"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -62,6 +62,22 @@ _mi24Chance = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MI24_CHANCE", 0.
 _aaChance   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_AA_CHANCE", 0.75];
 _classKa    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_KA", "Ka137_MG_PMC"];
 _classMi24  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_MI24", "Mi24_P"];
+//--- IFF-aware Mi-24 airframe selection (fix0807e, owner-approved same-lane addition, 2026-08-08):
+//--- A2 radar pre-identification colors a contact by the AIRFRAME's own CfgVehicles side, not its
+//--- actual crew side. No guerrilla-faction Mi-24 exists in loaded content, so every GUER Mi-24 hull
+//--- spoofs SOME real faction; live RPT showed a GUER Mi24_P (EAST-config) reading FRIENDLY on an
+//--- EAST player it was actively attacking. Pick the airframe whose config side does NOT match the
+//--- dominant attacker side at the town, so it always reads HOSTILE to the side actually under fire.
+//--- VSWEST = airframe used when the detected attackers are WEST (an EAST-config hull, so it reads
+//--- hostile to them) - default Mi24_P, unchanged from the pre-fix single-class behaviour. VSEAST =
+//--- airframe used when attackers are EAST (a WEST-config hull) - Mi24_D_CZ_ACR (ACR is loaded on
+//--- the live modline; already spawned/rostered elsewhere in this repo - Core_ACR.sqf, EASA_Init.sqf,
+//--- Common_BalanceInit.sqf, Units_CO_US.sqf/Units_USMC.sqf - so no new/unverified classname risk).
+//--- Mixed/unknown attacker mix falls back to WFBE_C_GUER_AIRDEF_CLASS_MI24 (today's default), same
+//--- as if IFF_AWARE were off. Master switch default 1 (owner-ordered); 0 restores single-class.
+_iffAware        = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_IFF_AWARE", 1];
+_classMi24VsWest = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_MI24_VSWEST", "Mi24_P"];
+_classMi24VsEast = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_CLASS_MI24_VSEAST", "Mi24_D_CZ_ACR"];
 _lifetime   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LIFETIME", 900];
 _quiet      = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_QUIET_DESPAWN", 300];
 _destroyedCooldown = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_DESTROYED_COOLDOWN", 240]; //--- fix0807b (churn): per-town no-spawn window armed after a COMBAT loss (reason=destroyed or crew_dead) so a fresh defender does not fly straight back into the force that just killed the last one. See PR measurement table.
@@ -588,7 +604,7 @@ while {!WFBE_GameOver} do {
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
-		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfRadius","_diag"];
+		private ["_town","_pos","_enemies","_enemiesWest","_enemiesEast","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfRadius","_diag","_iffTag","_nearFoes"];
 		_town = _x;
 
 		//--- E3: a GUER-held town under a genuine ground attack gets one edge-of-town defender
@@ -659,7 +675,10 @@ while {!WFBE_GameOver} do {
 			//--- the threat ends - this is the symmetric spawn half. 0 = legacy always-spawn.
 			&& {((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) <= 0)
 				|| {
-					_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+					_nearFoes = (getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)];
+					_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count _nearFoes;
+					_enemiesWest = {alive _x && {(side _x) == west}} count _nearFoes;
+					_enemiesEast = {alive _x && {(side _x) == east}} count _nearFoes;
 					_enemies > 0
 				}}) then {
 
@@ -668,7 +687,10 @@ while {!WFBE_GameOver} do {
 			//--- Enemies near the town (west + east, GUER's foes).
 			//--- fix(hunt): nearEntities "Man" returns only DISMOUNTED infantry - fully mounted assaults were invisible (defenders recalled as "quiet" mid-attack, paradrop/Mi-24 response never triggered). Include vehicle hulls: a crewed hull carries its crew's side; empty hulls resolve CIVILIAN and stay filtered by the side check.
 			if (!((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) > 0)) then {
-				_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+				_nearFoes = (getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)];
+				_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count _nearFoes;
+				_enemiesWest = {alive _x && {(side _x) == west}} count _nearFoes;
+				_enemiesEast = {alive _x && {(side _x) == east}} count _nearFoes;
 			};
 
 			//--- Enemy AIR near the town (crewed west/east aircraft) - use the one bounded live-air
@@ -725,7 +747,20 @@ while {!WFBE_GameOver} do {
 			//--- The paradrop variant normally uses the DEFAULT Ka-137 (drone recon-MG airframe).
 			//--- E5: once late-game air scaling begins, the dark-gated delivery bird is the registered
 			//--- crewed UH-1H; the existing pilot/gunner seat receipt and airdef lifecycle remain in force.
-			_class = if (_useMi24) then {_classMi24} else {_classKa};
+			_iffTag = "n/a";
+			if (_useMi24) then {
+				if (_iffAware >= 1 && {_enemiesEast > _enemiesWest}) then {
+					_class = _classMi24VsEast; _iffTag = "vseast";
+				} else {
+					if (_iffAware >= 1 && {_enemiesWest > _enemiesEast}) then {
+						_class = _classMi24VsWest; _iffTag = "vswest";
+					} else {
+						_class = _classMi24; _iffTag = "default";
+					};
+				};
+			} else {
+				_class = _classKa;
+			};
 			if (_useDrop && {(missionNamespace getVariable ["WFBE_C_GUER_HUEY_QRF", 0]) > 0} && {(time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45])}) then {_class = "UH1H_TK_GUE_EP1"};
 
 			//--- Spawn the airframe airborne, a short way off the town so it flies in (FLY special, like W13).
@@ -1100,7 +1135,7 @@ while {!WFBE_GameOver} do {
 							};
 						};
 
-						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|drop=%5|enemies=%6|enemyAir=%7|large=%8|alive=%9|dropsAlive=%10", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _useDrop, _enemies, _enemyAir, _isLarge, _aliveCount, _dropAlive];
+						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|drop=%5|enemies=%6|enemyAir=%7|large=%8|alive=%9|dropsAlive=%10|iff=%11", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _useDrop, _enemies, _enemyAir, _isLarge, _aliveCount, _dropAlive, _iffTag];
 						};
 					} else {
 						//--- No pilot: tear down the empty hull + group so nothing leaks.
