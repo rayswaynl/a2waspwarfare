@@ -64,6 +64,7 @@ if (_angle > 70) then {_angle = 70};
 if (_distance < 0 || _distance + _minRange > _maxRange) exitWith {
 	[_artillery] Call ARTY_Finish;
 	_artillery setVariable ["restricted",false];
+	if ((_artillery getVariable ["wfbe_arty_state", ""]) == "firing") then {_artillery setVariable ["wfbe_arty_state", "registered"]};
 };
 
 _ammoText = str _ammo;
@@ -133,6 +134,7 @@ if (_ffNear > 0) exitWith {
 			[_artillery] Call ARTY_Finish;
 			if (alive (driver _artillery)) then {{(driver _artillery) enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
 			_artillery setVariable ["restricted",false];
+			if ((_artillery getVariable ["wfbe_arty_state", ""]) == "firing") then {_artillery setVariable ["wfbe_arty_state", "registered"]};
 		};
 	};
 	if (alive _gunner) then {{_gunner enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
