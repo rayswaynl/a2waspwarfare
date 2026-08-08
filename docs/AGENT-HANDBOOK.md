@@ -70,10 +70,12 @@ the folder name. These are the tracked `version.sqf.template` values; a live/gen
 
 | Field | CH | TK | ZG |
 |---|---|---|---|
-| `WF_MAXPLAYERS` | 32 | 31 | 33 |
+| `WF_MAXPLAYERS` | 34 | 34 | 34 |
 | `STARTING_DISTANCE` | 7500 | 7500 | 5000 |
 | `IS_CHERNARUS_MAP_DEPENDENT` | defined | NOT defined | NOT defined |
 | `IS_NAVAL_MAP` | defined | NOT defined | NOT defined |
+
+`AGENTS.md` is the single authority for these per-map template defines.
 
 ---
 

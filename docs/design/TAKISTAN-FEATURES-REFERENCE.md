@@ -13,7 +13,7 @@ LoadoutManager; map-specific behavior is selected by `worldName`,
 
 | Area | Takistan behavior | Main anchors |
 |---|---|---|
-| Map defines | `IS_CHERNARUS_MAP_DEPENDENT` and `IS_NAVAL_MAP` are commented out; `WF_MAXPLAYERS` is 31 (the `[61-...]` folder-name prefix is a player-slot label, not this value); `STARTING_DISTANCE` is 7500. | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template:7-13` |
+| Map defines | `IS_CHERNARUS_MAP_DEPENDENT` and `IS_NAVAL_MAP` are commented out; `WF_MAXPLAYERS` is 34 (the `[61-...]` folder-name prefix is a player-slot label, not this value); `STARTING_DISTANCE` is 7500. `AGENTS.md` is the single authority for these per-map template defines. | `Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template:7-13` |
 | Oilfield | Takistan-only neutral resource objective with one-hour unlock, capture income, sabotage/repair, marker state, AICOM pull, and default-off GUER raids. | `Common/Init/Init_CommonConstants.sqf:374-414`, `Server/Init/Init_Server.sqf:1009-1013`, `Server/Server_Oilfields.sqf:74-79` |
 | Land ICBM TEL | Land TEL feature is on by default. Each side gets a destroyable `MAZ_543_SCUD_TK_EP1` TEL through the SCUD/ICBM research path; NUKE keeps countdown/counterplay, conventional munitions are range-limited. | `Common/Init/Init_CommonConstants.sqf:974-998`, `Server/Init/Init_IcbmTel.sqf:8-28`, `Server/Init/Init_IcbmTel.sqf:329-406` |
 | Producible SCUD | Takistan can buy conventional SCUD launch platforms from Heavy Factory level 3. Bought SCUDs are capped per side and never nuke. | `Common/Init/Init_CommonConstants.sqf:1006-1010`, `Server/Init/Init_IcbmTel.sqf:151-220` |
