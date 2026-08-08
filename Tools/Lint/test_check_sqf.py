@@ -628,6 +628,64 @@ class CheckSqfTests(unittest.TestCase):
         codes = lint_codes("\ufeff\ufeff_x = 1;  // noqa: DBLBOM\n")
         self.assertNotIn("DBLBOM", codes)
 
+    # \u2500\u2500 QUOTEPARITY unterminated double-quoted string \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+    def test_quoteparity_clean_line_not_flagged(self) -> None:
+        codes = lint_codes('_x = "hello world";\n')
+        self.assertNotIn("QUOTEPARITY", codes)
+
+    def test_quoteparity_doubled_escape_not_flagged(self) -> None:
+        # A2's in-string escaped quote ("") must not be read as close+reopen.
+        codes = lint_codes('_x = "She said ""Hi"" to him";\n')
+        self.assertNotIn("QUOTEPARITY", codes)
+
+    def test_quoteparity_line_comment_holding_quote_not_flagged(self) -> None:
+        # The lone " inside a // comment never reaches string-tracking because
+        # // consumes to EOL first.
+        codes = lint_codes('_x = 1; // note: uses " like this\n')
+        self.assertNotIn("QUOTEPARITY", codes)
+
+    def test_quoteparity_block_comment_multiline_quote_not_flagged(self) -> None:
+        # A /* ... */ block spanning multiple lines with a lone " inside must
+        # stay inert: the in_block branch is checked before string-open logic.
+        codes = lint_codes('_x = 1;\n/* comment\n uses " character\n spanning lines */\n_y = 2;\n')
+        self.assertNotIn("QUOTEPARITY", codes)
+
+    def test_quoteparity_unbalanced_is_flagged(self) -> None:
+        # A genuinely unterminated " string must FAIL - this is the automation
+        # of the rule that killed wave0807a2.
+        codes = lint_codes('_x = "unterminated string;\n_y = 2;\n')
+        self.assertIn("QUOTEPARITY", codes)
+
+    def test_quoteparity_only_quote_inside_comment_not_flagged(self) -> None:
+        # The only quote in the file lives inside a // comment; the file has
+        # no real open " string, so QUOTEPARITY must stay silent.
+        codes = lint_codes('// the value was "unset"\n_x = 1;\n')
+        self.assertNotIn("QUOTEPARITY", codes)
+
+    def test_quoteparity_dquote_inside_squote_string_not_flagged(self) -> None:
+        # A " inside a '...'-delimited string is ordinary content, not a
+        # delimiter - both quote types are tracked so this stays inert.
+        codes = lint_codes("_x = 'He said \" hi \"';\n")
+        self.assertNotIn("QUOTEPARITY", codes)
+
+    def test_quoteparity_reports_open_quote_position(self) -> None:
+        # The finding must point at the opening " of the never-closed string,
+        # not at EOF or the following line.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "sample.sqf"
+            src = '_x = "unterminated string;\n_y = 2;\n'
+            path.write_text(src, encoding="utf-8")
+            findings = [f for f in check_sqf.lint_text(path, src, root, {}) if f.code == "QUOTEPARITY"]
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0].line, 1)
+        self.assertEqual(findings[0].col, 6)
+
+    def test_quoteparity_noqa_suppresses(self) -> None:
+        codes = lint_codes('_x = "unterminated string;  // noqa: QUOTEPARITY\n_y = 2;\n')
+        self.assertNotIn("QUOTEPARITY", codes)
+
 
 class BuyMenuUpgradeRefreshTests(unittest.TestCase):
     """The open shop must rebuild its catalogue after a replicated tech change."""
