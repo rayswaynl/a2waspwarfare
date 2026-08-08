@@ -46,7 +46,7 @@ if (!townModeSet || !WFBE_Parameters_Ready || isNil "TownTemplate") then {
 diag_log format ["TOWNGATE|v1|AFTER|name=%1|waitTicks=%2|mode=%3|params=%4|templateNil=%5", _townName, _wTownMode, townModeSet, WFBE_Parameters_Ready, isNil "TownTemplate"];
 
 //--- Prevent the isServer bug on the client.
-sleep (1.2 + random 0.2);
+uiSleep (1.2 + random 0.2);
 
 //--- fable/towntemplate-nil-guard (2026-07-25): the readiness gate above keys on townModeSet, which
 //--- Common\Init\Init_TownMode.sqf sets AFTER TownTemplate (Init_TownMode.sqf:14 vs :30) and which can
