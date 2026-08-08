@@ -23,6 +23,7 @@ from typing import Iterable
 SQF_SUFFIXES = {".sqf", ".fsm", ".hpp", ".ext", ".sqm"}
 CLASSNAME_SOURCE_SUFFIXES = {".sqf", ".fsm", ".hpp", ".ext", ".sqm", ".xml", ".cpp"}
 A3_TRAPS = (
+    "systemChat",  # A3-only; shipped silent in wave0808b (fix0808e RCA)
     "isEqualType",
     "isEqualTo",
     "params",
