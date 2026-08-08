@@ -264,10 +264,13 @@ while {!WFBE_GameOver} do {
                             };
                             _gunnerSeated = ((gunner _gun) == _crew);
                             if (_gunnerSeated) then {
-                                _crew disableAI "MOVE";  //--- HOTFIX 2026-07-06: disableMove is not a valid A2 OA 1.64 command (parse "Missing ;", live-burned build89 garrison dressing #771). disableAI "MOVE" is the A2-correct immobilizer.
-                                _crew allowFleeing 0;
+                                 _crew disableAI "MOVE";  //--- HOTFIX 2026-07-06: disableMove is not a valid A2 OA 1.64 command (parse "Missing ;", live-burned build89 garrison dressing #771). disableAI "MOVE" is the A2-correct immobilizer.
+                                 _crew allowFleeing 0;
+                                 //--- A seated AA gunner must hold the static and engage aircraft; match the town-static posture.
+                                 _grp setBehaviour "AWARE";
+                                 _grp setCombatMode "RED";
 
-                                //--- Optional night searchlight.
+                                 //--- Optional night searchlight.
                                 _isNight = ((date select 3) < 6) || {(date select 3) >= 20};
                                 if (_searchlightOn >= 1 && {_isNight}) then {
                                     _light = _lightClass createVehicle
