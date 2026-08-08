@@ -70,6 +70,9 @@ _sliceYield = {
 	private ["_sliceLabel"];
 	_sliceLabel = "";
 	if (typeName _this == "STRING") then {_sliceLabel = _this};
+	if (typeName _this == "ARRAY" && {count _this > 0}) then {
+		if (typeName (_this select 0) == "STRING") then {_sliceLabel = _this select 0};
+	};
 	if (_scanChunkOn) then {
 		Call _sliceCut;
 		_perfSlices = _perfSlices + 1;
