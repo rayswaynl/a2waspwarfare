@@ -17,7 +17,7 @@ if (isNil "WFBE_SK_V_LockpickChance") then {
 
 _vehicle = [player,_vehicles] Call WFBE_CO_FNC_GetClosestEntity;
 
-if (!locked _vehicle) exitWith {};
+if ((locked _vehicle) == 0) exitWith {};
 
 WFBE_SK_V_LastUse_Lockpick = time;
 
@@ -30,7 +30,7 @@ for [{_z = 0},{_z < 4},{_z = _z + 1}] do {
 	if (!alive player || vehicle player != player || !alive _vehicle || _vehicle distance player > 5) exitWith {_skip = true};
 };
 
-if (!locked _vehicle) exitWith {};
+if ((locked _vehicle) == 0) exitWith {};
 
 if (!_skip) then {
 _min = 51;
