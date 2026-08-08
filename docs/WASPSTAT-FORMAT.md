@@ -223,14 +223,14 @@ Emitted once per match from `Server/Init/Init_Server.sqf`, immediately after the
 line (params + constants are final, before side-init).
 
 ```
-MATCH|v1|START|world=<worldName>|build=<buildId>|towns=<townsActiveMax>|missionSlots=<missionSlots>|aiEnabled=<aicomEnabled>|delegation=<delegation>|statlog=<statlog>|guer=<guerPlayerside>|naval=<navalHVT>|oilfield=<oilfieldEnable>
+MATCH|v1|START|world=<worldName>|build=<buildId>|towns=<totalTowns>|missionSlots=<missionSlots>|aiEnabled=<aicomEnabled>|delegation=<delegation>|statlog=<statlog>|guer=<guerPlayerside>|naval=<navalHVT>|oilfield=<oilfieldEnable>
 ```
 
 | Field | Source | Notes |
 |-------|--------|-------|
 | `world` | `worldName` | Terrain string, e.g. `chernarus`, `takistan`, `zargabad`. |
 | `build` | `"build89-cmdcon44"` (pipe-free literal) | Short build-id token; the full `WF_RELEASE_MARKER` string is not used here because it contains pipe characters that would shatter pipe-split parsers. |
-| `towns` | `WFBE_C_TOWNS_ACTIVE_MAX` | Configured max active towns for this match. |
+| `towns` | `totalTowns` | Selected town slots for this match. |
 | `missionSlots` | `missionConfigFile >> Header >> maxPlayers` | Compiled mission slot count (renamed from `maxPlayers` in the dynamic-identity update; consumers must read `missionSlots=`). |
 | `aiEnabled` | `WFBE_C_AI_COMMANDER_ENABLED` | Whether AI commander is enabled. |
 | `delegation` | `WFBE_C_AI_DELEGATION` | HC delegation mode. |
