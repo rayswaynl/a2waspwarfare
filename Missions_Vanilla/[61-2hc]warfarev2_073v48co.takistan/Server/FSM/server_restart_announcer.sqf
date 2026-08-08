@@ -35,7 +35,7 @@ _lastAnnounced = -1;                               //--- Minutes-remaining value
 
 ["INITIALIZATION", Format ["server_restart_announcer.sqf: Armed. Restart at %1 min uptime; warnings begin at %2 min (%3 broadcasts).", _restartAt, _warnStartMin, _warnMin]] Call WFBE_CO_FNC_LogContent;
 
-while {true} do {
+while {!WFBE_GameOver} do {
 	_minsElapsed = floor (time / 60);
 
 	if (_minsElapsed >= _warnStartMin) then {
@@ -56,4 +56,5 @@ while {true} do {
 	};
 
 	sleep 5;
+	if (gameOver || {WFBE_GameOver}) exitWith {};
 };
