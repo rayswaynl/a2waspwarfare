@@ -1,6 +1,6 @@
 //--- Malformed-payload guard: ensure _this is ARRAY with >= 2 elements (unit, sideID).
 if (!((typeName _this) in ["ARRAY"]) || {count _this < 2}) exitWith {};
-Private ["_side","_sideID","_unit","_unit_kind"];
+Private ["_side","_sideID","_unit","_unit_kind","_wClientInit"];
 
 _unit 				= _this select 0;
 _sideID 	 		= _this select 1;
@@ -8,7 +8,13 @@ _unit_kind = typeOf _unit;
 
 _side = (_sideID) Call GetSideFromID;
 
-waitUntil {clientInitComplete}; //--- Wait for the client part.
+//--- Bounded JIP guard: a PVF can arrive before client init, but a failed/aborted
+//--- client init must not leave one scheduled marker worker parked forever.
+_wClientInit = 0;
+while {(isNil "clientInitComplete" || {!clientInitComplete}) && {_wClientInit < 360}} do { uiSleep 0.25; _wClientInit = _wClientInit + 1; };
+if (isNil "clientInitComplete" || {!clientInitComplete}) exitWith {
+	diag_log format ["PARATROOP|MARKER_SKIP|reason=CLIENT_INIT_TIMEOUT|wait=%1s", _wClientInit / 4];
+};
 
 sleep 2; //--- Wait a bit.
 
