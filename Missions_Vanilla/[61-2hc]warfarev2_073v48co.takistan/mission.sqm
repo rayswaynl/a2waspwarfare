@@ -3656,7 +3656,7 @@ class Mission
 		}
 		class Item96
 		{
-			side="CIV";
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -3664,19 +3664,19 @@ class Mission
 				{
 					position[]={10.0,0,10.0};
 					id=10;
-					side="CIV";
-					vehicle="Functionary1";
+					side="WEST";
+					vehicle="FR_Miles";
 					player="PLAY CDG";
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
-					description="Headless Client 1";
+					description="Headless Client 1 - AI CONTROL - DO NOT TAKE";
 				};
 			};
 		};
 		class Item97
 		{
-			side="CIV";
+			side="EAST";
 			class Vehicles
 			{
 				items=1;
@@ -3684,13 +3684,13 @@ class Mission
 				{
 					position[]={20.0,0,10.0};
 					id=11;
-					side="CIV";
-					vehicle="Functionary1";
+					side="EAST";
+					vehicle="RUS_Soldier1";
 					player="PLAY CDG";
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
-					description="Headless Client 2";
+					description="Headless Client 2 - AI CONTROL - DO NOT TAKE";
 				};
 			};
 		};
