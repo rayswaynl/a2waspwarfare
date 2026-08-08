@@ -494,6 +494,11 @@ _aiCapTierIndex = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
 _aiCapTierLast = (count _aiCapTiers) - 1;
 if (_aiCapTierIndex > _aiCapTierLast) then {_aiCapTierIndex = _aiCapTierLast};
 _aiCapTier = _aiCapTiers select _aiCapTierIndex;
+//--- FPS GOVERNOR (flag WFBE_C_FPS_GOVERNOR, default 0; fable/fps-governor): mirror of the
+//--- Produce.sqf produce-cap scale - shrinks the FOUNDING ceiling under FPS pressure. Never
+//--- retires an already-founded team (the separate PC-cleanup retire pass above is untouched);
+//--- this only makes new founding stop sooner, same "throttle production, never delete" contract.
+if ((missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR", 0]) > 0) then {_aiCapTier = floor (_aiCapTier * (missionNamespace getVariable ["WFBE_FpsGovMultiplier", 1]))};
 //--- Reuse the exact side-live census above for the cap gate; avoid a second allUnits scan in the same tick.
 _sideAINow = _aicomSideLive;
 //--- F2 fable/aicom-econ-triad (2026-08-02): count committed-but-unspawned production against the tier

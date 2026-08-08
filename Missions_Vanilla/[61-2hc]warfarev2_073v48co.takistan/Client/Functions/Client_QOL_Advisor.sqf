@@ -23,8 +23,20 @@
 	  - supply vehicle pickup/delivery flow.
 
 	Spawned from Init_Client.sqf after commonInitComplete.
+
+	TUTORIAL-PACING PASS (claude-gaming 2026-08-08): the commander-basics/economy/Patrols nudge
+	gates below used to check ABSOLUTE mission `time` (time > 300/600/900). The tick cadence
+	itself (`sleep _interval` in the loop below) is already relative to this script's own spawn,
+	but those absolute checks meant a JIP joiner past the 300/600/900s marks could satisfy all
+	three thresholds on literally their own first tick, collapsing the intended staged rollout.
+	Every gate now checks elapsed time SINCE THIS SCRIPT'S OWN START (_joinTime, captured once
+	below) instead. Every hintSilent nudge site also now acquires/releases the shared tutorial
+	hint-slot gate (Client_HintGateAcquire.sqf / WFBE_CL_VAR_HintSlotBusy) so a nudge can never
+	land mid-onboarding-card; it releases immediately after (no artificial hold) since these
+	nudges never had a display-duration concept and player-triggered hints - out of scope for
+	this gate by design - would clobber them regardless of how long we held it.
 */
-Private ["_interval","_threshold","_lastBuy","_funds","_unitData","_price","_nudgeText","_elapsed","_patrolNudgeDone","_upgrades","_townsHeld","_patrolLvl","_inRangeKeys","_commanderNudgeDone","_economyNudgeDone","_easaNudgeDone","_supplyNudgeDone","_nudgeShown","_isCommander","_cmdPercent","_veh","_target","_easaTypes","_supplyTypes","_isSupplyVehicle","_loadedSupply"];
+Private ["_interval","_threshold","_lastBuy","_funds","_unitData","_price","_nudgeText","_elapsed","_patrolNudgeDone","_upgrades","_townsHeld","_patrolLvl","_inRangeKeys","_commanderNudgeDone","_economyNudgeDone","_easaNudgeDone","_supplyNudgeDone","_nudgeShown","_isCommander","_cmdPercent","_veh","_target","_easaTypes","_supplyTypes","_isSupplyVehicle","_loadedSupply","_joinTime"];
 
 //--- Master toggle.
 if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) < 1) exitWith {};
@@ -41,6 +53,10 @@ if (_interval <= 0) exitWith {};
 if (isNil "WFBE_QOL_LAST_PURCHASE_TIME") then {
 	WFBE_QOL_LAST_PURCHASE_TIME = time;
 };
+
+//--- Snapshot this script's own start time once, so the staged nudge gates below (commander
+//--- basics/economy/Patrols) are relative to THIS player's join, not absolute mission time.
+_joinTime = time;
 
 //--- Commander Patrols nudge: once per session.
 _patrolNudgeDone = false;
@@ -65,24 +81,29 @@ while {!gameOver} do {
 			if ((group player) in [commanderTeam]) then {_isCommander = true};
 		};
 
-		//--- Commander basics nudge: once after the commander has had a few minutes to orient.
-		if (!_nudgeShown && {!_commanderNudgeDone} && {_isCommander} && {time > 300}) then {
+		//--- Commander basics nudge: once after the commander has had a few minutes to orient
+		//--- (relative to this player's own join - see header).
+		if (!_nudgeShown && {!_commanderNudgeDone} && {_isCommander} && {(time - _joinTime) > 300}) then {
+			[] call WFBE_CL_FNC_HintGateAcquire;
 			hintSilent "Commander tip: use the WF Command menu to order teams, queue upgrades, and keep the HQ alive.";
+			[] call WFBE_CL_FNC_HintGateRelease;
 			_commanderNudgeDone = true;
 			_nudgeShown = true;
 		};
 
 		//--- Economy split nudge: separate from the basic commander tip so each message stays readable.
-		if (!_nudgeShown && {!_economyNudgeDone} && {_isCommander} && {time > 600}) then {
+		if (!_nudgeShown && {!_economyNudgeDone} && {_isCommander} && {(time - _joinTime) > 600}) then {
 			_cmdPercent = WFBE_Client_Logic getVariable ["wfbe_commander_percent", 70];
+			[] call WFBE_CL_FNC_HintGateAcquire;
 			hintSilent Format ["Economy tip: the Economy menu slider controls commander vs player income. Current commander share: %1%2.", _cmdPercent, "%"];
+			[] call WFBE_CL_FNC_HintGateRelease;
 			_economyNudgeDone = true;
 			_nudgeShown = true;
 		};
 
 		//--- Commander Patrols nudge (once per session, separate flag).
-		//--- Gates: player IS commander + side owns 3+ towns + Patrols unresearched + round > 15 min.
-		if (!_nudgeShown && {!_patrolNudgeDone} && {_isCommander} && {time > 900}) then {
+		//--- Gates: player IS commander + side owns 3+ towns + Patrols unresearched + own join + 15 min.
+		if (!_nudgeShown && {!_patrolNudgeDone} && {_isCommander} && {(time - _joinTime) > 900}) then {
 			_townsHeld = sideJoined Call GetTownsHeld;
 			if (_townsHeld >= 3) then {
 				_upgrades = sideJoined Call WFBE_CO_FNC_GetSideUpgrades;
@@ -91,7 +112,9 @@ while {!gameOver} do {
 					_patrolLvl = _upgrades select WFBE_UP_PATROLS;
 				};
 				if (_patrolLvl < 1) then {
+					[] call WFBE_CL_FNC_HintGateAcquire;
 					hintSilent "Commander tip: you hold 3+ towns - research Patrols (upgrade menu) to push the frontline automatically.";
+					[] call WFBE_CL_FNC_HintGateRelease;
 					_patrolNudgeDone = true;
 					_nudgeShown = true;
 				};
@@ -103,7 +126,9 @@ while {!gameOver} do {
 			_veh = vehicle player;
 			_easaTypes = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
 			if (!(_veh in [player]) && {(typeOf _veh) in _easaTypes}) then {
+				[] call WFBE_CL_FNC_HintGateAcquire;
 				hintSilent "EASA tip: service points can change aircraft loadouts with Loadout (EASA). GUER aircraft can use friendly town centers.";
+				[] call WFBE_CL_FNC_HintGateRelease;
 				_easaNudgeDone = true;
 				_nudgeShown = true;
 			};
@@ -127,11 +152,13 @@ while {!gameOver} do {
 				_loadedSupply = _target getVariable ["SupplyAmount", 0];
 			};
 			if (_isSupplyVehicle) then {
+				[] call WFBE_CL_FNC_HintGateAcquire;
 				if (_loadedSupply > 0) then {
 					hintSilent "Supply tip: loaded supply vehicles need the Command Center (C marker). Deliver before the cargo is lost.";
 				} else {
 					hintSilent "Supply tip: collect from friendly towns showing a + after their SV (SpecOps sees the SUPPLY label), then deliver the cargo to your Command Center (C marker).";
 				};
+				[] call WFBE_CL_FNC_HintGateRelease;
 				_supplyNudgeDone = true;
 				_nudgeShown = true;
 			};
@@ -171,7 +198,9 @@ while {!gameOver} do {
 					_funds = Call GetPlayerFunds;
 					if (_funds >= _threshold) then {
 						_nudgeText = Format ["You have $%1 unspent - visit a factory or the gear menu.", _funds];
+						[] call WFBE_CL_FNC_HintGateAcquire;
 						hintSilent _nudgeText;
+						[] call WFBE_CL_FNC_HintGateRelease;
 						_nudgeShown = true;
 					};
 				};

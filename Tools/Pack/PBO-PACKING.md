@@ -339,6 +339,90 @@ PR's author is explicitly barred from touching the live box or launching the gam
    in an owner-present window) does `--compress` become eligible for an actual wave ship.
    Until then this flag exists, is tested, and is documented — but is not live-ready.
 
+## SQF comment stripping (`--strip-comments`, opt-in)
+
+Separately from `--compress`, `pack_pbo.py` can also strip `//` and `/* */` comments out
+of packed `.sqf` entries when `--strip-comments` is passed. The default (flag omitted) is
+byte-for-byte identical to every build before this feature existed. Unlike `--compress`,
+this changes what bytes ship (comments are gone, not just LZSS-encoded) but is designed to
+be a zero-behavior-change transform: every newline is preserved exactly where it was, so
+`preprocessFileLineNumbers` line numbers — and therefore every RPT error/callstack — are
+identical with or without the flag.
+
+### What gets stripped, and why it's safe
+
+Only `.sqf` entries (`STRIP_COMMENT_SUFFIXES` in `pack_pbo.py`) — `description.ext`,
+`mission.sqm`, `stringtable.xml`, `.hpp` are out of scope for v1; those are config/data
+formats with different comment/parsing rules this pass never audited for safety.
+
+`strip_sqf_comments()` is a single-pass character state machine (a sibling of the existing
+`_mask_config_comments()` helper used for mission.sqm slot-census parsing, not a call
+through it — that helper masks to same-length spaces for structural depth-counting and
+only understands `"`-delimited strings; this one deletes characters outright and needs
+single-quote strings too) with two safety properties:
+
+- **String-literal aware, both quote styles.** SQF strings use `'...'` as often as `"..."`,
+  and both use the same doubled-quote-escapes-itself convention as config text. A `//` or
+  `/*` inside either kind of string is never treated as a comment.
+- **Preprocessor-aware.** Any physical line that is (or continues, via a trailing `\`
+  line-continuation) a `#define`/`#include`/`#if...` directive is copied through
+  completely untouched — no comment detection is even attempted on it. This is
+  deliberately conservative: a macro body can legitimately contain `//`-looking text that
+  stops being a comment once the preprocessor joins its continuation lines, and getting
+  that wrong would silently corrupt a build-time constant. The cost is a directive line
+  with a genuine trailing `//` comment keeps that comment (a few missed bytes, not a
+  correctness risk).
+
+`strip_comment_entries()` (the pack-time wrapper) re-verifies the line-count-preservation
+contract on every transformed file and aborts the pack (`PackError`) if it's ever violated
+— belt-and-suspenders alongside the stripper's own construction and the corpus-wide test
+below, so a future edit that breaks the contract fails the build instead of silently
+shipping an RPT-line-number-shifted PBO.
+
+### Cross-validated against the real corpus
+
+`Tools/Pack/test_pack_pbo.py` includes a second, independently-written implementation
+(`reference_strip_sqf_comments()`, a regex-token-scan plus a separate line-oriented
+directive mask — no shared code with the production state machine) used only to prove the
+two agree. Against every real `.sqf` file in `Missions/[55-2hc]warfarev2_073v48co.chernarus`
+(883 files):
+
+```
+strip-comments line-count invariant: 883/883 real .sqf files OK.
+strip-comments cross-check: 883/883 real .sqf files byte-identical between implementations.
+8,370,092 -> 5,308,359 bytes (3,061,733 saved, 36.6%).
+```
+
+And packing the real mission end-to-end (`--strip-comments --build-tag commentstrip-test`),
+independently re-verified with `read_pbo.py` (a from-scratch third parser) — every `.sqf`
+entry in the packed PBO matches `strip_sqf_comments()` applied to its source file, every
+non-`.sqf` entry is untouched, and the checksum trailer verifies:
+
+```
+normal:   17,718,092 bytes
+stripped: 14,656,021 bytes
+saved:     3,062,071 bytes (17.28%)
+checksum: OK
+.sqf entries checked: 883, mismatches: 0
+non-.sqf entries checked: 123, mismatches: 0
+```
+
+### Known limitations (v1)
+
+- `.sqf` only — `.hpp`/`.ext`/`.sqm`/`.xml` are not touched even though some of that text is
+  also comment-heavy; extending is future work, not this pass.
+- A directive line's own trailing `//` comment is never stripped (see above) — negligible
+  bytes, chosen deliberately over the risk of ever touching macro content.
+- A block comment that closes mid-line immediately before a `#directive` on that same
+  physical line (e.g. `/* x */ #define FOO 1`) is not detected as a directive start (the
+  directive must be the first token *of the original line*, not just first after a removed
+  comment) — an extremely rare pattern in this codebase; worst case it's treated as normal
+  code, which only risks stripping a harmless trailing comment on that same line, never
+  macro text.
+- No client/server boot-test has been run against a `--strip-comments`-packed mission. This
+  is a structural/byte-level spike; treat it the same as `--compress` was treated before its
+  own boot-test — proven safe to build, not yet proven safe to ship.
+
 ## Verification performed
 
 **Structural only — this does NOT confirm A2OA will boot the mission.** See "What still

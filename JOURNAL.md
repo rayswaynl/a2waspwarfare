@@ -2102,3 +2102,122 @@ No real 7-char conflict markers anywhere post-fold (`git grep -nP "^<{7}(?!<)|^=
 (`b37f7008cf`, realigns the two contract tests above), this journal commit.
 
 Pushed to `origin/update/wave-20260802`.
+
+## 2026-08-08 - lane fable/tutorial-pacing-20260808: tutorial hint coordinator + pacing pass, draft PR
+
+**OWNER COMPLAINT (via team-lead relay):** "tutorial message pacing is way off." Diagnosis in
+`text-sweep-results-20260808.json` (`result.pacingTimeline` + 9 findings tagged `category:
+"pacing"`), verified against source before writing anything.
+
+**Worktree:** `C:\Users\Steff\wt-pacing-0808`, branch `fable/tutorial-pacing-20260808`, based on
+`origin/update/wave-0808a` @ `e131e5438a`. BEHAVIOR CHANGE - draft PR for owner sign-off, not
+auto-folded.
+
+**Scope (team-lead's 7 numbered build steps, followed exactly, nothing extra folded in):**
+1. Worktree/branch. 2. Client-side hint coordinator (shared `WFBE_CL_VAR_HintSlotBusy` uiNamespace
+gate + two tiny helper functions). 3. De-dupe the JIP messages (onboarding's own JIP card vs.
+`Client_JIPCatchupBriefing.sqf`'s fuller stats card). 4. Spread onboarding cards to ~25-35s
+cadence, <3.5min total, respawn card moved earlier per the diagnosis. 5. `Client_TipRotation.sqf`:
+session cap + redraw-on-gated-draw instead of a silent skipped slot. 6. `Client_QOL_Advisor.sqf`:
+absolute mission time -> time-since-own-join for its nudge gates. 7. Named constants for every
+new/changed timing value.
+
+**Root cause (from source, not just the diagnosis prose):** all three tutorial scripts are spawned
+within a few lines of each other in `Init_Client.sqf` right after `clientInitComplete = true` with
+zero coordination - each just calls `hint`/`hintSilent` directly on its own independent `uiSleep`
+clock. A2's hint control has exactly one slot: any `hint`/`hintSilent` call instantly replaces
+whatever is currently shown, mid-dwell, with no queue. `Client_QOL_Advisor.sqf`'s nudge loop uses
+a *relative* `sleep _interval` for its own tick cadence (so the loop itself is fine) but gates each
+nudge on *absolute* `time > 300/600/900` - for any joiner past those marks (which is most JIP
+joiners), all three thresholds are already satisfied on their very first own tick.
+
+**What this lane built:**
+- NEW `Client/Functions/Client_HintGateAcquire.sqf` / `Client_HintGateRelease.sqf`: a tiny
+  cooperative mutex over one `uiNamespace` bool (`WFBE_CL_VAR_HintSlotBusy`). Acquire polls in 1s
+  real-time (`uiSleep`) increments, bounded by `WFBE_C_HINT_GATE_TIMEOUT` (45s) so a caller that
+  errors out mid-hold can never wedge every other tutorial system forever; Release just clears the
+  flag. Compiled once in `Init_Client.sqf` (`WFBE_CL_FNC_HintGateAcquire/Release`) ahead of the
+  three spawn sites. `Client_TipRotation.sqf` was deliberately NOT wired in - it only ever calls
+  `systemChat`, never `hint`/`hintSilent`, so it cannot clobber the hint surface and gating it would
+  just add pointless latency to chat tips.
+- `Common_Onboarding.sqf`: acquires the gate ONCE for the whole card sequence (not per-card) and
+  releases once at the end, matching the diagnosis's own suggested JIP-BRIEF fix wording ("plays
+  immediately after onboarding's own cards finish"). Reordered cards so the death/respawn
+  reassurance is CARD 3 (was last, CARD 7) - a fresh player near the frontline can die well under a
+  minute in, per the finding. Widened every inter-card gap to ~25-35s (uniform `_interCardGap`
+  constant + increased individual dwells) with an explicit blank `hintSilent ""` breathing pause
+  between cards instead of back-to-back dwells. Worst case (EASA+GUER+JIP-band all true) totals
+  ~186s (3:06), typical fresh path ~119s (1:59) - both under the 3.5min ceiling. JIP dedup: onboarding's
+  own short JIP note now only shows when `Client_JIPCatchupBriefing.sqf`'s fuller card will NOT
+  fire for this join (either JIP-BRIEF is disabled, or this join is younger than
+  `WFBE_C_JIP_CATCHUP_MIN_AGE`) - snapshotted once at script start (before any sleeps) so the
+  decision reflects actual join time, not `time` after 100+ seconds of card sequence have elapsed.
+- `Client_JIPCatchupBriefing.sqf`: keeps its existing `WFBE_C_JIP_CATCHUP_DELAY` as a small courtesy
+  pre-buffer, then acquires the same hint gate before its `hint` call - so it now genuinely waits
+  for onboarding to finish rather than racing it on a fixed 16s guess.
+- `Client_QOL_Advisor.sqf`: snapshots `_joinTime = time` once at script start; every nudge gate
+  (commander-basics, economy, Patrols) now checks `(time - _joinTime) > N` instead of absolute
+  `time > N`. Every `hintSilent` nudge site now acquires/releases the same hint gate (so a nudge
+  can never land mid-onboarding-card) but does NOT hold the gate afterward - QOL nudges never had a
+  display-duration concept before this change, and player-triggered hints (explicitly out of scope
+  per the brief) don't check this gate at all, so holding it longer would only block the other two
+  tutorial systems for zero real protection.
+- `Client_TipRotation.sqf`: added a session cap (`WFBE_C_TIPS_SESSION_CAP`, default 8 - new
+  Init_CommonConstants.sqf entry next to the existing `WFBE_C_TIPS_*` block, matching that block's
+  existing registration pattern) so the feed no longer runs unbounded for the entire match. A
+  gated-out random draw now redraws from the remaining deck instead of silently burning the whole
+  900s slot; redraw is bounded by the pool size itself (`_n`, currently 21) rather than a magic
+  number, so it always terminates and self-adapts if the pool grows/shrinks later - comfortably
+  above the current worst case of 8/21 gated. Cadence between VISIBLE tips is unchanged (900s).
+
+**Constants added/touched (all named, all owner-tunable):**
+- NEW in `Init_CommonConstants.sqf`: `WFBE_C_TIPS_SESSION_CAP = 8`.
+- NEW local constants at the top of `Common_Onboarding.sqf` (deliberately NOT pushed into
+  `Init_CommonConstants.sqf` - this file already documents its own convention of keeping
+  onboarding-only knobs local via inline `getVariable [name, default]` reads, to avoid touching the
+  shared constants file for things nothing else reads).
+- NEW local constants at the top of `Client_HintGateAcquire.sqf` (`WFBE_C_HINT_GATE_TIMEOUT`).
+- `WFBE_C_JIP_CATCHUP_MIN_AGE` / `WFBE_C_JIP_CATCHUP_BRIEFING` (existing, now also read from
+  `Common_Onboarding.sqf` for the dedup decision - no default changed).
+
+**Deliberately out of scope (flagged for the owner, not implemented - not in the 7 build steps):**
+QOL combat-suppression gate (skip a nudge tick if the player took damage/fired in the last 15s),
+moving the EASA/supply checks off the 300s funds-nudge loop onto a faster poll, QOL commander-tip
+redundancy with onboarding's own command/supply card, and the diagnosis's suggested t=150s bridging
+reinforcement message to close the silent gap between onboarding ending and the first QOL/TIP-ROT
+tick. All four are real findings in the sweep JSON but the team-lead's relay scoped this lane to
+exactly the 7 items above.
+
+**Correction mid-lane:** initially assumed only Chernarus `[55-2hc]` existed in this repo (only
+mission folder under `Missions/`) and treated the mirror-parity gate as trivially satisfied. WRONG
+- the Takistan/Zargabad mirrors live under a separate top-level `Missions_Vanilla/` directory
+(`[61-2hc]warfarev2_073v48co.takistan` / `.zargabad`), confirmed all 6 touched files were
+byte-identical across all three terrains on the base branch. Caught this via `pytest Tools/` full
+suite: 10 mirror-parity/byte-identical contract tests failed after editing Chernarus only. Fixed by
+copying the finalized Chernarus files (post-edit, CRLF-normalized) verbatim over the Takistan/
+Zargabad copies (`cp`, then md5sum-verified identical across all three) - same for both new
+`Client_HintGateAcquire.sqf` / `Client_HintGateRelease.sqf` files. Re-ran the full suite after
+syncing: the same 10 tests now pass.
+
+**Gates (final, all 24 files - 8 touched/new files x 3 terrains):**
+- Quote parity (raw `"` count per file): all 8 distinct files even-count, confirmed on all 3 terrain
+  copies (byte-identical by construction).
+- `check_sqf.py --diff-from origin/update/wave-0808a --ignore BOOLCMP,CLASSREF` (repo's own
+  documented convention for this gate, per `Tools/Lint/README.md`'s example invocation and the
+  wave0804 gate-suite precedent's `--no-classname-index`): **0 findings** across 24 scanned files.
+  (Raw `--diff-from` with default flags surfaces one `CLASSREF` false-positive per terrain on
+  `WFBE_C_HINT_GATE_TIMEOUT` - a getVariable key name in a brand-new file, not a classname; the
+  README explicitly lists `--ignore BOOLCMP,CLASSREF` as this check's noisy-heuristic exclusion.)
+- `check_sqf.py --select BRACKET,A3CMD,A3PRIVATE,A3HASH,BAREEXIT,DBLBOM,TRAILCOMMA,NSSETVAR3,GROUPGETVAR
+  --no-classname-index` (full-file, not diff-restricted) on all 24 files: **0 findings**.
+- `pytest Tools/` (full suite): **993 passed, 3 failed, 2 skipped** - identical 3 failures
+  (`test_cargo_airdrop_stage_a`, `test_guer_airdef_threat_scan_reuse`, `test_veh_delete_probe`)
+  confirmed pre-existing on the clean base branch via `git stash` (base: 3 failed / 99 passed on
+  those same 13 files in isolation) - unrelated to this lane, not touched by this diff.
+  `test_town_capture_intel_visibility.py::test_jip_briefing_does_not_enumerate_enemy_town_ownership`
+  (the one pre-existing test that directly covers a file this lane edited,
+  `Client_JIPCatchupBriefing.sqf`'s fog-of-war contract) passes.
+- Mirror parity: all 8 touched/new files md5sum-identical across Chernarus/Takistan/Zargabad.
+
+**Next:** commit, push, open the draft PR.
+

@@ -42,9 +42,22 @@
 	set [count _arr,_v] to append (NO pushBack) / numeric-only comparisons and if/else
 	latches (NEVER == / != on booleans). No isEqualType / isEqualTo / params / pushBack /
 	findIf / selectRandom / apply / forEachIndex - none of those exist in OA 1.64.
+
+	--- TUTORIAL-PACING PASS (claude-gaming 2026-08-08) ---
+	Two changes, both scoped to this file only (never wired into the shared tutorial hint-slot
+	gate - this script only ever calls systemChat, never hint/hintSilent, so it cannot clobber
+	that surface and gating it would just add pointless latency to chat tips):
+	  - Session cap (WFBE_C_TIPS_SESSION_CAP, default 8): the feed used to run
+	    `while {true}` for the entire match. It now stops after this many VISIBLE tips.
+	  - Redraw on a gated-out draw: previously a draw landing on a currently-disabled feature
+	    tip silently burned the whole _period slot with nothing shown - real gaps of 30+
+	    minutes between visible tips were possible with 8/21 entries gated. It now redraws
+	    from the remaining deck immediately, bounded by the pool size itself (_n) so it always
+	    terminates and self-adapts if the pool grows/shrinks, giving up silently only if every
+	    remaining draw within that bound was gated. Cadence between VISIBLE tips is unchanged.
 */
 
-private ["_enable","_period","_initial","_tips","_gate","_flag","_gateValue","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok"];
+private ["_enable","_period","_initial","_cap","_shown","_tips","_gate","_flag","_gateValue","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok","_attempts"];
 
 //--- Master toggle (default ON). Registered in Common\Init\Init_CommonConstants.sqf (cmdcon42-q).
 _enable = missionNamespace getVariable ["WFBE_C_TIPS_ENABLE", 1];
@@ -58,6 +71,14 @@ if (typeName _period != "SCALAR") then {_period = 900};
 if (typeName _initial != "SCALAR") then {_initial = 420};
 if (_period < 30) then {_period = 30};       //--- floor so a mis-set param can't hammer the chat.
 if (_initial < 0) then {_initial = 0};
+
+//--- Session cap (tutorial-pacing pass): stop the feed after this many VISIBLE tips instead of
+//--- running unbounded for the whole match. Registered in Init_CommonConstants.sqf next to the
+//--- other WFBE_C_TIPS_* knobs above, matching their existing registration pattern.
+_cap = missionNamespace getVariable ["WFBE_C_TIPS_SESSION_CAP", 8];
+if (typeName _cap != "SCALAR") then {_cap = 8};
+if (_cap < 1) then {_cap = 1};        //--- floor so a mis-set param can't disable the feed outright (WFBE_C_TIPS_ENABLE is for that).
+_shown = 0;
 
 //--- Wait for a real, alive player before we start (covers a slow JIP spawn). Bounded so a
 //--- never-spawning edge case can never wedge this spawn. uiSleep is real-time.
@@ -122,60 +143,73 @@ if (_n <= 0) exitWith {};
 _deck = [];
 _last = -1;   //--- index of the last tip shown, so we never repeat back-to-back across a refill.
 
-while {true} do {
+while {_shown < _cap} do {
 
-	//--- (Re)fill the deck when empty: [0 .. _n-1].
-	if ((count _deck) <= 0) then {
-		_deck = [];
-		_i = 0;
-		while {_i < _n} do {
-			_deck set [count _deck, _i];
-			_i = _i + 1;
+	_ok = false;
+	_attempts = 0;
+
+	//--- Redraw on a gated-out draw instead of silently burning the whole _period slot (tutorial-
+	//--- pacing pass). Bounded by _n (the pool size), not a fixed retry count, so this always
+	//--- terminates and self-adapts if the pool grows/shrinks - comfortably above the current
+	//--- worst case of 8/21 entries gated.
+	while {!_ok && {_attempts < _n}} do {
+		_attempts = _attempts + 1;
+
+		//--- (Re)fill the deck when empty: [0 .. _n-1].
+		if ((count _deck) <= 0) then {
+			_deck = [];
+			_i = 0;
+			while {_i < _n} do {
+				_deck set [count _deck, _i];
+				_i = _i + 1;
+			};
+			//--- Guard against showing the same tip twice in a row at the refill boundary: if the
+			//--- only remaining card would repeat _last (n==1 edge or a freak deck), we still show it,
+			//--- but for n>1 we bias the first draw off _last below.
 		};
-		//--- Guard against showing the same tip twice in a row at the refill boundary: if the
-		//--- only remaining card would repeat _last (n==1 edge or a freak deck), we still show it,
-		//--- but for n>1 we bias the first draw off _last below.
-	};
 
-	//--- Draw a random index from the deck (floor random count - A2-OA-safe, NOT selectRandom).
-	_pick = floor (random (count _deck));
-	if (_pick >= (count _deck)) then {_pick = (count _deck) - 1};   //--- paranoia: random can graze the top.
-	_idx = _deck select _pick;
-
-	//--- Avoid an immediate repeat across a refill (only meaningful when more than one card is left).
-	if (_idx == _last && {(count _deck) > 1}) then {
-		_pick = _pick + 1;
-		if (_pick >= (count _deck)) then {_pick = 0};
+		//--- Draw a random index from the deck (floor random count - A2-OA-safe, NOT selectRandom).
+		_pick = floor (random (count _deck));
+		if (_pick >= (count _deck)) then {_pick = (count _deck) - 1};   //--- paranoia: random can graze the top.
 		_idx = _deck select _pick;
+
+		//--- Avoid an immediate repeat across a refill (only meaningful when more than one card is left).
+		if (_idx == _last && {(count _deck) > 1}) then {
+			_pick = _pick + 1;
+			if (_pick >= (count _deck)) then {_pick = 0};
+			_idx = _deck select _pick;
+		};
+
+		//--- Remove the drawn index from the deck (rebuild without _pick - no deleteAt reliance).
+		private ["_nd","_j"];
+		_nd = [];
+		_j = 0;
+		while {_j < (count _deck)} do {
+			if (_j != _pick) then {_nd set [count _nd, (_deck select _j)]};
+			_j = _j + 1;
+		};
+		_deck = _nd;
+
+		//--- Resolve + gate the chosen tip.
+		_pair = _tips select _idx;
+		_text = _pair select 0;
+		_flag = _pair select 1;
+
+		_ok = true;
+		if (typeName _flag == "STRING" && {_flag != ""}) then {
+			private ["_fval"];
+			_fval = missionNamespace getVariable [_flag, 0];
+			if (typeName _fval == "SCALAR" && {_fval < 1}) then {_ok = false};
+			if (typeName _fval == "BOOL" && {!_fval}) then {_ok = false};
+		};
 	};
 
-	//--- Remove the drawn index from the deck (rebuild without _pick - no deleteAt reliance).
-	private ["_nd","_j"];
-	_nd = [];
-	_j = 0;
-	while {_j < (count _deck)} do {
-		if (_j != _pick) then {_nd set [count _nd, (_deck select _j)]};
-		_j = _j + 1;
-	};
-	_deck = _nd;
-
-	//--- Resolve + gate the chosen tip.
-	_pair = _tips select _idx;
-	_text = _pair select 0;
-	_flag = _pair select 1;
-
-	_ok = true;
-	if (typeName _flag == "STRING" && {_flag != ""}) then {
-		private ["_fval"];
-		_fval = missionNamespace getVariable [_flag, 0];
-		if (typeName _fval == "SCALAR" && {_fval < 1}) then {_ok = false};
-		if (typeName _fval == "BOOL" && {!_fval}) then {_ok = false};
-	};
-
-	//--- Only a gated-out tip is skipped silently; an eligible tip is posted and counts as "last".
+	//--- Only counts toward the session cap when an eligible tip was actually found; a slot
+	//--- where every draw within the retry bound was gated is skipped silently, same as before.
 	if (_ok) then {
 		systemChat ("TIP: " + _text);
 		_last = _idx;
+		_shown = _shown + 1;
 	};
 
 	uiSleep _period;

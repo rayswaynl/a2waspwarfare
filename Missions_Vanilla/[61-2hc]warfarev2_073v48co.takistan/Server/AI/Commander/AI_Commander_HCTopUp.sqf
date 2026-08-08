@@ -187,6 +187,13 @@ if (isNull _picked) exitWith {};
 _team = _picked;
 _aliveNow = {alive _x} count (units _team);
 _want = (_sizeMin min (missionNamespace getVariable "WFBE_C_AI_MAX"));
+//--- FPS GOVERNOR (flag WFBE_C_FPS_GOVERNOR, default 0; fable/fps-governor): shrink the HC top-up
+//--- REQUEST size under FPS pressure - same intent as the Produce/Teams caps, at per-team top-up
+//--- granularity. Never drops below _floor (the eligibility gate above already required
+//--- _aliveNow < _floor to pick this team), so a governed-down top-up still meaningfully
+//--- reinforces; if scaling collapses _want to <= _aliveNow the shortfall gate below simply
+//--- skips this cycle's top-up rather than shrinking it to zero bodies.
+if ((missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR", 0]) > 0) then {_want = (round (_want * (missionNamespace getVariable ["WFBE_FpsGovMultiplier", 1]))) max _floor};
 _shortBy = _want - _aliveNow;
 if (_shortBy <= 0) exitWith {};
 //--- Common_RunCommanderTeam consumes at most four bodies, then clears the request.

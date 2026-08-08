@@ -10,6 +10,14 @@
 	starts never see it) + a one-shot uiNamespace latch (respawns never re-show it).
 	A2-OA-1.64 safe: hint parseText structured text (size/color/br only), 1-arg getVariable
 	on the GROUP receiver, no isEqualType/findIf/pushBack/selectRandom.
+
+	TUTORIAL-PACING PASS (claude-gaming 2026-08-08): WFBE_C_JIP_CATCHUP_DELAY is now only a
+	small courtesy pre-buffer (unchanged default), not the real anti-clobber mechanism - the
+	hint call below acquires the shared tutorial hint-slot gate (Client_HintGateAcquire.sqf /
+	WFBE_CL_VAR_HintSlotBusy) first, so this card genuinely waits for Common_Onboarding.sqf's
+	sequence to finish (if it is still running) instead of racing it on a fixed-delay guess.
+	Acquire happens AFTER every early-exit guard below, so a join that never shows this card
+	never holds the gate.
 */
 
 Private ["_enable","_delay","_minAge","_duration","_myID","_owned","_guer","_neutral","_townSide","_mins","_hours","_rem","_ageText","_intent","_aiObj","_aiFocus","_axis","_commander","_cmdTeam","_cmdLead","_msg","_sideColor","_sideName","_funds","_teamName","_upg","_tech"];
@@ -23,7 +31,9 @@ uiNamespace setVariable ["WFBE_JIP_CATCHUP_SHOWN", true];
 waitUntil {!isNil "clientInitComplete" && {clientInitComplete}};
 waitUntil {!isNil "townInit" && {townInit} && {!isNil "towns"}};
 
-//--- Delay past the JIP loading fade / onboarding cards before showing anything.
+//--- Small courtesy delay past the JIP loading fade before we even start evaluating whether to
+//--- show anything. The hint-slot gate acquired further below (not this delay) is what actually
+//--- prevents clobbering Common_Onboarding.sqf's cards - see header.
 _delay = missionNamespace getVariable ["WFBE_C_JIP_CATCHUP_DELAY", 16];
 if (_delay < 0) then {_delay = 0};
 uiSleep _delay;
@@ -116,11 +126,17 @@ _msg = _msg + Format ["<t color='#9aa7b0'>Tech   </t>%1 upgrades researched<br/>
 _msg = _msg + Format ["<t color='#9aa7b0'>Order  </t>%1<br/>", _intent];
 _msg = _msg + Format ["<t color='#9aa7b0'>CO     </t>%1<br/>", _commander];
 
+//--- Wait for the shared hint slot (Common_Onboarding.sqf holds it for its whole card sequence)
+//--- so this card plays immediately after onboarding finishes instead of clobbering it mid-dwell.
+[] call WFBE_CL_FNC_HintGateAcquire;
 hint parseText _msg;
 
 //--- Self-clear so the card never lingers into gameplay (0 = leave it to the engine hint fade).
+//--- Gate is released either way below, even when duration<=0 leaves the card up for the engine
+//--- fade - otherwise a 0-duration config would hold the gate forever.
 _duration = missionNamespace getVariable ["WFBE_C_JIP_CATCHUP_DURATION", 15];
 if (_duration > 0) then {
 	uiSleep _duration;
 	hintSilent "";
 };
+[] call WFBE_CL_FNC_HintGateRelease;

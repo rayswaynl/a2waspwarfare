@@ -9,6 +9,7 @@ runs in well under a second. Run with:
 
 from __future__ import annotations
 
+import re
 import shutil
 import struct
 import tempfile
@@ -18,6 +19,9 @@ from pathlib import Path
 import cprs
 import pack_pbo
 import read_pbo
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+MISSION_DIR = REPO_ROOT / "Missions" / "[55-2hc]warfarev2_073v48co.chernarus"
 
 
 def make_mission(root: Path, extra_files: dict[str, bytes] | None = None) -> Path:
@@ -530,6 +534,304 @@ class PackPboCompressionTests(unittest.TestCase):
         buf[corrupt_at] ^= 0xFF
         with self.assertRaises(pack_pbo.PackError):
             pack_pbo.self_check(bytes(buf), expected_entry_count=len(parsed["entries"]))
+
+
+# --- Independent reference implementation, for cross-validation only ------
+# Deliberately NOT sharing any code with pack_pbo.strip_sqf_comments() - a
+# regex-token-scan plus a separate line-oriented directive mask, instead of
+# that function's single-pass character state machine. Used only to prove
+# (test_strip_matches_independent_reference_on_real_corpus) that two
+# independently-written implementations agree byte-for-byte on every real
+# .sqf file in the repo - the "second independent method" cross-check.
+_REFERENCE_TOKEN_RE = re.compile(
+    r'"(?:[^"]|"")*"'  # double-quoted string, doubled-quote escape
+    r"|'(?:[^']|'')*'"  # single-quoted string, doubled-quote escape
+    r"|//[^\n]*"  # line comment
+    r"|/\*.*?\*/",  # block comment (non-greedy, DOTALL below spans lines)
+    re.DOTALL,
+)
+
+
+def _reference_directive_mask(text: str) -> list[bool]:
+    """True for every character that belongs to a preprocessor directive
+    line (or one of its backslash-continuation lines). Independent
+    line-oriented pass - no shared code with pack_pbo.strip_sqf_comments()."""
+    n = len(text)
+    protected = [False] * n
+    pos = 0
+    in_directive = False
+    for line in text.splitlines(keepends=True):
+        start = pos
+        pos += len(line)
+        if line.lstrip(" \t").startswith("#"):
+            in_directive = True
+        if in_directive:
+            for k in range(start, pos):
+                protected[k] = True
+            in_directive = line.rstrip("\r\n").endswith("\\")
+        else:
+            in_directive = False
+    return protected
+
+
+def reference_strip_sqf_comments(text: str) -> str:
+    protected = _reference_directive_mask(text)
+    out = list(text)
+    for m in _REFERENCE_TOKEN_RE.finditer(text):
+        s, e = m.span()
+        if protected[s]:
+            continue  # starts inside a directive line - untouched
+        token = m.group(0)
+        if token[0] in "\"'":
+            continue  # string literal - untouched
+        for k in range(s, e):
+            # Keep the full CRLF pair, not just '\n' - dropping '\r' would
+            # turn a CRLF-encoded comment line into a bare-LF line, mixing
+            # line-ending styles within an otherwise-CRLF file.
+            if text[k] not in ("\n", "\r"):
+                out[k] = ""
+    return "".join(out)
+
+
+def _collect_mission_sqf_files() -> list[Path]:
+    if not MISSION_DIR.is_dir():
+        return []
+    return sorted(MISSION_DIR.rglob("*.sqf"))
+
+
+class SqfCommentStripTests(unittest.TestCase):
+    """Direct unit tests of pack_pbo.strip_sqf_comments() against the
+    adversarial cases called out in the task spec, plus real-corpus proofs."""
+
+    def test_line_comment_stripped_newline_kept(self) -> None:
+        self.assertEqual(
+            pack_pbo.strip_sqf_comments("x = 1; // real comment\ny = 2;\n"),
+            "x = 1; \ny = 2;\n",
+        )
+
+    def test_block_comment_spanning_lines_stripped_newlines_kept(self) -> None:
+        src = "x = 1;\n/* block\ncomment\nspans */\ny = 2;\n"
+        out = pack_pbo.strip_sqf_comments(src)
+        self.assertEqual(out, "x = 1;\n\n\n\ny = 2;\n")
+        self.assertEqual(out.count("\n"), src.count("\n"))
+
+    def test_double_quoted_string_with_slash_slash_untouched(self) -> None:
+        src = 'hint "http://example.com not a comment";\n'
+        self.assertEqual(pack_pbo.strip_sqf_comments(src), src)
+
+    def test_single_quoted_string_with_slash_slash_untouched(self) -> None:
+        src = "hint 'http://example.com not a comment';\n"
+        self.assertEqual(pack_pbo.strip_sqf_comments(src), src)
+
+    def test_string_containing_block_comment_markers_untouched(self) -> None:
+        src = 'hint "/* not a block comment */ end";\nreal = 1; // trailing\n'
+        self.assertEqual(
+            pack_pbo.strip_sqf_comments(src),
+            'hint "/* not a block comment */ end";\nreal = 1; \n',
+        )
+
+    def test_doubled_double_quote_escape_preserved(self) -> None:
+        # "" inside a "..." string is a literal quote, not a terminator -
+        # the trailing // must stay recognized as string content, not code.
+        src = 'hint "she said ""hi"" // not a comment";\ny = 2; // real\n'
+        self.assertEqual(
+            pack_pbo.strip_sqf_comments(src),
+            'hint "she said ""hi"" // not a comment";\ny = 2; \n',
+        )
+
+    def test_doubled_single_quote_escape_preserved(self) -> None:
+        src = "hint 'it''s // not a comment';\ny = 2; // real\n"
+        self.assertEqual(
+            pack_pbo.strip_sqf_comments(src),
+            "hint 'it''s // not a comment';\ny = 2; \n",
+        )
+
+    def test_define_continuation_passes_through_untouched(self) -> None:
+        src = (
+            '#define FOO(X) \\\n'
+            '  systemChat "X = " + str X; // inside macro, must survive\n'
+            "Y = 1; // real comment after\n"
+        )
+        out = pack_pbo.strip_sqf_comments(src)
+        # the whole directive (both physical lines) is byte-identical...
+        self.assertTrue(out.startswith(
+            '#define FOO(X) \\\n'
+            '  systemChat "X = " + str X; // inside macro, must survive\n'
+        ))
+        # ...while the following real code line's comment IS stripped.
+        self.assertEqual(out.splitlines(keepends=True)[-1], "Y = 1; \n")
+
+    def test_include_line_untouched_including_its_own_comment(self) -> None:
+        src = '#include "myFile.hpp" // include comment\nZ = 3; // real\n'
+        out = pack_pbo.strip_sqf_comments(src)
+        self.assertEqual(
+            out, '#include "myFile.hpp" // include comment\nZ = 3; \n'
+        )
+
+    def test_crlf_line_endings_preserved(self) -> None:
+        src = "x = 1; // c\r\ny = 2;\r\n"
+        out = pack_pbo.strip_sqf_comments(src)
+        self.assertEqual(out, "x = 1; \r\ny = 2;\r\n")
+        self.assertEqual(out.count("\n"), src.count("\n"))
+
+    def test_unterminated_block_comment_does_not_crash(self) -> None:
+        src = "x = 1;\n/* never closed\nsecond line\n"
+        out = pack_pbo.strip_sqf_comments(src)
+        self.assertEqual(out.count("\n"), src.count("\n"))
+
+    def test_strip_preserves_line_count_on_real_corpus(self) -> None:
+        files = _collect_mission_sqf_files()
+        self.assertGreater(
+            len(files), 0, f"no .sqf files found under {MISSION_DIR} - mission tree missing"
+        )
+        failures = []
+        for path in files:
+            text = path.read_bytes().decode("latin-1")
+            out = pack_pbo.strip_sqf_comments(text)
+            if out.count("\n") != text.count("\n"):
+                failures.append(str(path))
+        if failures:
+            self.fail(
+                f"{len(failures)}/{len(files)} real .sqf files changed line "
+                f"count after stripping:\n" + "\n".join(failures[:20])
+            )
+        print(f"\nstrip-comments line-count invariant: {len(files)}/{len(files)} real .sqf files OK.")
+
+    def test_strip_matches_independent_reference_on_real_corpus(self) -> None:
+        """Behavioral-identity check: pack_pbo.strip_sqf_comments() (the
+        production char-state-machine) must agree byte-for-byte with
+        reference_strip_sqf_comments() (an independently-written regex-token
+        implementation above) on every real .sqf file in the repo."""
+        files = _collect_mission_sqf_files()
+        self.assertGreater(
+            len(files), 0, f"no .sqf files found under {MISSION_DIR} - mission tree missing"
+        )
+        mismatches = []
+        saved_total = 0
+        original_total = 0
+        for path in files:
+            text = path.read_bytes().decode("latin-1")
+            prod = pack_pbo.strip_sqf_comments(text)
+            ref = reference_strip_sqf_comments(text)
+            original_total += len(text.encode("latin-1"))
+            saved_total += len(text.encode("latin-1")) - len(prod.encode("latin-1"))
+            if prod != ref:
+                mismatches.append(str(path))
+        if mismatches:
+            self.fail(
+                f"{len(mismatches)}/{len(files)} real .sqf files disagree between "
+                f"the production stripper and the independent reference "
+                f"implementation:\n" + "\n".join(mismatches[:20])
+            )
+        pct = (saved_total / original_total * 100) if original_total else 0.0
+        print(
+            f"\nstrip-comments cross-check: {len(files)}/{len(files)} real .sqf files "
+            f"byte-identical between implementations. {original_total:,} -> "
+            f"{original_total - saved_total:,} bytes ({saved_total:,} saved, {pct:.1f}%)."
+        )
+
+
+class PackPboCommentStripIntegrationTests(unittest.TestCase):
+    """--strip-comments end-to-end: default-off byte-identity, and the
+    opt-in path producing a smaller, still-valid, still-checksum-correct PBO."""
+
+    def test_strip_comments_false_is_byte_identical_to_omitting_the_flag(self) -> None:
+        commented_sqf = b"x = 1; // a real comment\r\ny = 2;\r\n"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(
+                root,
+                extra_files={
+                    "version.sqf": b"#define WF_MISSIONNAME \"x\"\n",
+                    "common\\functions\\common_commented.sqf": commented_sqf,
+                },
+            )
+            files = pack_pbo.collect_files(mission)
+            files.sort(key=lambda x: x[0])
+            prefix = pack_pbo.derive_prefix(mission.name, None)
+            default_bytes = pack_pbo.build_pbo_bytes(files, prefix)
+            explicit_false_bytes = pack_pbo.build_pbo_bytes(files, prefix, compress=False)
+            self.assertEqual(default_bytes, explicit_false_bytes)
+
+    def test_strip_comments_true_shrinks_output_and_stays_valid(self) -> None:
+        commented_sqf = (
+            b"// header comment\r\n"
+            b"x = 1; // trailing comment\r\n"
+            b"/* a block\r\n   comment */\r\n"
+            b"hint \"keep // this literal\";\r\n"
+        ) * 20  # big enough to make the saving unambiguous
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(
+                root,
+                extra_files={
+                    "version.sqf": b"#define WF_MISSIONNAME \"x\"\n",
+                    "common\\functions\\common_commented.sqf": commented_sqf,
+                },
+            )
+            out_plain = root / "plain.pbo"
+            out_stripped = root / "stripped.pbo"
+            pack_pbo.pack(
+                source=mission, output=out_plain, prefix=None, build_tag=None,
+                allow_debug=False, strict_version=True, force=False, quiet=True,
+                strip_comments=False,
+            )
+            pack_pbo.pack(
+                source=mission, output=out_stripped, prefix=None, build_tag=None,
+                allow_debug=False, strict_version=True, force=False, quiet=True,
+                strip_comments=True,
+            )
+            self.assertLess(out_stripped.stat().st_size, out_plain.stat().st_size)
+
+            buf = out_stripped.read_bytes()
+            properties, entries, data_start, data_end, trailer = read_pbo.parse_pbo(buf)
+            self.assertTrue(read_pbo.verify_checksum(buf, data_end, trailer))
+            data, notes = read_pbo.extract_entry_data(buf, entries, data_start)
+            self.assertEqual(notes, [])
+
+            stripped_entry = data["common\\functions\\common_commented.sqf"]
+            expected = pack_pbo.strip_sqf_comments(
+                commented_sqf.decode("latin-1")
+            ).encode("latin-1")
+            self.assertEqual(stripped_entry, expected)
+            # Line count must still match the original source line count.
+            self.assertEqual(
+                stripped_entry.count(b"\n"), commented_sqf.count(b"\n")
+            )
+            # mission.sqm (not .sqf) must be untouched.
+            self.assertEqual(data["mission.sqm"], (mission / "mission.sqm").read_bytes())
+
+    def test_strip_comments_never_desyncs_line_count_across_real_corpus_pack(self) -> None:
+        """Pack the real Chernarus mission with --strip-comments and confirm
+        every packed .sqf entry has the same line count as its source file -
+        the pack-time belt-and-suspenders check (strip_comment_entries'
+        internal PackError guard) exercised end-to-end, not just unit-tested."""
+        if not MISSION_DIR.is_dir():
+            self.skipTest(f"real mission tree not present: {MISSION_DIR}")
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "ch_stripped.pbo"
+            pack_pbo.pack(
+                source=MISSION_DIR, output=out, prefix=None, build_tag="commentstrip-test",
+                allow_debug=False, strict_version=False, force=True, quiet=True,
+                strip_comments=True,
+            )
+            buf = out.read_bytes()
+            properties, entries, data_start, data_end, trailer = read_pbo.parse_pbo(buf)
+            self.assertTrue(read_pbo.verify_checksum(buf, data_end, trailer))
+            data, notes = read_pbo.extract_entry_data(buf, entries, data_start)
+            checked = 0
+            for f in MISSION_DIR.rglob("*.sqf"):
+                rel = str(f.relative_to(MISSION_DIR)).replace("/", "\\").lower()
+                if rel not in data:
+                    continue
+                src_lines = f.read_bytes().count(b"\n")
+                packed_lines = data[rel].count(b"\n")
+                self.assertEqual(
+                    packed_lines, src_lines, f"{rel}: line count changed in packed PBO"
+                )
+                checked += 1
+            self.assertGreater(checked, 0)
+            print(f"\nreal-corpus pack line-count check: {checked} .sqf entries OK.")
 
 
 if __name__ == "__main__":

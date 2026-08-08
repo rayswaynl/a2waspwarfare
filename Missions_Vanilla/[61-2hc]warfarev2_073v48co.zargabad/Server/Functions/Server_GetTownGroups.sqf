@@ -220,6 +220,17 @@ if ((_side == west || {_side == east}) && {!_aa_get} && {(missionNamespace getVa
 };
 
 
+//--- FPS GOVERNOR (flag WFBE_C_FPS_GOVERNOR, default 0; fable/fps-governor): scale the planned
+//--- garrison group count by the live-FPS budget multiplier, AFTER the CTL strength overlay above
+//--- (same integration point CTL uses, so the two overlays compose for WEST/EAST instead of
+//--- racing). Runs for EVERY side (WEST/EAST/GUER alike - this planner is the single town-garrison
+//--- choke point all three route through), unlike the CTL block which is WEST/EAST-only. Floor-
+//--- protected so a contested town is never planned empty purely from FPS governance.
+if ((missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR", 0]) > 0) then {
+	_groups_max = round (_groups_max * (missionNamespace getVariable ["WFBE_FpsGovMultiplier", 1]));
+	if (_groups_max < (missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR_TOWNS_FLOOR", 1])) then {_groups_max = missionNamespace getVariable ["WFBE_C_FPS_GOVERNOR_TOWNS_FLOOR", 1]};
+};
+
 if (_aa_get) then {if (_groups_max > 3) then {_groups_max = 3}};
 
 _unit_infantry = [];
