@@ -303,6 +303,37 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 	_fpsAcc = missionNamespace getVariable ["wfbe_fpsmin_acc", -1];
 	if (_fpsAcc < 0 || {_fpsNow < _fpsAcc}) then { missionNamespace setVariable ["wfbe_fpsmin_acc", _fpsNow] };
 
+	//--- FPS-DOWNSCALE sustained-low latch (diagnosis wasp-waspscale-poptier-fps-gap-20260808): behind
+	//--- WFBE_C_FPS_DOWNSCALE (default 0, byte-identical when off). Reuses this same per-tick sample
+	//--- plus a fresh (<=120s) min across WFBE_HCFPS_REG (mirrors the emitter's own hc_fps fold at
+	//--- :1311). Latches WFBE_FpsThrottleActive once BOTH floors are breached for
+	//--- WFBE_C_FPS_DOWNSCALE_SUSTAIN_S continuous seconds; clears the instant either floor recovers.
+	if ((missionNamespace getVariable ["WFBE_C_FPS_DOWNSCALE", 0]) > 0) then {
+		private ["_fdFloor","_fdHcFloor","_fdHcMin","_fdHcReg","_fdSince","_fdSustain","_fdBad"];
+		_fdFloor = missionNamespace getVariable ["WFBE_C_FPS_DOWNSCALE_FLOOR", 20];
+		_fdHcFloor = missionNamespace getVariable ["WFBE_C_FPS_DOWNSCALE_HC_FLOOR", 20];
+		_fdHcMin = -1; _fdHcReg = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
+		{ if ((typeName _x) == "ARRAY" && {(count _x) >= 3} && {(typeName (_x select 1)) == "SCALAR"} && {(typeName (_x select 2)) == "SCALAR"} && {((time - (_x select 2)) <= 120)}) then { if ((_fdHcMin < 0) || {(_x select 1) < _fdHcMin}) then {_fdHcMin = _x select 1} } } forEach _fdHcReg;
+		_fdBad = (_fpsNow <= _fdFloor) && {(_fdHcMin < 0) || {_fdHcMin <= _fdHcFloor}};
+		if (_fdBad) then {
+			_fdSince = missionNamespace getVariable ["wfbe_fpsdownscale_since", -1];
+			if (_fdSince < 0) then { missionNamespace setVariable ["wfbe_fpsdownscale_since", time]; _fdSince = time };
+			_fdSustain = missionNamespace getVariable ["WFBE_C_FPS_DOWNSCALE_SUSTAIN_S", 120];
+			if ((time - _fdSince) >= _fdSustain) then {
+				if (!(missionNamespace getVariable ["WFBE_FpsThrottleActive", false])) then {
+					WFBE_FpsThrottleActive = true;
+					diag_log format ["[FPSDOWNSCALE] latched srvFps=%1 hcFpsMin=%2 sustainS=%3", _fpsNow, _fdHcMin, (time - _fdSince)];
+				};
+			};
+		} else {
+			missionNamespace setVariable ["wfbe_fpsdownscale_since", -1];
+			if (missionNamespace getVariable ["WFBE_FpsThrottleActive", false]) then {
+				WFBE_FpsThrottleActive = false;
+				diag_log format ["[FPSDOWNSCALE] cleared srvFps=%1 hcFpsMin=%2", _fpsNow, _fdHcMin];
+			};
+		};
+	};
+
 	_active = false;
 	if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0) then { //--- FIX7 (Ray): defaulted [..,0] - the bare single-arg getVariable threw if nil at an early-boot race.
 		if (alive ((_side) Call WFBE_CO_FNC_GetSideHQ)) then {_active = true};
