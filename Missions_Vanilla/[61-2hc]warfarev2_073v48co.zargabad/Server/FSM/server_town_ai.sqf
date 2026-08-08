@@ -772,9 +772,25 @@ while {!WFBE_GameOver} do {
 							};
 							case 2: { //--- Headless Client delegation.
 								//--- Keep this preflight identical to Server_DelegateAITownHeadless: an alive leader
-								//--- with owner 0 is a disconnected/locality-transferred zombie, so preserve the
-								//--- existing server CreateTownUnits fallback instead of dispatching a dropped wave.
-								_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+								//--- with owner 0 is a disconnected/locality-transferred zombie, and a positive owner
+								//--- without a fresh HCSTAT is a retained dead channel. Preserve the existing server
+								//--- CreateTownUnits fallback instead of dispatching a dropped wave.
+								private ["_fpsReg","_hcKey","_fidx","_slot","_fresh"];
+								_liveHCs = 0;
+								_fpsReg = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
+								{
+									_fresh = false;
+									if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {
+										_hcKey = Format ["HC-%1", netId (leader _x)];
+										_fidx = -1;
+										{ if ((_x select 0) == _hcKey) exitWith {_fidx = _forEachIndex} } forEach _fpsReg;
+										if (_fidx >= 0) then {
+											_slot = _fpsReg select _fidx;
+											if ((time - (_slot select 2)) <= 150) then {_fresh = true};
+										};
+									};
+									if (_fresh) then {_liveHCs = _liveHCs + 1};
+								} forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 								if (_liveHCs > 0) then {
 									//--- DESPAWN-BUDGET INTEGRITY: free server-side empty shells before HC dispatch.
 									//--- Client_DelegateTownAI.sqf recreates a LOCAL group when the received team is
