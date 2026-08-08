@@ -113,8 +113,8 @@ while {!gameOver} do {
 			//--- water would let the engine drown the bot (or the just-joined player) at the pen.
 			if (_penParked && {(count _penPos) > 1}) then {_leader setPos [_penPos select 0, _penPos select 1, 0]};
 			//--- m0801h6 (Codex audit): hand the stored loadout back before the player takes the body.
-			{_leader addMagazine _x} forEach (_leader getVariable ["wfbe_penMagazines", []]);
 			{_leader addWeapon _x} forEach (_leader getVariable ["wfbe_penWeapons", []]);
+			{_leader addMagazine _x} forEach (_leader getVariable ["wfbe_penMagazines", []]);
 			if ((primaryWeapon _leader) != "") then {_leader selectWeapon (primaryWeapon _leader)};
 			_leader setVariable ["wfbe_penWeapons", []];
 			_leader setVariable ["wfbe_penMagazines", []];
@@ -128,8 +128,8 @@ while {!gameOver} do {
 	//--- re-equips when a side loadout table exists, so this restore decides the no-table case (and
 	//--- the null-respawnLoc route further down must never move an unarmed unit out of the hold).
 	if (_deadspawnGuardApplied && {alive _leader}) then {
-		{_leader addMagazine _x} forEach (_leader getVariable ["wfbe_penMagazines", []]);
 		{_leader addWeapon _x} forEach (_leader getVariable ["wfbe_penWeapons", []]);
+		{_leader addMagazine _x} forEach (_leader getVariable ["wfbe_penMagazines", []]);
 		if ((primaryWeapon _leader) != "") then {_leader selectWeapon (primaryWeapon _leader)};
 		_leader setVariable ["wfbe_penWeapons", []];
 		_leader setVariable ["wfbe_penMagazines", []];

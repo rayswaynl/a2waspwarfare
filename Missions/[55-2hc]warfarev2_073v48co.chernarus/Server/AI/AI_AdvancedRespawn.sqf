@@ -124,8 +124,8 @@ if (_skip && _deadspawnGuardApplied && {alive _respawnedUnit}) then {
 	//--- water would let the engine drown the bot (or the just-joined player) at the pen.
 	if (_penParked && {(count _penPos) > 1}) then {_respawnedUnit setPos [_penPos select 0, _penPos select 1, 0]};
 	//--- m0801h6 (Codex audit): hand the stored loadout back before the player takes the body.
-	{_respawnedUnit addMagazine _x} forEach (_respawnedUnit getVariable ["wfbe_penMagazines", []]);
 	{_respawnedUnit addWeapon _x} forEach (_respawnedUnit getVariable ["wfbe_penWeapons", []]);
+	{_respawnedUnit addMagazine _x} forEach (_respawnedUnit getVariable ["wfbe_penMagazines", []]);
 	if ((primaryWeapon _respawnedUnit) != "") then {_respawnedUnit selectWeapon (primaryWeapon _respawnedUnit)};
 	_respawnedUnit setVariable ["wfbe_penWeapons", []];
 	_respawnedUnit setVariable ["wfbe_penMagazines", []];
@@ -140,8 +140,8 @@ if !(_skip) then {
 	//--- re-equips when a side loadout table exists, so this restore decides the no-table case (and
 	//--- the null-respawnLoc route further down must never move an unarmed unit out of the hold).
 	if (_deadspawnGuardApplied && {alive _respawnedUnit}) then {
-		{_respawnedUnit addMagazine _x} forEach (_respawnedUnit getVariable ["wfbe_penMagazines", []]);
 		{_respawnedUnit addWeapon _x} forEach (_respawnedUnit getVariable ["wfbe_penWeapons", []]);
+		{_respawnedUnit addMagazine _x} forEach (_respawnedUnit getVariable ["wfbe_penMagazines", []]);
 		if ((primaryWeapon _respawnedUnit) != "") then {_respawnedUnit selectWeapon (primaryWeapon _respawnedUnit)};
 		_respawnedUnit setVariable ["wfbe_penWeapons", []];
 		_respawnedUnit setVariable ["wfbe_penMagazines", []];
