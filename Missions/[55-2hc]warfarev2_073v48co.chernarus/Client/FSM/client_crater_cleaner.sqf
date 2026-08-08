@@ -47,6 +47,6 @@ while {!gameOver} do {
 					};
 				};
 			};
-		} forEach ((nearestObjects [getPos player, ["CraterLong"], _radius]) + (nearestObjects [getPos player, ["CraterLong_small"], _radius]));
+		} forEach (nearestObjects [getPos player, ["CraterLong", "CraterLong_small"], _radius]);
 	};
 };
