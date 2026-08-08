@@ -35,7 +35,7 @@ class FpsGovernorTests(unittest.TestCase):
         for name, mission in MISSIONS.items():
             with self.subTest(mission=name):
                 constants = code(mission, "Common/Init/Init_CommonConstants.sqf")
-                self.assertIn('if (isNil "WFBE_C_FPS_GOVERNOR") then {WFBE_C_FPS_GOVERNOR = 0};', constants)
+                self.assertIn('if (isNil "WFBE_C_FPS_GOVERNOR") then {WFBE_C_FPS_GOVERNOR = 1};', constants)
                 self.assertIn('if (isNil "WFBE_FpsGovMultiplier") then {WFBE_FpsGovMultiplier = 1};', constants)
 
     def test_governor_script_exists_and_the_flag_gate_is_the_first_statement(self) -> None:
