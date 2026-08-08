@@ -1,12 +1,13 @@
 //--- Auto Check the ai upgrade path for missing links.
 
-Private ["_add","_enabled","_levels","_missing","_orders","_values"];
+Private ["_add","_enabled","_levels","_missing","_orders","_researchGapFix","_values"];
 
 _side = _this;
 
 _enabled = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_ENABLED", _side];
 _orders = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_AI_ORDER", _side];
 _levels = missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", _side];
+_researchGapFix = (missionNamespace getVariable ["WFBE_C_AICOM_RESEARCH_GAP_FIX", 0]) > 0;
 
 _values = [];
 for '_i' from 0 to count(_levels)-1 do {
@@ -29,7 +30,12 @@ for '_i' from 0 to count(_values)-1 do {
 		
 		for '_j' from 1 to _level do {
 			if !(_j in _found) then {
-				[_add, [_i, _j]] Call WFBE_CO_FNC_ArrayPush;
+				//--- Keep the legacy AI_ORDER path free of the opt-in UnitCost/AmmoCoin research gap.
+				//--- CO upgrade configs insert these entries explicitly when the flag is armed; without
+				//--- this guard the generic completion pass silently appended them at the tail anyway.
+				if (_researchGapFix || {!(_i in [WFBE_UP_UNITCOST, WFBE_UP_AMMOCOIN])}) then {
+					[_add, [_i, _j]] Call WFBE_CO_FNC_ArrayPush;
+				};
 			};
 		};
 	};
