@@ -404,18 +404,20 @@ for "_rtIdx" from 0 to ((count _nearRepairTrucks) - 1) do {
 	if (alive (_nearRepairTrucks select _rtIdx)) then {_checks set [count _checks, _nearRepairTrucks select _rtIdx]};
 };
 if (count _checks > 0) then {
-	_repair = _checks select 0;
-	_vehi = ((getPos _repair) nearEntities[["Car","Motorcycle","Tank","Air","Ship","StaticWeapon"],100]) - [_repair];
 	{
-		if (!(_x in _effective) && {side _x in [sideJoined, civilian]} && {local _x}) then {
-			_effective = _effective + [_x];
-			_nearSupport set [_i,[_repair]];
-			_descVehi = [typeOf (vehicle _x), 'displayName'] Call GetConfigInfo;
-			lbAdd[20002,_descVehi];
+		_repair = _x;
+		_vehi = ((getPos _repair) nearEntities[["Car","Motorcycle","Tank","Air","Ship","StaticWeapon"],100]) - [_repair];
+		{
+			if (!(_x in _effective) && {side _x in [sideJoined, civilian]} && {local _x}) then {
+				_effective = _effective + [_x];
+				_nearSupport set [_i,[_repair]];
+				_descVehi = [typeOf (vehicle _x), 'displayName'] Call GetConfigInfo;
+				lbAdd[20002,_descVehi];
 
-			_i = _i + 1;
-		};
-	} forEach _vehi;
+				_i = _i + 1;
+			};
+		} forEach _vehi;
+	} forEach _checks;
 };
 
 if (count _effective > 0) then {lbSetCurSel[20002,0]};

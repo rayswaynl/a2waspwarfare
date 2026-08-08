@@ -54,6 +54,17 @@ def test_repair_truck_queries_exclude_destroyed_supports() -> None:
     )
 
 
+def test_nearby_service_expands_from_every_repair_truck() -> None:
+    text = SERVICE_MENU.read_text(encoding="utf-8-sig")
+    assert "_repair = _checks select 0;" not in text, (
+        "nearEntities is unsorted: selecting one repair truck can omit vehicles "
+        "that are serviceable only from another nearby repair truck"
+    )
+    assert "} forEach _checks;" in text, (
+        "nearby service expansion must examine every alive repair truck in range"
+    )
+
+
 def test_airlift_hook_blocks_only_living_crew() -> None:
     text = ZETA_HOOK.read_text(encoding="utf-8-sig")
     assert "if ({alive _x} count crew _vehicle > 0) exitWith" in text, (
