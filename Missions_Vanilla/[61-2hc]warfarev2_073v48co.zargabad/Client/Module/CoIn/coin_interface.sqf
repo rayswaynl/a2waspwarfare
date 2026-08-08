@@ -627,6 +627,18 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 				_preview = _itemclass_preview createVehicleLocal (screenToWorld [0.5,0.5]);
 				//--- FAIL-CLEAN r44: guard create null BEFORE setDir/camSetTarget/helper (late isnull ran after mutators)
+				//--- fable/placement-preview-fix (owner 2026-08-08 "LoS Screen has NO preview at all"):
+				//--- if a WFBE_ANCHOR_PREVIEW_MAP override classname fails to spawn, retry ONCE with the
+				//--- raw anchor classname (_itemclass) before giving up. The anchor itself is always a
+				//--- proven, placeable prop (every WDDM anchor previewed as itself before
+				//--- WFBE_C_DEF_PREVIEW_MAP existed), so this guarantees the player sees SOME ghost
+				//--- instead of none if a representative classname ever turns out to be unspawnable.
+				//--- Only fires when an override actually changed the classname.
+				if (isNull _preview && {_itemclass_preview != _itemclass}) then {
+					diag_log Format ["COINPLACE|v1|preview-override-fallback|failed=%1|itemclass=%2", _itemclass_preview, _itemclass];
+					_itemclass_preview = _itemclass;
+					_preview = _itemclass_preview createVehicleLocal (screenToWorld [0.5,0.5]);
+				};
 				if (isNull _preview) then {
 					["WARNING", Format ["coin_interface.sqf: preview class [%1] createVehicleLocal failed.", _itemclass_preview]] Call WFBE_CO_FNC_LogContent;
 					//--- fable/coin-placement-fixes (owner live report 2026-07-28 "some things dont even show a preview"):
