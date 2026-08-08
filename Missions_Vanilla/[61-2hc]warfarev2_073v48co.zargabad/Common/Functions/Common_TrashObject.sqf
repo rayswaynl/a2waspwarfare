@@ -148,7 +148,13 @@ if (true) then {
 		//--- exponential collector cooldown (cleanup delay floored at 60s, then doubled up to
 		//--- a 900s cap) so one dead remote object cannot generate a one-minute dispatch storm.
 		//--- The normal worker sleep remains after the cooldown, preserving cleanup grace.
+		//--- null-object race guard (HANDOVER-20260808 minor sig: RPT 'Undefined variable _remoteattempt'):
+		//--- statement boundaries in a scheduled script (this runs via spawn) are preemptable, so an
+		//--- HC-side delete landing between the locality check above and this retry bookkeeping can
+		//--- hand _object a null receiver. Bail before touching it further.
+		if (isNull _object) exitWith {};
 		_remoteAttempt = (_object getVariable ["wfbe_trash_remote_attempts", 0]) + 1;
+		if (isNil "_remoteAttempt") exitWith {};
 		_remoteBackoff = ((_delay max 60) * (2 ^ ((_remoteAttempt - 1) min 4)));
 		if (_remoteBackoff > 900) then {_remoteBackoff = 900};
 		_object setVariable ["wfbe_trash_remote_attempts", _remoteAttempt];
