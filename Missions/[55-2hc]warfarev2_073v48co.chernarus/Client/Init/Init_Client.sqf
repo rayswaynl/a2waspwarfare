@@ -686,6 +686,8 @@ missionNamespace setVariable ["WFBE_C_ENVIRONMENT_WEATHER_VOLUMETRIC", 0];
 sideID = sideJoined Call GetSideID;
 clientTeam = group player;
 clientTeams = missionNamespace getVariable [Format['WFBE_%1TEAMS',sideJoinedText], []]; //--- B74.2.5: default [] not nil. For a broken-JIP client WFBE_%1TEAMS is unset; the ungated vote-tally `forEach WFBE_Client_Teams` (GUI_VoteMenu) + the own-marker `forEach clientTeams` would `forEach nil` = THROW in A2-OA (count nil is 0 and safe, but forEach nil is not). [] makes them safe 0-iteration no-ops and still triggers the primitive-roster path (count 0). The two isNil "clientTeams" readers are diagnostics only.
+WFBE_CL_FNC_SetGroupsID = Compile preprocessFile "Client\Functions\Client_SetGroupsID.sqf";
+[] Call WFBE_CL_FNC_SetGroupsID;
 //--- B74.2.3 TELEMETRY: raw diag_log of the client's own-side team list AT INIT (the source of the no-cash/
 //--- no-vote cascade when it is empty). Pairs with the server TEAMREG log + the HEAL log below.
 diag_log format ["CLIENTTEAMS|atInit|side=%1|count=%2|isNil=%3", sideJoinedText, count (if (isNil "clientTeams") then {[]} else {clientTeams}), (isNil "clientTeams")];
@@ -991,6 +993,7 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 				missionNamespace setVariable [Format ["WFBE_%1TEAMS", _sideText], _teams];
 				WFBE_Client_Teams = _teams;
 				clientTeams = _teams;
+				[] Call WFBE_CL_FNC_SetGroupsID;
 				WFBE_Client_Teams_Count = count _teams;
 				_didTeams = true;
 				["INITIALIZATION", Format ["Init_Client.sqf: B62 reconciliation populated own-side teams (count %1) after JIP slow-sync.", count _teams]] Call WFBE_CO_FNC_LogContent;
@@ -1137,6 +1140,7 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 				missionNamespace setVariable [Format ["WFBE_%1TEAMS", _sideText], _teams];
 				WFBE_Client_Teams = _teams;
 				clientTeams = _teams;
+				[] Call WFBE_CL_FNC_SetGroupsID;
 				WFBE_Client_Teams_Count = count _teams;
 				_done = true;
 				diag_log format ["CLIENTTEAMS|EARLYHEAL|side=%1|count=%2|at=%3s", _sideText, count _teams, round time];
@@ -1607,9 +1611,6 @@ player Call WFBE_CL_FNC_AddPlayerAIActions;
 
 /* Zeta Cargo Lifter. */
 [] Call Compile preprocessFile "Client\Module\ZetaCargo\Zeta_Init.sqf";
-/* Set Groups ID. */
-[] Call Compile preprocessFile "Client\Functions\Client_SetGroupsID.sqf";
-
 waitUntil {!isNull group player};
 
 //--- Make sure that player is always the leader.
