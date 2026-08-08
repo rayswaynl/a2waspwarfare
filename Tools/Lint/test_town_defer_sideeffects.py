@@ -86,6 +86,42 @@ def test_group_creation_does_not_clobber_town_sweep_iterator() -> None:
     )
 
 
+def test_cap_deferral_diagnostics_are_debounced_and_group_count_reused() -> None:
+    source = (CH / TOWN_AI).read_text(encoding="utf-8")
+
+    # Cap refusal is evaluated inside the per-town activation sweep. Keep the
+    # diagnostic signal, but bound repeated emissions while a cap remains full.
+    assert "_garrisonCapDeferLast" in source
+    assert "_groupCapDeferLast" in source
+    assert "_garrisonCapDeferLast = -9999;" in source
+    assert "_groupCapDeferLast = -9999;" in source
+
+    cap_start = source.index(
+        "if (!_activationDeferred && {_enemies_ground > 0} && {(_side == west || {_side == east})}) then {"
+    )
+    activation_start = source.index("if(_enemies_ground > 0) then {", cap_start)
+    cap_region = source[cap_start:activation_start]
+
+    assert re.search(
+        r'if \(\(_now - _garrisonCapDeferLast\) >= 300\) then \{\s*'
+        r'_garrisonCapDeferLast = _now;\s*'
+        r'diag_log Format \["GARRISON_CAP_DEFER\|',
+        cap_region,
+        re.DOTALL,
+    )
+    assert re.search(
+        r'if \(\(_now - _groupCapDeferLast\) >= 300\) then \{\s*'
+        r'_groupCapDeferLast = _now;\s*'
+        r'diag_log Format \["TOWN_AI_GROUP_CAP_DEFER\|',
+        cap_region,
+        re.DOTALL,
+    )
+
+    # The group count is needed for the gate and the diagnostic. Do not scan
+    # allGroups a second time just to format the line.
+    assert cap_region.count("{side _x == _side} count allGroups") == 1
+
+
 def test_town_ai_mirrors_match_chernarus() -> None:
     digest = sha256((CH / TOWN_AI).read_bytes()).hexdigest()
     for mirror in MIRRORS:
@@ -95,4 +131,5 @@ def test_town_ai_mirrors_match_chernarus() -> None:
 if __name__ == "__main__":
     test_deferred_activation_skips_all_creation_side_effects()
     test_group_creation_does_not_clobber_town_sweep_iterator()
+    test_cap_deferral_diagnostics_are_debounced_and_group_count_reused()
     test_town_ai_mirrors_match_chernarus()
