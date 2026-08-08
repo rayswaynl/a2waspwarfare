@@ -16,7 +16,7 @@ _supplyMissionAlreadyActiveInTown = _sourceTown getVariable ["supplyMissionCoolD
 
 if (_supplyMissionAlreadyActiveInTown) exitWith {
     diag_log format ["ERROR: Supply mission happened already during the last 30 minutes in %1!", _sourceTown];
-    format ["This town doesn't have enough supplies to be collected yet! You can start a supply mission in towns that have [+SUPPLY] added after their SV on map."] call GroupChatMessage;
+    format ["This town doesn't have enough supplies to be collected yet! Check the map - friendly towns show a + after their SV once supplies are ready (SpecOps sees the SUPPLY label; other classes just see the +)."] call GroupChatMessage;
 };
 
 _cursorTarget = cursorTarget;
